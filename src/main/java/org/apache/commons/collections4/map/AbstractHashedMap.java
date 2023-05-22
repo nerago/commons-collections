@@ -1328,20 +1328,11 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         if (map.size() != size()) {
             return false;
         }
-        final MapIterator<?, ?> it = mapIterator();
         try {
-            while (it.hasNext()) {
-                final Object key = it.next();
-                final Object value = it.getValue();
-                if (value == null) {
-                    if (map.get(key) != null || !map.containsKey(key)) {
-                        return false;
-                    }
-                } else {
-                    if (!value.equals(map.get(key))) {
-                        return false;
-                    }
-                }
+            for (Entry<?, ?> theirEntry : map.entrySet()) {
+                HashEntry<K, V> ourEntry = getEntry(theirEntry.getKey());
+                if (ourEntry == null || !ourEntry.equals(theirEntry))
+                    return false;
             }
         } catch (final ClassCastException | NullPointerException ignored) {
             return false;

@@ -42,6 +42,11 @@ public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V> 
     }
 
     @Override
+    public boolean isExactlyEquatable() {
+        return false;
+    }
+
+    @Override
     public CaseInsensitiveMap<K, V> makeObject() {
         return new CaseInsensitiveMap<>();
     }

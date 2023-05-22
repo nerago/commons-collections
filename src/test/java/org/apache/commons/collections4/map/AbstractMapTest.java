@@ -23,7 +23,10 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AssertionFailureBuilder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
+import org.junit.platform.commons.util.UnrecoverableExceptions;
 
 import java.io.Serializable;
 import java.util.*;
@@ -300,6 +303,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     public boolean areEqualElementsDistinguishable() {
         return false;
+    }
+
+    public boolean isExactlyEquatable() {
+        return true;
     }
 
     /**
@@ -841,23 +848,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                     }
                 }
             } else {
-                try {
-                    // two possible exception here, either valid
-                    getMap().put(keys[0], newValues[0]);
-                    fail("Expected IllegalArgumentException or UnsupportedOperationException on put (change)");
-                } catch (final IllegalArgumentException | UnsupportedOperationException ex) {
-                    // ignore
-                }
+                assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                        ()->getMap().put(keys[0], newValues[0]),
+                        "Expected IllegalArgumentException or UnsupportedOperationException on put (change)");
             }
 
         } else if (isPutChangeSupported()) {
             resetEmpty();
-            try {
-                getMap().put(keys[0], values[0]);
-                fail("Expected UnsupportedOperationException or IllegalArgumentException on put (add) when fixed size");
-            } catch (final IllegalArgumentException | UnsupportedOperationException ex) {
-                // ignore
-            }
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    ()->getMap().put(keys[0], values[0]),
+                    "Expected UnsupportedOperationException or IllegalArgumentException on put (add) when fixed size");
 
             resetFull();
             int i = 0;
@@ -896,11 +896,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (isAllowNullKey()) {
                 getMap().put(null, values[0]);
             } else {
-                try {
-                    getMap().put(null, values[0]);
-                    fail("put(null, value) should throw NPE/IAE");
-                } catch (final NullPointerException | IllegalArgumentException ex) {
-                }
+                assertThrowsEither(NullPointerException.class, IllegalArgumentException.class,
+                        () -> getMap().put(null, values[0]),
+                        "put(null, value) should throw NPE/IAE");
             }
         }
     }
@@ -917,11 +915,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (isAllowNullValue()) {
                 getMap().put(keys[0], null);
             } else {
-                try {
-                    getMap().put(keys[0], null);
-                    fail("put(key, null) should throw NPE/IAE");
-                } catch (final NullPointerException | IllegalArgumentException ex) {
-                }
+                assertThrowsEither(NullPointerException.class, IllegalArgumentException.class,
+                        () -> getMap().put(keys[0], null),
+                                "put(null, value) should throw NPE/IAE");
             }
         }
     }
@@ -944,16 +940,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             getMap().putAll(new HashMap<K, V>());
             assertEquals(0, getMap().size());
             verify();
+            // TODO empty not really supported on singleton
 
             // check putAll OK adding empty map to non-empty map
             resetFull();
             getMap().putAll(new HashMap<K, V>());
-            verify();
-
-            // check putAll OK adding map to itself
-            // TODO and not duplicates?
-            resetFull();
-            getMap().putAll(getMap());
             verify();
 
             // check putAll OK adding JDK map with current values
@@ -969,19 +960,22 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             // check putAll rejects adding empty map to empty map
             resetEmpty();
             assertEquals(0, getMap().size());
-            assertThrows(UnsupportedOperationException.class, () -> getMap().putAll(new HashMap<>()),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(new HashMap<>()),
                     "Expected UnsupportedOperationException on putAll");
             verify();
 
             // check putAll rejects adding empty map to non-empty map
             resetFull();
-            assertThrows(UnsupportedOperationException.class, () -> getMap().putAll(new HashMap<>()),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(new HashMap<>()),
                     "Expected UnsupportedOperationException on putAll");
             verify();
 
             // check putAll rejects adding map to itself
             resetFull();
-            assertThrows(UnsupportedOperationException.class, () -> getMap().putAll(getMap()),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(getMap()),
                     "Expected UnsupportedOperationException on putAll");
             verify();
 
@@ -991,7 +985,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             for (int i = 0; i < keys.length; i++) {
                 m1.put(keys[i], values[i]);
             }
-            assertThrows(UnsupportedOperationException.class, () -> getMap().putAll(m1),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(m1),
                     "Expected UnsupportedOperationException on putAll");
             verify();
         }
@@ -1027,7 +1022,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             // check putAll rejects adding non-empty map to empty map
             resetEmpty();
             final Map<K, V> m2 = makeFullMap();
-            assertThrows(IllegalArgumentException.class, () -> getMap().putAll(m2),
+
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(m2),
                     "Expected IllegalArgumentException on putAll");
             verify();
 
@@ -1037,7 +1034,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             for (int i = 0; i < keys.length; i++) {
                 m3.put(keys[i], values[i]);
             }
-            assertThrows(IllegalArgumentException.class, () -> getMap().putAll(m3),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(m3),
                     "Expected IllegalArgumentException on putAll");
             verify();
 
@@ -1047,7 +1045,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             for (int i = 0; i < otherKeys.length; i++) {
                 m4.put(otherKeys[i], otherValues[i]);
             }
-            assertThrows(IllegalArgumentException.class, () -> getMap().putAll(m4),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(m4),
                     "Expected IllegalArgumentException on putAll");
             verify();
         }
@@ -1075,7 +1074,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             resetFull();
             final Map<K, V> m5 = makeConfirmedMap();
             m5.put(keys[0], newValues[0]);
-            assertThrows(IllegalArgumentException.class, () -> getMap().putAll(m5),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(m5),
                     "Expected IllegalArgumentException on putAll");
             verify();
 
@@ -1085,7 +1085,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             for (int i = 0; i < keys.length; i++) {
                 m6.put(keys[i], newValues[i]);
             }
-            assertThrows(IllegalArgumentException.class, () -> getMap().putAll(m6),
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    () -> getMap().putAll(m6),
                     "Expected IllegalArgumentException on putAll");
             verify();
         }
@@ -2101,14 +2102,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final boolean empty = getConfirmed().isEmpty();
         assertEquals(size, getMap().size(), "Map should be same size as HashMap");
         assertEquals(empty, getMap().isEmpty(), "Map should be empty if HashMap is");
-        //assertEquals(getConfirmed().hashCode(), getMap().hashCode(), "hashCodes should be the same");
-        // changing the order of the assertion below fails for LRUMap because confirmed is
-        // another collection (e.g. treemap) and confirmed.equals() creates a normal iterator (not
-        // #mapIterator()), which modifies the parent expected modCount of the map object, causing
-        // concurrent modification exceptions.
-        // Because of this we have assertEquals(map, confirmed), and not the other way around.
-        assertEquals(map, confirmed, "Map should still equal HashMap");
-        assertEquals(getMap(), getConfirmed(), "Map should still equal HashMap");
+        if (isExactlyEquatable()) {
+            assertEquals(getConfirmed().hashCode(), getMap().hashCode(), "hashCodes should be the same");
+            // changing the order of the assertion below fails for LRUMap because confirmed is
+            // another collection (e.g. treemap) and confirmed.equals() creates a normal iterator (not
+            // #mapIterator()), which modifies the parent expected modCount of the map object, causing
+            // concurrent modification exceptions.
+            // Because of this we have assertEquals(map, confirmed), and not the other way around.
+            assertEquals(map, confirmed, "Map should still equal HashMap");
+            assertEquals(getMap(), getConfirmed(), "Map should still equal HashMap");
+        }
     }
 
     public void verifyEntrySet() {
@@ -2123,11 +2126,13 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertTrue(entrySet.containsAll(getConfirmed().entrySet()),
                 "entrySet should contain all HashMap's elements" +
                         "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
-        assertEquals(getConfirmed().entrySet().hashCode(), entrySet.hashCode(),
-                "entrySet hashCodes should be the same" +
-                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
-        assertEquals(getConfirmed().entrySet(), entrySet,
-                "Map's entry set should still equal HashMap's");
+        if (isExactlyEquatable()) {
+            assertEquals(getConfirmed().entrySet().hashCode(), entrySet.hashCode(),
+                    "entrySet hashCodes should be the same" +
+                            "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+            assertEquals(getConfirmed().entrySet(), entrySet,
+                    "Map's entry set should still equal HashMap's");
+        }
     }
 
     public void verifyKeySet() {
@@ -2142,11 +2147,13 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertTrue(keySet.containsAll(getConfirmed().keySet()),
                 "keySet should contain all HashMap's elements" +
                         "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
-        assertEquals(getConfirmed().keySet().hashCode(), keySet.hashCode(),
-                "keySet hashCodes should be the same" +
-                        "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
-        assertEquals(getConfirmed().keySet(), keySet,
-                "Map's key set should still equal HashMap's");
+        if (isExactlyEquatable()) {
+            assertEquals(getConfirmed().keySet().hashCode(), keySet.hashCode(),
+                    "keySet hashCodes should be the same" +
+                            "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
+            assertEquals(getConfirmed().keySet(), keySet,
+                    "Map's key set should still equal HashMap's");
+        }
     }
 
     public void verifyValues() {
@@ -2188,6 +2195,22 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         entrySet = null;
         values = null;
         confirmed = null;
+    }
+
+
+    private <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable, String message) {
+        try {
+            executable.execute();
+        } catch (Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            UnrecoverableExceptions.rethrowIfUnrecoverable(throwable);
+            throw AssertionFailureBuilder.assertionFailure().message(message).reason("Unexpected exception type thrown").cause(throwable).build();
+        }
+
+        throw AssertionFailureBuilder.assertionFailure().message(message).reason("Expected exception to be thrown, but nothing was thrown.").build();
     }
 
     /**

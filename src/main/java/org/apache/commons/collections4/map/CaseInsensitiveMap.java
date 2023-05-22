@@ -151,6 +151,38 @@ public class CaseInsensitiveMap<K, V> extends AbstractHashedMap<K, V> implements
         return (CaseInsensitiveMap<K, V>) super.clone();
     }
 
+    @Override
+    protected boolean isEqualKey(Object key1, Object key2) {
+        // NONE of this is consistent since sentinel doesn't work right for constructed?
+        return key1 == key2 || key1.toString().equalsIgnoreCase(key2.toString());
+    }
+
+    @Override
+    protected HashEntry<K, V> createEntry(HashEntry<K, V> next, int hashCode, K key, V value) {
+        return new HashEntryInsensitive(next, hashCode, convertKey(key), value);
+    }
+
+    protected class HashEntryInsensitive extends HashEntry<K,V> {
+        protected HashEntryInsensitive(HashEntry<K,V> next, int hashCode, Object key, V value) {
+            super(next, hashCode, key, value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof Map.Entry)) {
+                return false;
+            }
+            final Map.Entry<?, ?> other = (Map.Entry<?, ?>) obj;
+            return
+                    (getKey() == null ? other.getKey() == null : isEqualKey(getKey(), other.getKey()))
+                            &&
+                            (getValue() == null ? other.getValue() == null : isEqualValue(getValue(), other.getValue()));
+        }
+    }
+
     /**
      * Write the map out using a custom routine.
      *
