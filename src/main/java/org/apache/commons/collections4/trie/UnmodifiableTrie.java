@@ -177,6 +177,12 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     }
 
     @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        final OrderedMapIterator<K, V> it = delegate.mapIteratorBetween(fromKey, fromInclusive,toKey,toInclusive,reverse);
+        return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
+    }
+
+    @Override
     public K nextKey(final K key) {
         return delegate.nextKey(key);
     }

@@ -67,6 +67,11 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V>
     }
 
     @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        return decorated().mapIteratorBetween(fromKey, fromInclusive,toKey,toInclusive,reverse);
+    }
+
+    @Override
     public K firstKey() {
         return decorated().firstKey();
     }

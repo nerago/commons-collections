@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.commons.collections4.ContiguousMap;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;

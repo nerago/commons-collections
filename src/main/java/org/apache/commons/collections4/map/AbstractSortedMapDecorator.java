@@ -16,15 +16,12 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
+import java.util.*;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.iterators.ListIteratorWrapper;
 
 /**
@@ -107,15 +104,27 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
 
     @Override
     public K previousKey(final K key) {
-        final SortedMap<K, V> headMap = headMap(key);
-        return headMap.isEmpty() ? null : headMap.lastKey();
+        SortedMap<K, V> decorated = decorated();
+        if (decorated instanceof NavigableMap) {
+            NavigableMap<K, V> navigable = (NavigableMap<K, V>) decorated;
+            return navigable.lowerKey(key);
+        } else {
+            final SortedMap<K, V> headMap = decorated.headMap(key);
+            return headMap.isEmpty() ? null : headMap.lastKey();
+        }
     }
 
     @Override
     public K nextKey(final K key) {
-        final Iterator<K> it = tailMap(key).keySet().iterator();
-        it.next();
-        return it.hasNext() ? it.next() : null;
+        SortedMap<K, V> decorated = decorated();
+        if (decorated instanceof NavigableMap) {
+            NavigableMap<K, V> navigable = (NavigableMap<K, V>) decorated;
+            return navigable.higherKey(key);
+        } else {
+            final Iterator<K> it = decorated.tailMap(key).keySet().iterator();
+            it.next();
+            return it.hasNext() ? it.next() : null;
+        }
     }
 
     /**
@@ -123,7 +132,153 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
      */
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return new SortedMapIterator<>(entrySet());
+        SortedMap<K, V> decorated = decorated();
+        if (decorated instanceof NavigableMap) {
+            return new SortedMapIteratorNavigable<>((NavigableMap<K, V>) decorated);
+        } else {
+            return new SortedMapIterator<>(decorated.entrySet());
+        }
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        SortedMap<K, V> map = decorated().subMap(fromKey, toKey);
+        if (map instanceof NavigableMap) {
+            return new SortedMapIteratorNavigable<>((NavigableMap<K, V>) map);
+        } else {
+            return new SortedMapIterator<>(map.entrySet());
+        }
+    }
+
+    protected static class SortedMapIteratorNavigable<K, V>            implements ResettableIterator<K>, OrderedMapIterator<K, V> {
+        transient final NavigableMap<K, V> map;
+        transient Map.Entry<K, V> next;
+        transient Map.Entry<K, V> curr;
+        transient Map.Entry<K, V> prev;
+
+        public SortedMapIteratorNavigable(NavigableMap<K, V> map) {
+            this.map = map;
+            this.next = map.firstEntry();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public K getKey() {
+            return current().getKey();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public V getValue() {
+            return current().getValue();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public V setValue(final V value) {
+            return current().setValue(value);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public K next() {
+            Map.Entry<K, V> entry = next;
+            if (entry == null)
+                throw new NoSuchElementException();
+            K key = entry.getKey();
+            prev = entry;
+            curr = entry;
+            next = map.higherEntry(key);
+            return key;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasPrevious() {
+            return prev != null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public K previous() {
+            Map.Entry<K, V> entry = prev;
+            if (entry == null)
+                throw new NoSuchElementException();
+            K key = entry.getKey();
+            prev = map.lowerEntry(key);
+            curr = entry;
+            next = entry;
+            return key;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void remove() {
+            if (curr == null)
+                throw new IllegalStateException();
+            map.remove(curr.getKey(), curr.getValue());
+            curr = null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void forEachRemaining(Consumer<? super K> action) {
+            Map.Entry<K, V> entry = next, last = null;
+            while (entry != null) {
+                K key = entry.getKey();
+                action.accept(key);
+                last = entry;
+                entry = map.higherEntry(key);
+            }
+            prev = last;
+            curr = null;
+            next = null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void reset() {
+            this.next = map.firstEntry();
+            this.prev = null;
+            this.curr = null;
+        }
+
+        /**
+         * Get the currently active entry.
+         * @return Map.Entry&lt;K, V&gt;
+         */
+        protected synchronized Map.Entry<K, V> current() {
+            if (curr == null) {
+                throw new IllegalStateException();
+            }
+            return curr;
+        }
     }
 
     /**
@@ -149,6 +304,7 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
         @Override
         public synchronized void reset() {
             super.reset();
+            // is it ok to assume listIterator?
             iterator = new ListIteratorWrapper<>(iterator);
         }
 

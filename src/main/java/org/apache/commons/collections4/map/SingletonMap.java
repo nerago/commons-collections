@@ -25,11 +25,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.commons.collections4.BoundedMap;
-import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.OrderedMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 import org.apache.commons.collections4.keyvalue.TiedMapEntry;
 
@@ -61,7 +58,7 @@ import org.apache.commons.collections4.keyvalue.TiedMapEntry;
  * @since 3.1
  */
 public class SingletonMap<K, V>
-        implements OrderedMap<K, V>, BoundedMap<K, V>, KeyValue<K, V>, Serializable, Cloneable {
+        implements ContiguousMap<K, V>, BoundedMap<K, V>, KeyValue<K, V>, Serializable, Cloneable {
 
     /** Serialization version */
     private static final long serialVersionUID = -8931271118676803261L;
@@ -345,6 +342,15 @@ public class SingletonMap<K, V>
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new SingletonMapIterator<>(this);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K from, boolean fromInclusive, K to, boolean toInclusive, boolean reverse) {
+        if (OrderedMapUtils.inRange(this.key, from, fromInclusive, to, toInclusive)) {
+            return new SingletonMapIterator<>(this);
+        } else {
+            return EmptyOrderedMapIterator.emptyOrderedMapIterator();
+        }
     }
 
     /**

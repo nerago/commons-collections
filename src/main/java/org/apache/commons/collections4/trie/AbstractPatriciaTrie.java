@@ -812,6 +812,11 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
     }
 
     @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        return new RangeEntrySet(new RangeEntryMap(fromKey, toKey)).mapIterator();
+    }
+
+    @Override
     public SortedMap<K, V> prefixMap(final K key) {
         return getPrefixMapByBits(key, 0, lengthInBits(key));
     }
@@ -1605,6 +1610,14 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
         protected TrieEntry<K, V> previous; // the previous node to return
 
+        protected TrieMapIterator() {
+
+        }
+
+        protected TrieMapIterator(TrieEntry<K,V> first) {
+            super(first);
+        }
+
         @Override
         public K next() {
             return nextEntry().getKey();
@@ -1990,6 +2003,25 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
             return new EntryIterator(first, last);
         }
 
+        public OrderedMapIterator<K, V> mapIterator() {
+            final K fromKey = delegate.getFromKey();
+            final K toKey = delegate.getToKey();
+
+            TrieEntry<K, V> first = null;
+            if (fromKey == null) {
+                first = firstEntry();
+            } else {
+                first = ceilingEntry(fromKey);
+            }
+
+            TrieEntry<K, V> last = null;
+            if (toKey != null) {
+                last = ceilingEntry(toKey);
+            }
+
+            return new EntryMapIterator(first, last);
+        }
+
         @Override
         public int size() {
             if (size == -1 || expectedModCount != AbstractPatriciaTrie.this.modCount) {
@@ -2073,6 +2105,45 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                     throw new NoSuchElementException();
                 }
                 return nextEntry();
+            }
+        }
+
+        private final class EntryMapIterator extends TrieMapIterator {
+
+            private final K excludedKey;
+
+            /**
+             * Creates a {@link EntryIterator}.
+             */
+            private EntryMapIterator(final TrieEntry<K, V> first, final TrieEntry<K, V> last) {
+                super(first);
+                this.excludedKey = last != null ? last.getKey() : null;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return next != null && !compare(next.key, excludedKey);
+            }
+
+            @Override
+            public K next() {
+                if (next == null || compare(next.key, excludedKey)) {
+                    throw new NoSuchElementException();
+                }
+                return nextEntry().key;
+            }
+
+            @Override
+            public boolean hasPrevious() {
+                return previous != null && !compare(previous.key, excludedKey);
+            }
+
+            @Override
+            public K previous() {
+                if (previous == null || compare(previous.key, excludedKey)) {
+                    throw new NoSuchElementException();
+                }
+                return previousEntry().key;
             }
         }
     }

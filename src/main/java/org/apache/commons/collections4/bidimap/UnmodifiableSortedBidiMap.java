@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
@@ -27,6 +23,10 @@ import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
 import org.apache.commons.collections4.map.UnmodifiableSortedMap;
 import org.apache.commons.collections4.set.UnmodifiableSet;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
 
 /**
  * Decorates another {@link SortedBidiMap} to ensure it can't be altered.
@@ -41,7 +41,9 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
 public final class UnmodifiableSortedBidiMap<K, V>
         extends AbstractSortedBidiMapDecorator<K, V> implements Unmodifiable {
 
-    /** The inverse unmodifiable map */
+    /**
+     * The inverse unmodifiable map
+     */
     private UnmodifiableSortedBidiMap<V, K> inverse;
 
     /**
@@ -51,7 +53,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
      *
      * @param <K> the key type
      * @param <V> the value type
-     * @param map  the map to decorate, must not be null
+     * @param map the map to decorate, must not be null
      * @return an unmodifiable SortedBidiMap
      * @throws NullPointerException if map is null
      * @since 4.0
@@ -68,7 +70,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
     /**
      * Constructor that wraps (not copies).
      *
-     * @param map  the map to decorate, must not be null
+     * @param map the map to decorate, must not be null
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
@@ -122,6 +124,12 @@ public final class UnmodifiableSortedBidiMap<K, V>
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         final OrderedMapIterator<K, V> it = decorated().mapIterator();
+        return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        final OrderedMapIterator<K, V> it = decorated().mapIteratorBetween(fromKey, fromInclusive, toKey, toInclusive, reverse);
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
     }
 

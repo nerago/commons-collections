@@ -16,15 +16,17 @@
  */
 package org.apache.commons.collections4;
 
-import java.util.SortedMap;
-
 /**
- * {@link SortedMap} + {@link OrderedMap}.
+ * Defines a map that maintains order and allows both forward and backward
+ * iteration through that order.
  *
  * @param <K> the type of the keys in the map
  * @param <V> the type of the values in the map
  *
- * @since 4.0
+ * @since 3.0
  */
-public interface IterableSortedMap<K, V> extends SortedMap<K, V>, ContiguousMap<K, V> {
+public interface ContiguousMap<K, V> extends OrderedMap<K,V> {
+
+    OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse);
+
 }

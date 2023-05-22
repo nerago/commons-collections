@@ -27,6 +27,7 @@ import java.util.SortedMap;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
@@ -188,5 +189,4 @@ public class FixedSizeSortedMap<K, V>
     public int maxSize() {
         return size();
     }
-
 }

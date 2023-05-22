@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.ContiguousMap;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 
@@ -38,7 +39,7 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @since 3.0
  */
 public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecorator<K, V>
-        implements OrderedMap<K, V> {
+        implements ContiguousMap<K, V> {
 
     /**
      * Constructor only used in deserialization, do not use otherwise.

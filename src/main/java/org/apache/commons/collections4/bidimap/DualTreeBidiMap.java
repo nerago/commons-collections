@@ -197,6 +197,13 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return new BidiOrderedMapIterator<>(this);
     }
 
+    @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        final SortedMap<K, V> sub = ((SortedMap<K, V>) normalMap).subMap(fromKey, toKey);
+        final ViewMap<K, V> viewMap = new ViewMap<>(this, sub);
+        return viewMap.decorated().mapIterator();
+    }
+
     public SortedBidiMap<V, K> inverseSortedBidiMap() {
         return inverseBidiMap();
     }
@@ -288,6 +295,11 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         @Override
         public K nextKey(final K key) {
             return decorated().nextKey(key);
+        }
+
+        @Override
+        public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+            return new ViewMap<>(decorated(), super.subMap(fromKey, toKey)).decorated().mapIterator();
         }
     }
 

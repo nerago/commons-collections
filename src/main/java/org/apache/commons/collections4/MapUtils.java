@@ -1248,6 +1248,7 @@ public class MapUtils {
      */
     public static <K, V> IterableSortedMap<K, V> iterableSortedMap(final SortedMap<K, V> sortedMap) {
         Objects.requireNonNull(sortedMap, "sortedMap");
+        // if NavigableMap
         return sortedMap instanceof IterableSortedMap ? (IterableSortedMap<K, V>) sortedMap
                 : new AbstractSortedMapDecorator<K, V>(sortedMap) {
                     // empty

@@ -113,6 +113,12 @@ public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecora
     }
 
     @Override
+    @Deprecated
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        return null;
+    }
+
+    @Override
     public void clear() {
         throw new UnsupportedOperationException();
     }

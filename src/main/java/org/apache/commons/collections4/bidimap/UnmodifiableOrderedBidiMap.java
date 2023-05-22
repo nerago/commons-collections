@@ -129,6 +129,12 @@ public final class UnmodifiableOrderedBidiMap<K, V>
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
     }
 
+    @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        final OrderedMapIterator<K, V> it = decorated().mapIteratorBetween(fromKey, fromInclusive,toKey,toInclusive,reverse);
+        return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
+    }
+
     /**
      * Gets an unmodifiable view of this map where the keys and values are reversed.
      *

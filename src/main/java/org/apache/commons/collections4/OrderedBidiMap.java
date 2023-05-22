@@ -29,7 +29,7 @@ package org.apache.commons.collections4;
  *
  * @since 3.0
  */
-public interface OrderedBidiMap<K, V> extends BidiMap<K, V>, OrderedMap<K, V> {
+public interface OrderedBidiMap<K, V> extends BidiMap<K, V>, ContiguousMap<K, V> {
 
     /**
      * Gets a view of this map where the keys and values are reversed.

@@ -16,28 +16,18 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
-import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VALUE;
+import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.AbstractSet;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.OrderedBidiMap;
-import org.apache.commons.collections4.OrderedIterator;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
-import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
+import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VALUE;
 
 /**
  * Red-Black tree-based implementation of BidiMap where all objects added
@@ -80,11 +70,10 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  *
  * @param <K> the type of the keys in this map
  * @param <V> the type of the values in this map
- *
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
 public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
-    implements OrderedBidiMap<K, V>, Serializable {
+        implements OrderedBidiMap<K, V>, Serializable {
 
     enum DataElement {
         KEY("key"), VALUE("value");
@@ -94,7 +83,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Creates a new TreeBidiMap.DataElement.
          *
-         * @param description  the description for the element
+         * @param description the description for the element
          */
         DataElement(final String description) {
             this.description = description;
@@ -127,9 +116,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Constructs a new TreeBidiMap by copying an existing Map.
      *
-     * @param map  the map to copy
-     * @throws ClassCastException if the keys/values in the map are
-     *  not Comparable or are not mutually comparable
+     * @param map the map to copy
+     * @throws ClassCastException   if the keys/values in the map are
+     *                              not Comparable or are not mutually comparable
      * @throws NullPointerException if any key or value in the map is null
      */
     public TreeBidiMap(final Map<? extends K, ? extends V> map) {
@@ -162,9 +151,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * The key must implement {@code Comparable}.
      *
-     * @param key  key whose presence in this map is to be tested
+     * @param key key whose presence in this map is to be tested
      * @return true if this map contains a mapping for the specified key
-     * @throws ClassCastException if the key is of an inappropriate type
+     * @throws ClassCastException   if the key is of an inappropriate type
      * @throws NullPointerException if the key is null
      */
     @Override
@@ -178,9 +167,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * The value must implement {@code Comparable}.
      *
-     * @param value  value whose presence in this map is to be tested
+     * @param value value whose presence in this map is to be tested
      * @return true if this map contains a mapping for the specified value
-     * @throws ClassCastException if the value is of an inappropriate type
+     * @throws ClassCastException   if the value is of an inappropriate type
      * @throws NullPointerException if the value is null
      */
     @Override
@@ -195,10 +184,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * The key must implement {@code Comparable}.
      *
-     * @param key  key whose associated value is to be returned
+     * @param key key whose associated value is to be returned
      * @return the value to which this map maps the specified key,
-     *  or null if the map contains no mapping for this key
-     * @throws ClassCastException if the key is of an inappropriate type
+     * or null if the map contains no mapping for this key
+     * @throws ClassCastException   if the key is of an inappropriate type
      * @throws NullPointerException if the key is null
      */
     @Override
@@ -226,10 +215,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * Both key and value must implement {@code Comparable}.
      *
-     * @param key  key with which the specified value is to be  associated
-     * @param value  value to be associated with the specified key
+     * @param key   key with which the specified value is to be  associated
+     * @param value value to be associated with the specified key
      * @return the previous value for the key
-     * @throws ClassCastException if the key is of an inappropriate type
+     * @throws ClassCastException   if the key is of an inappropriate type
      * @throws NullPointerException if the key is null
      */
     @Override
@@ -244,7 +233,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * All keys and values must implement {@code Comparable}.
      *
-     * @param map  the map to copy from
+     * @param map the map to copy from
      */
     @Override
     public void putAll(final Map<? extends K, ? extends V> map) {
@@ -258,10 +247,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * The key must implement {@code Comparable}.
      *
-     * @param key  key whose mapping is to be removed from the map.
+     * @param key key whose mapping is to be removed from the map.
      * @return previous value associated with specified key,
-     *  or null if there was no mapping for key.
-     * @throws ClassCastException if the key is of an inappropriate type
+     * or null if there was no mapping for key.
+     * @throws ClassCastException   if the key is of an inappropriate type
      * @throws NullPointerException if the key is null
      */
     @Override
@@ -287,10 +276,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * The value must implement {@code Comparable}.
      *
-     * @param value  value whose associated key is to be returned.
+     * @param value value whose associated key is to be returned.
      * @return the key to which this map maps the specified value,
-     *  or null if the map contains no mapping for this value.
-     * @throws ClassCastException if the value is of an inappropriate type
+     * or null if the map contains no mapping for this value.
+     * @throws ClassCastException   if the value is of an inappropriate type
      * @throws NullPointerException if the value is null
      */
     @Override
@@ -305,10 +294,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * <p>
      * The value must implement {@code Comparable}.
      *
-     * @param value  value whose mapping is to be removed from the map
+     * @param value value whose mapping is to be removed from the map
      * @return previous key associated with specified value,
-     *  or null if there was no mapping for value.
-     * @throws ClassCastException if the value is of an inappropriate type
+     * or null if there was no mapping for value.
+     * @throws ClassCastException   if the value is of an inappropriate type
      * @throws NullPointerException if the value is null
      */
     @Override
@@ -355,7 +344,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public K nextKey(final K key) {
         checkKey(key);
-        final Node<K, V> node = nextGreater(lookupKey(key), KEY);
+        final Node<K, V> node = lookupGreater(key, KEY);
         return node == null ? null : node.getKey();
     }
 
@@ -370,7 +359,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public K previousKey(final K key) {
         checkKey(key);
-        final Node<K, V> node = nextSmaller(lookupKey(key), KEY);
+        final Node<K, V> node = lookupSmaller(key, KEY);
         return node == null ? null : node.getKey();
     }
 
@@ -445,6 +434,15 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return new ViewMapIterator(KEY);
     }
 
+
+    @Override
+    public OrderedMapIterator<K, V> mapIteratorBetween(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+        if (isEmpty()) {
+            return EmptyOrderedMapIterator.<K, V>emptyOrderedMapIterator();
+        }
+        return new ViewMapRangeIterator(fromKey, fromInclusive, toKey, toInclusive, reverse);
+    }
+
     /**
      * Gets the inverse map for comparison.
      *
@@ -461,7 +459,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Compares for equals as per the API.
      *
-     * @param obj  the object to compare to
+     * @param obj the object to compare to
      * @return true if equal
      */
     @Override
@@ -492,8 +490,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Puts logic.
      *
-     * @param key  the key, always the main map key
-     * @param value  the value, always the main map value
+     * @param key   the key, always the main map key
+     * @param value the value, always the main map value
      */
     private void doPut(final K key, final V value) {
         checkKeyAndValue(key, value);
@@ -571,11 +569,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Does the actual lookup of a piece of data.
      *
-     * @param data the key or value to be looked up
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param data        the key or value to be looked up
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the desired Node, or null if there is no mapping of the
-     *         specified data
+     * specified data
      */
     @SuppressWarnings("unchecked")
     private <T extends Comparable<T>> Node<K, V> lookup(final Object data, final DataElement dataElement) {
@@ -594,6 +592,42 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return rval;
     }
 
+    @SuppressWarnings("unchecked")
+    private <T extends Comparable<T>> Node<K, V> lookupGreater(final Object data, final DataElement dataElement) {
+        Node<K, V> rval = null;
+        Node<K, V> node = rootNode[dataElement.ordinal()];
+
+        while (node != null) {
+            final int cmp = compare((T) node.getData(dataElement), (T) data);
+            if (cmp > 0) {
+                rval = node;
+                node = node.getLeft(KEY);
+            } else {
+                node = node.getRight(KEY);
+            }
+        }
+
+        return rval;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Comparable<T>> Node<K, V> lookupSmaller(final Object data, final DataElement dataElement) {
+        Node<K, V> rval = null;
+        Node<K, V> node = rootNode[dataElement.ordinal()];
+
+        while (node != null) {
+            final int cmp = compare((T) node.getData(dataElement), (T) data);
+            if (cmp < 0) {
+                rval = node;
+                node = node.getRight(KEY);
+            } else {
+                node = node.getLeft(KEY);
+            }
+        }
+
+        return rval;
+    }
+
     private Node<K, V> lookupKey(final Object key) {
         return this.<K>lookup(key, KEY);
     }
@@ -605,9 +639,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Gets the next larger node from the specified node.
      *
-     * @param node the node to be searched from
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node to be searched from
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the specified node
      */
     private Node<K, V> nextGreater(final Node<K, V> node, final DataElement dataElement) {
@@ -640,9 +674,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Gets the next smaller node from the specified node.
      *
-     * @param node the node to be searched from
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node to be searched from
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the specified node
      */
     private Node<K, V> nextSmaller(final Node<K, V> node, final DataElement dataElement) {
@@ -676,11 +710,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Compares two objects.
      *
-     * @param o1  the first object
-     * @param o2  the second object
-     *
+     * @param o1 the first object
+     * @param o2 the second object
      * @return negative value if o1 &lt; o2; 0 if o1 == o2; positive
-     *         value if o1 &gt; o2
+     * value if o1 &gt; o2
      */
     private static <T extends Comparable<T>> int compare(final T o1, final T o2) {
         return o1.compareTo(o2);
@@ -689,11 +722,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Finds the least node from a given node.
      *
-     * @param node  the node from which we will start searching
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node from which we will start searching
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the smallest node, from the specified node, in the
-     *         specified mapping
+     * specified mapping
      */
     private Node<K, V> leastNode(final Node<K, V> node, final DataElement dataElement) {
         Node<K, V> rval = node;
@@ -708,9 +741,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Finds the greatest node from a given node.
      *
-     * @param node  the node from which we will start searching
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node from which we will start searching
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the greatest node, from the specified node
      */
     private Node<K, V> greatestNode(final Node<K, V> node, final DataElement dataElement) {
@@ -727,10 +760,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Copies the color from one node to another, dealing with the fact
      * that one or both nodes may, in fact, be null.
      *
-     * @param from the node whose color we're copying; may be null
-     * @param to the node whose color we're changing; may be null
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param from        the node whose color we're copying; may be null
+     * @param to          the node whose color we're changing; may be null
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private void copyColor(final Node<K, V> from, final Node<K, V> to, final DataElement dataElement) {
         if (to != null) {
@@ -747,9 +780,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Is the specified node red? If the node does not exist, no, it's
      * black, thank you.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private static boolean isRed(final Node<?, ?> node, final DataElement dataElement) {
         return node != null && node.isRed(dataElement);
@@ -759,9 +792,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Is the specified black red? If the node does not exist, sure,
      * it's black, thank you.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private static boolean isBlack(final Node<?, ?> node, final DataElement dataElement) {
         return node == null || node.isBlack(dataElement);
@@ -770,9 +803,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Forces a node (if it exists) red.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private static void makeRed(final Node<?, ?> node, final DataElement dataElement) {
         if (node != null) {
@@ -783,9 +816,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Forces a node (if it exists) black.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private static void makeBlack(final Node<?, ?> node, final DataElement dataElement) {
         if (node != null) {
@@ -797,9 +830,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Gets a node's grandparent. mind you, the node, its parent, or
      * its grandparent may not exist. No problem.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private Node<K, V> getGrandParent(final Node<K, V> node, final DataElement dataElement) {
         return getParent(getParent(node, dataElement), dataElement);
@@ -809,9 +842,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Gets a node's parent. mind you, the node, or its parent, may not
      * exist. no problem.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private Node<K, V> getParent(final Node<K, V> node, final DataElement dataElement) {
         return node == null ? null : node.getParent(dataElement);
@@ -821,9 +854,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Gets a node's right child. mind you, the node may not exist. no
      * problem.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private Node<K, V> getRightChild(final Node<K, V> node, final DataElement dataElement) {
         return node == null ? null : node.getRight(dataElement);
@@ -833,9 +866,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Gets a node's left child. mind you, the node may not exist. no
      * problem.
      *
-     * @param node the node (may be null) in question
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node (may be null) in question
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private Node<K, V> getLeftChild(final Node<K, V> node, final DataElement dataElement) {
         return node == null ? null : node.getLeft(dataElement);
@@ -844,9 +877,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Does a rotate left. standard fare in the world of balanced trees.
      *
-     * @param node the node to be rotated
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node to be rotated
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private void rotateLeft(final Node<K, V> node, final DataElement dataElement) {
         final Node<K, V> rightChild = node.getRight(dataElement);
@@ -873,9 +906,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Does a rotate right. standard fare in the world of balanced trees.
      *
-     * @param node the node to be rotated
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param node        the node to be rotated
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      */
     private void rotateRight(final Node<K, V> node, final DataElement dataElement) {
         final Node<K, V> leftChild = node.getLeft(dataElement);
@@ -910,8 +943,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         makeRed(currentNode, dataElement);
 
         while (currentNode != null
-            && currentNode != rootNode[dataElement.ordinal()]
-            && isRed(currentNode.getParent(dataElement), dataElement)) {
+                && currentNode != rootNode[dataElement.ordinal()]
+                && isRed(currentNode.getParent(dataElement), dataElement)) {
             if (currentNode.isLeftChild(dataElement)) {
                 final Node<K, V> y = getRightChild(getGrandParent(currentNode, dataElement), dataElement);
 
@@ -1039,7 +1072,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * perfectly balanced -- perfect balancing takes longer)
      *
      * @param replacementNode the node being replaced
-     * @param dataElement  the KEY or VALUE int
+     * @param dataElement     the KEY or VALUE int
      */
     private void doRedBlackDeleteFixup(final Node<K, V> replacementNode, final DataElement dataElement) {
         Node<K, V> currentNode = replacementNode;
@@ -1057,7 +1090,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 }
 
                 if (isBlack(getLeftChild(siblingNode, dataElement), dataElement)
-                    && isBlack(getRightChild(siblingNode, dataElement), dataElement)) {
+                        && isBlack(getRightChild(siblingNode, dataElement), dataElement)) {
                     makeRed(siblingNode, dataElement);
 
                     currentNode = getParent(currentNode, dataElement);
@@ -1089,7 +1122,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 }
 
                 if (isBlack(getRightChild(siblingNode, dataElement), dataElement)
-                    && isBlack(getLeftChild(siblingNode, dataElement), dataElement)) {
+                        && isBlack(getLeftChild(siblingNode, dataElement), dataElement)) {
                     makeRed(siblingNode, dataElement);
 
                     currentNode = getParent(currentNode, dataElement);
@@ -1120,9 +1153,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * special cases where one is the other's parent ... hey, it
      * happens.
      *
-     * @param x one node
-     * @param y another node
-     * @param dataElement  the KEY or VALUE int
+     * @param x           one node
+     * @param y           another node
+     * @param dataElement the KEY or VALUE int
      */
     private void swapPosition(final Node<K, V> x, final Node<K, V> y, final DataElement dataElement) {
         // Save initial values.
@@ -1219,12 +1252,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Checks if an object is fit to be proper input ... has to be
      * Comparable and non-null.
      *
-     * @param obj the object being checked
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
-     *
+     * @param obj         the object being checked
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @throws NullPointerException if o is null
-     * @throws ClassCastException if o is not Comparable
+     * @throws ClassCastException   if o is not Comparable
      */
     private static void checkNonNullComparable(final Object obj, final DataElement dataElement) {
         Objects.requireNonNull(obj, Objects.toString(dataElement));
@@ -1237,9 +1269,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Checks a key for validity (non-null and implements Comparable)
      *
      * @param key the key to be checked
-     *
      * @throws NullPointerException if key is null
-     * @throws ClassCastException if key is not Comparable
+     * @throws ClassCastException   if key is not Comparable
      */
     private static void checkKey(final Object key) {
         checkNonNullComparable(key, KEY);
@@ -1249,9 +1280,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Checks a value for validity (non-null and implements Comparable)
      *
      * @param value the value to be checked
-     *
      * @throws NullPointerException if value is null
-     * @throws ClassCastException if value is not Comparable
+     * @throws ClassCastException   if value is not Comparable
      */
     private static void checkValue(final Object value) {
         checkNonNullComparable(value, VALUE);
@@ -1261,11 +1291,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Checks a key and a value for validity (non-null and implements
      * Comparable)
      *
-     * @param key the key to be checked
+     * @param key   the key to be checked
      * @param value the value to be checked
-     *
      * @throws NullPointerException if key or value is null
-     * @throws ClassCastException if key or value is not Comparable
+     * @throws ClassCastException   if key or value is not Comparable
      */
     private static void checkKeyAndValue(final Object key, final Object value) {
         checkKey(key);
@@ -1301,9 +1330,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Inserts a node by its value.
      *
      * @param newNode the node to be inserted
-     *
      * @throws IllegalArgumentException if the node already exists
-     *                                     in the value mapping
+     *                                  in the value mapping
      */
     private void insertValue(final Node<K, V> newNode) throws IllegalArgumentException {
         Node<K, V> node = rootNode[VALUE.ordinal()];
@@ -1313,7 +1341,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
             if (cmp == 0) {
                 throw new IllegalArgumentException(
-                    "Cannot store a duplicate value (\"" + newNode.getData(VALUE) + "\") in this Map");
+                        "Cannot store a duplicate value (\"" + newNode.getData(VALUE) + "\") in this Map");
             }
             if (cmp < 0) {
                 if (node.getLeft(VALUE) == null) {
@@ -1340,9 +1368,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Compares for equals as per the API.
      *
-     * @param obj  the object to compare to
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param obj         the object to compare to
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return true if equal
      */
     private boolean doEquals(final Object obj, final DataElement dataElement) {
@@ -1376,8 +1404,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Gets the hash code value for this map as per the API.
      *
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the hash code value for this map
      */
     private int doHashCode(final DataElement dataElement) {
@@ -1395,8 +1423,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Gets the string form of this map as per AbstractMap.
      *
-     * @param dataElement  either the {@link DataElement#KEY key}
-     *                     or the {@link DataElement#VALUE value}.
+     * @param dataElement either the {@link DataElement#KEY key}
+     *                    or the {@link DataElement#VALUE value}.
      * @return the string form of this map
      */
     private String doToString(final DataElement dataElement) {
@@ -1411,8 +1439,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             final Object key = it.next();
             final Object value = it.getValue();
             buf.append(key == this ? "(this Map)" : key)
-                .append('=')
-                .append(value == this ? "(this Map)" : value);
+                    .append('=')
+                    .append(value == this ? "(this Map)" : value);
 
             hasNext = it.hasNext();
             if (hasNext) {
@@ -1426,12 +1454,12 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
     private MapIterator<?, ?> getMapIterator(final DataElement dataElement) {
         switch (dataElement) {
-        case KEY:
-            return new ViewMapIterator(KEY);
-        case VALUE:
-            return new InverseViewMapIterator(VALUE);
-        default:
-            throw new IllegalArgumentException();
+            case KEY:
+                return new ViewMapIterator(KEY);
+            case VALUE:
+                return new InverseViewMapIterator(VALUE);
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
@@ -1439,17 +1467,17 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * Reads the content of the stream.
      *
      * @param stream the input stream
-     * @throws IOException if an error occurs while reading from the stream
+     * @throws IOException            if an error occurs while reading from the stream
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
-    private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException{
+    private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
         rootNode = new Node[2];
         final int size = stream.readInt();
-        for (int i = 0; i < size; i++){
-            final K k =(K) stream.readObject();
-            final V v =(V) stream.readObject();
+        for (int i = 0; i < size; i++) {
+            final K k = (K) stream.readObject();
+            final V v = (V) stream.readObject();
             put(k, v);
         }
     }
@@ -1457,10 +1485,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Writes the content to the stream for serialization.
      *
-     * @param stream  the output stream
+     * @param stream the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream stream) throws IOException{
+    private void writeObject(final ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
         stream.writeInt(this.size());
         for (final Entry<K, V> entry : entrySet()) {
@@ -1474,12 +1502,15 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     abstract class View<E> extends AbstractSet<E> {
 
-        /** Whether to return KEY or VALUE order. */
+        /**
+         * Whether to return KEY or VALUE order.
+         */
         final DataElement orderType;
 
         /**
          * Constructor.
-         * @param orderType  the KEY or VALUE int for the order
+         *
+         * @param orderType the KEY or VALUE int for the order
          */
         View(final DataElement orderType) {
             this.orderType = orderType;
@@ -1637,20 +1668,31 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     abstract class ViewIterator {
 
-        /** Whether to return KEY or VALUE order. */
+        /**
+         * Whether to return KEY or VALUE order.
+         */
         private final DataElement orderType;
-        /** The last node returned by the iterator. */
+        /**
+         * The last node returned by the iterator.
+         */
         Node<K, V> lastReturnedNode;
-        /** The next node to be returned by the iterator. */
+        /**
+         * The next node to be returned by the iterator.
+         */
         private Node<K, V> nextNode;
-        /** The previous node in the sequence returned by the iterator. */
+        /**
+         * The previous node in the sequence returned by the iterator.
+         */
         private Node<K, V> previousNode;
-        /** The modification count. */
+        /**
+         * The modification count.
+         */
         private int expectedModifications;
 
         /**
          * Constructor.
-         * @param orderType  the KEY or VALUE int for the order
+         *
+         * @param orderType the KEY or VALUE int for the order
          */
         ViewIterator(final DataElement orderType) {
             this.orderType = orderType;
@@ -1857,6 +1899,205 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
+    abstract class ViewRangeIterator {
+
+        /**
+         * Whether to return KEY or VALUE order.
+         */
+        private final DataElement orderType;
+        private final K from;
+        private final boolean fromInclusive;
+        private final K to;
+        private final boolean toInclusive;
+        private final boolean reverse;
+        private Node<K, V> fromNode;
+        private Node<K, V> toNode;
+        /**
+         * The last node returned by the iterator.
+         */
+        Node<K, V> lastReturnedNode;
+        /**
+         * The next node to be returned by the iterator.
+         */
+        private Node<K, V> nextNode;
+        /**
+         * The previous node in the sequence returned by the iterator.
+         */
+        private Node<K, V> previousNode;
+        /**
+         * The modification count.
+         */
+        private int expectedModifications;
+
+        /**
+         * Constructor.
+         *
+         * @param orderType the KEY or VALUE int for the order
+         */
+        public ViewRangeIterator(DataElement orderType, K from, boolean fromInclusive, K to, boolean toInclusive, boolean reverse) {
+            this.orderType = orderType;
+            this.from = from;
+            this.fromInclusive = fromInclusive;
+            this.to = to;
+            this.toInclusive = toInclusive;
+            this.reverse = reverse;
+            reset();
+        }
+
+        public void reset() {
+            expectedModifications = modifications;
+            lastReturnedNode = null;
+            previousNode = null;
+
+            if (from == null) {
+                fromNode = leastNode(rootNode[orderType.ordinal()], orderType);
+            } else if (fromInclusive) {
+                Node<K, V> exact = lookup(from, orderType);
+                if (exact != null)
+                    fromNode = exact;
+                else
+                    fromNode = lookupGreater(from, orderType);
+            } else {
+                fromNode = lookupGreater(from, orderType);
+            }
+
+            if (to == null) {
+                toNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            } else if (toInclusive) {
+                Node<K, V> exact = lookup(from, orderType);
+                if (exact != null)
+                    toNode = exact;
+                else
+                    toNode = lookupSmaller(from, orderType);
+            } else {
+                toNode = lookupSmaller(from, orderType);
+            }
+
+            if (reverse) {
+                nextNode = toNode;
+            } else {
+                nextNode = fromNode;
+            }
+        }
+
+        public final boolean hasNext() {
+            return nextNode != null;
+        }
+
+        protected Node<K, V> navigateNext() {
+            Node<K, V> node = nextNode;
+            if (node == null) {
+                throw new NoSuchElementException();
+            }
+            if (modifications != expectedModifications) {
+                throw new ConcurrentModificationException();
+            }
+            lastReturnedNode = node;
+            previousNode = node;
+            if (!reverse) {
+                if (node != toNode)
+                    nextNode = nextGreater(node, orderType);
+                else
+                    nextNode = null;
+            } else {
+                if (node != fromNode)
+                    nextNode = nextSmaller(node, orderType);
+                else
+                    nextNode = null;
+            }
+            return lastReturnedNode;
+        }
+
+        public boolean hasPrevious() {
+            return previousNode != null;
+        }
+
+        protected Node<K, V> navigatePrevious() {
+            Node<K, V> node = previousNode;
+            if (node == null) {
+                throw new NoSuchElementException();
+            }
+            if (modifications != expectedModifications) {
+                throw new ConcurrentModificationException();
+            }
+            lastReturnedNode = node;
+            nextNode = node;
+            if (reverse) {
+                if (node != toNode)
+                    previousNode = nextGreater(node, orderType);
+                else
+                    previousNode = null;
+            } else {
+                if (node != fromNode)
+                    previousNode = nextSmaller(node, orderType);
+                else
+                    previousNode = null;
+            }
+            return lastReturnedNode;
+        }
+
+        public final void remove() {
+            if (lastReturnedNode == null) {
+                throw new IllegalStateException();
+            }
+            if (modifications != expectedModifications) {
+                throw new ConcurrentModificationException();
+            }
+            doRedBlackDelete(lastReturnedNode);
+            expectedModifications++;
+            lastReturnedNode = null;
+            if (nextNode == null) {
+                previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            } else {
+                previousNode = nextSmaller(nextNode, orderType);
+            }
+        }
+    }
+
+    class ViewMapRangeIterator extends ViewRangeIterator implements OrderedMapIterator<K, V>, ResettableIterator<K> {
+
+        /**
+         * Constructor.
+         */
+        ViewMapRangeIterator(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, boolean reverse) {
+            super(KEY, fromKey, fromInclusive, toKey, toInclusive, reverse);
+        }
+
+        @Override
+        public K getKey() {
+            if (lastReturnedNode == null) {
+                throw new IllegalStateException(
+                        "Iterator getKey() can only be called after next() and before remove()");
+            }
+            return lastReturnedNode.getKey();
+        }
+
+        @Override
+        public V getValue() {
+            if (lastReturnedNode == null) {
+                throw new IllegalStateException(
+                        "Iterator getValue() can only be called after next() and before remove()");
+            }
+            return lastReturnedNode.getValue();
+        }
+
+        @Override
+        public V setValue(final V obj) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public K next() {
+            return navigateNext().getKey();
+        }
+
+        @Override
+        public K previous() {
+            return navigatePrevious().getKey();
+        }
+
+    }
+
     /**
      * A node used to store the data.
      */
@@ -1875,7 +2116,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Makes a new cell with given key and value, and with null
          * links, and black (true) colors.
          *
-         * @param key the key of this node
+         * @param key   the key of this node
          * @param value the value of this node
          */
         @SuppressWarnings("unchecked")
@@ -1885,18 +2126,18 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             leftNode = new Node[2];
             rightNode = new Node[2];
             parentNode = new Node[2];
-            blackColor = new boolean[] { true, true };
+            blackColor = new boolean[]{true, true};
             calculatedHashCode = false;
         }
 
         private Object getData(final DataElement dataElement) {
             switch (dataElement) {
-            case KEY:
-                return getKey();
-            case VALUE:
-                return getValue();
-            default:
-                throw new IllegalArgumentException();
+                case KEY:
+                    return getKey();
+                case VALUE:
+                    return getValue();
+                default:
+                    throw new IllegalArgumentException();
             }
         }
 
@@ -1919,9 +2160,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Sets this node's parent node.
          *
-         * @param node  the new parent node
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param node        the new parent node
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          */
         private void setParent(final Node<K, V> node, final DataElement dataElement) {
             parentNode[dataElement.ordinal()] = node;
@@ -1930,8 +2171,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Gets the parent node.
          *
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          * @return the parent node, may be null
          */
         private Node<K, V> getParent(final DataElement dataElement) {
@@ -1941,22 +2182,22 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Exchanges colors with another node.
          *
-         * @param node  the node to swap with
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param node        the node to swap with
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          */
         private void swapColors(final Node<K, V> node, final DataElement dataElement) {
             // Swap colors -- old hacker's trick
-            blackColor[dataElement.ordinal()]      ^= node.blackColor[dataElement.ordinal()];
+            blackColor[dataElement.ordinal()] ^= node.blackColor[dataElement.ordinal()];
             node.blackColor[dataElement.ordinal()] ^= blackColor[dataElement.ordinal()];
-            blackColor[dataElement.ordinal()]      ^= node.blackColor[dataElement.ordinal()];
+            blackColor[dataElement.ordinal()] ^= node.blackColor[dataElement.ordinal()];
         }
 
         /**
          * Is this node black?
          *
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          * @return true if black (which is represented as a true boolean)
          */
         private boolean isBlack(final DataElement dataElement) {
@@ -1966,8 +2207,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Is this node red?
          *
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          * @return true if non-black
          */
         private boolean isRed(final DataElement dataElement) {
@@ -1977,8 +2218,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Makes this node black.
          *
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          */
         private void setBlack(final DataElement dataElement) {
             blackColor[dataElement.ordinal()] = true;
@@ -1987,8 +2228,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Makes this node red.
          *
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          */
         private void setRed(final DataElement dataElement) {
             blackColor[dataElement.ordinal()] = false;
@@ -1997,9 +2238,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /**
          * Makes this node the same color as another.
          *
-         * @param node  the node whose color we're adopting
-         * @param dataElement  either the {@link DataElement#KEY key}
-         *                     or the {@link DataElement#VALUE value}.
+         * @param node        the node whose color we're adopting
+         * @param dataElement either the {@link DataElement#KEY key}
+         *                    or the {@link DataElement#VALUE value}.
          */
         private void copyColor(final Node<K, V> node, final DataElement dataElement) {
             blackColor[dataElement.ordinal()] = node.blackColor[dataElement.ordinal()];
@@ -2052,7 +2293,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Returns true if the given object is also a map entry and
          * the two entries represent the same mapping.
          *
-         * @param obj  the object to be compared for equality with this entry.
+         * @param obj the object to be compared for equality with this entry.
          * @return true if the specified object is equal to this entry.
          */
         @Override
@@ -2085,11 +2326,17 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     class Inverse implements OrderedBidiMap<V, K> {
 
-        /** Store the keySet once created. */
+        /**
+         * Store the keySet once created.
+         */
         private Set<V> inverseKeySet;
-        /** Store the valuesSet once created. */
+        /**
+         * Store the valuesSet once created.
+         */
         private Set<K> inverseValuesSet;
-        /** Store the entrySet once created. */
+        /**
+         * Store the entrySet once created.
+         */
         private Set<Map.Entry<V, K>> inverseEntrySet;
 
         @Override
@@ -2231,6 +2478,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public String toString() {
             return TreeBidiMap.this.doToString(VALUE);
+        }
+
+        @Override
+        public OrderedMapIterator<V, K> mapIteratorBetween(V fromKey, boolean fromInclusive, V toKey, boolean toInclusive, boolean reverse) {
+            return null;
         }
     }
 

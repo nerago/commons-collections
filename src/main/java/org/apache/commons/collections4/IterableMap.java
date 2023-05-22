@@ -17,6 +17,7 @@
 package org.apache.commons.collections4;
 
 import java.util.Map;
+import java.util.NavigableMap;
 
 /**
  * Defines a map that can be iterated directly without needing to create an entry set.

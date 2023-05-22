@@ -16,26 +16,19 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.AbstractCollection;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * An abstract implementation of a hash-based map which provides numerous points for
@@ -67,32 +60,58 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     protected static final String GETVALUE_INVALID = "getValue() can only be called after next() and before remove()";
     protected static final String SETVALUE_INVALID = "setValue() can only be called after next() and before remove()";
 
-    /** The default capacity to use */
+    /**
+     * The default capacity to use
+     */
     protected static final int DEFAULT_CAPACITY = 16;
-    /** The default threshold to use */
+    /**
+     * The default threshold to use
+     */
     protected static final int DEFAULT_THRESHOLD = 12;
-    /** The default load factor to use */
+    /**
+     * The default load factor to use
+     */
     protected static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    /** The maximum capacity allowed */
+    /**
+     * The maximum capacity allowed
+     */
     protected static final int MAXIMUM_CAPACITY = 1 << 30;
-    /** An object for masking null */
+    /**
+     * An object for masking null
+     */
     protected static final Object NULL = new Object();
 
-    /** Load factor, normally 0.75 */
+    /**
+     * Load factor, normally 0.75
+     */
     transient float loadFactor;
-    /** The size of the map */
+    /**
+     * The size of the map
+     */
     transient int size;
-    /** Map entries */
+    /**
+     * Map entries
+     */
     transient HashEntry<K, V>[] data;
-    /** Size at which to rehash */
+    /**
+     * Size at which to rehash
+     */
     transient int threshold;
-    /** Modification count for iterators */
+    /**
+     * Modification count for iterators
+     */
     transient int modCount;
-    /** Entry set */
+    /**
+     * Entry set
+     */
     transient EntrySet<K, V> entrySet;
-    /** Key set */
+    /**
+     * Key set
+     */
     transient KeySet<K> keySet;
-    /** Values */
+    /**
+     * Values
+     */
     transient Values<V> values;
 
     /**
@@ -104,9 +123,9 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Constructor which performs no validation on the passed in parameters.
      *
-     * @param initialCapacity  the initial capacity, must be a power of two
-     * @param loadFactor  the load factor, must be &gt; 0.0f and generally &lt; 1.0f
-     * @param threshold  the threshold, must be sensible
+     * @param initialCapacity the initial capacity, must be a power of two
+     * @param loadFactor      the load factor, must be &gt; 0.0f and generally &lt; 1.0f
+     * @param threshold       the threshold, must be sensible
      */
     @SuppressWarnings("unchecked")
     protected AbstractHashedMap(final int initialCapacity, final float loadFactor, final int threshold) {
@@ -120,7 +139,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Constructs a new, empty map with the specified initial capacity and
      * default load factor.
      *
-     * @param initialCapacity  the initial capacity
+     * @param initialCapacity the initial capacity
      * @throws IllegalArgumentException if the initial capacity is negative
      */
     protected AbstractHashedMap(final int initialCapacity) {
@@ -131,8 +150,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Constructs a new, empty map with the specified initial capacity and
      * load factor.
      *
-     * @param initialCapacity  the initial capacity
-     * @param loadFactor  the load factor
+     * @param initialCapacity the initial capacity
+     * @param loadFactor      the load factor
      * @throws IllegalArgumentException if the initial capacity is negative
      * @throws IllegalArgumentException if the load factor is less than or equal to zero
      */
@@ -154,7 +173,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Constructor copying elements from another map.
      *
-     * @param map  the map to copy
+     * @param map the map to copy
      * @throws NullPointerException if the map is null
      */
     protected AbstractHashedMap(final Map<? extends K, ? extends V> map) {
@@ -172,7 +191,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Gets the value mapped to the key specified.
      *
-     * @param key  the key
+     * @param key the key
      * @return the mapped value, null if no match
      */
     @Override
@@ -212,7 +231,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Checks whether the map contains the specified key.
      *
-     * @param key  the key to search for
+     * @param key the key to search for
      * @return true if the map contains the key
      */
     @Override
@@ -232,7 +251,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Checks whether the map contains the specified value.
      *
-     * @param value  the value to search for
+     * @param value the value to search for
      * @return true if the map contains the value
      */
     @Override
@@ -264,8 +283,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Puts a key-value mapping into this map.
      *
-     * @param key  the key to add
-     * @param value  the value to add
+     * @param key   the key to add
+     * @param value the value to add
      * @return the value previously mapped to this key, null if none
      */
     @Override
@@ -293,7 +312,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation iterates around the specified map and
      * uses {@link #put(Object, Object)}.
      *
-     * @param map  the map to add
+     * @param map the map to add
      * @throws NullPointerException if the map is null
      */
     @Override
@@ -310,7 +329,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * It is private to allow the constructor to still call it
      * even when putAll is overridden.
      *
-     * @param map  the map to add
+     * @param map the map to add
      * @throws NullPointerException if the map is null
      */
     private void _putAll(final Map<? extends K, ? extends V> map) {
@@ -320,7 +339,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         }
         final int newSize = (int) ((size + mapSize) / loadFactor + 1);
         ensureCapacity(calculateNewCapacity(newSize));
-        for (final Map.Entry<? extends K, ? extends V> entry: map.entrySet()) {
+        for (final Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
@@ -328,7 +347,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Removes the specified mapping from this map.
      *
-     * @param key  the mapping to remove
+     * @param key the mapping to remove
      * @return the value mapped to the removed key, null if key not in map
      */
     @Override
@@ -370,7 +389,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * The reverse conversion can be changed, if required, by overriding the
      * getKey() method in the hash entry.
      *
-     * @param key  the key convert
+     * @param key the key convert
      * @return the converted key
      */
     protected Object convertKey(final Object key) {
@@ -382,16 +401,16 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation uses the additional hashing routine from JDK1.4.
      * Subclasses can override this to return alternate hash codes.
      *
-     * @param key  the key to get a hash code for
+     * @param key the key to get a hash code for
      * @return the hash code
      */
     protected int hash(final Object key) {
         // same as JDK 1.4
         int h = key.hashCode();
         h += ~(h << 9);
-        h ^=  h >>> 14;
-        h +=  h << 4;
-        h ^=  h >>> 10;
+        h ^= h >>> 14;
+        h += h << 4;
+        h ^= h >>> 10;
         return h;
     }
 
@@ -400,8 +419,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation uses the equals method and assumes neither key is null.
      * Subclasses can override this to match differently.
      *
-     * @param key1  the first key to compare passed in from outside
-     * @param key2  the second key extracted from the entry via {@code entry.key}
+     * @param key1 the first key to compare passed in from outside
+     * @param key2 the second key extracted from the entry via {@code entry.key}
      * @return true if equal
      */
     protected boolean isEqualKey(final Object key1, final Object key2) {
@@ -413,8 +432,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation uses the equals method and assumes neither value is null.
      * Subclasses can override this to match differently.
      *
-     * @param value1  the first value to compare passed in from outside
-     * @param value2  the second value extracted from the entry via {@code getValue()}
+     * @param value1 the first value to compare passed in from outside
+     * @param value2 the second value extracted from the entry via {@code getValue()}
      * @return true if equal
      */
     protected boolean isEqualValue(final Object value1, final Object value2) {
@@ -426,8 +445,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation uses the least significant bits of the hashCode.
      * Subclasses can override this to return alternate bucketing.
      *
-     * @param hashCode  the hash code to use
-     * @param dataSize  the size of the data to pick a bucket from
+     * @param hashCode the hash code to use
+     * @param dataSize the size of the data to pick a bucket from
      * @return the bucket index
      */
     protected int hashIndex(final int hashCode, final int dataSize) {
@@ -441,7 +460,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * process accessing the entry. The public methods in this class don't use this
      * method to gain a small performance boost.
      *
-     * @param key  the key
+     * @param key the key
      * @return the entry, null if no match
      */
     protected HashEntry<K, V> getEntry(Object key) {
@@ -463,8 +482,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation calls {@code setValue()} on the entry.
      * Subclasses could override to handle changes to the map.
      *
-     * @param entry  the entry to update
-     * @param newValue  the new value to store
+     * @param entry    the entry to update
+     * @param newValue the new value to store
      */
     protected void updateEntry(final HashEntry<K, V> entry, final V newValue) {
         entry.setValue(newValue);
@@ -476,11 +495,11 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation sets all the data fields on the entry.
      * Subclasses could populate additional entry fields.
      *
-     * @param entry  the entry to update, not null
-     * @param hashIndex  the index in the data array
+     * @param entry     the entry to update, not null
+     * @param hashIndex the index in the data array
      * @param hashCode  the hash code of the key to add
-     * @param key  the key to add
-     * @param value  the value to add
+     * @param key       the key to add
+     * @param value     the value to add
      */
     protected void reuseEntry(final HashEntry<K, V> entry, final int hashIndex, final int hashCode,
                               final K key, final V value) {
@@ -498,10 +517,10 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * It also handles changes to {@code modCount} and {@code size}.
      * Subclasses could override to fully control adds to the map.
      *
-     * @param hashIndex  the index into the data array to store at
+     * @param hashIndex the index into the data array to store at
      * @param hashCode  the hash code of the key to add
-     * @param key  the key to add
-     * @param value  the value to add
+     * @param key       the key to add
+     * @param value     the value to add
      */
     protected void addMapping(final int hashIndex, final int hashCode, final K key, final V value) {
         modCount++;
@@ -518,10 +537,10 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Subclasses can override this to return a different storage class,
      * or implement caching.
      *
-     * @param next  the next entry in sequence
-     * @param hashCode  the hash code to use
-     * @param key  the key to store
-     * @param value  the value to store
+     * @param next     the next entry in sequence
+     * @param hashCode the hash code to use
+     * @param key      the key to store
+     * @param value    the value to store
      * @return the newly created entry
      */
     protected HashEntry<K, V> createEntry(final HashEntry<K, V> next, final int hashCode, final K key, final V value) {
@@ -534,8 +553,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation adds the entry to the data storage table.
      * Subclasses could override to handle changes to the map.
      *
-     * @param entry  the entry to add
-     * @param hashIndex  the index into the data array to store at
+     * @param entry     the entry to add
+     * @param hashIndex the index into the data array to store at
      */
     protected void addEntry(final HashEntry<K, V> entry, final int hashIndex) {
         data[hashIndex] = entry;
@@ -548,8 +567,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * It also handles changes to {@code modCount} and {@code size}.
      * Subclasses could override to fully control removals from the map.
      *
-     * @param entry  the entry to remove
-     * @param hashIndex  the index into the data structure
+     * @param entry     the entry to remove
+     * @param hashIndex the index into the data structure
      * @param previous  the previous entry in the chain
      */
     protected void removeMapping(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
@@ -566,8 +585,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * The size is not updated.
      * Subclasses could override to handle changes to the map.
      *
-     * @param entry  the entry to remove
-     * @param hashIndex  the index into the data structure
+     * @param entry     the entry to remove
+     * @param hashIndex the index into the data structure
      * @param previous  the previous entry in the chain
      */
     protected void removeEntry(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
@@ -584,7 +603,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * This implementation prepares the HashEntry for garbage collection.
      * Subclasses can override this to implement caching (override clear as well).
      *
-     * @param entry  the entry to destroy
+     * @param entry the entry to destroy
      */
     protected void destroyEntry(final HashEntry<K, V> entry) {
         entry.next = null;
@@ -609,7 +628,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Changes the size of the data structure to the capacity proposed.
      *
-     * @param newCapacity  the new capacity of the array (a power of two, less or equal to max)
+     * @param newCapacity the new capacity of the array (a power of two, less or equal to max)
      */
     @SuppressWarnings("unchecked")
     protected void ensureCapacity(final int newCapacity) {
@@ -647,7 +666,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Calculates the new capacity of the map.
      * This implementation normalizes the capacity to a power of two.
      *
-     * @param proposedCapacity  the proposed capacity
+     * @param proposedCapacity the proposed capacity
      * @return the normalized new capacity
      */
     protected int calculateNewCapacity(final int proposedCapacity) {
@@ -669,8 +688,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Calculates the new threshold of the map, where it will be resized.
      * This implementation uses the load factor.
      *
-     * @param newCapacity  the new capacity
-     * @param factor  the load factor
+     * @param newCapacity the new capacity
+     * @param factor      the load factor
      * @return the new resize threshold
      */
     protected int calculateThreshold(final int newCapacity, final float factor) {
@@ -681,7 +700,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Gets the {@code next} field from a {@code HashEntry}.
      * Used in subclasses that have no visibility of the field.
      *
-     * @param entry  the entry to query, must not be null
+     * @param entry the entry to query, must not be null
      * @return the {@code next} field of the entry
      * @throws NullPointerException if the entry is null
      * @since 3.1
@@ -694,7 +713,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Gets the {@code hashCode} field from a {@code HashEntry}.
      * Used in subclasses that have no visibility of the field.
      *
-     * @param entry  the entry to query, must not be null
+     * @param entry the entry to query, must not be null
      * @return the {@code hashCode} field of the entry
      * @throws NullPointerException if the entry is null
      * @since 3.1
@@ -707,7 +726,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Gets the {@code key} field from a {@code HashEntry}.
      * Used in subclasses that have no visibility of the field.
      *
-     * @param entry  the entry to query, must not be null
+     * @param entry the entry to query, must not be null
      * @return the {@code key} field of the entry
      * @throws NullPointerException if the entry is null
      * @since 3.1
@@ -720,7 +739,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Gets the {@code value} field from a {@code HashEntry}.
      * Used in subclasses that have no visibility of the field.
      *
-     * @param entry  the entry to query, must not be null
+     * @param entry the entry to query, must not be null
      * @return the {@code value} field of the entry
      * @throws NullPointerException if the entry is null
      * @since 3.1
@@ -828,7 +847,9 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * @param <V> the type of the values in the map
      */
     protected static class EntrySet<K, V> extends AbstractSet<Map.Entry<K, V>> {
-        /** The parent map */
+        /**
+         * The parent map
+         */
         private final AbstractHashedMap<K, V> parent;
 
         protected EntrySet(final AbstractHashedMap<K, V> parent) {
@@ -926,7 +947,9 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * @param <K> the type of elements maintained by this set
      */
     protected static class KeySet<K> extends AbstractSet<K> {
-        /** The parent map */
+        /**
+         * The parent map
+         */
         private final AbstractHashedMap<K, ?> parent;
 
         protected KeySet(final AbstractHashedMap<K, ?> parent) {
@@ -1013,7 +1036,9 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * @param <V> the type of elements maintained by this collection
      */
     protected static class Values<V> extends AbstractCollection<V> {
-        /** The parent map */
+        /**
+         * The parent map
+         */
         private final AbstractHashedMap<?, V> parent;
 
         protected Values(final AbstractHashedMap<?, V> parent) {
@@ -1071,13 +1096,21 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * @param <V> the type of the values
      */
     protected static class HashEntry<K, V> implements Map.Entry<K, V>, KeyValue<K, V> {
-        /** The next entry in the hash chain */
+        /**
+         * The next entry in the hash chain
+         */
         protected HashEntry<K, V> next;
-        /** The hash code of the key */
+        /**
+         * The hash code of the key
+         */
         protected int hashCode;
-        /** The key */
+        /**
+         * The key
+         */
         protected Object key;
-        /** The value */
+        /**
+         * The value
+         */
         protected Object value;
 
         protected HashEntry(final HashEntry<K, V> next, final int hashCode, final Object key, final V value) {
@@ -1120,14 +1153,14 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
             }
             final Map.Entry<?, ?> other = (Map.Entry<?, ?>) obj;
             return
-                (getKey() == null ? other.getKey() == null : getKey().equals(other.getKey())) &&
-                (getValue() == null ? other.getValue() == null : getValue().equals(other.getValue()));
+                    (getKey() == null ? other.getKey() == null : getKey().equals(other.getKey())) &&
+                            (getValue() == null ? other.getValue() == null : getValue().equals(other.getValue()));
         }
 
         @Override
         public int hashCode() {
             return (getKey() == null ? 0 : getKey().hashCode()) ^
-                   (getValue() == null ? 0 : getValue().hashCode());
+                    (getValue() == null ? 0 : getValue().hashCode());
         }
 
         @Override
@@ -1144,15 +1177,25 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      */
     protected abstract static class HashIterator<K, V> {
 
-        /** The parent map */
+        /**
+         * The parent map
+         */
         private final AbstractHashedMap<K, V> parent;
-        /** The current index into the array of buckets */
+        /**
+         * The current index into the array of buckets
+         */
         private int hashIndex;
-        /** The last returned entry */
+        /**
+         * The last returned entry
+         */
         private HashEntry<K, V> last;
-        /** The next entry */
+        /**
+         * The next entry
+         */
         private HashEntry<K, V> next;
-        /** The modification count expected */
+        /**
+         * The modification count expected
+         */
         private int expectedModCount;
 
         protected HashIterator(final AbstractHashedMap<K, V> parent) {
@@ -1177,7 +1220,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
                 throw new ConcurrentModificationException();
             }
             final HashEntry<K, V> newCurrent = next;
-            if (newCurrent == null)  {
+            if (newCurrent == null) {
                 throw new NoSuchElementException(AbstractHashedMap.NO_NEXT_ENTRY);
             }
             final HashEntry<K, V>[] data = parent.data;
@@ -1234,14 +1277,14 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * on read before this implementation will work. Generally, the read determines
      * what must be serialized here, if anything.
      *
-     * @param out  the output stream
+     * @param out the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
     protected void doWriteObject(final ObjectOutputStream out) throws IOException {
         out.writeFloat(loadFactor);
         out.writeInt(data.length);
         out.writeInt(size);
-        for (final MapIterator<K, V> it = mapIterator(); it.hasNext();) {
+        for (final MapIterator<K, V> it = mapIterator(); it.hasNext(); ) {
             out.writeObject(it.next());
             out.writeObject(it.getValue());
         }
@@ -1263,8 +1306,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      * Subclasses may override if the subclass has a specific field that must be present
      * before {@code put()} or {@code calculateThreshold()} will work correctly.
      *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
+     * @param in the input stream
+     * @throws IOException            if an error occurs while reading from the stream
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
@@ -1313,7 +1356,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     /**
      * Compares this map with another.
      *
-     * @param obj  the object to compare to
+     * @param obj the object to compare to
      * @return true if equal
      */
     @Override
@@ -1383,8 +1426,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
             final K key = it.next();
             final V value = it.getValue();
             buf.append(key == this ? "(this Map)" : key)
-                .append('=')
-                .append(value == this ? "(this Map)" : value);
+                    .append('=')
+                    .append(value == this ? "(this Map)" : value);
 
             hasNext = it.hasNext();
             if (hasNext) {
@@ -1395,4 +1438,194 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         buf.append('}');
         return buf.toString();
     }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue != null)
+                    return oldValue;
+                updateEntry(entry, value);
+                return null;
+            }
+            entry = entry.next;
+        }
+        addMapping(index, hashCode, key, value);
+        return null;
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        HashEntry<K, V> previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V entryValue = entry.getValue();
+                if ((value == null && entryValue == null)
+                        || (value != null && entryValue != null && isEqualValue(value, entryValue))) {
+                    removeMapping(entry, index, previous);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V entryValue = entry.getValue();
+                if ((oldValue == null && entryValue == null)
+                        || (oldValue != null && entryValue != null && isEqualValue(oldValue, entryValue))) {
+                    updateEntry(entry, newValue);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            entry = entry.next;
+        }
+        return false;
+    }
+
+    @Override
+    public V replace(K key, V value) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                updateEntry(entry, value);
+                return oldValue;
+            }
+            entry = entry.next;
+        }
+        return null;
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue != null)
+                    return oldValue;
+                final V newValue = mappingFunction.apply(key);
+                if (newValue != null)
+                    updateEntry(entry, newValue);
+                return newValue;
+            }
+            entry = entry.next;
+        }
+        final V newValue = mappingFunction.apply(key);
+        if (newValue != null)
+            addMapping(index, hashCode, key, newValue);
+        return newValue;
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        HashEntry<K, V> previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue == null)
+                    return null;
+                final V newValue = remappingFunction.apply(key, oldValue);
+                if (newValue == null) {
+                    removeMapping(entry, index, previous);
+                } else {
+                    updateEntry(entry, newValue);
+                }
+                return newValue;
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+        return null;
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        HashEntry<K, V> previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                final V newValue = remappingFunction.apply(key, oldValue);
+                if (newValue == null) {
+                    removeMapping(entry, index, previous);
+                } else {
+                    updateEntry(entry, newValue);
+                }
+                return newValue;
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+        final V newValue = remappingFunction.apply(key, null);
+        if (newValue != null)
+            addMapping(index, hashCode, key, newValue);
+        return newValue;
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        HashEntry<K, V> previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue == null) {
+                    updateEntry(entry, value);
+                    return value;
+                }
+                final V newValue = remappingFunction.apply(oldValue, value);
+                if (newValue == null) {
+                    removeMapping(entry, index, previous);
+                } else {
+                    updateEntry(entry, newValue);
+                }
+                return newValue;
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+        addMapping(index, hashCode, key, value);
+        return value;
+    }
+
 }

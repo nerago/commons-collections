@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4;
 
+import java.util.NavigableMap;
+
 /**
  * Defines a map that maintains order and allows both forward and backward
  * iteration through that order.
