@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -30,8 +26,11 @@ import java.util.NoSuchElementException;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedBidiMap;
+import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link OrderedBidiMap} methods and contracts.
@@ -142,6 +141,69 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         } else {
             assertNull(bidi.previousKey(null));
         }
+    }
+
+    @Test
+    public void testMapIteratorDirectional() {
+        resetEmpty();
+        OrderedMapIterator<K, V> mapIterator1 = getMap().mapIterator();
+        assertFalse(mapIterator1.hasNext());
+        assertFalse(mapIterator1.hasPrevious());
+        assertThrows(NoSuchElementException.class, mapIterator1::next);
+        assertThrows(NoSuchElementException.class, mapIterator1::previous);
+
+        resetFull();
+        Object[] keys = getMap().keySet().toArray(new Object[0]);
+        K key;
+        OrderedMapIterator<K, V> mapIterator2 = getMap().mapIterator();
+        // initial state before first element
+        assertTrue(mapIterator2.hasNext());
+        assertFalse(mapIterator2.hasPrevious());
+        assertThrows(NoSuchElementException.class, mapIterator2::previous);
+        // middle elements
+        for (int i = 0; i < keys.length - 1; ++i) {
+            key = mapIterator2.next();
+            assertEquals(keys[i], key);
+            assertTrue(mapIterator2.hasNext());
+            assertTrue(mapIterator2.hasPrevious());
+        }
+        // final element
+        key = mapIterator2.next();
+        assertEquals(keys[keys.length - 1], key);
+        assertFalse(mapIterator2.hasNext());
+        assertTrue(mapIterator2.hasPrevious());
+        assertThrows(NoSuchElementException.class, mapIterator2::next);
+        // iterator backwards
+        for (int i = keys.length - 1; i > 0; --i) {
+            key = mapIterator2.previous();
+            assertEquals(keys[i], key);
+            assertTrue(mapIterator2.hasNext());
+            assertTrue(mapIterator2.hasPrevious());
+        }
+        // first element
+        key = mapIterator2.previous();
+        assertEquals(keys[0], key);
+        assertTrue(mapIterator2.hasNext());
+        assertFalse(mapIterator2.hasPrevious());
+        assertThrows(NoSuchElementException.class, mapIterator2::previous);
+        // switching direction
+        key = mapIterator2.next();
+        assertEquals(keys[1], key);
+        assertTrue(mapIterator2.hasNext());
+        assertTrue(mapIterator2.hasPrevious());
+        key = mapIterator2.next();
+        assertEquals(keys[2], key);
+        assertTrue(mapIterator2.hasNext());
+        assertTrue(mapIterator2.hasPrevious());
+        key = mapIterator2.previous();
+        assertEquals(keys[1], key);
+        assertTrue(mapIterator2.hasNext());
+        assertTrue(mapIterator2.hasPrevious());
+        key = mapIterator2.previous();
+        assertEquals(keys[0], key);
+        assertTrue(mapIterator2.hasNext());
+        assertFalse(mapIterator2.hasPrevious());
+        assertThrows(NoSuchElementException.class, mapIterator2::previous);
     }
 
     public BulkTest bulkTestOrderedMapIterator() {
