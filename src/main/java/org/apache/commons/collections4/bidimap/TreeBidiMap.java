@@ -1655,6 +1655,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         ViewIterator(final DataElement orderType) {
             this.orderType = orderType;
             expectedModifications = modifications;
+            reset();
+        }
+
+        public void reset() {
             nextNode = leastNode(rootNode[orderType.ordinal()], orderType);
             lastReturnedNode = null;
             previousNode = null;
@@ -1673,7 +1677,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             lastReturnedNode = nextNode;
             previousNode = nextNode;
-            nextNode = nextGreater(nextNode, orderType);
+            nextNode = nextGreater(lastReturnedNode, orderType);
             return lastReturnedNode;
         }
 
@@ -1688,12 +1692,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             if (modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
-            nextNode = lastReturnedNode;
-            if (nextNode == null) {
-                nextNode = nextGreater(previousNode, orderType);
-            }
             lastReturnedNode = previousNode;
-            previousNode = nextSmaller(previousNode, orderType);
+            nextNode = previousNode;
+            previousNode = nextSmaller(lastReturnedNode, orderType);
             return lastReturnedNode;
         }
 
@@ -1706,19 +1707,29 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             doRedBlackDelete(lastReturnedNode);
             expectedModifications++;
-            lastReturnedNode = null;
-            if (nextNode == null) {
-                previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            if (lastReturnedNode == previousNode) {
+                // most recent was navigateNext
+                if (nextNode == null) {
+                    previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+                } else {
+                    previousNode = nextSmaller(nextNode, orderType);
+                }
             } else {
-                previousNode = nextSmaller(nextNode, orderType);
+                // most recent was navigatePrevious
+                if (previousNode == null) {
+                    nextNode = leastNode(rootNode[orderType.ordinal()], orderType);
+                } else {
+                    nextNode = nextGreater(previousNode, orderType);
+                }
             }
+            lastReturnedNode = null;
         }
     }
 
     /**
      * An iterator over the map.
      */
-    class ViewMapIterator extends ViewIterator implements OrderedMapIterator<K, V> {
+    class ViewMapIterator extends ViewIterator implements OrderedMapIterator<K, V>, ResettableIterator<K> {
 
         /**
          * Constructor.
@@ -1764,7 +1775,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map.
      */
-    class InverseViewMapIterator extends ViewIterator implements OrderedMapIterator<V, K> {
+    class InverseViewMapIterator extends ViewIterator implements OrderedMapIterator<V, K>, ResettableIterator<V> {
 
         /**
          * Creates a new TreeBidiMap.InverseViewMapIterator.
@@ -1810,7 +1821,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map entries.
      */
-    class ViewMapEntryIterator extends ViewIterator implements OrderedIterator<Map.Entry<K, V>> {
+    class ViewMapEntryIterator extends ViewIterator implements OrderedIterator<Map.Entry<K, V>>, ResettableIterator<Map.Entry<K, V>> {
 
         /**
          * Constructor.
@@ -1833,7 +1844,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the inverse map entries.
      */
-    class InverseViewMapEntryIterator extends ViewIterator implements OrderedIterator<Map.Entry<V, K>> {
+    class InverseViewMapEntryIterator extends ViewIterator implements OrderedIterator<Map.Entry<V, K>>, ResettableIterator<Map.Entry<V, K>> {
 
         /**
          * Constructor.
