@@ -34,6 +34,7 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
 
 /**
@@ -158,6 +159,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
         if (normalMap instanceof OrderedMap) {
             return ((OrderedMap<K, ?>) normalMap).nextKey(key);
+        } else if (normalMap instanceof NavigableMap) {
+            return ((NavigableMap<K, ?>) normalMap).higherKey(key);
         }
         final SortedMap<K, V> sm = (SortedMap<K, V>) normalMap;
         final Iterator<K> it = sm.tailMap(key).keySet().iterator();
@@ -175,6 +178,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
         if (normalMap instanceof OrderedMap) {
             return ((OrderedMap<K, V>) normalMap).previousKey(key);
+        } else if (normalMap instanceof NavigableMap) {
+            return ((NavigableMap<K, V>) normalMap).lowerKey(key);
         }
         final SortedMap<K, V> sm = (SortedMap<K, V>) normalMap;
         final SortedMap<K, V> hm = sm.headMap(key);
@@ -291,19 +296,17 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
     }
 
-    /**
-     * Inner class MapIterator.
-     */
     protected static class BidiOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
 
         /** The parent map */
         private final AbstractDualBidiMap<K, V> parent;
 
-        /** The iterator being decorated */
-        private ListIterator<Map.Entry<K, V>> iterator;
+        private Iterator<Map.Entry<K, V>> forwardIterator;
+        private Iterator<Map.Entry<K, V>> reverseIterator;
 
         /** The last returned entry */
         private Map.Entry<K, V> last;
+        private boolean forward;
 
         /**
          * Constructor.
@@ -311,34 +314,73 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          */
         protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V> parent) {
             this.parent = parent;
-            iterator = new ArrayList<>(parent.entrySet()).listIterator();
+            reset();
+        }
+
+        @Override
+        public void reset() {
+            forward = true;
+            forwardIterator = parent.entrySet().iterator();
+            reverseIterator = null;
+            last = null;
+        }
+
+        private void makeForward() {
+            NavigableMap<K, V> nav = ((NavigableMap<K, V>) parent.normalMap);
+            if (last != null)
+                forwardIterator = nav.tailMap(last.getKey(), true).entrySet().iterator();
+            else
+                forwardIterator = EmptyIterator.emptyIterator();
+        }
+
+        private void makeReverse() {
+            NavigableMap<K, V> nav = ((NavigableMap<K, V>) parent.normalMap);
+            if (last != null)
+                reverseIterator = nav.headMap(last.getKey(), true).descendingMap().entrySet().iterator();
+            else
+                reverseIterator = EmptyIterator.emptyIterator();
         }
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            if (forwardIterator == null)
+                makeForward();
+            return forwardIterator.hasNext();
         }
 
         @Override
         public K next() {
-            last = iterator.next();
+            if (forwardIterator == null)
+                makeForward();
+            last = forwardIterator.next();
+            forward = true;
+            reverseIterator = null;
             return last.getKey();
         }
 
         @Override
         public boolean hasPrevious() {
-            return iterator.hasPrevious();
+            if (reverseIterator == null)
+                makeReverse();
+            return reverseIterator.hasNext();
         }
 
         @Override
         public K previous() {
-            last = iterator.previous();
+            if (reverseIterator == null)
+                makeReverse();
+            last = reverseIterator.next();
+            forward = false;
+            forwardIterator = null;
             return last.getKey();
         }
 
         @Override
         public void remove() {
-            iterator.remove();
+            if (forward)
+                forwardIterator.remove();
+            else
+                reverseIterator.remove();
             parent.remove(last.getKey());
             last = null;
         }
@@ -368,7 +410,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
                         "Iterator setValue() can only be called after next() and before remove()");
             }
             if (parent.reverseMap.containsKey(value) &&
-                parent.reverseMap.get(value) != last.getKey()) {
+                    parent.reverseMap.get(value) != last.getKey()) {
                 throw new IllegalArgumentException(
                         "Cannot use setValue() when the object being set is already in the map");
             }
@@ -377,12 +419,6 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
             // has been modified (as we did with the put), so we also set the value
             last.setValue(value);
             return oldValue;
-        }
-
-        @Override
-        public void reset() {
-            iterator = new ArrayList<>(parent.entrySet()).listIterator();
-            last = null;
         }
 
         @Override
