@@ -36,6 +36,7 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
