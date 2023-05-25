@@ -144,6 +144,8 @@ public abstract class AbstractCollectionDecorator<E>
         return decorated().size();
     }
 
+    // TODO use iterator for wrapping object help
+
     @Override
     public Object[] toArray() {
         return decorated().toArray();
