@@ -2190,22 +2190,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         confirmed = null;
     }
 
-
-    private <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable, String message) {
-        try {
-            executable.execute();
-        } catch (Throwable throwable) {
-            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
-                return;
-            }
-
-            UnrecoverableExceptions.rethrowIfUnrecoverable(throwable);
-            throw AssertionFailureBuilder.assertionFailure().message(message).reason("Unexpected exception type thrown").cause(throwable).build();
-        }
-
-        throw AssertionFailureBuilder.assertionFailure().message(message).reason("Expected exception to be thrown, but nothing was thrown.").build();
-    }
-
     /**
      * Get the map.
      *

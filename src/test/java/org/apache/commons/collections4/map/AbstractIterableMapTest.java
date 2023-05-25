@@ -16,17 +16,19 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Spliterator;
 
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link IterableMap} methods and contracts.

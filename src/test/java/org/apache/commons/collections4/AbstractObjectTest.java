@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -33,6 +29,9 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link java.lang.Object} methods and contracts.
@@ -332,6 +331,20 @@ public abstract class AbstractObjectTest extends BulkTest {
     private void writeExternalFormToStream(final Serializable o, final OutputStream stream) throws IOException {
         final ObjectOutputStream oStream = new ObjectOutputStream(stream);
         oStream.writeObject(o);
+    }
+
+    protected  <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable, String message) {
+        try {
+            executable.execute();
+        } catch (Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            fail("Unexpected exception type thrown", throwable);
+        }
+
+        fail("Expected exception to be thrown, but nothing was thrown.");
     }
 
 }
