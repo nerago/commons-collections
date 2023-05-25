@@ -125,6 +125,79 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
         assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
     }
 
+    @Test
+    public void testCompareIterators() {
+        if ((getIterationBehaviour() & AbstractCollectionTest.UNORDERED) != 0)
+            return;
+
+        resetEmpty();
+        MapIterator<K, V> mapIterator = getMap().mapIterator();
+        Iterator<K> keyIterator = getMap().keySet().iterator();
+        Spliterator<K> keySpliterator = getMap().keySet().spliterator();
+        Iterator<Map.Entry<K, V>> entryIterator = getMap().entrySet().iterator();
+        Spliterator<Map.Entry<K, V>> entrySpliterator = getMap().entrySet().spliterator();
+        Iterator<V> valueIterator = getMap().values().iterator();
+        Spliterator<V> valueSpliterator = getMap().values().spliterator();
+        assertFalse(mapIterator.hasNext());
+        assertFalse(keyIterator.hasNext());
+        assertFalse(entryIterator.hasNext());
+        assertFalse(valueIterator.hasNext());
+        assertFalse(entrySpliterator.tryAdvance(x -> {
+        }));
+        assertFalse(keySpliterator.tryAdvance(x -> {
+        }));
+        assertFalse(valueSpliterator.tryAdvance(x -> {
+        }));
+
+        resetFull();
+        mapIterator = getMap().mapIterator();
+        keyIterator = getMap().keySet().iterator();
+        keySpliterator = getMap().keySet().spliterator();
+        entryIterator = getMap().entrySet().iterator();
+        entrySpliterator = getMap().entrySet().spliterator();
+        valueIterator = getMap().values().iterator();
+        valueSpliterator = getMap().values().spliterator();
+
+        while (mapIterator.hasNext()) {
+            assertTrue(keyIterator.hasNext());
+            assertTrue(entryIterator.hasNext());
+            assertTrue(valueIterator.hasNext());
+
+            K key = mapIterator.next();
+            V value = mapIterator.getValue();
+            Map.Entry<K, V> entry = entryIterator.next();
+            Map.Entry<K, V> entry2 = advanceSpliterator(entrySpliterator);
+            assertEquals(key, mapIterator.getKey());
+            assertEquals(key, keyIterator.next());
+            assertEquals(key, entry.getKey());
+            assertEquals(key, entry2.getKey());
+            assertEquals(key, advanceSpliterator(keySpliterator));
+            assertEquals(value, valueIterator.next());
+            assertEquals(value, entry.getValue());
+            assertEquals(value, entry2.getValue());
+            assertEquals(value, advanceSpliterator(valueSpliterator));
+        }
+        assertFalse(keyIterator.hasNext());
+        assertFalse(entryIterator.hasNext());
+        assertFalse(valueIterator.hasNext());
+        cannotAdvanceSpliterator(entrySpliterator);
+        cannotAdvanceSpliterator(keySpliterator);
+        cannotAdvanceSpliterator(valueSpliterator);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T advanceSpliterator(Spliterator<T> spliterator) {
+        final Object[] result = new Object[1];
+        assertTrue(spliterator.tryAdvance(x -> result[0] = x));
+        return (T) result[0];
+    }
+
+    private <T> void cannotAdvanceSpliterator(Spliterator<T> spliterator) {
+        final Object[] result = new Object[1];
+        assertFalse(spliterator.tryAdvance(x -> result[0] = x));
+        assertNull(result[0]);
+    }
+
     public BulkTest bulkTestMapIterator() {
         return new InnerTestMapIterator();
     }
