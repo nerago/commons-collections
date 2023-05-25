@@ -44,17 +44,17 @@ import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
  * @see DualTreeBidiMap
  * @since 3.0
  */
-public abstract class AbstractDualBidiMap<K, V, N extends Map<K, V>, R extends Map<V, K>> implements BidiMap<K, V> {
+public abstract class AbstractDualBidiMap<K, V, NormalMap extends Map<K, V>, ReverseMap extends Map<V, K>> implements BidiMap<K, V> {
 
     /**
      * Normal delegate map.
      */
-    transient N normalMap;
+    transient NormalMap normalMap;
 
     /**
      * Reverse delegate map.
      */
-    transient R reverseMap;
+    transient ReverseMap reverseMap;
 
     /**
      * Inverse view of this map.
@@ -100,7 +100,7 @@ public abstract class AbstractDualBidiMap<K, V, N extends Map<K, V>, R extends M
      * @param reverseMap  the reverse direction map
      * @since 3.1
      */
-    protected AbstractDualBidiMap(final N normalMap, final R reverseMap) {
+    protected AbstractDualBidiMap(final NormalMap normalMap, final ReverseMap reverseMap) {
         this.normalMap = normalMap;
         this.reverseMap = reverseMap;
     }
@@ -113,7 +113,7 @@ public abstract class AbstractDualBidiMap<K, V, N extends Map<K, V>, R extends M
      * @param reverseMap  the reverse direction map
      * @param inverseBidiMap  the inverse BidiMap
      */
-    protected AbstractDualBidiMap(final N normalMap, final R reverseMap,
+    protected AbstractDualBidiMap(final NormalMap normalMap, final ReverseMap reverseMap,
                                   final BidiMap<V, K> inverseBidiMap) {
         this.normalMap = normalMap;
         this.reverseMap = reverseMap;
@@ -128,7 +128,7 @@ public abstract class AbstractDualBidiMap<K, V, N extends Map<K, V>, R extends M
      * @param inverseMap  this map, which is the inverse in the new map
      * @return the bidi map
      */
-    protected abstract BidiMap<V, K> createBidiMap(R normalMap, N reverseMap, BidiMap<K, V> inverseMap);
+    protected abstract BidiMap<V, K> createBidiMap(ReverseMap normalMap, NormalMap reverseMap, BidiMap<K, V> inverseMap);
 
     // Map delegation
 
@@ -339,7 +339,7 @@ public abstract class AbstractDualBidiMap<K, V, N extends Map<K, V>, R extends M
         private static final long serialVersionUID = 4621510560119690639L;
 
         /** The parent map */
-        protected final AbstractDualBidiMap<K, V, ?, ?> parent;
+        protected transient final AbstractDualBidiMap<K, V, ?, ?> parent;
 
         /**
          * Constructor.

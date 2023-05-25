@@ -21,7 +21,7 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
 /**
  * JUnit tests.
  */
-public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
+public class DualHashBidiMapTest extends AbstractBidiMapTest<String, String> {
 
     public DualHashBidiMapTest() {
         super(DualHashBidiMapTest.class.getSimpleName());
@@ -31,7 +31,7 @@ public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public DualHashBidiMap<K, V> makeObject() {
+    public DualHashBidiMap<String, String> makeObject() {
         return new DualHashBidiMap<>();
     }
 

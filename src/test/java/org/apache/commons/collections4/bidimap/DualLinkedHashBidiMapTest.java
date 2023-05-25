@@ -19,7 +19,7 @@ package org.apache.commons.collections4.bidimap;
 /**
  * JUnit tests.
  */
-public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
+public class DualLinkedHashBidiMapTest extends AbstractBidiMapTest<String, String> {
 
     public DualLinkedHashBidiMapTest() {
         super(DualLinkedHashBidiMapTest.class.getSimpleName());
@@ -29,7 +29,7 @@ public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public DualLinkedHashBidiMap<K, V> makeObject() {
+    public DualLinkedHashBidiMap<String, String> makeObject() {
         return new DualLinkedHashBidiMap<>();
     }
 

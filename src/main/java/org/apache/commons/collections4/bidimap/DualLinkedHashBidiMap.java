@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ import org.apache.commons.collections4.BidiMap;
  *
  * @since 4.0
  */
-public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> implements Serializable {
+public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V, LinkedHashMap<K,V>, LinkedHashMap<V,K>> implements Serializable {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361810L;
@@ -67,7 +68,7 @@ public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> imple
      * @param reverseMap     the reverse direction map
      * @param inverseBidiMap the inverse BidiMap
      */
-    protected DualLinkedHashBidiMap(final Map<K, V> normalMap, final Map<V, K> reverseMap,
+    protected DualLinkedHashBidiMap(final LinkedHashMap<K, V> normalMap, final LinkedHashMap<V, K> reverseMap,
                                     final BidiMap<V, K> inverseBidiMap) {
         super(normalMap, reverseMap, inverseBidiMap);
     }
@@ -81,7 +82,7 @@ public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> imple
      * @return new bidi map
      */
     @Override
-    protected BidiMap<V, K> createBidiMap(final Map<V, K> normalMap, final Map<K, V> reverseMap,
+    protected BidiMap<V, K> createBidiMap(final LinkedHashMap<V, K> normalMap, final LinkedHashMap<K, V> reverseMap,
             final BidiMap<K, V> inverseBidiMap) {
         return new DualLinkedHashBidiMap<>(normalMap, reverseMap, inverseBidiMap);
     }

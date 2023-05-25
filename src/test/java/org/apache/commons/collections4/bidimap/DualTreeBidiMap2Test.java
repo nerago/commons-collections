@@ -40,28 +40,28 @@ import org.junit.jupiter.api.Test;
  * JUnit tests.
  */
 @SuppressWarnings("boxing")
-public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
+public class DualTreeBidiMap2Test extends AbstractSortedBidiMapTest<String, String> {
 
     public DualTreeBidiMap2Test() {
         super(DualTreeBidiMap2Test.class.getSimpleName());
     }
 
     @Override
-    public DualTreeBidiMap<K, V> makeObject() {
-        return new DualTreeBidiMap<>(
-                new ReverseComparator<>(ComparableComparator.<K>comparableComparator()),
-                new ReverseComparator<>(ComparableComparator.<V>comparableComparator()));
+    public DualTreeBidiMap<String, String> makeObject() {
+        return new DualTreeBidiMap<String, String>(
+                new ReverseComparator<>(ComparableComparator.comparableComparator()),
+                new ReverseComparator<>(ComparableComparator.comparableComparator()));
     }
 
     @Override
-    public TreeMap<K, V> makeConfirmedMap() {
-        return new TreeMap<>(new ReverseComparator<>(ComparableComparator.<K>comparableComparator()));
+    public TreeMap<String, String> makeConfirmedMap() {
+        return new TreeMap<>(new ReverseComparator<>(ComparableComparator.comparableComparator()));
     }
 
     @Test
     public void testComparator() {
         resetEmpty();
-        final SortedBidiMap<K, V> bidi = (SortedBidiMap<K, V>) map;
+        final SortedBidiMap<String, String> bidi = (SortedBidiMap<String, String>) map;
         assertNotNull(bidi.comparator());
         assertTrue(bidi.comparator() instanceof ReverseComparator);
     }
@@ -127,16 +127,16 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
 
     @Test
     public void testSortOrder() throws Exception {
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<String, String> sm = makeFullMap();
 
         // Sort by the comparator used in the makeEmptyBidiMap() method
-        List<K> newSortedKeys = getAsList(getSampleKeys());
-        newSortedKeys.sort(new ReverseComparator<>(ComparableComparator.<K>comparableComparator()));
+        List<String> newSortedKeys = getAsList(getSampleKeys());
+        newSortedKeys.sort(new ReverseComparator<>(ComparableComparator.comparableComparator()));
         newSortedKeys = Collections.unmodifiableList(newSortedKeys);
 
-        final Iterator<K> mapIter = sm.keySet().iterator();
-        for (final K expectedKey : newSortedKeys) {
-            final K mapKey = mapIter.next();
+        final Iterator<String> mapIter = sm.keySet().iterator();
+        for (final String expectedKey : newSortedKeys) {
+            final String mapKey = mapIter.next();
             assertNotNull(expectedKey, "key in sorted list may not be null");
             assertNotNull(mapKey, "key in map may not be null");
             assertEquals(expectedKey, mapKey, "key from sorted list and map must be equal");

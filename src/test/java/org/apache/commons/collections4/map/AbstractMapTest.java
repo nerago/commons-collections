@@ -1630,6 +1630,12 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
     }
 
+    @Test
+    public void TestNickNotSureEntrySetAdd() {
+        resetFull();
+        getMap().entrySet().add(new DefaultMapEntry<>((K)"zzzzzzz", (V)"qqqqqqq"));
+    }
+
     /**
      * Utility methods to create an array of Map.Entry objects
      * out of the given key and value arrays.<P>

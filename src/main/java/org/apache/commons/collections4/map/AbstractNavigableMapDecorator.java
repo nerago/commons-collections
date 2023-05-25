@@ -16,11 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.bidimap.TreeBidiMap;
-import org.apache.commons.collections4.iterators.ListIteratorWrapper;
 
 import java.util.*;
 
@@ -62,7 +58,7 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
         super(map);
     }
 
-    protected abstract NavigableMap<K, V> createWrappedMap(NavigableMap<K, V> other);
+    protected abstract AbstractNavigableMapDecorator<K, V> createWrappedMap(NavigableMap<K, V> other);
 
     /**
      * Gets the map being decorated.
@@ -93,6 +89,11 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
     }
 
     @Override
+    public K previousKey(K key) {
+        return decorated().lowerKey(key);
+    }
+
+    @Override
     public Entry<K, V> floorEntry(K key) {
         return decorated().floorEntry(key);
     }
@@ -119,6 +120,11 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
 
     @Override
     public K higherKey(K key) {
+        return decorated().higherKey(key);
+    }
+
+    @Override
+    public K nextKey(K key) {
         return decorated().higherKey(key);
     }
 
@@ -215,98 +221,4 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
         return createWrappedMap(decorated().tailMap(fromKey, true));
     }
 
-    /**
-     * OrderedMapIterator implementation.
-     *
-     * @param <K>  the key type
-     * @param <V>  the value type
-     */
-    protected static class NavigableMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
-        private final AbstractNavigableMapDecorator<K, V> map;
-        private Map.Entry<K, V> lastReturnedNode;
-        /** The next node to be returned by the iterator. */
-        private Map.Entry<K, V> nextNode;
-        /** The previous node in the sequence returned by the iterator. */
-        private Map.Entry<K, V> previousNode;
-
-        /**
-         * Create a new AbstractNavigableMapDecorator.NavigableMapIterator.
-         * @param map the map to iterate
-         */
-        protected NavigableMapIterator(final AbstractNavigableMapDecorator<K,V> map) {
-            this.map = map;
-        }
-
-        @Override
-        public synchronized void reset() {
-            previousNode = null;
-            lastReturnedNode = null;
-            nextNode = map.firstEntry();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return nextNode != null;
-        }
-
-        @Override
-        public K next() {
-            Entry<K, V> current = nextNode;
-            if (current == null)
-                throw new NoSuchElementException();
-            K key = current.getKey();
-            previousNode = current;
-            lastReturnedNode = current;
-            nextNode = map.higherEntry(key);
-            return key;
-        }
-
-        @Override
-        public boolean hasPrevious() {
-            return previousNode != null;
-        }
-
-        @Override
-        public K previous() {
-            Entry<K, V> current = previousNode;
-            if (current == null)
-                throw new NoSuchElementException();
-            K key = current.getKey();
-            previousNode = map.lowerEntry(key);
-            lastReturnedNode = current;
-            nextNode = current;
-            return key;
-        }
-
-        protected synchronized Map.Entry<K, V> current() {
-            if (lastReturnedNode == null) {
-                throw new IllegalStateException();
-            }
-            return lastReturnedNode;
-        }
-
-        @Override
-        public K getKey() {
-            return current().getKey();
-        }
-
-        @Override
-        public V getValue() {
-            return current().getValue();
-        }
-
-        @Override
-        public void remove() {
-            Entry<K, V> current = current();
-            map.remove(current.getKey());
-            lastReturnedNode = null;
-        }
-
-        @Override
-        public V setValue(V value) {
-            Entry<K, V> current = current();
-            current.setValue(value);
-            return map.put(current.getKey(), current.getValue());
-        }
-    }
 }
