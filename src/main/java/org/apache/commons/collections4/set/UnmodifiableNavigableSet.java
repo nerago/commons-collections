@@ -70,6 +70,11 @@ public final class UnmodifiableNavigableSet<E>
     }
 
     @Override
+    protected NavigableSet<E> wrapSet(NavigableSet<E> sub) {
+        return UnmodifiableNavigableSet.unmodifiableNavigableSet(sub);
+    }
+
+    @Override
     public Iterator<E> iterator() {
         return UnmodifiableIterator.unmodifiableIterator(decorated().iterator());
     }
@@ -128,53 +133,9 @@ public final class UnmodifiableNavigableSet<E>
         throw new UnsupportedOperationException();
     }
 
-    // SortedSet
-    @Override
-    public SortedSet<E> subSet(final E fromElement, final E toElement) {
-        final SortedSet<E> sub = decorated().subSet(fromElement, toElement);
-        return UnmodifiableSortedSet.unmodifiableSortedSet(sub);
-    }
-
-    @Override
-    public SortedSet<E> headSet(final E toElement) {
-        final SortedSet<E> head = decorated().headSet(toElement);
-        return UnmodifiableSortedSet.unmodifiableSortedSet(head);
-    }
-
-    @Override
-    public SortedSet<E> tailSet(final E fromElement) {
-        final SortedSet<E> tail = decorated().tailSet(fromElement);
-        return UnmodifiableSortedSet.unmodifiableSortedSet(tail);
-    }
-
-    // NavigableSet
-    @Override
-    public NavigableSet<E> descendingSet() {
-        return unmodifiableNavigableSet(decorated().descendingSet());
-    }
-
     @Override
     public Iterator<E> descendingIterator() {
         return UnmodifiableIterator.unmodifiableIterator(decorated().descendingIterator());
-    }
-
-    @Override
-    public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement,
-            final boolean toInclusive) {
-        final NavigableSet<E> sub = decorated().subSet(fromElement, fromInclusive, toElement, toInclusive);
-        return unmodifiableNavigableSet(sub);
-    }
-
-    @Override
-    public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
-        final NavigableSet<E> head = decorated().headSet(toElement, inclusive);
-        return unmodifiableNavigableSet(head);
-    }
-
-    @Override
-    public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
-        final NavigableSet<E> tail = decorated().tailSet(fromElement, inclusive);
-        return unmodifiableNavigableSet(tail);
     }
 
     /**

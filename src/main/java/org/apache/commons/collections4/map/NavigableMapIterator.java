@@ -2,7 +2,11 @@ package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.keyvalue.AbstractKeyValue;
+import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NoSuchElementException;
@@ -104,5 +108,18 @@ public class NavigableMapIterator<K, V> implements OrderedMapIterator<K, V>, Res
         Map.Entry<K, V> current = current();
         current.setValue(value);
         return map.put(current.getKey(), current.getValue());
+    }
+
+    protected void setEntryValue(V value) {
+        if (lastReturnedNode instanceof AbstractMap.SimpleImmutableEntry || lastReturnedNode instanceof AbstractKeyValue) {
+            UnmodifiableMapEntry<K, V> replace = new UnmodifiableMapEntry<>(lastReturnedNode.getKey(), value);
+            if (nextNode == lastReturnedNode)
+                nextNode = replace;
+            if (previousNode == lastReturnedNode)
+                previousNode = replace;
+            lastReturnedNode = replace;
+        } else {
+            lastReturnedNode.setValue(value);
+        }
     }
 }

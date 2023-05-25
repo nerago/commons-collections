@@ -18,6 +18,7 @@ package org.apache.commons.collections4.set;
 
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.SortedSet;
 
 /**
  * Decorates another {@code NavigableSet} to provide additional behavior.
@@ -61,6 +62,7 @@ public abstract class AbstractNavigableSetDecorator<E>
         return (NavigableSet<E>) super.decorated();
     }
 
+    protected abstract NavigableSet<E> wrapSet(NavigableSet<E> sub);
 
     @Override
     public E lower(final E e) {
@@ -94,7 +96,7 @@ public abstract class AbstractNavigableSetDecorator<E>
 
     @Override
     public NavigableSet<E> descendingSet() {
-        return decorated().descendingSet();
+        return wrapSet(decorated().descendingSet());
     }
 
     @Override
@@ -105,17 +107,31 @@ public abstract class AbstractNavigableSetDecorator<E>
     @Override
     public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement,
             final boolean toInclusive) {
-        return decorated().subSet(fromElement, fromInclusive, toElement, toInclusive);
+        return wrapSet(decorated().subSet(fromElement, fromInclusive, toElement, toInclusive));
+    }
+
+    @Override
+    public NavigableSet<E> subSet(E fromElement, E toElement) {
+        return wrapSet(decorated().subSet(fromElement, true, toElement, false));
     }
 
     @Override
     public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
-        return decorated().headSet(toElement, inclusive);
+        return wrapSet(decorated().headSet(toElement, inclusive));
     }
 
     @Override
     public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
-        return decorated().tailSet(fromElement, inclusive);
+        return wrapSet(decorated().tailSet(fromElement, inclusive));
     }
 
+    @Override
+    public NavigableSet<E> headSet(final E toElement) {
+        return wrapSet(decorated().headSet(toElement, false));
+    }
+
+    @Override
+    public NavigableSet<E> tailSet(final E fromElement) {
+        return wrapSet(decorated().tailSet(fromElement, true));
+    }
 }

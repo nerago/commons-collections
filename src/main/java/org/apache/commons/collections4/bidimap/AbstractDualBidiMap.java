@@ -171,12 +171,14 @@ public abstract class AbstractDualBidiMap<K, V, NormalMap extends Map<K, V>, Rev
 
     @Override
     public V put(final K key, final V value) {
+        boolean hadKey = normalMap.containsKey(key);
         final V oldVal = normalMap.put(key, value);
-        if (oldVal != null || normalMap.containsKey(key)) {
+        if (hadKey) {
             reverseMap.remove(oldVal);
         }
+        boolean hadValue = reverseMap.containsKey(value);
         final K oldKey = reverseMap.put(value, key);
-        if (oldKey != null || reverseMap.containsKey(value)) {
+        if (oldKey != null || hadValue) {
             normalMap.remove(oldKey);
         }
         return oldVal;
@@ -446,6 +448,10 @@ public abstract class AbstractDualBidiMap<K, V, NormalMap extends Map<K, V>, Rev
         @SuppressWarnings("unchecked")
         protected KeySet(final AbstractDualBidiMap<K, V, ?, ?> parent) {
             super(parent.normalMap.keySet(), parent);
+        }
+
+        protected KeySet(final Set<K> keySet, final AbstractDualBidiMap<K, V, ?, ?> parent) {
+            super(keySet, parent);
         }
 
         @Override

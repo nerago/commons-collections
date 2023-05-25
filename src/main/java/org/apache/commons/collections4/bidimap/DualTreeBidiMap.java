@@ -23,13 +23,11 @@ import java.io.Serializable;
 import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
 import org.apache.commons.collections4.map.NavigableMapIterator;
+import org.apache.commons.collections4.set.AbstractNavigableSetDecorator;
 
 /**
  * Implementation of {@link BidiMap} that uses two {@link TreeMap} instances.
@@ -222,7 +220,7 @@ public class DualTreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return new BidiOrderedMapIterator<>(this);
+        return new BidiNavigableMapIterator<>(this);
     }
 
     @Override
@@ -230,18 +228,15 @@ public class DualTreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return (SortedBidiMap<V, K>) super.inverseBidiMap();
     }
 
-    public SortedBidiMap<V, K> inverseSortedBidiMap() {
-        return inverseBidiMap();
-    }
-
-    public OrderedBidiMap<V, K> inverseOrderedBidiMap() {
-        return inverseBidiMap();
-    }
-
     @Override
     public NavigableMap<K, V> descendingMap() {
         final NavigableMap<K, V> sub = normalMap.descendingMap();
         return new ViewMap<>(this, sub);
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return super.keySet();
     }
 
     @Override
@@ -318,6 +313,11 @@ public class DualTreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
+        protected NavigableSet<K> createWrappedKeySet(NavigableSet<K> other) {
+            return new BidiNavigableSet<>(other, decorated());
+        }
+
+        @Override
         public boolean containsValue(final Object value) {
             // override as default implementation uses reverseMap
             return decorated().normalMap.containsValue(value);
@@ -334,21 +334,112 @@ public class DualTreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public OrderedMapIterator<K, V> mapIterator() {
-            return new BidiOrderedMapIterator<>(decorated());
-        }
-
-        @Override
-        public NavigableSet<K> navigableKeySet() {
-            return super.navigableKeySet();
-        }
-
-        @Override
-        public NavigableSet<K> descendingKeySet() {
-            return super.descendingKeySet();
+            return new BidiNavigableMapIterator<>(decorated());
         }
     }
 
-    protected static class BidiOrderedMapIterator<K, V> extends NavigableMapIterator<K,V> {
+    protected static class BidiNavigableSet<K, V> extends AbstractDualBidiMap.KeySet<K, V> implements NavigableSet<K> {
+        protected BidiNavigableSet(NavigableSet<K> keySet, AbstractDualBidiMap<K, V, ?, ?> parent) {
+            super(keySet, parent);
+        }
+
+        @Override
+        protected NavigableSet<K> decorated() {
+            return (NavigableSet<K>) super.decorated();
+        }
+
+        protected NavigableSet<K> wrapSet(NavigableSet<K> sub) {
+            return new BidiNavigableSet<>(sub, parent);
+        }
+
+        @Override
+        public K first() {
+            return decorated().first();
+        }
+
+        @Override
+        public K last() {
+            return decorated().last();
+        }
+
+        @Override
+        public K lower(final K e) {
+            return decorated().lower(e);
+        }
+
+        @Override
+        public K floor(final K e) {
+            return decorated().floor(e);
+        }
+
+        @Override
+        public K ceiling(final K e) {
+            return decorated().ceiling(e);
+        }
+
+        @Override
+        public K higher(final K e) {
+            return decorated().higher(e);
+        }
+
+        @Override
+        public K pollFirst() {
+            return decorated().pollFirst();
+        }
+
+        @Override
+        public K pollLast() {
+            return decorated().pollLast();
+        }
+
+        @Override
+        public NavigableSet<K> descendingSet() {
+            return wrapSet(decorated().descendingSet());
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return decorated().descendingIterator();
+        }
+
+        @Override
+        public NavigableSet<K> subSet(final K fromKlement, final boolean fromInclusive, final K toKlement,
+                                      final boolean toInclusive) {
+            return wrapSet(decorated().subSet(fromKlement, fromInclusive, toKlement, toInclusive));
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return decorated().comparator();
+        }
+
+        @Override
+        public NavigableSet<K> subSet(K fromKlement, K toKlement) {
+            return wrapSet(decorated().subSet(fromKlement, true, toKlement, false));
+        }
+
+        @Override
+        public NavigableSet<K> headSet(final K toKlement, final boolean inclusive) {
+            return wrapSet(decorated().headSet(toKlement, inclusive));
+        }
+
+        @Override
+        public NavigableSet<K> tailSet(final K fromKlement, final boolean inclusive) {
+            return wrapSet(decorated().tailSet(fromKlement, inclusive));
+        }
+
+        @Override
+        public NavigableSet<K> headSet(final K toKlement) {
+            return wrapSet(decorated().headSet(toKlement, false));
+        }
+
+        @Override
+        public NavigableSet<K> tailSet(final K fromKlement) {
+            return wrapSet(decorated().tailSet(fromKlement, true));
+        }
+    }
+
+    protected static class BidiNavigableMapIterator<K, V> extends NavigableMapIterator<K,V> {
 
         /** The parent map */
         private final AbstractDualBidiMap<K, V, ?, ?> parent;
@@ -357,7 +448,7 @@ public class DualTreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Constructor.
          * @param parent  the parent map
          */
-        protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V, NavigableMap<K,V>, NavigableMap<V,K>> parent) {
+        protected BidiNavigableMapIterator(final AbstractDualBidiMap<K, V, NavigableMap<K,V>, NavigableMap<V,K>> parent) {
             super(parent.normalMap);
             this.parent = parent;
             reset();
@@ -382,9 +473,7 @@ public class DualTreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                         "Cannot use setValue() when the object being set is already in the map");
             }
             final V oldValue = parent.put(lastReturnedNode.getKey(), value);
-            // Map.Entry specifies that the behavior is undefined when the backing map
-            // has been modified (as we did with the put), so we also set the value
-            lastReturnedNode.setValue(value);
+            setEntryValue(value);
             return oldValue;
         }
 
