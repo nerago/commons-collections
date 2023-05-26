@@ -1812,6 +1812,64 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             verify();
         }
 
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntrySetIteratorEntrySetValueMixedPutsClonedKeys() {
+            K key1 = getSampleKeys()[0];
+            V newValue1 = getNewSampleValues()[0];
+            V newValue2 = getNewSampleValues().length ==1 ? getNewSampleValues()[0] : getNewSampleValues()[1];
+            resetFull();
+            final Iterator<Map.Entry<K, V>> it = TestMapEntrySet.this.getCollection().iterator();
+            final Map.Entry<K, V> entry1 = getEntry(it, key1);
+            Iterator<Map.Entry<K, V>> itConfirmed = TestMapEntrySet.this.getConfirmed().iterator();
+            final Map.Entry<K, V> entryConfirmed1 = getEntry(itConfirmed, key1);
+
+            if (isSetValueSupported()) {
+                key1 = (K) new String((String) key1);
+                newValue1 = (V) new String((String) newValue1);
+
+                map.put(key1, newValue1);
+                confirmed.put(key1, newValue1);
+                verify();
+
+                key1 = (K) new String((String) key1);
+                newValue1 = (V) new String((String) newValue1);
+
+                entry1.setValue(newValue1);
+                entryConfirmed1.setValue(newValue1);
+                verify();
+
+                key1 = (K) new String((String) key1);
+                newValue1 = (V) new String((String) newValue1);
+
+                map.put(key1, newValue1);
+                confirmed.put(key1, newValue1);
+                verify();
+
+                key1 = (K) new String((String) key1);
+                newValue1 = (V) new String((String) newValue1);
+
+                entry1.setValue(newValue1);
+                entryConfirmed1.setValue(newValue1);
+                verify();
+
+                key1 = (K) new String((String) key1);
+                newValue2 = (V) new String((String) newValue2);
+
+                map.put(key1, newValue2);
+                confirmed.put(key1, newValue2);
+                verify();
+
+                newValue1 = (V) new String((String) newValue1);
+
+                entry1.setValue(newValue1);
+                entryConfirmed1.setValue(newValue1);
+                verify();
+            } else {
+                assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(getNewSampleValues()[0]));
+            }
+        }
+
         public Map.Entry<K, V> getEntry(final Iterator<Map.Entry<K, V>> itConfirmed, final K key) {
             Map.Entry<K, V> entry = null;
             while (itConfirmed.hasNext()) {

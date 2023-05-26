@@ -396,13 +396,6 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
             getMap().put(key1, newValue1);
             getMap().put(key2, newValue2);
 
-
-            key1 = (K) new String((String)key1);
-            key2 = (K) new String((String)key2);
-            newValue1 = (V) new String((String)newValue1);
-            newValue2 = (V) new String((String)newValue2);
-
-
             entry1.setValue(newValue1);
             entryConfirmed1.setValue(newValue1);
 
@@ -412,14 +405,6 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
             // at this point
             // key1=newValue1, key2=newValue2
             assertThrows(IllegalArgumentException.class, () -> entry2.setValue(getNewSampleValues()[0]));
-
-
-            key1 = (K) new String((String)key1);
-            key2 = (K) new String((String)key2);
-            newValue1 = (V) new String((String)newValue1);
-            newValue2 = (V) new String((String)newValue2);
-
-
 
             assertEquals(newValue1, entry1.getValue());
             assertEquals(newValue2, entry2.getValue());
