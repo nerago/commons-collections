@@ -42,6 +42,7 @@ import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
+import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
@@ -1790,10 +1791,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             verify();
 
             if (!isSetValueSupported()) {
-                try {
-                    entry1.setValue(newValue1);
-                } catch (final UnsupportedOperationException ex) {
-                }
+                assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(newValue1));
                 return;
             }
 
@@ -1882,12 +1880,32 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         @SuppressWarnings("unchecked")
         private K copyKey(K key) {
-            return key != null ? (K) new String((String) key) : null;
+            if (key == null)
+                return null;
+            else if (key instanceof String)
+                return (K) new String((String) key);
+            else {
+                try {
+                    return (K) serializeDeserialize(key);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
 
         @SuppressWarnings("unchecked")
         private V copyValue(V value) {
-            return value != null ? (V) new String((String) value) : null;
+            if (value == null)
+                return null;
+            else if (value instanceof String)
+                return (V) new String((String) value);
+            else {
+                try {
+                    return (V) serializeDeserialize(value);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
 
         public Map.Entry<K, V> getEntry(final Iterator<Map.Entry<K, V>> itConfirmed, final K key) {
