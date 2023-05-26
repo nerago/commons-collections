@@ -164,7 +164,6 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         key = mapIterator2.next();
         assertEquals(key, mapIterator2.getKey());
         assertEquals(keys[0], key);
-        System.out.println(0 + " " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
         // middle elements
@@ -172,14 +171,12 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
             key = mapIterator2.next();
             assertEquals(key, mapIterator2.getKey());
             assertEquals(keys[i], key);
-            System.out.println(i + " " + key);
             assertTrue(mapIterator2.hasNext());
             assertTrue(mapIterator2.hasPrevious());
         }
         // final element
         key = mapIterator2.next();
         assertEquals(keys[keys.length - 1], key);
-        System.out.println((keys.length - 1) + " " + key);
         assertFalse(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
         assertThrows(NoSuchElementException.class, mapIterator2::next);
@@ -188,50 +185,42 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
             key = mapIterator2.previous();
             assertEquals(key, mapIterator2.getKey());
             assertEquals(keys[i], key);
-            System.out.println(i + " " + key);
             assertTrue(mapIterator2.hasNext());
             assertTrue(mapIterator2.hasPrevious());
         }
         // first element
-        key = mapIterator2.previous(); // pos null..0
+        key = mapIterator2.previous();
         assertEquals(key, mapIterator2.getKey());
         assertEquals(keys[0], key);
-        System.out.println("0 " + key);
         assertTrue(mapIterator2.hasNext());
         assertFalse(mapIterator2.hasPrevious());
         assertThrows(NoSuchElementException.class, mapIterator2::previous);
         // switching direction
-        key = mapIterator2.next(); // pos 0..1
+        key = mapIterator2.next();
         assertEquals(key, mapIterator2.getKey());
         assertEquals(keys[0], key);
-        System.out.println("0 " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
-        key = mapIterator2.next(); // pos 1..2
+        key = mapIterator2.next();
         assertEquals(key, mapIterator2.getKey());
         assertEquals(keys[1], key);
-        System.out.println("1 " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
-        key = mapIterator2.next(); // pos 2..3
+        key = mapIterator2.next();
         assertEquals(key, mapIterator2.getKey());
         assertEquals(keys[2], key);
-        System.out.println("2 " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
-        key = mapIterator2.previous(); // pos 1..2
+        key = mapIterator2.previous();
         assertEquals(keys[2], key);
-        System.out.println("2 " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
         key = mapIterator2.next();
         assertEquals(keys[2], key);
-        System.out.println("2 " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
         key = mapIterator2.next();
         assertEquals(keys[3], key);
-        System.out.println("3 " + key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
     }
