@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.KeyValue;
@@ -43,7 +44,7 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     public OrderedMap<K, V> makeObject() {
         // need an empty singleton map, but that's not possible
         // use a ridiculous fake instead to make the tests pass
-        return UnmodifiableOrderedMap.unmodifiableOrderedMap(ListOrderedMap.listOrderedMap(new HashMap<K, V>()));
+        return FixedSizeSortedMap.fixedSizeSortedMap(new TreeMap<>());
     }
 
     @Override
