@@ -20,13 +20,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedBidiMap;
@@ -368,10 +362,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
                         "Iterator setValue() can only be called after next() and before remove()");
             }
             final K key = last.getKey();
-            if (key != null &&  (key == parent.reverseMap.get(value)) != (key.equals(parent.reverseMap.get(value)))    )
-                throw new IllegalStateException("in the equals case");
             if (parent.reverseMap.containsKey(value) &&
-                parent.reverseMap.get(value) != key) {
+                    !Objects.equals(parent.reverseMap.get(value), key)) {
                 throw new IllegalArgumentException(
                         "Cannot use setValue() when the object being set is already in the map");
             }
