@@ -828,6 +828,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             AbstractMultiValuedMap.this.clear();
         }
 
+        @Override
+        public void putAll(Map<? extends K, ? extends Collection<V>> m) {
+            throw new UnsupportedOperationException();
+        }
+
         class AsMapEntrySet extends AbstractSet<Map.Entry<K, Collection<V>>> {
 
             @Override

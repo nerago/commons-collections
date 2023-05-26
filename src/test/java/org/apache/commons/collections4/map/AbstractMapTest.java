@@ -39,7 +39,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.collections4.AbstractObjectTest;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
@@ -47,6 +46,7 @@ import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
  * Abstract test class for {@link java.util.Map} methods and contracts.
@@ -231,6 +231,17 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     public boolean isRemoveSupported() {
         return true;
+    }
+    /**
+     * Returns true if the maps produced by
+     * {@link #makeObject()} and {@link #makeFullMap()}
+     * support the {@code remove} operation on values collection.
+     * <p>
+     * Default implementation returns isRemoveSupported.
+     * Override if your collection class does not support removal operations.
+     */
+    public boolean isSpecificValueRemoveSupported() {
+        return isRemoveSupported();
     }
 
     /**
@@ -941,7 +952,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             getMap().putAll(new HashMap<K, V>());
             assertEquals(0, getMap().size());
             verify();
-            // TODO empty not really supported on singleton
 
             // check putAll OK adding empty map to non-empty map
             resetFull();
@@ -1825,42 +1835,42 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             final Map.Entry<K, V> entryConfirmed1 = getEntry(itConfirmed, key1);
 
             if (isSetValueSupported()) {
-                key1 = (K) new String((String) key1);
-                newValue1 = (V) new String((String) newValue1);
+                key1 = copyKey(key1);
+                newValue1 = copyValue(newValue1);
 
                 map.put(key1, newValue1);
                 confirmed.put(key1, newValue1);
                 verify();
 
-                key1 = (K) new String((String) key1);
-                newValue1 = (V) new String((String) newValue1);
+                key1 = copyKey(key1);
+                newValue1 = copyValue(newValue1);
 
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
 
-                key1 = (K) new String((String) key1);
-                newValue1 = (V) new String((String) newValue1);
+                key1 = copyKey(key1);
+                newValue1 = copyValue(newValue1);
 
                 map.put(key1, newValue1);
                 confirmed.put(key1, newValue1);
                 verify();
 
-                key1 = (K) new String((String) key1);
-                newValue1 = (V) new String((String) newValue1);
+                key1 = copyKey(key1);
+                newValue1 = copyValue( newValue1);
 
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
 
-                key1 = (K) new String((String) key1);
-                newValue2 = (V) new String((String) newValue2);
+                key1 = copyKey(key1);
+                newValue2 = copyValue(newValue2);
 
                 map.put(key1, newValue2);
                 confirmed.put(key1, newValue2);
                 verify();
 
-                newValue1 = (V) new String((String) newValue1);
+                newValue1 = copyValue(newValue1);
 
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
@@ -1868,6 +1878,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             } else {
                 assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(getNewSampleValues()[0]));
             }
+        }
+
+        @SuppressWarnings("unchecked")
+        private K copyKey(K key) {
+            return key != null ? (K) new String((String) key) : null;
+        }
+
+        @SuppressWarnings("unchecked")
+        private V copyValue(V value) {
+            return value != null ? (V) new String((String) value) : null;
         }
 
         public Map.Entry<K, V> getEntry(final Iterator<Map.Entry<K, V>> itConfirmed, final K key) {
@@ -2031,6 +2051,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         @Override
         public boolean isRemoveSupported() {
             return AbstractMapTest.this.isRemoveSupported();
+        }
+
+        @Override
+        public boolean isRemoveElementSupported() {
+            return AbstractMapTest.this.isSpecificValueRemoveSupported();
         }
 
         @Override

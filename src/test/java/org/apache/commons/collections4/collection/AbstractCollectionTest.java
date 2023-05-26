@@ -234,6 +234,17 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     /**
+     *  Returns true if the collections produced by
+     *  {@link #makeObject()} and {@link #makeFullCollection()}
+     *  support the {@code remove}.
+     *  Default implementation returns isRemoveSupported.  Override if your collection
+     *  class does not support removal operations.
+     */
+    public boolean isRemoveElementSupported() {
+        return isRemoveSupported();
+    }
+
+    /**
      * Returns true to indicate that the collection supports holding null.
      * The default implementation returns true;
      */
@@ -856,7 +867,9 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionRemove() {
-        if (!isRemoveSupported()) {
+        if (!isRemoveElementSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(getFullElements()[0]));
             return;
         }
 
@@ -1223,9 +1236,11 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 "clear should raise UnsupportedOperationException");
         verify();
 
-        assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(null),
-                "remove should raise UnsupportedOperationException");
-        verify();
+        if (!isRemoveElementSupported()) {
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(null),
+                    "remove should raise UnsupportedOperationException");
+            verify();
+        }
 
         assertThrows(UnsupportedOperationException.class, () -> getCollection().removeIf(e -> true),
                 "removeIf should raise UnsupportedOperationException");
