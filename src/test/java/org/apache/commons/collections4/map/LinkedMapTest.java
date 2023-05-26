@@ -30,6 +30,7 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.list.AbstractListTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -227,10 +228,7 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         }
     }
 
-    public BulkTest bulkTestListView() {
-        return new TestListView();
-    }
-
+    @Nested
     public class TestListView extends AbstractListTest<K> {
 
         TestListView() {

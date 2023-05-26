@@ -642,17 +642,4 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         assertFalse(sub.containsValue(secondEntry.getValue()));
         assertFalse(set.contains(secondEntry));
     }
-
-    public BulkTest bulkTestHeadMap() {
-        return new AbstractSortedMapTest.TestHeadMap<>(this);
-    }
-
-    public BulkTest bulkTestTailMap() {
-        return new AbstractSortedMapTest.TestTailMap<>(this);
-    }
-
-    public BulkTest bulkTestSubMap() {
-        return new AbstractSortedMapTest.TestSubMap<>(this);
-    }
-
 }

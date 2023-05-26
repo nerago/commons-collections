@@ -47,6 +47,7 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.apache.commons.collections4.multiset.AbstractMultiSetTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -898,10 +899,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * @return a {@link AbstractCollectionTest} instance for testing the map's
      *         values collection
      */
-    public BulkTest bulkTestMultiValuedMapEntries() {
-        return new TestMultiValuedMapEntries();
-    }
-
+    @Nested
     public class TestMultiValuedMapEntries extends AbstractCollectionTest<Entry<K, V>> {
         public TestMultiValuedMapEntries() {
             super("");
@@ -985,10 +983,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      *
      * @return a {@link AbstractSetTest} instance for testing the map's key set
      */
-    public BulkTest bulkTestMultiValuedMapKeySet() {
-        return new TestMultiValuedMapKeySet();
-    }
-
+    @Nested
     public class TestMultiValuedMapKeySet extends AbstractSetTest<K> {
         public TestMultiValuedMapKeySet() {
             super("");
@@ -1045,10 +1040,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * @return a {@link AbstractCollectionTest} instance for testing the map's
      *         values collection
      */
-    public BulkTest bulkTestMultiValuedMapValues() {
-        return new TestMultiValuedMapValues();
-    }
-
+    @Nested
     public class TestMultiValuedMapValues extends AbstractCollectionTest<V> {
         public TestMultiValuedMapValues() {
             super("");
@@ -1130,10 +1122,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * @return a {@link AbstractBagTest} instance for testing the map's values
      *         collection
      */
-    public BulkTest bulkTestMultiValuedMapKeys() {
-        return new TestMultiValuedMapKeys();
-    }
-
+    @Nested
     public class TestMultiValuedMapKeys extends AbstractMultiSetTest<K> {
 
         public TestMultiValuedMapKeys() {
@@ -1195,10 +1184,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
     }
 
-    public BulkTest bulkTestAsMap() {
-        return new TestMultiValuedMapAsMap();
-    }
-
+    @Nested
     public class TestMultiValuedMapAsMap extends AbstractMapTest<K, Collection<V>> {
 
         public TestMultiValuedMapAsMap() {

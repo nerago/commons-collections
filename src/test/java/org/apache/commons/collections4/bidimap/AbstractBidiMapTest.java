@@ -16,13 +16,6 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,7 +29,10 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link BidiMap} methods and contracts.
@@ -336,11 +332,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         return (BidiMap<K, V>) super.getMap();
     }
 
-    @Override
-    public BulkTest bulkTestMapEntrySet() {
-        return new TestBidiMapEntrySet();
-    }
-
+    @Nested
     public class TestBidiMapEntrySet extends TestMapEntrySet {
 
         public TestBidiMapEntrySet() {

@@ -28,6 +28,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.BulkTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -100,18 +101,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         assertSame(obj, sm.lastKey());
     }
 
-    public BulkTest bulkTestHeadMap() {
-        return new TestHeadMap<>(this);
-    }
-
-    public BulkTest bulkTestTailMap() {
-        return new TestTailMap<>(this);
-    }
-
-    public BulkTest bulkTestSubMap() {
-        return new TestSubMap<>(this);
-    }
-
     public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
         protected final AbstractMapTest<K, V> main;
         protected final List<K> subSortedKeys = new ArrayList<>();
@@ -139,18 +128,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             // cross verify changes on view with changes on main map
             super.verify();
             main.verify();
-        }
-        @Override
-        public BulkTest bulkTestHeadMap() {
-            return null;  // block infinite recursion
-        }
-        @Override
-        public BulkTest bulkTestTailMap() {
-            return null;  // block infinite recursion
-        }
-        @Override
-        public BulkTest bulkTestSubMap() {
-            return null;  // block infinite recursion
         }
 
         @Override
@@ -211,7 +188,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //        }
     }
 
-    public static class TestHeadMap<K, V> extends TestViewMap<K, V> {
+    @Nested
+    public class TestHeadMap extends TestViewMap<K, V> {
         static final int SUBSIZE = 6;
         final K toKey;
 
@@ -263,7 +241,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //        }
     }
 
-    public static class TestTailMap<K, V> extends TestViewMap<K, V> {
+    @Nested
+    public class TestTailMap extends TestViewMap<K, V> {
         static final int SUBSIZE = 6;
         final K fromKey;
         final K invalidKey;
@@ -317,7 +296,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //        }
     }
 
-    public static class TestSubMap<K, V> extends TestViewMap<K, V> {
+    @Nested
+    public  class TestSubMap extends TestViewMap<K, V> {
         static final int SUBSIZE = 3;
         final K fromKey;
         final K toKey;

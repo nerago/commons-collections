@@ -26,6 +26,7 @@ import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -200,10 +201,7 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
         assertNull(result[0]);
     }
 
-    public BulkTest bulkTestMapIterator() {
-        return new InnerTestMapIterator();
-    }
-
+    @Nested
     public class InnerTestMapIterator extends AbstractMapIteratorTest<K, V> {
         public InnerTestMapIterator() {
             super("InnerTestMapIterator");
