@@ -367,12 +367,15 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
                 throw new IllegalStateException(
                         "Iterator setValue() can only be called after next() and before remove()");
             }
+            final K key = last.getKey();
+            if (key != null &&  (key == parent.reverseMap.get(value)) != (key.equals(parent.reverseMap.get(value)))    )
+                throw new IllegalStateException("in the equals case");
             if (parent.reverseMap.containsKey(value) &&
-                parent.reverseMap.get(value) != last.getKey()) {
+                parent.reverseMap.get(value) != key) {
                 throw new IllegalArgumentException(
                         "Cannot use setValue() when the object being set is already in the map");
             }
-            final V oldValue = parent.put(last.getKey(), value);
+            final V oldValue = parent.put(key, value);
             // Map.Entry specifies that the behavior is undefined when the backing map
             // has been modified (as we did with the put), so we also set the value
             last.setValue(value);

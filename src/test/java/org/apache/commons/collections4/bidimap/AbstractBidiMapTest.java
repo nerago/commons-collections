@@ -340,10 +340,15 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
         @Test
         public void testMapEntrySetIteratorEntrySetValueCrossCheck() {
-            final K key1 = getSampleKeys()[0];
-            final K key2 = getSampleKeys()[1];
-            final V newValue1 = getNewSampleValues()[0];
-            final V newValue2 = getNewSampleValues()[1];
+             K key1 = getSampleKeys()[0];
+             K key2 = getSampleKeys()[1];
+             V newValue1 = getNewSampleValues()[0];
+             V newValue2 = getNewSampleValues()[1];
+
+            key1 = (K) new String((String)key1);
+            key2 = (K) new String((String)key2);
+            newValue1 = (V) new String((String)newValue1);
+            newValue2 = (V) new String((String)newValue2);
 
             resetFull();
             // explicitly get entries as sample values/keys are connected for some maps
@@ -358,35 +363,72 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
             final Map.Entry<K, V> entryConfirmed2 = getEntry(itConfirmed, key2);
             TestBidiMapEntrySet.this.verify();
 
+
+            key1 = (K) new String((String)key1);
+            key2 = (K) new String((String)key2);
+            newValue1 = (V) new String((String)newValue1);
+            newValue2 = (V) new String((String)newValue2);
+
             if (!isSetValueSupported()) {
-                try {
-                    entry1.setValue(newValue1);
-                } catch (final UnsupportedOperationException ex) {
-                }
+                assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(getNewSampleValues()[0]));
                 return;
             }
 
             // these checked in superclass
             entry1.setValue(newValue1);
             entryConfirmed1.setValue(newValue1);
+
+
+            key1 = (K) new String((String)key1);
+            key2 = (K) new String((String)key2);
+            newValue1 = (V) new String((String)newValue1);
+            newValue2 = (V) new String((String)newValue2);
+
+            entry2.setValue(newValue2);
+            entryConfirmed2.setValue(newValue2);
+
+
+            key1 = (K) new String((String)key1);
+            key2 = (K) new String((String)key2);
+            newValue1 = (V) new String((String)newValue1);
+            newValue2 = (V) new String((String)newValue2);
+
+            getMap().put(key1, newValue1);
+            getMap().put(key2, newValue2);
+
+
+            key1 = (K) new String((String)key1);
+            key2 = (K) new String((String)key2);
+            newValue1 = (V) new String((String)newValue1);
+            newValue2 = (V) new String((String)newValue2);
+
+
+            entry1.setValue(newValue1);
+            entryConfirmed1.setValue(newValue1);
+
             entry2.setValue(newValue2);
             entryConfirmed2.setValue(newValue2);
 
             // at this point
             // key1=newValue1, key2=newValue2
-            try {
-                entry2.setValue(newValue1);  // should remove key1
-            } catch (final IllegalArgumentException ex) {
-                return;  // simplest way of dealing with tricky situation
-            }
-            entryConfirmed2.setValue(newValue1);
-            AbstractBidiMapTest.this.getConfirmed().remove(key1);
-            assertEquals(newValue1, entry2.getValue());
-            assertTrue(AbstractBidiMapTest.this.getMap().containsKey(entry2.getKey()));
+            assertThrows(IllegalArgumentException.class, () -> entry2.setValue(getNewSampleValues()[0]));
+
+
+            key1 = (K) new String((String)key1);
+            key2 = (K) new String((String)key2);
+            newValue1 = (V) new String((String)newValue1);
+            newValue2 = (V) new String((String)newValue2);
+
+
+
+            assertEquals(newValue1, entry1.getValue());
+            assertEquals(newValue2, entry2.getValue());
+            assertTrue(AbstractBidiMapTest.this.getMap().containsKey(key1));
             assertTrue(AbstractBidiMapTest.this.getMap().containsValue(newValue1));
-            assertEquals(newValue1, AbstractBidiMapTest.this.getMap().get(entry2.getKey()));
-            assertFalse(AbstractBidiMapTest.this.getMap().containsKey(key1));
-            assertFalse(AbstractBidiMapTest.this.getMap().containsValue(newValue2));
+            assertEquals(newValue1, AbstractBidiMapTest.this.getMap().get(key1));
+            assertEquals(newValue2, AbstractBidiMapTest.this.getMap().get(key2));
+            assertTrue(AbstractBidiMapTest.this.getMap().containsKey(key2));
+            assertTrue(AbstractBidiMapTest.this.getMap().containsValue(newValue2));
             TestBidiMapEntrySet.this.verify();
 
             // check for ConcurrentModification
