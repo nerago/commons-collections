@@ -73,7 +73,17 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
     protected NavigableMap<K, V> wrapSubMap(NavigableMap<K, V> subMap) {
         return subMap;
     }
-    
+
+    @Override
+    public K nextKey(K key) {
+        return decorated().higherKey(key);
+    }
+
+    @Override
+    public K previousKey(K key) {
+        return decorated().lowerKey(key);
+    }
+
     @Override
     public Entry<K, V> lowerEntry(K key) {
         return decorated().lowerEntry(key);

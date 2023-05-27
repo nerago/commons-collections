@@ -22,12 +22,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.OrderedBidiMap;
-import org.apache.commons.collections4.OrderedMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
 import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
@@ -158,17 +153,11 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
 
     @Override
     public K nextKey(final K key) {
-        if (isEmpty()) {
-            return null;
-        }
         return normalMap().higherKey(key);
     }
 
     @Override
     public K previousKey(final K key) {
-        if (isEmpty()) {
-            return null;
-        }
         return normalMap().lowerKey(key);
     }
 
@@ -211,41 +200,67 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     /**
      * Internal sorted map view.
      */
-    protected static class ViewMap<K, V> extends AbstractNavigableMapDecorator<K, V> implements NavigableMap<K,V> {
-        protected NavigableMap<V, K> reverseMap;
+    protected static class ViewMap<K, V> extends AbstractDualBidiMap<K, V> implements SortedBidiMap<K, V>, NavigableMap<K,V> {
+        //private final DualTreeBidiMap<K, V> parent;
 
         /**
          * Constructor.
-         * @param bidi  the parent bidi map
-         * @param sm  the subMap sorted map
+         * @param parent  the parent bidi map
+         * @param sub  the subMap sorted map
          */
-        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm) {
+        protected ViewMap(final DualTreeBidiMap<K, V> parent, final NavigableMap<K, V> sub) {
             // the implementation is not great here...
             // use the normalMap as the filtered map, but reverseMap as the full map
             // this forces containsValue and clear to be overridden
-            super(sm);
-            reverseMap = bidi.reverseMap();
+            super(sub, parent.reverseMap());
         }
 
-        protected ViewMap(final ViewMap<K, V> view, final NavigableMap<K, V> map) {
-            super(map);
-            reverseMap = view.reverseMap;
-        }
-
-        @Override
-        protected NavigableMap<K, V> wrapSubMap(NavigableMap<K, V> subMap) {
-            return new ViewMap<>(this, subMap);
+        protected ViewMap(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
+            super(normalMap, reverseMap, inverseMap);
         }
 
         @Override
-        public boolean containsValue(final Object value) {
-            // override as default implementation uses reverseMap as a simple lookup
-            // we need to also check it's in our filtered keys
-            if (reverseMap.containsKey(value)) {
-                K key = reverseMap.get(value);
-                return decorated().containsKey(key);
-            }
-            return false;
+        protected ViewMap<V, K> createBidiMap(Map<V, K> normalMap, Map<K, V> reverseMap, BidiMap<K, V> inverseMap) {
+            return new ViewMap<>(normalMap, reverseMap, inverseMap);
+        }
+
+        protected ViewMap<K, V> createSubMap(Map<K, V> subMap) {
+            return new ViewMap<>(subMap, reverseMap(), null);
+        }
+        
+        @Override
+        protected NavigableMap<K, V> normalMap() {
+            return (NavigableMap<K, V>) super.normalMap();
+        }
+
+        @Override
+        protected NavigableMap<V, K> reverseMap() {
+            return (NavigableMap<V, K>) super.reverseMap();
+        }
+
+        @Override
+        public SortedBidiMap<V, K> inverseBidiMap() {
+            return super.inverseBidiMap();
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return normalMap().comparator();
+        }
+
+        @Override
+        public Comparator<? super V> valueComparator() {
+            return reverseMap().comparator();
+        }
+
+        @Override
+        public V put(K key, V value) {
+            throw new UnsupportedOperationException("not tracked if in sub map range");
+        }
+
+        @Override
+        public void putAll(Map<? extends K, ? extends V> mapToCopy) {
+            throw new UnsupportedOperationException("not tracked if in sub map range");
         }
 
         @Override
@@ -258,13 +273,165 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
 
         @Override
-        public K previousKey(final K key) {
-            return decorated().lowerKey(key);
+        public boolean containsValue(final Object value) {
+            // override as default implementation uses reverseMap as a simple lookup
+            // we need to also check it's in our filtered keys
+            if (reverseMap().containsKey(value)) {
+                K key = reverseMap().get(value);
+                return normalMap().containsKey(key);
+            }
+            return false;
         }
 
         @Override
-        public K nextKey(final K key) {
-            return decorated().higherKey(key);
+        public K removeValue(Object value) {
+            if (reverseMap().containsKey(value)) {
+                K key = reverseMap().get(value);
+                if (normalMap().containsKey(key)) {
+                    normalMap().remove(key);
+                    reverseMap().remove(value);
+                    return key;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected boolean removeValueViaCollection(V value) {
+            if (reverseMap().containsKey(value)) {
+                Object key = reverseMap().get(value);
+                if (normalMap().containsKey(key)) {
+                    normalMap().remove(key);
+                    reverseMap().remove(value);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public K firstKey() {
+            return normalMap().firstKey();
+        }
+
+        @Override
+        public K lastKey() {
+            return normalMap().lastKey();
+        }
+
+        @Override
+        public K nextKey(K key) {
+            return normalMap().higherKey(key);
+        }
+
+        @Override
+        public K previousKey(K key) {
+            return normalMap().lowerKey(key);
+        }
+
+        @Override
+        public Entry<K, V> lowerEntry(K key) {
+            return normalMap().lowerEntry(key);
+        }
+
+        @Override
+        public K lowerKey(K key) {
+            return normalMap().lowerKey(key);
+        }
+
+        @Override
+        public Entry<K, V> floorEntry(K key) {
+            return normalMap().floorEntry(key);
+        }
+
+        @Override
+        public K floorKey(K key) {
+            return normalMap().floorKey(key);
+        }
+
+        @Override
+        public Entry<K, V> ceilingEntry(K key) {
+            return normalMap().ceilingEntry(key);
+        }
+
+        @Override
+        public K ceilingKey(K key) {
+            return normalMap().ceilingKey(key);
+        }
+
+        @Override
+        public Entry<K, V> higherEntry(K key) {
+            return normalMap().higherEntry(key);
+        }
+
+        @Override
+        public K higherKey(K key) {
+            return normalMap().higherKey(key);
+        }
+
+        @Override
+        public Entry<K, V> firstEntry() {
+            return normalMap().firstEntry();
+        }
+
+        @Override
+        public Entry<K, V> lastEntry() {
+            return normalMap().lastEntry();
+        }
+
+        @Override
+        public Entry<K, V> pollFirstEntry() {
+            return normalMap().pollFirstEntry();
+        }
+
+        @Override
+        public Entry<K, V> pollLastEntry() {
+            return normalMap().pollLastEntry();
+        }
+
+        @Override
+        public NavigableSet<K> navigableKeySet() {
+            return normalMap().navigableKeySet();
+        }
+
+        @Override
+        public NavigableSet<K> descendingKeySet() {
+            return normalMap().descendingKeySet();
+        }
+
+        @Override
+        public NavigableMap<K, V> descendingMap() {
+            return createSubMap(normalMap().descendingMap());
+        }
+
+        @Override
+        public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+            return createSubMap(normalMap().subMap(fromKey, fromInclusive, toKey, toInclusive));
+        }
+
+        @Override
+        public NavigableMap<K, V> headMap(K toKey, boolean inclusive) {
+            return createSubMap(normalMap().headMap(toKey, inclusive));
+        }
+
+        @Override
+        public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
+            return createSubMap(normalMap().tailMap(fromKey, inclusive));
+        }
+
+        @Override
+        public SortedMap<K, V> subMap(K fromKey, K toKey) {
+            return createSubMap(normalMap().subMap(fromKey, toKey));
+        }
+
+        @Override
+        public SortedMap<K, V> headMap(K toKey) {
+            return createSubMap(normalMap().headMap(toKey));
+        }
+
+        @Override
+        public SortedMap<K, V> tailMap(K fromKey) {
+            return createSubMap(normalMap().tailMap(fromKey));
         }
     }
 
