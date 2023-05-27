@@ -49,32 +49,32 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * Normal delegate map.
      */
-    transient Map<K, V> normalMap;
+    private transient Map<K, V> normalMap;
 
     /**
      * Reverse delegate map.
      */
-    transient Map<V, K> reverseMap;
+    private transient Map<V, K> reverseMap;
 
     /**
      * Inverse view of this map.
      */
-    transient BidiMap<V, K> inverseBidiMap;
+    protected transient BidiMap<V, K> inverseBidiMap;
 
     /**
      * View of the keys.
      */
-    transient Set<K> keySet;
+    private transient Set<K> keySet;
 
     /**
      * View of the values.
      */
-    transient Set<V> values;
+    private  transient Set<V> values;
 
     /**
      * View of the entries.
      */
-    transient Set<Map.Entry<K, V>> entrySet;
+    private transient Set<Map.Entry<K, V>> entrySet;
 
     /**
      * Creates an empty map, initialized by {@code createMap}.
@@ -130,7 +130,27 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
      */
     protected abstract BidiMap<V, K> createBidiMap(Map<V, K> normalMap, Map<K, V> reverseMap, BidiMap<K, V> inverseMap);
 
-    // Map delegation
+
+    /**
+     * Sets the collection being decorated.
+     * <p>
+     * <b>NOTE:</b> this method should only be used during deserialization
+     *
+     * @param normalMap  the normal direction map
+     * @param reverseMap  the reverse direction map
+     */
+    protected void setInternalMaps(Map<K, V> normalMap, Map<V, K> reverseMap) {
+        this.normalMap = normalMap;
+        this.reverseMap = reverseMap;
+    }
+
+    protected Map<K, V> normalMap() {
+        return normalMap;
+    }
+
+    protected Map<V, K> reverseMap() {
+        return reverseMap;
+    }
 
     @Override
     public V get(final Object key) {

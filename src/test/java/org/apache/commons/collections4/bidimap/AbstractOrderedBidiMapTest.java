@@ -30,6 +30,7 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -223,10 +224,8 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         assertEquals(keys[3], key);
         assertTrue(mapIterator2.hasNext());
         assertTrue(mapIterator2.hasPrevious());
-    }
 
-    public BulkTest bulkTestOrderedMapIterator() {
-        return new TestBidiOrderedMapIterator();
+        // TODO more checks after exception?
     }
 
     /**
@@ -237,6 +236,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         return (OrderedBidiMap<K, V>) super.getMap();
     }
 
+    @Nested
     public class TestBidiOrderedMapIterator extends AbstractMapIteratorTest<K, V> {
 
         public TestBidiOrderedMapIterator() {

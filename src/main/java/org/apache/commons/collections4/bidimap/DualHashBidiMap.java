@@ -95,13 +95,12 @@ public class DualHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> implements 
     // Serialization
     private void writeObject(final ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        out.writeObject(normalMap);
+        out.writeObject(normalMap());
     }
 
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        normalMap = new HashMap<>();
-        reverseMap = new HashMap<>();
+        setInternalMaps(new HashMap<>(), new HashMap<>());
         @SuppressWarnings("unchecked") // will fail at runtime if stream is incorrect
         final Map<K, V> map = (Map<K, V>) in.readObject();
         putAll(map);
