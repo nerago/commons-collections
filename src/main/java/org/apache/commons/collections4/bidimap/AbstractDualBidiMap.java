@@ -16,11 +16,7 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
@@ -59,7 +55,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * Inverse view of this map.
      */
-    protected transient BidiMap<V, K> inverseBidiMap;
+    private transient BidiMap<V, K> inverseBidiMap;
 
     /**
      * View of the keys.
@@ -69,7 +65,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * View of the values.
      */
-    private  transient Set<V> values;
+    private transient Set<V> values;
 
     /**
      * View of the entries.
@@ -146,6 +142,14 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
 
     protected Map<V, K> reverseMap() {
         return reverseMap;
+    }
+
+    protected boolean keyEquals(K a, K b) {
+        return Objects.equals(a, b);
+    }
+
+    protected boolean valueEquals(V a, V b) {
+        return Objects.equals(a, b);
     }
 
     @Override
@@ -228,7 +232,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     public boolean remove(Object key, Object expectedValue) {
         if (normalMap.containsKey(key)) {
             final V value = normalMap.get(key);
-            if (Objects.equals(value, expectedValue)) {
+            if (valueEquals(value, (V) expectedValue)) {
                 normalMap.remove(key);
                 reverseMap.remove(value);
                 return true;
@@ -305,9 +309,13 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public Set<K> keySet() {
         if (keySet == null) {
-            keySet = new KeySet<>(this);
+            keySet = createKeySet();
         }
         return keySet;
+    }
+
+    protected KeySet<K> createKeySet() {
+        return new KeySet<>(this);
     }
 
     /**
@@ -331,9 +339,13 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public Set<V> values() {
         if (values == null) {
-            values = new Values<>(this);
+            values = createValues();
         }
         return values;
+    }
+
+    protected Values<V> createValues() {
+        return new Values<>(this);
     }
 
     /**
@@ -361,9 +373,13 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
         if (entrySet == null) {
-            entrySet = new EntrySet<>(this);
+            entrySet = createEntrySet();
         }
         return entrySet;
+    }
+
+    protected Set<Map.Entry<K, V>> createEntrySet() {
+        return new EntrySet<>(this);
     }
 
     /**
@@ -379,9 +395,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
 
     protected V setValueViaCollection(K key, V value) {
         if (reverseMap.containsKey(value) &&
-                !Objects.equals(reverseMap.get(value), key)) {
+                !keyEquals(reverseMap.get(value), key)) {
             throw new IllegalArgumentException(
-                    "Cannot use setValue() when the object being set is already in the map");
+                    "Cannot use setValue() when the value being set is already in the map");
         }
         return put(key, value);
     }
@@ -504,6 +520,11 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
             super(parent.normalMap.keySet(), (AbstractDualBidiMap<K, Object>) parent);
         }
 
+        @SuppressWarnings("unchecked")
+        protected KeySet(Collection<K> keys, AbstractDualBidiMap<K, ?> parent) {
+            super(keys, (AbstractDualBidiMap<K, Object>) parent);
+        }
+
         @Override
         public Iterator<K> iterator() {
             return parent.createKeySetIterator(super.iterator());
@@ -580,6 +601,11 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
         @SuppressWarnings("unchecked")
         protected Values(final AbstractDualBidiMap<?, V> parent) {
             super(parent.normalMap.values(), (AbstractDualBidiMap<Object, V>) parent);
+        }
+
+        @SuppressWarnings("unchecked")
+        public Values(Collection<V> set, final AbstractDualBidiMap<?, V> parent) {
+            super(set, (AbstractDualBidiMap<Object, V>) parent);
         }
 
         @Override

@@ -20,19 +20,13 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.functors.EqualPredicate;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
 import java.util.*;
-import java.util.function.BiFunction;
 
 public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V> implements SortedBidiMap<K, V>, NavigableMap<K, V> {
-    public AbstractDualTreeBidiMap(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseBidiMap) {
+    protected AbstractDualTreeBidiMap(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseBidiMap) {
         super(normalMap, reverseMap, inverseBidiMap);
-    }
-
-    public AbstractDualTreeBidiMap(Map<K, V> normalMap, Map<V, K> reverseMap) {
-        super(normalMap, reverseMap);
     }
 
     /**
@@ -66,7 +60,7 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
      */
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return new BidiOrderedMapIterator<>(this, normalMap());
+        return new BidiNavigableMapIterator<>(this, normalMap());
     }
 
     @Override
@@ -76,15 +70,26 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
 
     @Override
     protected V setValueViaCollection(K key, V value) {
-        if (reverseMap().containsKey(value) && !keyEquals(reverseMap().get(value), key)) {
+        if (reverseMap().containsKey(value) &&
+                !keyEquals(reverseMap().get(value), key)) {
             throw new IllegalArgumentException(
-                    "Cannot use setValue() when the object being set is already in the map");
+                    "Cannot use setValue() when the value being set is already in the map");
         }
         return put(key, value);
     }
 
-    private boolean keyEquals(K a, K b) {
+    @Override
+    protected boolean keyEquals(K a, K b) {
         Comparator<? super K> comparator = comparator();
+        if (comparator != null)
+            return comparator.compare(a, b) == 0;
+        else
+            return Objects.equals(a, b);
+    }
+
+    @Override
+    protected boolean valueEquals(V a, V b) {
+        Comparator<? super V> comparator = valueComparator();
         if (comparator != null)
             return comparator.compare(a, b) == 0;
         else
@@ -173,16 +178,19 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
 
     @Override
     public NavigableSet<K> navigableKeySet() {
+        // TODO
         return normalMap().navigableKeySet();
     }
 
     @Override
     public NavigableSet<K> descendingKeySet() {
+        // TODO
         return normalMap().descendingKeySet();
     }
 
     @Override
     public NavigableMap<K, V> descendingMap() {
+        // TODO
         return createSubMap(normalMap().descendingMap());
     }
 
@@ -218,7 +226,7 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
     /**
      * Inner class MapIterator.
      */
-    protected static class BidiOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
+    protected static class BidiNavigableMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
 
         /**
          * The parent map
@@ -235,16 +243,11 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
         private Entry<K, V> current;
 
         /**
-         * Whether remove is allowed at present
-         */
-        protected boolean canRemove;
-
-        /**
          * Constructor.
          *
          * @param parent the parent map
          */
-        protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V> parent, final NavigableMap<K, V> normalMap) {
+        protected BidiNavigableMapIterator(final AbstractDualBidiMap<K, V> parent, final NavigableMap<K, V> normalMap) {
             this.parent = parent;
             this.normalMap = normalMap;
             reset();
@@ -263,7 +266,6 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
             }
             prevEntry = current;
             nextEntry = normalMap.higherEntry(current.getKey());
-            canRemove = true;
             return current.getKey();
         }
 
@@ -281,13 +283,12 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
             }
             nextEntry = current;
             prevEntry = normalMap.lowerEntry(current.getKey());
-            canRemove = true;
             return current.getKey();
         }
 
         @Override
         public void remove() {
-            if (!canRemove) {
+            if (current == null) {
                 throw new IllegalStateException("Iterator remove() can only be called once after next() or previous()");
             }
             parent.remove(current.getKey());
@@ -303,7 +304,6 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
                     prevEntry = normalMap.lowerEntry(nextEntry.getKey());
             }
             current = null;
-            canRemove = false;
         }
 
         @Override
@@ -350,7 +350,6 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
             nextEntry = normalMap.firstEntry();
             prevEntry = null;
             current = null;
-            canRemove = false;
         }
 
         @Override

@@ -60,7 +60,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualTreeBidiMap<K, V> impleme
      * Creates an empty {@link DualTreeBidiMap}.
      */
     public DualTreeBidiMap() {
-        super(new TreeMap<>(), new TreeMap<>());
+        super(new TreeMap<>(), new TreeMap<>(), null);
         this.comparator = null;
         this.valueComparator = null;
     }
@@ -72,7 +72,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualTreeBidiMap<K, V> impleme
      * @param map  the map whose mappings are to be placed in this map
      */
     public DualTreeBidiMap(final Map<? extends K, ? extends V> map) {
-        super(new TreeMap<>(), new TreeMap<>());
+        super(new TreeMap<>(), new TreeMap<>(), null);
         this.comparator = null;
         this.valueComparator = null;
         putAll(map);
@@ -85,7 +85,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualTreeBidiMap<K, V> impleme
      * @param valueComparator  the values comparator to use
      */
     public DualTreeBidiMap(final Comparator<? super K> keyComparator, final Comparator<? super V> valueComparator) {
-        super(new TreeMap<>(keyComparator), new TreeMap<>(valueComparator));
+        super(new TreeMap<>(keyComparator), new TreeMap<>(valueComparator), null);
         this.comparator = keyComparator;
         this.valueComparator = valueComparator;
     }
@@ -116,7 +116,12 @@ public class DualTreeBidiMap<K, V> extends AbstractDualTreeBidiMap<K, V> impleme
 
     @Override
     protected AbstractDualTreeBidiMap<K, V> createSubMap(NavigableMap<K, V> normalMap) {
-        return new DualTreeBidiSubMap<>(this, normalMap);
+        return new DualTreeBidiSubMap<>(normalMap, reverseMap(), null);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIterator() {
+        return super.mapIterator();
     }
 
     @Override

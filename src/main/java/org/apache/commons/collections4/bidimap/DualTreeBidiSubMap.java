@@ -26,25 +26,13 @@ import java.util.*;
  * Internal sub map view.
  */
 class DualTreeBidiSubMap<K, V> extends AbstractDualTreeBidiMap<K, V> {
-    /**
-     * Constructor.
-     *
-     * @param parent the parent bidi map
-     * @param sub    the subMap sorted map
-     */
-    protected DualTreeBidiSubMap(final DualTreeBidiMap<K, V> parent, final NavigableMap<K, V> sub) {
-        // use the normalMap as the filtered map, but reverseMap as the full map
-        // this forces values to be checked more carefully
-        super(sub, parent.reverseMap());
-    }
-
     protected DualTreeBidiSubMap(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
         super(normalMap, reverseMap, inverseMap);
     }
 
     @Override
-    protected DualTreeBidiSubMap<V, K> createInverse() {
-        return new DualTreeBidiSubMap<>(reverseMap(), normalMap(), this);
+    protected AbstractDualTreeBidiMap<V, K> createInverse() {
+        return new DualTreeBidiSubMapInverse<>(reverseMap(), normalMap(), this);
     }
 
     @Override
@@ -63,19 +51,6 @@ class DualTreeBidiSubMap<K, V> extends AbstractDualTreeBidiMap<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
-        if (normalMap().containsKey(key)) {
-            reverseMap().remove(normalMap().get(key));
-        }
-        if (reverseMap().containsKey(value)) {
-            normalMap().remove(reverseMap().get(value));
-        }
-        final V obj = normalMap().put(key, value);
-        reverseMap().put(value, key);
-        return obj;
-    }
-
-    @Override
     public void clear() {
         // override as default implementation uses reverseMap
         for (final Iterator<K> it = keySet().iterator(); it.hasNext(); ) {
@@ -85,23 +60,24 @@ class DualTreeBidiSubMap<K, V> extends AbstractDualTreeBidiMap<K, V> {
     }
 
     @Override
-    protected V setValueViaCollection(K key, V value) {
-        return super.setValueViaCollection(key, value);
-    }
+    public V put(K key, V value) {
+        if (normalMap().containsKey(key)) {
+            V oldValue = normalMap().get(key);
+            if (valueEquals(value, oldValue)) {
+                return value;
+            } else if (reverseMap().containsKey(value) && !keyEquals(reverseMap().get(value), key)) {
+                throw new IllegalArgumentException(
+                        "Cannot use put on sub map when the value being set is already in the map");
+            }
 
-    @Override
-    protected boolean removeViaCollection(K key) {
-        return super.removeViaCollection(key);
-    }
-
-    @Override
-    public boolean remove(Object key, Object expectedValue) {
-        return super.remove(key, expectedValue);
-    }
-
-    @Override
-    public V remove(Object key) {
-        return super.remove(key);
+            normalMap().put(key, value);
+            reverseMap().remove(oldValue);
+            reverseMap().put(value, key);
+            return oldValue;
+        } else {
+            throw new IllegalArgumentException(
+                    "Cannot use put on sub map unless the key is already in that map");
+        }
     }
 
     @Override
@@ -113,6 +89,17 @@ class DualTreeBidiSubMap<K, V> extends AbstractDualTreeBidiMap<K, V> {
             return normalMap().containsKey(key);
         }
         return false;
+    }
+
+    @Override
+    public K getKey(Object value) {
+        if (reverseMap().containsKey(value)) {
+            K key = reverseMap().get(value);
+            if (normalMap().containsKey(key)) {
+                return key;
+            }
+        }
+        return null;
     }
 
     @Override
