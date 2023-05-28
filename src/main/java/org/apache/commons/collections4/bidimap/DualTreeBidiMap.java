@@ -24,8 +24,6 @@ import java.util.*;
 
 import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
-import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
 
 /**
  * Implementation of {@link BidiMap} that uses two {@link TreeMap} instances.
@@ -47,8 +45,7 @@ import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
-        implements SortedBidiMap<K, V>, Serializable {
+public class DualTreeBidiMap<K, V> extends AbstractDualTreeBidiMap<K, V> implements Serializable {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361809L;
@@ -76,9 +73,9 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
      */
     public DualTreeBidiMap(final Map<? extends K, ? extends V> map) {
         super(new TreeMap<>(), new TreeMap<>());
-        putAll(map);
         this.comparator = null;
         this.valueComparator = null;
+        putAll(map);
     }
 
     /**
@@ -110,25 +107,21 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     /**
      * Creates a new instance of this object.
      *
-     * @param normalMap  the normal direction map
-     * @param reverseMap  the reverse direction map
-     * @param inverseMap  the inverse BidiMap
      * @return new bidi map
      */
     @Override
-    protected DualTreeBidiMap<V, K> createBidiMap(final Map<V, K> normalMap, final Map<K, V> reverseMap,
-                                                  final BidiMap<K, V> inverseMap) {
-        return new DualTreeBidiMap<>((NavigableMap<V,K>) normalMap, (NavigableMap<K,V>) reverseMap, inverseMap);
+    protected DualTreeBidiMap<V, K> createInverse() {
+        return new DualTreeBidiMap<>(reverseMap(), normalMap(), this);
     }
 
     @Override
-    protected NavigableMap<K, V> normalMap() {
-        return (NavigableMap<K, V>) super.normalMap();
+    protected AbstractDualTreeBidiMap<K, V> createSubMap(NavigableMap<K, V> normalMap) {
+        return new DualTreeBidiSubMap<>(this, normalMap);
     }
 
     @Override
-    protected NavigableMap<V, K> reverseMap() {
-        return (NavigableMap<V, K>) super.reverseMap();
+    public DualTreeBidiMap<V, K> inverseBidiMap() {
+        return (DualTreeBidiMap<V, K>) super.inverseBidiMap();
     }
 
     @Override
@@ -141,444 +134,6 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return reverseMap().comparator();
     }
 
-    @Override
-    public K firstKey() {
-        return normalMap().firstKey();
-    }
-
-    @Override
-    public K lastKey() {
-        return normalMap().lastKey();
-    }
-
-    @Override
-    public K nextKey(final K key) {
-        return normalMap().higherKey(key);
-    }
-
-    @Override
-    public K previousKey(final K key) {
-        return normalMap().lowerKey(key);
-    }
-
-    /**
-     * Obtains an ordered map iterator.
-     * <p>
-     * This implementation copies the elements to an ArrayList in order to
-     * provide the forward/backward behavior.
-     *
-     * @return a new ordered map iterator
-     */
-    @Override
-    public OrderedMapIterator<K, V> mapIterator() {
-        return new BidiOrderedMapIterator<>(this);
-    }
-
-    @Override
-    public NavigableMap<K, V> headMap(final K toKey) {
-        final NavigableMap<K, V> sub = normalMap().headMap(toKey, false);
-        return new ViewMap<>(this, sub);
-    }
-
-    @Override
-    public NavigableMap<K, V> tailMap(final K fromKey) {
-        final NavigableMap<K, V> sub = normalMap().tailMap(fromKey, true);
-        return new ViewMap<>(this, sub);
-    }
-
-    @Override
-    public NavigableMap<K, V> subMap(final K fromKey, final K toKey) {
-        final NavigableMap<K, V> sub = normalMap().subMap(fromKey, true, toKey, false);
-        return new ViewMap<>(this, sub);
-    }
-
-    @Override
-    public DualTreeBidiMap<V, K> inverseBidiMap() {
-        return (DualTreeBidiMap<V, K>) super.inverseBidiMap();
-    }
-
-    /**
-     * Internal sorted map view.
-     */
-    protected static class ViewMap<K, V> extends AbstractDualBidiMap<K, V> implements SortedBidiMap<K, V>, NavigableMap<K,V> {
-        //private final DualTreeBidiMap<K, V> parent;
-
-        /**
-         * Constructor.
-         * @param parent  the parent bidi map
-         * @param sub  the subMap sorted map
-         */
-        protected ViewMap(final DualTreeBidiMap<K, V> parent, final NavigableMap<K, V> sub) {
-            // the implementation is not great here...
-            // use the normalMap as the filtered map, but reverseMap as the full map
-            // this forces containsValue and clear to be overridden
-            super(sub, parent.reverseMap());
-        }
-
-        protected ViewMap(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
-            super(normalMap, reverseMap, inverseMap);
-        }
-
-        @Override
-        protected ViewMap<V, K> createBidiMap(Map<V, K> normalMap, Map<K, V> reverseMap, BidiMap<K, V> inverseMap) {
-            return new ViewMap<>(normalMap, reverseMap, inverseMap);
-        }
-
-        protected ViewMap<K, V> createSubMap(Map<K, V> subMap) {
-            return new ViewMap<>(subMap, reverseMap(), null);
-        }
-        
-        @Override
-        protected NavigableMap<K, V> normalMap() {
-            return (NavigableMap<K, V>) super.normalMap();
-        }
-
-        @Override
-        protected NavigableMap<V, K> reverseMap() {
-            return (NavigableMap<V, K>) super.reverseMap();
-        }
-
-        @Override
-        public SortedBidiMap<V, K> inverseBidiMap() {
-            return super.inverseBidiMap();
-        }
-
-        @Override
-        public Comparator<? super K> comparator() {
-            return normalMap().comparator();
-        }
-
-        @Override
-        public Comparator<? super V> valueComparator() {
-            return reverseMap().comparator();
-        }
-
-        @Override
-        public V put(K key, V value) {
-            throw new UnsupportedOperationException("not tracked if in sub map range");
-        }
-
-        @Override
-        public void putAll(Map<? extends K, ? extends V> mapToCopy) {
-            throw new UnsupportedOperationException("not tracked if in sub map range");
-        }
-
-        @Override
-        public void clear() {
-            // override as default implementation uses reverseMap
-            for (final Iterator<K> it = keySet().iterator(); it.hasNext();) {
-                it.next();
-                it.remove();
-            }
-        }
-
-        @Override
-        public boolean containsValue(final Object value) {
-            // override as default implementation uses reverseMap as a simple lookup
-            // we need to also check it's in our filtered keys
-            if (reverseMap().containsKey(value)) {
-                K key = reverseMap().get(value);
-                return normalMap().containsKey(key);
-            }
-            return false;
-        }
-
-        @Override
-        public K removeValue(Object value) {
-            if (reverseMap().containsKey(value)) {
-                K key = reverseMap().get(value);
-                if (normalMap().containsKey(key)) {
-                    normalMap().remove(key);
-                    reverseMap().remove(value);
-                    return key;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected boolean removeValueViaCollection(V value) {
-            if (reverseMap().containsKey(value)) {
-                Object key = reverseMap().get(value);
-                if (normalMap().containsKey(key)) {
-                    normalMap().remove(key);
-                    reverseMap().remove(value);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public K firstKey() {
-            return normalMap().firstKey();
-        }
-
-        @Override
-        public K lastKey() {
-            return normalMap().lastKey();
-        }
-
-        @Override
-        public K nextKey(K key) {
-            return normalMap().higherKey(key);
-        }
-
-        @Override
-        public K previousKey(K key) {
-            return normalMap().lowerKey(key);
-        }
-
-        @Override
-        public Entry<K, V> lowerEntry(K key) {
-            return normalMap().lowerEntry(key);
-        }
-
-        @Override
-        public K lowerKey(K key) {
-            return normalMap().lowerKey(key);
-        }
-
-        @Override
-        public Entry<K, V> floorEntry(K key) {
-            return normalMap().floorEntry(key);
-        }
-
-        @Override
-        public K floorKey(K key) {
-            return normalMap().floorKey(key);
-        }
-
-        @Override
-        public Entry<K, V> ceilingEntry(K key) {
-            return normalMap().ceilingEntry(key);
-        }
-
-        @Override
-        public K ceilingKey(K key) {
-            return normalMap().ceilingKey(key);
-        }
-
-        @Override
-        public Entry<K, V> higherEntry(K key) {
-            return normalMap().higherEntry(key);
-        }
-
-        @Override
-        public K higherKey(K key) {
-            return normalMap().higherKey(key);
-        }
-
-        @Override
-        public Entry<K, V> firstEntry() {
-            return normalMap().firstEntry();
-        }
-
-        @Override
-        public Entry<K, V> lastEntry() {
-            return normalMap().lastEntry();
-        }
-
-        @Override
-        public Entry<K, V> pollFirstEntry() {
-            return normalMap().pollFirstEntry();
-        }
-
-        @Override
-        public Entry<K, V> pollLastEntry() {
-            return normalMap().pollLastEntry();
-        }
-
-        @Override
-        public NavigableSet<K> navigableKeySet() {
-            return normalMap().navigableKeySet();
-        }
-
-        @Override
-        public NavigableSet<K> descendingKeySet() {
-            return normalMap().descendingKeySet();
-        }
-
-        @Override
-        public NavigableMap<K, V> descendingMap() {
-            return createSubMap(normalMap().descendingMap());
-        }
-
-        @Override
-        public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-            return createSubMap(normalMap().subMap(fromKey, fromInclusive, toKey, toInclusive));
-        }
-
-        @Override
-        public NavigableMap<K, V> headMap(K toKey, boolean inclusive) {
-            return createSubMap(normalMap().headMap(toKey, inclusive));
-        }
-
-        @Override
-        public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
-            return createSubMap(normalMap().tailMap(fromKey, inclusive));
-        }
-
-        @Override
-        public SortedMap<K, V> subMap(K fromKey, K toKey) {
-            return createSubMap(normalMap().subMap(fromKey, toKey));
-        }
-
-        @Override
-        public SortedMap<K, V> headMap(K toKey) {
-            return createSubMap(normalMap().headMap(toKey));
-        }
-
-        @Override
-        public SortedMap<K, V> tailMap(K fromKey) {
-            return createSubMap(normalMap().tailMap(fromKey));
-        }
-    }
-
-    /**
-     * Inner class MapIterator.
-     */
-    protected static class BidiOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
-
-        /** The parent map */
-        private final DualTreeBidiMap<K, V> parent;
-
-        private Map.Entry<K, V> nextEntry;
-        private Map.Entry<K, V> prevEntry;
-
-        /** The last returned entry */
-        private Map.Entry<K, V> current;
-
-        /** Whether remove is allowed at present */
-        protected boolean canRemove;
-
-        /**
-         * Constructor.
-         * @param parent  the parent map
-         */
-        protected BidiOrderedMapIterator(final DualTreeBidiMap<K, V> parent) {
-            this.parent = parent;
-            reset();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return nextEntry != null;
-        }
-
-        @Override
-        public K next() {
-            current = nextEntry;
-            if (current == null) {
-                throw new NoSuchElementException();
-            }
-            prevEntry = current;
-            nextEntry = parent.normalMap().higherEntry(current.getKey());
-            canRemove = true;
-            return current.getKey();
-        }
-
-        @Override
-        public boolean hasPrevious() {
-            return prevEntry != null;
-        }
-
-        @Override
-        public K previous() {
-            current = prevEntry;
-            if (current == null) {
-                // should fail due to already changing current
-                throw new NoSuchElementException();
-            }
-            nextEntry = current;
-            prevEntry = parent.normalMap().lowerEntry(current.getKey());
-            canRemove = true;
-            return current.getKey();
-        }
-
-        @Override
-        public void remove() {
-            if (!canRemove) {
-                throw new IllegalStateException("Iterator remove() can only be called once after next() or previous()");
-            }
-            parent.remove(current.getKey());
-            if (nextEntry == current) {
-                if (prevEntry == null)
-                    nextEntry = parent.normalMap().firstEntry();
-                else
-                    nextEntry = parent.normalMap().higherEntry(prevEntry.getKey());
-            } else {
-                if (nextEntry == null)
-                    prevEntry = parent.normalMap().lastEntry();
-                else
-                    prevEntry = parent.normalMap().lowerEntry(nextEntry.getKey());
-            }
-            current = null;
-            canRemove = false;
-        }
-
-        @Override
-        public K getKey() {
-            if (current == null) {
-                throw new IllegalStateException(
-                        "Iterator getKey() can only be called after next() or previous() and before remove()");
-            }
-            return current.getKey();
-        }
-
-        @Override
-        public V getValue() {
-            if (current == null) {
-                throw new IllegalStateException(
-                        "Iterator getValue() can only be called after next() or previous() and before remove()");
-            }
-            return current.getValue();
-        }
-
-        @Override
-        public V setValue(final V value) {
-            if (current == null) {
-                throw new IllegalStateException(
-                        "Iterator setValue() can only be called after next() or previous() and before remove()");
-            }
-
-            final K key = current.getKey();
-            if (parent.reverseMap().containsKey(value) &&
-                    !Objects.equals(parent.reverseMap().get(value), key)) {
-                throw new IllegalArgumentException(
-                        "Cannot use setValue() when the object being set is already in the map");
-            }
-
-            final V oldValue = parent.put(key, value);
-
-            // entry objects as returned from TreeMap navigation methods don't support setValue
-            UnmodifiableMapEntry<K, V> replacementEntry = new UnmodifiableMapEntry<>(key, value);
-            if (nextEntry == current)
-                nextEntry = replacementEntry;
-             else
-                prevEntry = replacementEntry;
-            current = replacementEntry;
-
-            return oldValue;
-        }
-
-        @Override
-        public void reset() {
-            nextEntry = parent.normalMap().firstEntry();
-            prevEntry = null;
-            current = null;
-            canRemove = false;
-        }
-
-        @Override
-        public String toString() {
-            if (current != null) {
-                return "MapIterator[" + getKey() + "=" + getValue() + "]";
-            }
-            return "MapIterator[]";
-        }
-    }
-
     // Serialization
     private void writeObject(final ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
@@ -587,7 +142,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
 
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        setInternalMaps(new TreeMap<>(), new TreeMap<>());
+        setInternalMaps(new TreeMap<>(comparator), new TreeMap<>(valueComparator));
         @SuppressWarnings("unchecked") // will fail at runtime if the stream is incorrect
         final Map<K, V> map = (Map<K, V>) in.readObject();
         putAll(map);

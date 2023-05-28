@@ -81,9 +81,8 @@ public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> imple
      * @return new bidi map
      */
     @Override
-    protected BidiMap<V, K> createBidiMap(final Map<V, K> normalMap, final Map<K, V> reverseMap,
-            final BidiMap<K, V> inverseBidiMap) {
-        return new DualLinkedHashBidiMap<>(normalMap, reverseMap, inverseBidiMap);
+    protected BidiMap<V, K> createInverse() {
+        return new DualLinkedHashBidiMap<>(reverseMap(), normalMap(), this);
     }
 
     // Serialization

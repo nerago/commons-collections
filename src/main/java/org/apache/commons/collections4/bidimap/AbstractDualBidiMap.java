@@ -123,13 +123,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * Creates a new instance of the subclass.
      *
-     * @param normalMap  the normal direction map
-     * @param reverseMap  the reverse direction map
-     * @param inverseMap  this map, which is the inverse in the new map
      * @return the bidi map
      */
-    protected abstract BidiMap<V, K> createBidiMap(Map<V, K> normalMap, Map<K, V> reverseMap, BidiMap<K, V> inverseMap);
-
+    protected abstract BidiMap<V, K> createInverse();
 
     /**
      * Sets the collection being decorated.
@@ -293,7 +289,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public BidiMap<V, K> inverseBidiMap() {
         if (inverseBidiMap == null) {
-            inverseBidiMap = createBidiMap(reverseMap, normalMap, this);
+            inverseBidiMap = createInverse();
         }
         return inverseBidiMap;
     }
@@ -381,7 +377,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
         return new EntrySetIterator<>(iterator, this);
     }
 
-    protected V collectionSetValue(K key, V value) {
+    protected V setValueViaCollection(K key, V value) {
         if (reverseMap.containsKey(value) &&
                 !Objects.equals(reverseMap.get(value), key)) {
             throw new IllegalArgumentException(
@@ -560,8 +556,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
             if (!canRemove) {
                 throw new IllegalStateException("Iterator remove() can only be called once after next()");
             }
-            parent.removeViaCollection(lastKey);
-            super.remove();
+            final Object value = parent.normalMap.get(lastKey);
+            parent.reverseMap.remove(value);
+            super.remove(); // removes from normalMap
             lastKey = null;
             canRemove = false;
         }
@@ -741,7 +738,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
         @Override
         public V setValue(final V value) {
             final K key = getKey();
-            parent.collectionSetValue(key, value);
+            parent.setValueViaCollection(key, value);
             return super.setValue(value);
         }
     }
@@ -820,7 +817,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
                         "Iterator setValue() can only be called after next() and before remove()");
             }
             final K key = last.getKey();
-            return parent.collectionSetValue(key, value);
+            return parent.setValueViaCollection(key, value);
         }
 
         @Override
