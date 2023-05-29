@@ -255,9 +255,7 @@ public class CompositeCollection<E> implements Collection<E>, Serializable {
      */
     @Override
     public boolean containsAll(final Collection<?> coll) {
-        if (coll == null) {
-            return false;
-        }
+        Objects.requireNonNull(coll);
         for (final Object item : coll) {
             if (!contains(item)) {
                 return false;
@@ -298,9 +296,7 @@ public class CompositeCollection<E> implements Collection<E>, Serializable {
      */
     @Override
     public boolean removeAll(final Collection<?> coll) {
-        if (CollectionUtils.isEmpty(coll)) {
-            return false;
-        }
+        Objects.requireNonNull(coll);
         boolean changed = false;
         for (final Collection<E> item : all) {
             changed |= item.removeAll(coll);
@@ -342,11 +338,10 @@ public class CompositeCollection<E> implements Collection<E>, Serializable {
      */
     @Override
     public boolean retainAll(final Collection<?> coll) {
+        Objects.requireNonNull(coll);
         boolean changed = false;
-        if (coll != null) {
-            for (final Collection<E> item : all) {
-                changed |= item.retainAll(coll);
-            }
+        for (final Collection<E> item : all) {
+            changed |= item.retainAll(coll);
         }
         return changed;
     }
