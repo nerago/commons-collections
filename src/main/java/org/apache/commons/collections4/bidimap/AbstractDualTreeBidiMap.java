@@ -16,10 +16,8 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
 import java.util.*;
@@ -177,15 +175,18 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
     }
 
     @Override
+    protected KeySet<K> createKeySet() {
+        return new NavKeySet<>(normalMap().navigableKeySet(), this);
+    }
+
+    @Override
     public NavigableSet<K> navigableKeySet() {
-        // TODO
-        return normalMap().navigableKeySet();
+        return new NavKeySet<>(normalMap().navigableKeySet(), this);
     }
 
     @Override
     public NavigableSet<K> descendingKeySet() {
-        // TODO
-        return normalMap().descendingKeySet();
+        return new NavKeySet<>(normalMap().descendingKeySet(), this);
     }
 
     @Override
@@ -228,18 +229,14 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
      */
     protected static class BidiNavigableMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
 
-        /**
-         * The parent map
-         */
         private final AbstractDualBidiMap<K, V> parent;
         private final NavigableMap<K, V> normalMap;
 
-        private Entry<K, V> nextEntry;
-        private Entry<K, V> prevEntry;
+        private Iterator<Entry<K, V>> forwardIterator;
+        private Iterator<Entry<K, V>> backwardIterator;
 
-        /**
-         * The last returned entry
-         */
+        private boolean canRemove;
+        private boolean forwardDirection;
         private Entry<K, V> current;
 
         /**
@@ -253,62 +250,77 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
             reset();
         }
 
+        private Iterator<Entry<K,V>> forwardIterator() {
+            Iterator<Entry<K, V>> iterator = forwardIterator;
+            if (iterator == null) {
+                iterator = normalMap.tailMap(current.getKey(), true).entrySet().iterator();
+                forwardIterator = iterator;
+            }
+            return iterator;
+        }
+
+        private Iterator<Entry<K,V>> backwardIterator() {
+            Iterator<Entry<K, V>> iterator = backwardIterator;
+            if (iterator != null) {
+                return iterator;
+            } else if (current == null) {
+                return EmptyIterator.emptyIterator();
+            } else {
+                iterator = normalMap.headMap(current.getKey(), true).descendingMap().entrySet().iterator();
+                backwardIterator = iterator;
+                return iterator;
+            }
+        }
+
         @Override
         public boolean hasNext() {
-            return nextEntry != null;
+            return forwardIterator().hasNext();
         }
 
         @Override
         public K next() {
-            current = nextEntry;
-            if (current == null) {
-                throw new NoSuchElementException();
-            }
-            prevEntry = current;
-            nextEntry = normalMap.higherEntry(current.getKey());
+            Iterator<Entry<K, V>> iterator = forwardIterator();
+            current = iterator.next();
+            forwardDirection = true;
+            backwardIterator = null;
+            canRemove = true;
             return current.getKey();
         }
 
         @Override
         public boolean hasPrevious() {
-            return prevEntry != null;
+            return backwardIterator().hasNext();
         }
 
         @Override
         public K previous() {
-            current = prevEntry;
-            if (current == null) {
-                // should fail due to already changing current
-                throw new NoSuchElementException();
-            }
-            nextEntry = current;
-            prevEntry = normalMap.lowerEntry(current.getKey());
+            Iterator<Entry<K, V>> iterator = backwardIterator();
+            current = iterator.next();
+            forwardDirection = false;
+            forwardIterator = null;
+            canRemove = true;
             return current.getKey();
         }
 
         @Override
         public void remove() {
-            if (current == null) {
+            if (!canRemove) {
                 throw new IllegalStateException("Iterator remove() can only be called once after next() or previous()");
             }
-            parent.remove(current.getKey());
-            if (nextEntry == current) {
-                if (prevEntry == null)
-                    nextEntry = normalMap.firstEntry();
-                else
-                    nextEntry = normalMap.higherEntry(prevEntry.getKey());
+            if (forwardDirection) {
+                forwardIterator.remove();
+                backwardIterator = null;
             } else {
-                if (nextEntry == null)
-                    prevEntry = normalMap.lastEntry();
-                else
-                    prevEntry = normalMap.lowerEntry(nextEntry.getKey());
+                backwardIterator.remove();
+                forwardIterator = null;
             }
-            current = null;
+            parent.reverseMap().remove(current.getValue());
+            canRemove = false;
         }
 
         @Override
         public K getKey() {
-            if (current == null) {
+            if (!canRemove) {
                 throw new IllegalStateException(
                         "Iterator getKey() can only be called after next() or previous() and before remove()");
             }
@@ -317,7 +329,7 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
 
         @Override
         public V getValue() {
-            if (current == null) {
+            if (!canRemove) {
                 throw new IllegalStateException(
                         "Iterator getValue() can only be called after next() or previous() and before remove()");
             }
@@ -326,30 +338,24 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
 
         @Override
         public V setValue(final V value) {
-            if (current == null) {
+            if (!canRemove) {
                 throw new IllegalStateException(
                         "Iterator setValue() can only be called after next() or previous() and before remove()");
             }
 
             final K key = current.getKey();
             final V oldValue = parent.setValueViaCollection(key, value);
-
-            // entry objects as returned from TreeMap navigation methods don't support setValue
-            UnmodifiableMapEntry<K, V> replacementEntry = new UnmodifiableMapEntry<>(key, value);
-            if (nextEntry == current)
-                nextEntry = replacementEntry;
-            else
-                prevEntry = replacementEntry;
-            current = replacementEntry;
-
+            current.setValue(value);
             return oldValue;
         }
 
         @Override
         public void reset() {
-            nextEntry = normalMap.firstEntry();
-            prevEntry = null;
+            forwardDirection = true;
+            forwardIterator = normalMap.entrySet().iterator();
+            backwardIterator = null;
             current = null;
+            canRemove = false;
         }
 
         @Override
@@ -358,6 +364,111 @@ public abstract class AbstractDualTreeBidiMap<K, V> extends AbstractDualBidiMap<
                 return "MapIterator[" + getKey() + "=" + getValue() + "]";
             }
             return "MapIterator[]";
+        }
+    }
+
+    protected static class NavKeySet<K> extends KeySet<K> implements NavigableSet<K> {
+        protected NavKeySet(NavigableSet<K> set, AbstractDualBidiMap<K, ?> parent) {
+            super(set, parent);
+        }
+
+        @Override
+        protected NavigableSet<K> decorated() {
+            return (NavigableSet<K>) super.decorated();
+        }
+
+        protected NavKeySet<K> createSubSet(NavigableSet<K> set) {
+            return new NavKeySet<>(set, parent);
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return decorated().comparator();
+        }
+
+        @Override
+        public K lower(K k) {
+            return decorated().lower(k);
+        }
+
+        @Override
+        public K floor(K k) {
+            return decorated().floor(k);
+        }
+
+        @Override
+        public K ceiling(K k) {
+            return decorated().ceiling(k);
+        }
+
+        @Override
+        public K higher(K k) {
+            return decorated().higher(k);
+        }
+
+        @Override
+        public K pollFirst() {
+            return decorated().pollFirst();
+        }
+
+        @Override
+        public K pollLast() {
+            return decorated().pollLast();
+        }
+
+        @Override
+        public Iterator<K> iterator() {
+            return decorated().iterator();
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return decorated().descendingIterator();
+        }
+
+        @Override
+        public NavigableSet<K> descendingSet() {
+            return createSubSet(decorated().descendingSet());
+        }
+
+        @Override
+        public NavigableSet<K> subSet(K fromElement, boolean fromInclusive, K toElement, boolean toInclusive) {
+            return createSubSet(decorated().subSet(fromElement, fromInclusive, toElement, toInclusive));
+        }
+
+        @Override
+        public NavigableSet<K> headSet(K toElement, boolean inclusive) {
+            return createSubSet(decorated().headSet(toElement, inclusive));
+        }
+
+        @Override
+        public NavigableSet<K> tailSet(K fromElement, boolean inclusive) {
+            return createSubSet(decorated().tailSet(fromElement, inclusive));
+        }
+
+        @Override
+        public SortedSet<K> subSet(K fromElement, K toElement) {
+            return createSubSet(decorated().subSet(fromElement, true, toElement, false));
+        }
+
+        @Override
+        public SortedSet<K> headSet(K toElement) {
+            return createSubSet(decorated().headSet(toElement, false));
+        }
+
+        @Override
+        public SortedSet<K> tailSet(K fromElement) {
+            return createSubSet(decorated().tailSet(fromElement, true));
+        }
+
+        @Override
+        public K first() {
+            return decorated().first();
+        }
+
+        @Override
+        public K last() {
+            return decorated().last();
         }
     }
 }

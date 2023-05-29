@@ -77,11 +77,6 @@ class DualTreeBidiSubMapInverse<K, V> extends AbstractDualTreeBidiMap<K, V> impl
     }
 
     @Override
-    public SortedBidiMap<V, K> inverseBidiMap() {
-        return super.inverseBidiMap();
-    }
-
-    @Override
     public int size() {
         return reverseMap().size();
     }
@@ -328,11 +323,9 @@ class DualTreeBidiSubMapInverse<K, V> extends AbstractDualTreeBidiMap<K, V> impl
     }
 
     protected static class EntrySetIteratorInverted<K, V> implements Iterator<Entry<K, V>> {
-        private final DualTreeBidiSubMapInverse<K, V> parent;
         private final Iterator<Entry<V, K>> reverseIterator;
 
         public EntrySetIteratorInverted(DualTreeBidiSubMapInverse<K, V> parent) {
-            this.parent = parent;
             this.reverseIterator = parent.reverseMap().entrySet().iterator();
         }
 
