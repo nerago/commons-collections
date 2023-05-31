@@ -1151,7 +1151,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
-     * Tests that the {@link Map#bitMaps} collection is backed by
+     * Tests that the {@link Map#values} collection is backed by
      * the underlying map for clear().
      */
     @Test
@@ -1320,7 +1320,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
-     * Tests that the {@link Map#bitMaps} collection is backed by
+     * Tests that the {@link Map#values} collection is backed by
      * the underlying map by removing from the values collection
      * and testing if the value was removed from the map.
      * <p>
@@ -1640,6 +1640,22 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             }
             assertFalse(getMap().containsKey(key));
         }
+    }
+
+    @Test
+    public void testOptionals() {
+        org.junit.jupiter.api.Assertions.fail("TODO");
+//        V getOrDefault(Object key, V defaultValue) {
+//        void forEach(BiConsumer<? super K, ? super V> action) {
+//        void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+//        V putIfAbsent(K key, V value) {
+//        boolean remove(Object key, Object value) {
+//        boolean replace(K key, V oldValue, V newValue) {
+//        V replace(K key, V value) {
+//        V computeIfAbsent(K key,
+//        V computeIfPresent(K key,
+//        V compute(K key,
+//        V merge(K key, V value,
     }
 
     /**

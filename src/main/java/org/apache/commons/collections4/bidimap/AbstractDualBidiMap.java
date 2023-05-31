@@ -21,6 +21,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
@@ -208,6 +211,93 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public boolean containsValue(final Object value) {
         return reverseMap.containsKey(value);
+    }
+
+    @Override
+    public V getOrDefault(Object key, V defaultValue) {
+        return normalMap.getOrDefault(key, defaultValue);
+    }
+
+    @Override
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        normalMap.forEach(action);
+    }
+
+    @Override
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        BidiMap.super.replaceAll(function);
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        if (normalMap.containsKey(key)) {
+            V oldValue = normalMap.get(key);
+            if (oldValue != null)
+                return oldValue;
+            else
+                reverseMap.remove(null);
+        }
+        if (reverseMap.containsKey(value)) {
+            normalMap.remove(reverseMap.get(value));
+        }
+        normalMap.put(key, value);
+        reverseMap.put(value, key);
+        return null;
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+        if (normalMap.remove(key, value)) {
+            reverseMap.remove(value);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        if (!normalMap.containsKey(key))
+            return false;
+        V currentValue = normalMap.get(key);
+        if (!Objects.equals(currentValue, oldValue))
+            return false;
+        reverseMap.remove(currentValue);
+        if (reverseMap.containsKey(newValue)) {
+            normalMap.remove(reverseMap.get(newValue));
+        }
+         normalMap.put(key, newValue);
+        reverseMap.put(newValue, key);
+        return true;
+    }
+
+    @Override
+    public V replace(K key, V value) {
+        return BidiMap.super.replace(key, value);
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        return BidiMap.super.computeIfAbsent(key, mappingFunction);
+    }
+
+    @Override
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return BidiMap.super.computeIfPresent(key, remappingFunction);
+    }
+
+    @Override
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return BidiMap.super.compute(key, remappingFunction);
+    }
+
+    @Override
+    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        return BidiMap.super.merge(key, value, remappingFunction);
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 
     // BidiMap

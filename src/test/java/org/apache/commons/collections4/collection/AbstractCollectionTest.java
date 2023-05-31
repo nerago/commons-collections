@@ -1386,6 +1386,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         }
     }
 
+    @Test void testOptionals() {
+        org.junit.jupiter.api.Assertions.fail("TODO");
+        //getCollection().removeIf()
+        //getCollection().stream()
+        //getCollection()
+    }
+
     public Collection<E> getCollection() {
         return collection;
     }
