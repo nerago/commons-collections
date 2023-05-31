@@ -39,6 +39,7 @@ import java.util.NoSuchElementException;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -1138,6 +1139,14 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         sub = getCollection().subList(1, size);
         getCollection().clear();
         failFastAll(sub);
+    }
+
+    @Test
+    public void testOptionals() {
+        org.junit.jupiter.api.Assertions.fail("TODO");
+        //replaceAll
+        //index addall
+        //sort
     }
 
     /**

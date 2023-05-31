@@ -145,7 +145,7 @@ public final class CollectionSortedBag<E> extends AbstractSortedBagDecorator<E> 
     @Override
     public boolean add(final E object, final int count) {
         decorated().add(object, count);
-        return true;
+        return count > 0;
     }
 
 }

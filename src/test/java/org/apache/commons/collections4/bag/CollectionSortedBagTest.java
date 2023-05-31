@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 4.0
  */
-public class CollectionSortedBagTest<T> extends AbstractCollectionTest<T> {
+public class CollectionSortedBagTest<T> extends AbstractCollectionBagTest<T> {
 
     /**
      * JUnit constructor.

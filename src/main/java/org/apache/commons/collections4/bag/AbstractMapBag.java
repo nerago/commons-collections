@@ -25,6 +25,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
@@ -250,7 +251,7 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      *
      * @param object the object to search for
      * @param nCopies the number of copies to add
-     * @return {@code true} if the object was not already in the {@code uniqueSet}
+     * @return {@code true} if the object was added to the {@code uniqueSet}
      */
     @Override
     public boolean add(final E object, final int nCopies) {
@@ -347,12 +348,11 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      */
     @Override
     public boolean removeAll(final Collection<?> coll) {
+        Objects.requireNonNull(coll);
         boolean result = false;
-        if (coll != null) {
-            for (final Object current : coll) {
-                final boolean changed = remove(current, 1);
-                result = result || changed;
-            }
+        for (final Object current : coll) {
+            final boolean changed = remove(current, 1);
+            result = result || changed;
         }
         return result;
     }
@@ -366,6 +366,7 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      */
     @Override
     public boolean retainAll(final Collection<?> coll) {
+        Objects.requireNonNull(coll);
         if (coll instanceof Bag) {
             return retainAll((Bag<?>) coll);
         }
