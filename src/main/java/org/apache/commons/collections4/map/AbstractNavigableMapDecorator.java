@@ -175,17 +175,17 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
     }
 
     @Override
-    public SortedMap<K, V> subMap(K fromKey, K toKey) {
+    public NavigableMap<K, V> subMap(K fromKey, K toKey) {
         return wrapSubMap(decorated().subMap(fromKey, true, toKey, false));
     }
 
     @Override
-    public SortedMap<K, V> headMap(K toKey) {
+    public NavigableMap<K, V> headMap(K toKey) {
         return wrapSubMap(decorated().headMap(toKey, false));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(K fromKey) {
+    public NavigableMap<K, V> tailMap(K fromKey) {
         return wrapSubMap(decorated().tailMap(fromKey, true));
     }
 }
