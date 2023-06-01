@@ -18,7 +18,6 @@ package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
@@ -29,21 +28,21 @@ import java.util.function.Predicate;
 /**
  * Internal sub map view.
  */
-class DualTreeBidiSubMapInverse<K, V> extends AbstractDualTreeBidiMap<K, V> implements Unmodifiable {
+class DualTreeBidiSubMapInverseX<K, V> extends AbstractDualTreeBidiMap<K, V> implements Unmodifiable {
     static final Object NULL = new Object();
 
-    protected DualTreeBidiSubMapInverse(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
+    protected DualTreeBidiSubMapInverseX(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
         super(normalMap, reverseMap, inverseMap);
     }
 
     @Override
-    protected DualTreeBidiSubMapInverse<V, K> createInverse() {
+    protected DualTreeBidiSubMapInverseX<V, K> createInverse() {
         throw new IllegalStateException("should never get called");
     }
 
     @Override
     protected AbstractDualTreeBidiMap<K, V> createSubMap(NavigableMap<K, V> normalMap) {
-        return new DualTreeBidiSubMapInverse<>(normalMap, reverseMap(),null);
+        return new DualTreeBidiSubMapInverseX<>(normalMap, reverseMap(),null);
     }
 
     @Override
@@ -199,16 +198,16 @@ class DualTreeBidiSubMapInverse<K, V> extends AbstractDualTreeBidiMap<K, V> impl
     }
 
     protected static class ValuesUsingReverse<V> extends Values<V> {
-        public ValuesUsingReverse(DualTreeBidiSubMapInverse<?, V> parent) {
+        public ValuesUsingReverse(DualTreeBidiSubMapInverseX<?, V> parent) {
             super(parent.reverseMap().keySet(), parent);
         }
     }
 
     protected static class EntrySetInverted<K, V> implements Set<Entry<K, V>> {
-        private final DualTreeBidiSubMapInverse<K, V> parent;
+        private final DualTreeBidiSubMapInverseX<K, V> parent;
         private final Set<Entry<V, K>> reverseEntrySet;
 
-        public EntrySetInverted(DualTreeBidiSubMapInverse<K, V> parent) {
+        public EntrySetInverted(DualTreeBidiSubMapInverseX<K, V> parent) {
             this.parent = parent;
             this.reverseEntrySet = parent.reverseMap().entrySet();
         }
@@ -325,7 +324,7 @@ class DualTreeBidiSubMapInverse<K, V> extends AbstractDualTreeBidiMap<K, V> impl
     protected static class EntrySetIteratorInverted<K, V> implements Iterator<Entry<K, V>> {
         private final Iterator<Entry<V, K>> reverseIterator;
 
-        public EntrySetIteratorInverted(DualTreeBidiSubMapInverse<K, V> parent) {
+        public EntrySetIteratorInverted(DualTreeBidiSubMapInverseX<K, V> parent) {
             this.reverseIterator = parent.reverseMap().entrySet().iterator();
         }
 

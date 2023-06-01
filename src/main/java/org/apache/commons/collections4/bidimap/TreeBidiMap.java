@@ -59,7 +59,7 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  * keys, containsValue would be directed to the TreeMap that maps keys
  * to values), there are problems with that implementation.
  * If the data contained in the TreeMaps is large, the cost of redundant
- * storage becomes significant. The {@link DualTreeBidiMap} and
+ * storage becomes significant. The {@link DualTreeBidi2MapImproved} and
  * {@link DualHashBidiMap} implementations use this approach.
  * </p>
  * <p>

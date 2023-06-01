@@ -17,27 +17,25 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedBidiMap;
 
 import java.util.*;
 
 /**
  * Internal sub map view.
  */
-class DualTreeBidiSubMap<K, V> extends AbstractDualTreeBidiMap<K, V> {
-    protected DualTreeBidiSubMap(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
+class DualTreeBidiSubMapX<K, V> extends AbstractDualTreeBidiMap<K, V> {
+    protected DualTreeBidiSubMapX(Map<K, V> normalMap, Map<V, K> reverseMap, BidiMap<V, K> inverseMap) {
         super(normalMap, reverseMap, inverseMap);
     }
 
     @Override
     protected AbstractDualTreeBidiMap<V, K> createInverse() {
-        return new DualTreeBidiSubMapInverse<>(reverseMap(), normalMap(), this);
+        return new DualTreeBidiSubMapInverseX<>(reverseMap(), normalMap(), this);
     }
 
     @Override
     protected AbstractDualTreeBidiMap<K, V> createSubMap(NavigableMap<K, V> normalMap) {
-        return new DualTreeBidiSubMap<>(normalMap, reverseMap(),null);
+        return new DualTreeBidiSubMapX<>(normalMap, reverseMap(),null);
     }
 
     @Override
