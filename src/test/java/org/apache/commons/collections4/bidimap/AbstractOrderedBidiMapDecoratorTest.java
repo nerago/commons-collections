@@ -39,7 +39,7 @@ public class AbstractOrderedBidiMapDecoratorTest
      */
     @Override
     public OrderedBidiMap<String, String> makeObject() {
-        return new TestOrderedBidiMap<>();
+        return new TestOrderedBidiMap();
     }
 
     @Override

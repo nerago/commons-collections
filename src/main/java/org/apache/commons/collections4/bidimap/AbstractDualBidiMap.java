@@ -439,6 +439,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          */
         @Override
         public boolean removeIf(final Predicate<? super E> filter) {
+            Objects.requireNonNull(filter);
             if (parent.isEmpty() || Objects.isNull(filter)) {
                 return false;
             }
