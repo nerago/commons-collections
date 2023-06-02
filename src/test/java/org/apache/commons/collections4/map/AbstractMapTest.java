@@ -1952,6 +1952,26 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             assertFalse(getCollection().remove(new Object()));
         }
 
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntryInArrayReadOnly() {
+            resetFull();
+            Object[] arrayObject = getCollection().toArray();
+            assertEquals(getCollection().size(), arrayObject.length);
+            for (Object entryObject : arrayObject) {
+                final Entry<K,V> entry = (Entry<K, V>) entryObject;
+                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue((V) "abc"));
+            }
+
+            Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
+            assertEquals(getCollection().size(), arrayTyped.length);
+            for (Entry<K,V> entry : arrayTyped) {
+                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue((V) "abc"));
+            }
+        }
+
         @Override
         public void verify() {
             super.verify();

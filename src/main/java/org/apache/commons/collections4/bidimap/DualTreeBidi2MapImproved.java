@@ -17,9 +17,10 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.*;
-import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
 import org.apache.commons.collections4.set.AbstractNavigableSetDecorator;
+import org.apache.commons.collections4.set.AbstractSetDecorator;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -27,9 +28,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.*;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.util.function.*;
 
 
 /**
@@ -62,10 +62,16 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
     protected final NavigableMap<V, K> valueMap;
     private final Comparator<? super K> keyComparator;
     private final Comparator<? super V> valueComparator;
+    private KeySet<K, V> keySet;
+    private KeySet<K, V> keySetDescending;
+    private Set<V> values;
+    private Set<Map.Entry<K, V>> entrySet;
     private DualTreeBidi2MapImproved<V, K> inverseBidiMap;
     private int modificationCount = 0;
 
-    private static final Object NULL = new Object();
+    private static final Comparable<?> NULL = o -> {
+        throw new UnsupportedOperationException();
+    };
 
     @SuppressWarnings("unchecked")
     private K NO_KEY() {
@@ -193,11 +199,7 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
     @Override
     public K getKey(Object valueObject) {
         V value = castValue(valueObject);
-        K key = valueMap.getOrDefault(value, NO_KEY());
-        if (key != NO_KEY())
-            return key;
-        else
-            return null;
+        return valueMap.get(value);
     }
 
     @Override
@@ -210,6 +212,17 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
         valueMapRemoveChecked(value, key);
         modified();
         return key;
+    }
+
+    protected boolean removeValueViaCollection(Object valueObject) {
+        V value = castValue(valueObject);
+        K key = valueMap.getOrDefault(value, NO_KEY());
+        if (key == NO_KEY())
+            return false;
+        keyMapRemoveChecked(key, value);
+        valueMapRemoveChecked(value, key);
+        modified();
+        return true;
     }
 
     @Override
@@ -249,19 +262,28 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
     public V put(K key, V newValue) {
         V currentValue = keyMap.getOrDefault(key, NO_VALUE());
 
-        if (valueEquals(newValue, currentValue)) {
-            return currentValue;
-        } else if (currentValue == NO_VALUE()) {
+        if (currentValue == NO_VALUE()) {
             keyMapAddChecked(key, newValue);
             updateValueMapForNewValue(key, newValue);
             modified();
             return null;
+        } else if (valueEquals(newValue, currentValue)) {
+            return currentValue;
         } else {
             keyMapReplaceChecked(key, currentValue, newValue);
             valueMapRemoveChecked(currentValue, key);
             updateValueMapForNewValue(key, newValue);
             modified();
             return currentValue;
+        }
+    }
+
+    protected void putWithKnownState(K key, V oldValue, V newValue) {
+        if (!valueEquals(oldValue, newValue)) {
+            keyMapReplaceChecked(key, oldValue, newValue);
+            valueMapRemoveChecked(oldValue, key);
+            updateValueMapForNewValue(key, newValue);
+            modified();
         }
     }
 
@@ -323,8 +345,16 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
         }
     }
 
+    protected void removeViaMapIterator(K key, V value) {
+        keyMapRemoveChecked(key, value);
+        valueMapRemoveChecked(value, key);
+        modified();
+    }
+
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
+        if (valueEquals(oldValue, newValue))
+            return false;
         if (!keyMap.replace(key, oldValue, newValue))
             return false;
         valueMapRemoveChecked(oldValue, key);
@@ -422,13 +452,13 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
                 modified();
             }
             return null;
-        } else if (valueEquals(newValue, currentValue)) {
-            return currentValue;
         } else if (currentValue == NO_VALUE()) {
             keyMapAddChecked(key, newValue);
             updateValueMapForNewValue(key, newValue);
             modified();
             return newValue;
+        } else if (valueEquals(newValue, currentValue)) {
+            return currentValue;
         } else {
             keyMapReplaceChecked(key, currentValue, newValue);
             valueMapRemoveChecked(currentValue, key);
@@ -510,12 +540,16 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
 
     @Override
     public NavigableSet<K> navigableKeySet() {
-        return new KeySet<>(keyMap.navigableKeySet(), this);
+        if (keySet == null)
+            keySet = new KeySet<>(keyMap.navigableKeySet(), this);
+        return keySet;
     }
 
     @Override
     public NavigableSet<K> descendingKeySet() {
-        return new KeySet<>(keyMap.descendingKeySet(), this);
+        if (keySetDescending == null)
+            keySetDescending = new KeySet<>(keyMap.descendingKeySet(), this);
+        return keySetDescending;
     }
 
     @Override
@@ -525,17 +559,21 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
 
     @Override
     public Set<Entry<K, V>> entrySet() {
-        return new EntrySet<>(keyMap.entrySet(), this);
+        if (entrySet == null)
+            entrySet = new EntrySet<>(keyMap.entrySet(), this);
+        return entrySet;
     }
 
     @Override
     public Set<V> values() {
-        return new ValueMapKeySet<>(valueMap.keySet(), this);
+        if (values == null)
+            values = new ValueMapKeySet<>(valueMap.navigableKeySet(), this);
+        return values;
     }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return new DualTreeMapIterator();
+        return new DualTreeMapIterator(keyMap, this);
     }
 
     private void updateValueMapDuringKeyMapIteration(K key, V oldValue, V newValue) {
@@ -645,16 +683,16 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
     protected static class ValueChangeNotAllowedException extends IllegalArgumentException {
     }
 
-    protected static class BaseSet<E, K extends Comparable<K>, V extends Comparable<V>>
+    protected static abstract class BaseNavigableSet<E, K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractNavigableSetDecorator<E> {
         protected final DualTreeBidi2MapImproved<K, V> parent;
 
-        protected BaseSet(NavigableSet<E> set, DualTreeBidi2MapImproved<K, V> parent) {
+        protected BaseNavigableSet(NavigableSet<E> set, DualTreeBidi2MapImproved<K, V> parent) {
             super(set);
             this.parent = parent;
         }
 
-        protected abstract BaseSet<E, K, V> wrapSet(NavigableSet<E> set)
+        protected abstract BaseNavigableSet<E, K, V> wrapSet(NavigableSet<E> set);
 
         @Override
         public boolean add(E object) {
@@ -669,6 +707,42 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
         @Override
         public void clear() {
             parent.clear();
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> coll) {
+            // from abstractdualbidimap
+            if (parent.isEmpty() || coll.isEmpty()) {
+                return false;
+            }
+            boolean modified = false;
+            for (final Object current : coll) {
+                modified |= remove(current);
+            }
+            return modified;
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> coll) {
+            // from abstractdualbidimap
+            if (parent.isEmpty()) {
+                return false;
+            }
+            if (coll.isEmpty()) {
+                parent.clear();
+                return true;
+            }
+            boolean modified = false;
+            final Iterator<E> it = iterator();
+            while (it.hasNext()) {
+                if (!coll.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            if (modified)
+                parent.modified();
+            return modified;
         }
 
         @Override
@@ -709,19 +783,24 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
     }
 
     protected static class KeySet<K extends Comparable<K>, V extends Comparable<V>>
-            extends BaseSet<K, K, V> {
+            extends BaseNavigableSet<K, K, V> {
         protected KeySet(NavigableSet<K> keySet, DualTreeBidi2MapImproved<K, V> parent) {
             super(keySet, parent);
         }
 
         @Override
+        protected KeySet<K, V> wrapSet(NavigableSet<K> set) {
+            return new KeySet<>(set, parent);
+        }
+
+        @Override
         public Iterator<K> iterator() {
-            return new KeyIterator<>(decorated().iterator(), parent);
+            return new KeyIterator<>(() -> decorated().iterator(), parent);
         }
 
         @Override
         public Iterator<K> descendingIterator() {
-            return new KeyIterator<>(decorated().descendingIterator(), parent);
+            return new KeyIterator<>(() -> decorated().descendingIterator(), parent);
         }
 
         @Override
@@ -734,16 +813,6 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
             // ignores set order
             Objects.requireNonNull(filter);
             return parent.collectionRemoveIf(e -> filter.test(e.getKey()));
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> coll) {
-            return super.removeAll(coll);
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> coll) {
-            return super.retainAll(coll);
         }
 
         @Override
@@ -775,90 +844,332 @@ public class DualTreeBidi2MapImproved<K extends Comparable<K>, V extends Compara
         }
     }
 
-    protected static class EntrySet<K extends Comparable<K>, V extends Comparable<V>>
-            extends BaseSet<Entry<K, V>, K, V> {
-        public EntrySet(Set<Entry<K, V>> entrySet) {
-            super(entrySet);
-        }
-
-        public EntrySet(Set<Entry<K,V>> entries, DualTreeBidi2MapImproved<K,V> kvDualTreeBidi2MapImproved) {
-            super();
-        }
-
-    }
-
     protected static class ValueMapKeySet<K extends Comparable<K>, V extends Comparable<V>>
-            extends BaseSet<V, K, V> {
-        public ValueMapKeySet(Set<V> valueMapKeySet) {
-            super(valueMapKeySet);
+            extends BaseNavigableSet<V, K, V> {
+        public ValueMapKeySet(NavigableSet<V> valueMapKeySet, DualTreeBidi2MapImproved<K, V> parent) {
+            super(valueMapKeySet, parent);
         }
 
-        public ValueMapKeySet(Set<V> vs, DualTreeBidi2MapImproved<K,V> kvDualTreeBidi2MapImproved) {
-            super();
+        @Override
+        protected ValueMapKeySet<K, V> wrapSet(NavigableSet<V> set) {
+            return new ValueMapKeySet<>(set, parent);
+        }
+
+        @Override
+        public Iterator<V> iterator() {
+            return new ValueIterator<>(() -> decorated().iterator(), parent);
+        }
+
+        @Override
+        public Iterator<V> descendingIterator() {
+            return new ValueIterator<>(() -> decorated().descendingIterator(), parent);
+        }
+
+        @Override
+        public boolean remove(Object object) {
+            return parent.removeValueViaCollection(object);
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super V> filter) {
+            // ignores set order
+            Objects.requireNonNull(filter);
+            return parent.collectionRemoveIf(e -> filter.test(e.getValue()));
+        }
+
+        @Override
+        public V pollFirst() {
+            if (!decorated().isEmpty()) {
+                // could be improved if we knew parent map aligned
+                V value = decorated().first(); // from valueMap
+                K key = parent.valueMap.remove(value);
+                parent.keyMapRemoveChecked(key, value);
+                parent.modified();
+                return value;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public V pollLast() {
+            if (!decorated().isEmpty()) {
+                // could be improved if we knew parent map aligned
+                V value = decorated().last(); // from valueMap
+                K key = parent.valueMap.remove(value);
+                parent.keyMapRemoveChecked(key, value);
+                parent.modified();
+                return value;
+            } else {
+                return null;
+            }
         }
     }
 
-    protected static class KeyIterator<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractIteratorDecorator<K> {
-        public KeyIterator(Iterator<K> iterator, DualTreeBidi2MapImproved<K,V> parent) {
-            super(iterator);
+    protected static class EntrySet<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractSetDecorator<Entry<K, V>> {
+        protected final DualTreeBidi2MapImproved<K, V> parent;
+
+        protected EntrySet(Set<Entry<K, V>> entrySet, DualTreeBidi2MapImproved<K, V> parent) {
+            super(entrySet);
+            this.parent = parent;
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> iterator() {
+            return new EntryIterator<>(() -> decorated().iterator(), parent);
+        }
+
+        @Override
+        public boolean remove(Object object) {
+            return super.remove(object);
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+            return super.removeIf(filter);
+        }
+
+        @Override
+        public void forEach(Consumer<? super Entry<K, V>> action) {
+            super.forEach(action);
+        }
+
+        @Override
+        public Object[] toArray() {
+            // TODO wrap array?
+            return super.toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] object) {
+            return super.toArray(object);
         }
     }
 
-    protected static class EntryIterator<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractIteratorDecorator<K> {
-        public EntryIterator(Iterator<K> iterator, DualTreeBidi2MapImproved<K,V> parent) {
-            super(iterator);
-        }
-    }
+    protected abstract static class BaseIterator<K extends Comparable<K>, V extends Comparable<V>, E> implements ResettableIterator<E> {
+        /**
+         * The parent map
+         */
+        protected final DualTreeBidi2MapImproved<K, V> parent;
+        protected final Supplier<Iterator<E>> makeIterator;
+        protected Iterator<E> iterator;
+        /**
+         * The last returned key/entry/value
+         */
+        protected E lastResult;
+        /**
+         * Whether remove is allowed at present
+         */
+        protected boolean canRemove;
+        protected int expectedModCount;
 
-    protected static class ValueIterator<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractIteratorDecorator<K> {
-        public ValueIterator(Iterator<K> iterator, DualTreeBidi2MapImproved<K,V> parent) {
-            super(iterator);
+        protected BaseIterator(Supplier<Iterator<E>> makeIterator, DualTreeBidi2MapImproved<K, V> parent) {
+            this.parent = parent;
+            this.makeIterator = makeIterator;
+            this.expectedModCount = parent.modificationCount;
+            reset();
         }
-    }
 
-    private class DualTreeMapIterator implements OrderedMapIterator<K, V> {
+        @Override
+        public void reset() {
+            lastResult = null;
+            canRemove = false;
+            iterator = makeIterator.get();
+        }
 
         @Override
         public boolean hasNext() {
-            return false;
+            return iterator.hasNext();
         }
 
         @Override
-        public K next() {
-            return null;
-        }
-
-        @Override
-        public K getKey() {
-            return null;
-        }
-
-        @Override
-        public V getValue() {
-            return null;
+        public E next() {
+            E result = iterator.next();
+            canRemove = true;
+            lastResult = result;
+            return result;
         }
 
         @Override
         public void remove() {
+            if (!canRemove)
+                throw new IllegalStateException();
+            if (parent.modificationCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            removeExtras(lastResult);
+            iterator.remove(); // removes from primary map
+            parent.modified();
+            expectedModCount = parent.modificationCount;
+            lastResult = null;
+            canRemove = false;
+        }
 
+        protected abstract void removeExtras(E result);
+
+        @Override
+        public void forEachRemaining(Consumer<? super E> action) {
+            iterator.forEachRemaining(action);
+        }
+    }
+
+    protected static class KeyIterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseIterator<K, V, K> {
+        protected KeyIterator(Supplier<Iterator<K>> makeIterator, DualTreeBidi2MapImproved<K, V> parent) {
+            // normally receives keyMap.navigableKeySet().iterator()
+            super(makeIterator, parent);
         }
 
         @Override
-        public V setValue(V value) {
-            return null;
+        protected void removeExtras(K key) {
+            V value = parent.keyMap.get(key);
+            parent.valueMapRemoveChecked(value, key);
+        }
+    }
+
+    protected static class ValueIterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseIterator<K, V, V> {
+        public ValueIterator(Supplier<Iterator<V>> makeIterator, DualTreeBidi2MapImproved<K, V> parent) {
+            // normally receives valueMap.navigableKeySet().iterator()
+            super(makeIterator, parent);
+        }
+
+        @Override
+        protected void removeExtras(V value) {
+            K key = parent.valueMap.get(value);
+            parent.keyMapRemoveChecked(key, value);
+        }
+    }
+
+    protected static class EntryIterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseIterator<K, V, Entry<K, V>> {
+        public EntryIterator(Supplier<Iterator<Entry<K, V>>> makeIterator, DualTreeBidi2MapImproved<K, V> parent) {
+            // normally receives keyMap.entrySet().iterator()
+            super(makeIterator, parent);
+        }
+
+        @Override
+        protected void removeExtras(Entry<K, V> entry) {
+            parent.valueMapRemoveChecked(entry.getValue(), entry.getKey());
+        }
+    }
+
+    private static class DualTreeMapIterator<K extends Comparable<K>, V extends Comparable<V>>
+            implements OrderedMapIterator<K, V>, ResettableIterator<K> {
+
+        private final DualTreeBidi2MapImproved<K, V> parent;
+        private final NavigableMap<K, V> map;
+        private boolean forward;
+        private Entry<K, V> previousEntry;
+        private Entry<K, V> nextEntry;
+        private Entry<K, V> latestResult;
+
+        private DualTreeMapIterator(NavigableMap<K, V> map, DualTreeBidi2MapImproved<K, V> parent) {
+            this.map = map;
+            this.parent = parent;
+        }
+
+        @Override
+        public void reset() {
+            forward = true;
+            nextEntry = map.firstEntry();
+            previousEntry = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextEntry != null;
         }
 
         @Override
         public boolean hasPrevious() {
-            return false;
+            return previousEntry != null;
+        }
+
+        @Override
+        public K next() {
+            Entry<K, V> result = nextEntry;
+            if (result == null)
+                throw new NoSuchElementException();
+            K key = result.getKey();
+            previousEntry = result;
+            latestResult = result;
+            nextEntry = map.higherEntry(key);
+            forward = true;
+            return key;
         }
 
         @Override
         public K previous() {
-            return null;
+            Entry<K, V> result = previousEntry;
+            if (result == null)
+                throw new NoSuchElementException();
+            K key = result.getKey();
+            previousEntry = map.lowerEntry(key);
+            latestResult = result;
+            nextEntry = result;
+            forward = false;
+            return key;
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super K> action) {
+            Function<K, Entry<K, V>> advance;
+            Entry<K, V> node, prev = null;
+            if (forward) {
+                node = nextEntry;
+                advance = map::higherEntry;
+            } else {
+                node = previousEntry;
+                advance = map::lowerEntry;
+            }
+            while (node != null) {
+                K key = node.getKey();
+                action.accept(key);
+                prev = node;
+                node = advance.apply(key);
+            }
+            if (forward) {
+                nextEntry = null;
+                previousEntry = prev;
+            } else {
+                nextEntry = prev;
+                previousEntry = null;
+            }
+            latestResult = null;
+        }
+
+        @Override
+        public K getKey() {
+            return latestResult.getKey();
+        }
+
+        @Override
+        public V getValue() {
+            return latestResult.getValue();
+        }
+
+        @Override
+        public V setValue(V value) {
+            if (latestResult == null)
+                throw new IllegalStateException();
+            K key = latestResult.getKey();
+            V oldValue = latestResult.getValue();
+            parent.putWithKnownState(key, oldValue, value);
+            UnmodifiableMapEntry<K, V> replacementEntry = new UnmodifiableMapEntry<>(key, value);
+            if (forward)
+                previousEntry = replacementEntry;
+            else
+                nextEntry = replacementEntry;
+            return oldValue;
+        }
+
+        @Override
+        public void remove() {
+            if (latestResult == null)
+                throw new IllegalStateException();
+            parent.removeViaMapIterator(latestResult.getKey(), latestResult.getValue());
+            latestResult = null;
         }
     }
 }
