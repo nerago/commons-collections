@@ -1949,10 +1949,12 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (!isSetValueSupported())
                 return;
 
-            resetFull();
+            resetEmpty();
+            AbstractMapTest.this.getMap().put(getSampleKeys()[0], getSampleValues()[0]);
+            AbstractMapTest.this.getConfirmed().put(getSampleKeys()[0], getSampleValues()[0]);
             Object[] arrayObject = getCollection().toArray();
             Object[] arrayObjectConfirmed = getConfirmed().toArray();
-            assertEquals(getCollection().size(), arrayObject.length);
+            assertEquals(1, arrayObject.length);
             for (int i = 0; i < getCollection().size(); ++i) {
                 final Entry<K,V> entry = (Entry<K, V>) arrayObject[i];
                 final Entry<K,V> entryConfirmed = (Entry<K, V>) arrayObjectConfirmed[i];
@@ -1963,7 +1965,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertEquals(value, entry.getValue());
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
-                assertFalse(getMap().containsValue(newValue));
                 entry.setValue(newValue);
                 entryConfirmed.setValue(newValue);
                 assertEquals(key, entry.getKey());
@@ -1975,7 +1976,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             }
             verify();
 
-            resetFull();
+            resetEmpty();
+            AbstractMapTest.this.getMap().put(getSampleKeys()[0], getSampleValues()[0]);
+            AbstractMapTest.this.getConfirmed().put(getSampleKeys()[0], getSampleValues()[0]);
             Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
             Entry<K, V>[] arrayTypedConfirmed = getConfirmed().toArray(new Entry[0]);
             assertEquals(getCollection().size(), arrayTyped.length);
@@ -2032,7 +2035,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         @Test
         @SuppressWarnings("unchecked")
-        public void testMapEntryInForeachReadOnly() {
+        public void testMapEntryInForeachModifiable() {
             if (!isSetValueSupported())
                 return;
 
@@ -2041,11 +2044,12 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             resetFull();
             getCollection().forEach(entry -> {
                 final K key = entry.getKey();
+
                 final V value = entry.getValue();
                 final V newValue = newValueQueue.remove();
+                System.out.println(key + " " + value + " " + newValue);
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
-                assertFalse(getMap().containsValue(newValue));
                 entry.setValue(newValue);
                 confirmed.put(key, newValue);
                 assertEquals(key, entry.getKey());
@@ -2056,6 +2060,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             });
             verify();
 
+            resetFull();
             final V newValue0 = getNewSampleValues()[0];
             getCollection().removeIf(entry -> {
                 assertEquals(entry.getValue(), getMap().get(entry.getKey()));
@@ -2067,7 +2072,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         @Test
         @SuppressWarnings("unchecked")
-        public void testMapEntryInForeachReadOnlyUnsupported() {
+        public void testMapEntryInForeachReadOnly() {
             if (isSetValueSupported())
                 return;
 

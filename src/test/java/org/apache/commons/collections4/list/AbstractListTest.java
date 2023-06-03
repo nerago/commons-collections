@@ -238,6 +238,83 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+        final int max = getFullElements().length;
+
+        for (int i = 0; i <= max; i++) {
+            resetFull();
+            assertTrue(getCollection().addAll(i, elements));
+            assertTrue(getConfirmed().addAll(i, elements));
+            verify();
+        }
+
+        assertFalse(getConfirmed().addAll(0, Collections.emptyList()));
+        verify();
+    }
+
+    @Test
+    public void testListAddAllByIndexBoundsChecking() {
+        if (!isAddSupported()) {
+            return;
+        }
+
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+
+        final List<E> finalList0 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList0.addAll(Integer.MIN_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MIN_VALUE]");
+
+        final List<E> finalList1 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList1.addAll(-1, elements),
+                "List.add should throw IndexOutOfBoundsException [-1]");
+
+        final List<E> finalList2 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList2.addAll(1, elements),
+                "List.add should throw IndexOutOfBoundsException [1]");
+
+        final List<E> finalList3 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList3.addAll(Integer.MAX_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MAX_VALUE]");
+    }
+
+    /**
+     *  Tests bounds checking for {@link List#add(int, Object)} on a
+     *  full list.
+     */
+    @Test
+    public void testListAddAllByIndexBoundsChecking2() {
+        if (!isAddSupported()) {
+            return;
+        }
+
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+
+        final List<E> finalList0 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList0.addAll(Integer.MIN_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MIN_VALUE]");
+
+        final List<E> finalList1 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList1.addAll(-1, elements),
+                "List.add should throw IndexOutOfBoundsException [-1]");
+
+        final List<E> finalList2 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList2.addAll(finalList2.size() + 1, elements),
+                "List.add should throw IndexOutOfBoundsException [size + 1]");
+
+        final List<E> finalList3 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList3.addAll(Integer.MAX_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MAX_VALUE]");
+    }
+
+    /**
+     *  Tests {@link List#add(int,Object)}.
+     */
+    @Test
+    public void testListAddAllByIndex() {
+        if (!isAddSupported()) {
+            return;
+        }
+
         final E element = getOtherElements()[0];
         final int max = getFullElements().length;
 
@@ -883,12 +960,25 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final ListIterator<E> iter1 = getCollection().listIterator();
         final ListIterator<E> iter2 = getConfirmed().listIterator();
         for (final E element : elements) {
-            iter1.next();
-            iter2.next();
-            iter1.set(element);
-            iter2.set(element);
+            E old = iter1.next();
+            assertEquals(old, iter2.next());
+            E replace = element instanceof String ? (E) ((String)element).toLowerCase() : null;
+            iter1.set(replace);
+            iter2.set(replace);
             verify();
         }
+    }
+
+    @Test
+    public void testListReplaceAll() {
+        if (!isSetSupported()) {
+            return;
+        }
+
+        resetFull();
+        getCollection().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        getConfirmed().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        verify();
     }
 
     @Test
@@ -1139,14 +1229,6 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         sub = getCollection().subList(1, size);
         getCollection().clear();
         failFastAll(sub);
-    }
-
-    @Test
-    public void testOptionals() {
-        org.junit.jupiter.api.Assertions.fail("TODO");
-        //replaceAll
-        //index addall
-        //sort
     }
 
     /**
