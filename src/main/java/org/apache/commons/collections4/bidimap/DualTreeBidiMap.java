@@ -120,12 +120,12 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return new DualTreeBidiMap<V, K>(reverseMap(), normalMap(), this);
     }
 
-    protected TreeMap<K, V> normalMap() {
-        return (TreeMap<K, V>) super.normalMap();
+    protected NavigableMap<K, V> normalMap() {
+        return (NavigableMap<K, V>) super.normalMap();
     }
 
-    protected TreeMap<V, K> reverseMap() {
-        return (TreeMap<V, K>) super.reverseMap();
+    protected NavigableMap<V, K> reverseMap() {
+        return (NavigableMap<V, K>) super.reverseMap();
     }
 
     @Override
@@ -350,7 +350,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          */
         protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V> parent) {
             this.parent = parent;
-            iterator = new ArrayList<>(parent.entrySet()).listIterator();
+            iterator = new ArrayList<>(parent.normalMap().entrySet()).listIterator();
         }
 
         @Override

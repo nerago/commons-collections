@@ -16,7 +16,10 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
@@ -25,6 +28,8 @@ import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.map.UnmodifiableEntrySet;
 
 /**
  * Abstract {@link BidiMap} implemented using two maps.
@@ -698,6 +703,53 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
             return parent.remove(entry.getKey(), entry.getValue());
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+            return super.removeIf(entry -> filter.test(new UnmodifiableMapEntry<>(entry)));
+        }
+
+        @Override
+        public void forEach(Consumer<? super Entry<K, V>> action) {
+            super.forEach(entry -> action.accept(new UnmodifiableMapEntry<>(entry)));
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object[] toArray() {
+            final Object[] array = decorated().toArray();
+            for (int i = 0; i < array.length; i++) {
+                array[i] = new UnmodifiableMapEntry<>((Map.Entry<K, V>) array[i]);
+            }
+            return array;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T> T[] toArray(final T[] array) {
+            Object[] result = array;
+            if (array.length > 0) {
+                // we must create a new array to handle multithreaded situations
+                // where another thread could access data before we decorate it
+                result = (Object[]) Array.newInstance(array.getClass().getComponentType(), 0);
+            }
+            result = decorated().toArray(result);
+            for (int i = 0; i < result.length; i++) {
+                result[i] = new UnmodifiableMapEntry<>((Map.Entry<K, V>) result[i]);
+            }
+
+            // check to see if result should be returned straight
+            if (result.length > array.length) {
+                return (T[]) result;
+            }
+
+            // copy back into input array to fulfill the method contract
+            System.arraycopy(result, 0, array, 0, result.length);
+            if (array.length > result.length) {
+                array[result.length] = null;
+            }
+            return array;
         }
     }
 

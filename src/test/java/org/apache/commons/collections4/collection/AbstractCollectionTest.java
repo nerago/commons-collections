@@ -30,21 +30,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
 
@@ -1386,11 +1376,39 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         }
     }
 
-    @Test void testOptionals() {
-        org.junit.jupiter.api.Assertions.fail("TODO");
-        //getCollection().removeIf()
-        //getCollection().stream()
-        //getCollection()
+    @Test
+    public void testSpliterator() {
+        if ((getIterationBehaviour() & AbstractCollectionTest.UNORDERED) != 0)
+            return;
+
+        resetEmpty();
+        Iterator<E> iterator = getCollection().iterator();
+        Spliterator<E> spliterator = getCollection().spliterator();
+        assertFalse(iterator.hasNext());
+        cannotAdvanceSpliterator(spliterator);
+
+        resetFull();
+        iterator = getCollection().iterator();
+        spliterator = getCollection().spliterator();
+
+        while (iterator.hasNext()) {
+            E value = iterator.next();
+            assertEquals(value, advanceSpliterator(spliterator));
+        }
+        cannotAdvanceSpliterator(spliterator);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T advanceSpliterator(Spliterator<T> spliterator) {
+        final Object[] result = new Object[1];
+        assertTrue(spliterator.tryAdvance(x -> result[0] = x));
+        return (T) result[0];
+    }
+
+    private <T> void cannotAdvanceSpliterator(Spliterator<T> spliterator) {
+        final Object[] result = new Object[1];
+        assertFalse(spliterator.tryAdvance(x -> result[0] = x));
+        assertNull(result[0]);
     }
 
     public Collection<E> getCollection() {

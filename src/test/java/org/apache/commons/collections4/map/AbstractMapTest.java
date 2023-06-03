@@ -26,17 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionUtils;
@@ -1954,22 +1945,147 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         @Test
         @SuppressWarnings("unchecked")
-        public void testMapEntryInArrayReadOnly() {
+        public void testMapEntryInArray() {
+            if (!isSetValueSupported())
+                return;
+
+            resetFull();
+            Object[] arrayObject = getCollection().toArray();
+            Object[] arrayObjectConfirmed = getConfirmed().toArray();
+            assertEquals(getCollection().size(), arrayObject.length);
+            for (int i = 0; i < getCollection().size(); ++i) {
+                final Entry<K,V> entry = (Entry<K, V>) arrayObject[i];
+                final Entry<K,V> entryConfirmed = (Entry<K, V>) arrayObjectConfirmed[i];
+                final K key = entryConfirmed.getKey();
+                final V value = entryConfirmed.getValue();
+                final V newValue = getNewSampleValues()[i];
+                assertEquals(key, entry.getKey());
+                assertEquals(value, entry.getValue());
+                assertEquals(value, getMap().get(key));
+                assertTrue(getMap().containsValue(value));
+                assertFalse(getMap().containsValue(newValue));
+                entry.setValue(newValue);
+                entryConfirmed.setValue(newValue);
+                assertEquals(key, entry.getKey());
+                assertEquals(newValue, entry.getValue());
+                assertEquals(newValue, entryConfirmed.getValue());
+                assertEquals(newValue, getMap().get(key));
+                assertFalse(getMap().containsValue(value));
+                assertTrue(getMap().containsValue(newValue));
+            }
+            verify();
+
+            resetFull();
+            Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
+            Entry<K, V>[] arrayTypedConfirmed = getConfirmed().toArray(new Entry[0]);
+            assertEquals(getCollection().size(), arrayTyped.length);
+            for (int i = 0; i < getCollection().size(); ++i) {
+                final Entry<K,V> entry = arrayTyped[i];
+                final Entry<K,V> entryConfirmed = arrayTypedConfirmed[i];
+                final K key = entryConfirmed.getKey();
+                final V value = entryConfirmed.getValue();
+                final V newValue = getNewSampleValues()[i];
+                assertEquals(key, entry.getKey());
+                assertEquals(value, entry.getValue());
+                assertEquals(value, entryConfirmed.getValue());
+                assertEquals(value, getMap().get(key));
+                assertTrue(getMap().containsValue(value));
+                assertFalse(getMap().containsValue(newValue));
+                entry.setValue(newValue);
+                entryConfirmed.setValue(newValue);
+                assertEquals(key, entry.getKey());
+                assertEquals(newValue, entry.getValue());
+                assertEquals(newValue, entryConfirmed.getValue());
+                assertEquals(newValue, getMap().get(key));
+                assertFalse(getMap().containsValue(value));
+                assertTrue(getMap().containsValue(newValue));
+            }
+            verify();
+        }
+
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntryInArrayUnsupported() {
+            if (isSetValueSupported())
+                return;
+
+            final V newValue = getNewSampleValues()[0];
+
             resetFull();
             Object[] arrayObject = getCollection().toArray();
             assertEquals(getCollection().size(), arrayObject.length);
             for (Object entryObject : arrayObject) {
                 final Entry<K,V> entry = (Entry<K, V>) entryObject;
                 assertEquals(entry.getValue(), getMap().get(entry.getKey()));
-                assertThrows(UnsupportedOperationException.class, () -> entry.setValue((V) "abc"));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue));
             }
+            verify();
 
             Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
             assertEquals(getCollection().size(), arrayTyped.length);
             for (Entry<K,V> entry : arrayTyped) {
                 assertEquals(entry.getValue(), getMap().get(entry.getKey()));
-                assertThrows(UnsupportedOperationException.class, () -> entry.setValue((V) "abc"));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue));
             }
+            verify();
+        }
+
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntryInForeachReadOnly() {
+            if (!isSetValueSupported())
+                return;
+
+            final Queue<V> newValueQueue = new LinkedList<>(Arrays.asList(getNewSampleValues()));
+
+            resetFull();
+            getCollection().forEach(entry -> {
+                final K key = entry.getKey();
+                final V value = entry.getValue();
+                final V newValue = newValueQueue.remove();
+                assertEquals(value, getMap().get(key));
+                assertTrue(getMap().containsValue(value));
+                assertFalse(getMap().containsValue(newValue));
+                entry.setValue(newValue);
+                confirmed.put(key, newValue);
+                assertEquals(key, entry.getKey());
+                assertEquals(newValue, entry.getValue());
+                assertEquals(newValue, getMap().get(key));
+                assertFalse(getMap().containsValue(value));
+                assertTrue(getMap().containsValue(newValue));
+            });
+            verify();
+
+            final V newValue0 = getNewSampleValues()[0];
+            getCollection().removeIf(entry -> {
+                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue0));
+                return false;
+            });
+            verify();
+        }
+
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntryInForeachReadOnlyUnsupported() {
+            if (isSetValueSupported())
+                return;
+
+            final V newValue = getNewSampleValues()[0];
+
+            resetFull();
+            getCollection().forEach(entry -> {
+                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue));
+            });
+            verify();
+
+            getCollection().removeIf(entry -> {
+                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
+                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue));
+                return false;
+            });
+            verify();
         }
 
         @Override
@@ -2245,6 +2361,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                         "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
         assertTrue(entrySet.containsAll(getConfirmed().entrySet()),
                 "entrySet should contain all HashMap's elements" +
+                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+        assertTrue(getConfirmed().entrySet().containsAll(entrySet),
+                "HashMap should contain all entrySet's elements" +
                         "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
         assertEquals(getConfirmed().entrySet().hashCode(), entrySet.hashCode(),
                 "entrySet hashCodes should be the same" +

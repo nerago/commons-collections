@@ -129,7 +129,7 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
     }
 
     @Test
-    public void testCompareIterators() {
+    public void testCompareMapIterators() {
         if ((getIterationBehaviour() & AbstractCollectionTest.UNORDERED) != 0)
             return;
 
