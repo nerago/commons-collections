@@ -33,7 +33,10 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
+import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 
 /**
@@ -523,10 +526,25 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
         public <T> T[] toArray(final T[] arr) {
             // special implementation to handle disappearing entries
             final ArrayList<Map.Entry<K, V>> list = new ArrayList<>(size());
-            for (final Map.Entry<K, V> entry : this) {
-                list.add(new DefaultMapEntry<>(entry));
+            for (final Entry<K, V> entry : this) {
+                list.add(new PartiallyWrappedMapEntry<>(entry));
             }
             return list.toArray(arr);
+        }
+    }
+
+    static class PartiallyWrappedMapEntry<K, V> extends AbstractMapEntry<K, V> {
+        private final Entry<K,V> parent;
+
+        public PartiallyWrappedMapEntry(Entry<K, V> entry) {
+            super(entry.getKey(), entry.getValue());
+            parent = entry;
+        }
+
+        @Override
+        public V setValue(V value) {
+            super.setValue(value);
+            return parent.setValue(value);
         }
     }
 

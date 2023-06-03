@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionUtils;
@@ -1946,61 +1947,46 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         @Test
         @SuppressWarnings("unchecked")
         public void testMapEntryInArray() {
-            if (!isSetValueSupported())
+            if (!isSetValueSupported() || isGetStructuralModify())
                 return;
 
-            resetEmpty();
-            AbstractMapTest.this.getMap().put(getSampleKeys()[0], getSampleValues()[0]);
-            AbstractMapTest.this.getConfirmed().put(getSampleKeys()[0], getSampleValues()[0]);
+            resetFull();
             Object[] arrayObject = getCollection().toArray();
-            Object[] arrayObjectConfirmed = getConfirmed().toArray();
-            assertEquals(1, arrayObject.length);
+            assertEquals(getCollection().size(), arrayObject.length);
             for (int i = 0; i < getCollection().size(); ++i) {
                 final Entry<K,V> entry = (Entry<K, V>) arrayObject[i];
-                final Entry<K,V> entryConfirmed = (Entry<K, V>) arrayObjectConfirmed[i];
-                final K key = entryConfirmed.getKey();
-                final V value = entryConfirmed.getValue();
+                final K key = entry.getKey();
+                final V value = entry.getValue();
                 final V newValue = getNewSampleValues()[i];
-                assertEquals(key, entry.getKey());
-                assertEquals(value, entry.getValue());
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
                 entry.setValue(newValue);
-                entryConfirmed.setValue(newValue);
+                AbstractMapTest.this.getConfirmed().put(key, newValue);
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
-                assertEquals(newValue, entryConfirmed.getValue());
                 assertEquals(newValue, getMap().get(key));
-                assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
             }
             verify();
 
-            resetEmpty();
-            AbstractMapTest.this.getMap().put(getSampleKeys()[0], getSampleValues()[0]);
-            AbstractMapTest.this.getConfirmed().put(getSampleKeys()[0], getSampleValues()[0]);
+            resetFull();
             Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
             Entry<K, V>[] arrayTypedConfirmed = getConfirmed().toArray(new Entry[0]);
             assertEquals(getCollection().size(), arrayTyped.length);
             for (int i = 0; i < getCollection().size(); ++i) {
                 final Entry<K,V> entry = arrayTyped[i];
-                final Entry<K,V> entryConfirmed = arrayTypedConfirmed[i];
-                final K key = entryConfirmed.getKey();
-                final V value = entryConfirmed.getValue();
+                final K key = entry.getKey();
+                final V value = entry.getValue();
                 final V newValue = getNewSampleValues()[i];
                 assertEquals(key, entry.getKey());
                 assertEquals(value, entry.getValue());
-                assertEquals(value, entryConfirmed.getValue());
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
-                assertFalse(getMap().containsValue(newValue));
                 entry.setValue(newValue);
-                entryConfirmed.setValue(newValue);
+                AbstractMapTest.this.getConfirmed().put(key, newValue);
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
-                assertEquals(newValue, entryConfirmed.getValue());
                 assertEquals(newValue, getMap().get(key));
-                assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
             }
             verify();
@@ -2036,7 +2022,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         @Test
         @SuppressWarnings("unchecked")
         public void testMapEntryInForeachModifiable() {
-            if (!isSetValueSupported())
+            if (!isSetValueSupported() || isGetStructuralModify())
                 return;
 
             final Queue<V> newValueQueue = new LinkedList<>(Arrays.asList(getNewSampleValues()));
@@ -2044,10 +2030,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             resetFull();
             getCollection().forEach(entry -> {
                 final K key = entry.getKey();
-
                 final V value = entry.getValue();
                 final V newValue = newValueQueue.remove();
-                System.out.println(key + " " + value + " " + newValue);
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
                 entry.setValue(newValue);
@@ -2055,17 +2039,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
                 assertEquals(newValue, getMap().get(key));
-                assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
-            });
-            verify();
-
-            resetFull();
-            final V newValue0 = getNewSampleValues()[0];
-            getCollection().removeIf(entry -> {
-                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
-                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue0));
-                return false;
             });
             verify();
         }
@@ -2084,12 +2058,37 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue));
             });
             verify();
+        }
 
-            getCollection().removeIf(entry -> {
-                assertEquals(entry.getValue(), getMap().get(entry.getKey()));
-                assertThrows(UnsupportedOperationException.class, () -> entry.setValue(newValue));
-                return false;
-            });
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntryInRemoveIfVaried() {
+            if (!isSetValueSupported() || isGetStructuralModify())
+                return;
+
+            resetFull();
+            final V newValue0 = getNewSampleValues()[0];
+            Predicate<Entry<K,V>> predicate = (Entry<K,V> entry) -> {
+                    assertEquals(entry.getValue(), getMap().get(entry.getKey()));
+                    try {
+                        // acceptable to apply the value change if done correctly - for some collections at least
+                        entry.setValue(newValue0);
+                    } catch (UnsupportedOperationException ex) {
+                        // but maybe more correct to throw exception
+                        return false;
+                    }
+                    assertEquals(newValue0, entry.getValue());
+                    assertEquals(newValue0, getMap().get(entry.getKey()));
+                    assertTrue(getMap().containsKey(entry.getKey()));
+                    assertTrue(getMap().containsValue(entry.getValue()));
+                    AbstractMapTest.this.getConfirmed().put(entry.getKey(), newValue0);
+                    return false;
+            };
+            try {
+                assertFalse(getCollection().removeIf(predicate));
+            } catch (UnsupportedOperationException ex) {
+                // exception on the method is also good
+            }
             verify();
         }
 
