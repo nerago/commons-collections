@@ -16,15 +16,12 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.QueueUtilsTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
@@ -214,6 +211,59 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         assertNull(
             map.getKey(oldValue),
                 "Modifying entrySet did not affect inverse Map.");
+    }
+
+    @Test
+    public void testBidiModifyEntrySetForEachRemaining() {
+        if (!isSetValueSupported()) {
+            return;
+        }
+
+        Queue<V> newValueQueue = new LinkedList<>(Arrays.asList(getNewSampleValues()));
+        final BidiMap<K, V> map1 = makeFullMap();
+        map1.entrySet().iterator().forEachRemaining(
+                entry -> {
+                    // Gets key and value
+                    final K key = entry.getKey();
+                    final V oldValue = entry.getValue();
+
+                    // Sets new value
+                    final V newValue = newValueQueue.poll();
+                    entry.setValue(newValue);
+
+                    assertEquals(
+                            newValue,
+                            map1.get(key),
+                            "Modifying entrySet did not affect underlying Map.");
+
+                    assertNull(
+                            map1.getKey(oldValue),
+                            "Modifying entrySet did not affect inverse Map.");
+                }
+        );
+
+        Queue<K> newKeyQueue = new LinkedList<>(Arrays.asList((K[]) getNewSampleValues()));
+        final BidiMap<V, K> map2 = makeFullMap().inverseBidiMap();
+        map2.entrySet().iterator().forEachRemaining(
+                entry -> {
+                    // Gets key and value
+                    final V lookup = entry.getKey();
+                    final K oldKey = entry.getValue();
+
+                    // Sets new value
+                    final K newKey = newKeyQueue.poll();
+                    entry.setValue(newKey);
+
+                    assertEquals(
+                            newKey,
+                            map2.get(lookup),
+                            "Modifying entrySet did not affect underlying Map.");
+
+                    assertNull(
+                            map2.getKey(oldKey),
+                            "Modifying entrySet did not affect inverse Map.");
+                }
+        );
     }
 
     @Test
