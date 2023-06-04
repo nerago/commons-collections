@@ -37,8 +37,8 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
     }
 
     @Override
-    public DualTreeBidi2MapImproved<K, V> makeObject() {
-        return new DualTreeBidi2MapImproved<>(
+    public DualTreeBidi2Map<K, V> makeObject() {
+        return new DualTreeBidi2Map<>(
                 new ReverseComparator<>(ComparableComparator.<K>comparableComparator()),
                 new ReverseComparator<>(ComparableComparator.<V>comparableComparator()));
     }
@@ -58,7 +58,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
 
     @Test
     public void testComparator2() {
-        final DualTreeBidi2MapImproved<String, Integer> dtbm = new DualTreeBidi2MapImproved<>(
+        final DualTreeBidi2Map<String, Integer> dtbm = new DualTreeBidi2Map<>(
                 String.CASE_INSENSITIVE_ORDER, null);
         dtbm.put("two", 0);
         dtbm.put("one", 1);
@@ -97,7 +97,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
 
     @Test
     public void testCollections364() throws Exception {
-        final DualTreeBidi2MapImproved<String, Integer> original = new DualTreeBidi2MapImproved<>(
+        final DualTreeBidi2Map<String, Integer> original = new DualTreeBidi2Map<>(
                 String.CASE_INSENSITIVE_ORDER, new IntegerComparator());
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         final ObjectOutputStream out = new ObjectOutputStream(buffer);
@@ -106,7 +106,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
 
         final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()));
         @SuppressWarnings("unchecked")
-        final DualTreeBidi2MapImproved<String, Integer> deserialized = (DualTreeBidi2MapImproved<String, Integer>) in.readObject();
+        final DualTreeBidi2Map<String, Integer> deserialized = (DualTreeBidi2Map<String, Integer>) in.readObject();
         in.close();
 
         assertNotNull(original.comparator());

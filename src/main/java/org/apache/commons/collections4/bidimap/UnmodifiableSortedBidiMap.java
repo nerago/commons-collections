@@ -22,6 +22,7 @@ import java.util.SortedMap;
 
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.SortedBoundMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
@@ -135,7 +136,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
         final SortedMap<K, V> sm = decorated().subMap(fromKey, toKey);
         return UnmodifiableSortedMap.unmodifiableSortedMap(sm);
     }

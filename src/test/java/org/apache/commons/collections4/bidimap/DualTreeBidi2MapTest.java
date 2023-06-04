@@ -29,8 +29,8 @@ public class DualTreeBidi2MapTest<K extends Comparable<K>, V extends Comparable<
      * {@inheritDoc}
      */
     @Override
-    public DualTreeBidi2MapImproved<K, V> makeObject() {
-        return new DualTreeBidi2MapImproved<>();
+    public DualTreeBidi2Map<K, V> makeObject() {
+        return new DualTreeBidi2Map<>();
     }
 
     /**

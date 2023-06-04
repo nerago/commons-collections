@@ -34,6 +34,8 @@ import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBoundMap;
+import org.apache.commons.collections4.SortedMapRange;
 
 /**
  * This class implements the base PATRICIA algorithm and everything that
@@ -853,18 +855,18 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return new RangeEntryMap(null, toKey);
+    public SortedBoundMap<K, V> headMap(final K toKey) {
+        return new RangeEntryMap(SortedMapRange.<K>full(comparator()).headMap(toKey));
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return new RangeEntryMap(fromKey, toKey);
+    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
+        return new RangeEntryMap(SortedMapRange.<K>full(comparator()).subMap(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return new RangeEntryMap(fromKey, null);
+    public SortedBoundMap<K, V> tailMap(final K fromKey) {
+        return new RangeEntryMap(SortedMapRange.<K>full(comparator()).tailMap(fromKey));
     }
 
     /**
@@ -1673,7 +1675,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      * A range view of the {@link org.apache.commons.collections4.Trie}.
      */
     private abstract class RangeMap extends AbstractMap<K, V>
-            implements SortedMap<K, V> {
+            implements SortedBoundMap<K, V> {
 
         /** The {@link #entrySet()} view. */
         private transient volatile Set<Map.Entry<K, V>> entrySet;
@@ -1682,26 +1684,6 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
          * Creates and returns an {@link #entrySet()} view of the {@link RangeMap}.
          */
         protected abstract Set<Map.Entry<K, V>> createEntrySet();
-
-        /**
-         * Returns the FROM Key.
-         */
-        protected abstract K getFromKey();
-
-        /**
-         * Whether or not the {@link #getFromKey()} is in the range.
-         */
-        protected abstract boolean isFromInclusive();
-
-        /**
-         * Returns the TO Key.
-         */
-        protected abstract K getToKey();
-
-        /**
-         * Whether or not the {@link #getToKey()} is in the range.
-         */
-        protected abstract boolean isToInclusive();
 
         @Override
         public Comparator<? super K> comparator() {
@@ -1752,7 +1734,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
             if (!inRange2(fromKey)) {
                 throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
             }
@@ -1765,7 +1747,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public SortedMap<K, V> headMap(final K toKey) {
+        public SortedBoundMap<K, V> headMap(final K toKey) {
             if (!inRange2(toKey)) {
                 throw new IllegalArgumentException("ToKey is out of range: " + toKey);
             }
@@ -1773,7 +1755,9 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public SortedMap<K, V> tailMap(final K fromKey) {
+        public SortedBoundMap<K, V> tailMap(final K fromKey) {
+            // this seems wrong, especially inclusive check
+            // but the out of range check makes better?
             if (!inRange2(fromKey)) {
                 throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
             }
@@ -1781,58 +1765,10 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         /**
-         * Returns true if the provided key is greater than TO and less than FROM.
-         */
-        protected boolean inRange(final K key) {
-            final K fromKey = getFromKey();
-            final K toKey = getToKey();
-
-            return (fromKey == null || inFromRange(key, false)) && (toKey == null || inToRange(key, false));
-        }
-
-        /**
-         * This form allows the high endpoint (as well as all legit keys).
-         */
-        protected boolean inRange2(final K key) {
-            final K fromKey = getFromKey();
-            final K toKey = getToKey();
-
-            return (fromKey == null || inFromRange(key, false)) && (toKey == null || inToRange(key, true));
-        }
-
-        /**
-         * Returns true if the provided key is in the FROM range of the {@link RangeMap}.
-         */
-        protected boolean inFromRange(final K key, final boolean forceInclusive) {
-            final K fromKey = getFromKey();
-            final boolean fromInclusive = isFromInclusive();
-
-            final int ret = getKeyAnalyzer().compare(key, fromKey);
-            if (fromInclusive || forceInclusive) {
-                return ret >= 0;
-            }
-            return ret > 0;
-        }
-
-        /**
-         * Returns true if the provided key is in the TO range of the {@link RangeMap}.
-         */
-        protected boolean inToRange(final K key, final boolean forceInclusive) {
-            final K toKey = getToKey();
-            final boolean toInclusive = isToInclusive();
-
-            final int ret = getKeyAnalyzer().compare(key, toKey);
-            if (toInclusive || forceInclusive) {
-                return ret <= 0;
-            }
-            return ret < 0;
-        }
-
-        /**
          * Creates and returns a sub-range view of the current {@link RangeMap}.
          */
-        protected abstract SortedMap<K, V> createRangeMap(K fromKey, boolean fromInclusive,
-                                                          K toKey, boolean toInclusive);
+        protected abstract SortedBoundMap<K, V> createRangeMap(K fromKey, boolean fromInclusive,
+                                                               K toKey, boolean toInclusive);
     }
 
     /**
@@ -1840,44 +1776,11 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      */
     private class RangeEntryMap extends RangeMap {
 
-        /** The key to start from, null if the beginning. */
-        private final K fromKey;
+        private final SortedMapRange<K> range;
 
-        /** The key to end at, null if till the end. */
-        private final K toKey;
-
-        /** Whether or not the 'from' is inclusive. */
-        private final boolean fromInclusive;
-
-        /** Whether or not the 'to' is inclusive. */
-        private final boolean toInclusive;
-
-        /**
-         * Creates a {@link RangeEntryMap} with the fromKey included and
-         * the toKey excluded from the range.
-         */
-        protected RangeEntryMap(final K fromKey, final K toKey) {
-            this(fromKey, true, toKey, false);
-        }
-
-        /**
-         * Creates a {@link RangeEntryMap}.
-         */
-        protected RangeEntryMap(final K fromKey, final boolean fromInclusive,
-                                final K toKey, final boolean toInclusive) {
-
-            if (fromKey == null && toKey == null) {
-                throw new IllegalArgumentException("must have a from or to!");
-            }
-
-            if (fromKey != null && toKey != null && getKeyAnalyzer().compare(fromKey, toKey) > 0) {
-                throw new IllegalArgumentException("fromKey > toKey");
-            }
-
-            this.fromKey = fromKey;
-            this.fromInclusive = fromInclusive;
-            this.toKey = toKey;
-            this.toInclusive = toInclusive;
+        public RangeEntryMap(SortedMapRange<K> range) {
+            super();
+            this.range = range;
         }
 
         @Override
@@ -1926,28 +1829,13 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public K getFromKey() {
-            return fromKey;
+        public SortedMapRange<K> getMapRange() {
+            return range;
         }
 
         @Override
-        public K getToKey() {
-            return toKey;
-        }
-
-        @Override
-        public boolean isFromInclusive() {
-            return fromInclusive;
-        }
-
-        @Override
-        public boolean isToInclusive() {
-            return toInclusive;
-        }
-
-        @Override
-        protected SortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
-                                                 final K toKey, final boolean toInclusive) {
+        protected SortedBoundMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
+                                                      final K toKey, final boolean toInclusive) {
             return new RangeEntryMap(fromKey, fromInclusive, toKey, toInclusive);
         }
     }
@@ -2245,8 +2133,8 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        protected SortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
-                                                 final K toKey, final boolean toInclusive) {
+        protected SortedBoundMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
+                                                      final K toKey, final boolean toInclusive) {
             return new RangeEntryMap(fromKey, fromInclusive, toKey, toInclusive);
         }
 

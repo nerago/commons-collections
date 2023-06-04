@@ -31,7 +31,7 @@ import java.util.SortedMap;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public interface SortedBidiMap<K, V> extends OrderedBidiMap<K, V>, SortedMap<K, V> {
+public interface SortedBidiMap<K, V> extends OrderedBidiMap<K, V>, SortedBoundMap<K, V> {
 
     /**
      * Gets a view of this map where the keys and values are reversed.

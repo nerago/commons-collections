@@ -16,9 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.IterableSortedMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.iterators.ListIteratorWrapper;
+import org.apache.commons.collections4.NavigableBoundMap;
+import org.apache.commons.collections4.SortedBoundMap;
+import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.*;
 
@@ -41,7 +41,7 @@ import java.util.*;
  * @since 3.0
  */
 public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSortedMapDecorator<K, V> implements
-        NavigableMap<K, V> {
+        NavigableBoundMap<K, V> {
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -70,9 +70,8 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
         return (NavigableMap<K, V>) super.decorated();
     }
 
-    protected NavigableMap<K, V> wrapSubMap(NavigableMap<K, V> subMap) {
-        return subMap;
-    }
+    @Override
+    protected abstract NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range);
 
     @Override
     public K nextKey(K key) {
@@ -156,36 +155,38 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
     
     @Override
     public NavigableMap<K, V> descendingMap() {
-        return wrapSubMap(decorated().descendingMap());
+        return wrapMap(decorated().descendingMap(), getMapRange().reverse());
     }
     
     @Override
-    public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-        return wrapSubMap(decorated().subMap(fromKey, fromInclusive, toKey, toInclusive));
+    public NavigableBoundMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+        return wrapMap(decorated().subMap(fromKey, fromInclusive, toKey, toInclusive),
+                getMapRange().subMap(fromKey, fromInclusive, toKey, toInclusive));
     }
 
     @Override
-    public NavigableMap<K, V> headMap(K toKey, boolean inclusive) {
-        return wrapSubMap(decorated().headMap(toKey, inclusive));
+    public NavigableBoundMap<K, V> headMap(K toKey, boolean inclusive) {
+        return wrapMap(decorated().headMap(toKey, inclusive), getMapRange().headMap(toKey, inclusive));
     }
 
     @Override
-    public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
-        return wrapSubMap(decorated().tailMap(fromKey, inclusive));
+    public NavigableBoundMap<K, V> tailMap(K fromKey, boolean inclusive) {
+        return wrapMap(decorated().tailMap(fromKey, inclusive), getMapRange().tailMap(fromKey, inclusive));
     }
 
     @Override
-    public NavigableMap<K, V> subMap(K fromKey, K toKey) {
-        return wrapSubMap(decorated().subMap(fromKey, true, toKey, false));
+    public NavigableBoundMap<K, V> subMap(K fromKey, K toKey) {
+        return wrapMap(decorated().subMap(fromKey, true, toKey, false),
+                getMapRange().subMap(fromKey, true, toKey, false));
     }
 
     @Override
-    public NavigableMap<K, V> headMap(K toKey) {
-        return wrapSubMap(decorated().headMap(toKey, false));
+    public NavigableBoundMap<K, V> headMap(K toKey) {
+        return wrapMap(decorated().headMap(toKey, false), getMapRange().headMap(toKey, false));
     }
 
     @Override
-    public NavigableMap<K, V> tailMap(K fromKey) {
-        return wrapSubMap(decorated().tailMap(fromKey, true));
+    public NavigableBoundMap<K, V> tailMap(K fromKey) {
+        return wrapMap(decorated().tailMap(fromKey, true), getMapRange().tailMap(fromKey, true));
     }
 }

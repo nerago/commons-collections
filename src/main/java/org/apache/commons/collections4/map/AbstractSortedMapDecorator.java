@@ -25,7 +25,10 @@ import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBoundMap;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.ListIteratorWrapper;
+
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -75,6 +78,8 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
         return (SortedMap<K, V>) super.decorated();
     }
 
+    protected abstract SortedBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range);
+
     @Override
     public Comparator<? super K> comparator() {
         return decorated().comparator();
@@ -91,18 +96,18 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return decorated().subMap(fromKey, toKey);
+    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
+        return wrapMap(decorated().subMap(fromKey, toKey), getMapRange().subMap(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return decorated().headMap(toKey);
+    public SortedBoundMap<K, V> headMap(final K toKey) {
+        return wrapMap(decorated().headMap(toKey), getMapRange().headMap(toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return decorated().tailMap(fromKey);
+    public SortedBoundMap<K, V> tailMap(final K fromKey) {
+        return wrapMap(decorated().tailMap(fromKey), getMapRange().tailMap(fromKey));
     }
 
     @Override

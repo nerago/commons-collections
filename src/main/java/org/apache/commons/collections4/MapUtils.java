@@ -35,20 +35,7 @@ import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.map.AbstractMapDecorator;
-import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
-import org.apache.commons.collections4.map.FixedSizeMap;
-import org.apache.commons.collections4.map.FixedSizeSortedMap;
-import org.apache.commons.collections4.map.LazyMap;
-import org.apache.commons.collections4.map.LazySortedMap;
-import org.apache.commons.collections4.map.ListOrderedMap;
-import org.apache.commons.collections4.map.MultiValueMap;
-import org.apache.commons.collections4.map.PredicatedMap;
-import org.apache.commons.collections4.map.PredicatedSortedMap;
-import org.apache.commons.collections4.map.TransformedMap;
-import org.apache.commons.collections4.map.TransformedSortedMap;
-import org.apache.commons.collections4.map.UnmodifiableMap;
-import org.apache.commons.collections4.map.UnmodifiableSortedMap;
+import org.apache.commons.collections4.map.*;
 
 /**
  * Provides utility methods and decorators for {@link Map} and {@link SortedMap} instances.
@@ -1249,9 +1236,7 @@ public class MapUtils {
     public static <K, V> IterableSortedMap<K, V> iterableSortedMap(final SortedMap<K, V> sortedMap) {
         Objects.requireNonNull(sortedMap, "sortedMap");
         return sortedMap instanceof IterableSortedMap ? (IterableSortedMap<K, V>) sortedMap
-                : new AbstractSortedMapDecorator<K, V>(sortedMap) {
-                    // empty
-                };
+                : new DefaultSortedMapDecorator<>(sortedMap);
     }
 
     /**
