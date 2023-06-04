@@ -26,7 +26,7 @@ import org.apache.commons.collections4.SortedBoundMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
-import org.apache.commons.collections4.map.UnmodifiableSortedMap;
+import org.apache.commons.collections4.map.UnmodifiableSortedBoundMap;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -138,19 +138,19 @@ public final class UnmodifiableSortedBidiMap<K, V>
     @Override
     public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
         final SortedMap<K, V> sm = decorated().subMap(fromKey, toKey);
-        return UnmodifiableSortedMap.unmodifiableSortedMap(sm);
+        return UnmodifiableSortedBoundMap.unmodifiableSortedMap(sm, getKeyRange().sub(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
+    public SortedBoundMap<K, V> headMap(final K toKey) {
         final SortedMap<K, V> sm = decorated().headMap(toKey);
-        return UnmodifiableSortedMap.unmodifiableSortedMap(sm);
+        return UnmodifiableSortedBoundMap.unmodifiableSortedMap(sm, getKeyRange().head(toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
+    public SortedBoundMap<K, V> tailMap(final K fromKey) {
         final SortedMap<K, V> sm = decorated().tailMap(fromKey);
-        return UnmodifiableSortedMap.unmodifiableSortedMap(sm);
+        return UnmodifiableSortedBoundMap.unmodifiableSortedMap(sm, getKeyRange().tail(fromKey));
     }
 
 }

@@ -16,21 +16,17 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-
 import org.apache.commons.collections4.SortedBoundMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.set.UnmodifiableSet;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Decorates another {@code SortedMap} to ensure it can't be altered.
@@ -45,12 +41,13 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableSortedMap<K, V>
-        extends AbstractSortedMapDecorator<K, V>
+public final class UnmodifiableSortedBoundMap<K, V>
+        extends AbstractSortedBoundMapDecorator<K, V>
         implements Unmodifiable, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 5805344239827376360L;
+    private final SortedMapRange<K> range;
 
     /**
      * Factory method to create an unmodifiable sorted map.
@@ -62,13 +59,8 @@ public final class UnmodifiableSortedMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> SortedMap<K, V> unmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
-        if (map instanceof Unmodifiable) {
-            @SuppressWarnings("unchecked") // safe to upcast
-            final SortedMap<K, V> tmpMap = (SortedMap<K, V>) map;
-            return tmpMap;
-        }
-        return new UnmodifiableSortedMap<>(map);
+    public static <K, V> SortedBoundMap<K, V> unmodifiableSortedMap(final SortedMap<K, ? extends V> map, final SortedMapRange<K> range) {
+        return new UnmodifiableSortedBoundMap<>(map, range);
     }
 
     /**
@@ -78,8 +70,9 @@ public final class UnmodifiableSortedMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
-        super((SortedMap<K, V>) map);
+    public UnmodifiableSortedBoundMap(final SortedMap<K, ? extends V> map, SortedMapRange<K> range) {
+        super((SortedBoundMap<K, V>) map);
+        this.range = range;
     }
 
     /**
@@ -129,7 +122,7 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         return UnmodifiableEntrySet.unmodifiableEntrySet(super.entrySet());
     }
 
@@ -159,7 +152,7 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    protected SortedMap<K, V> wrapMap(SortedMap<K, V> map) {
-        return new UnmodifiableSortedMap<>(map);
+    protected SortedBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range) {
+        return new UnmodifiableSortedBoundMap<>(map, range);
     }
 }

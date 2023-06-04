@@ -9,35 +9,39 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-class DualTreeBidi2MapSubKeys<K extends Comparable<K>, V extends Comparable<V>>
+class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         extends DualTreeBidi2MapBase<K, V> {
-    protected final DualTreeBidi2Map<?, ?> parent;
-    protected final SortedMapRange<K> range;
+    protected final DualTreeBidi2Map<K, V> parent;
 
-    DualTreeBidi2MapSubKeys(NavigableMap<K, V> subKeyMap, SortedMapRange<K> range, DualTreeBidi2Map<K, V> parent) {
-        super(subKeyMap, parent.valueMap);
-        this.range = range;
+    DualTreeBidi2MapSubMap(NavigableMap<K, V> subKeyMap, SortedMapRange<K> keyRange, DualTreeBidi2Map<K, V> parent) {
+        super(subKeyMap, keyRange, parent.valueMap, parent.valueRange);
+        this.parent = parent;
+    }
+
+    public DualTreeBidi2MapSubMap(NavigableMap<K, V> keyMap, SortedMapRange<K> keyRange,
+                                  NavigableMap<V, K> valueMap, SortedMapRange<V> valueRange, DualTreeBidi2Map<K, V> parent) {
+        super(keyMap, keyRange, valueMap, valueRange);
         this.parent = parent;
     }
 
     @Override
-    protected DualTreeBidi2Map<?, ?> primaryMap() {
+    protected DualTreeBidi2Map<K, V> primaryMap() {
         return parent;
     }
 
     @Override
     protected DualTreeBidi2MapBase<V, K> createInverse() {
-        return new DualTreeBidi2MapSubValues<>(valueMap, keyMap, this);
+        return new DualTreeBidi2MapSubMap<>(valueMap, valueRange, keyMap, keyRange, (DualTreeBidi2Map<V, K>) parent.inverseBidiMap());
     }
 
     @Override
-    public NavigableMap<K, V> descendingMap() {
-        return new DualTreeBidi2MapSubKeys<>(keyMap.descendingMap(), getMapRange(), parent);
+    protected DualTreeBidi2MapBase<K, V> createDescending() {
+        return new DualTreeBidi2MapSubMap<>(keyMap.descendingMap(), getKeyRange().reversed(), parent);
     }
 
     @Override
     protected NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> subMap, SortedMapRange<K> range) {
-        return new DualTreeBidi2MapSubKeys<>((NavigableMap<K, V>) subMap, range, parent);
+        return new DualTreeBidi2MapSubMap<>((NavigableMap<K, V>) subMap, range, parent);
     }
 
     @Override
@@ -85,7 +89,7 @@ class DualTreeBidi2MapSubKeys<K extends Comparable<K>, V extends Comparable<V>>
 
     @Override
     public V put(K key, V newValue) {
-        if (!range.inRange(key))
+        if (!keyRange.inRange(key))
             throw new IllegalArgumentException();
 
         V currentValue = keyMap.getOrDefault(key, NO_VALUE());
@@ -235,6 +239,5 @@ class DualTreeBidi2MapSubKeys<K extends Comparable<K>, V extends Comparable<V>>
     public OrderedMapIterator<K, V> mapIterator() {
         return super.mapIterator();
     }
-
 
 }

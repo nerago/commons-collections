@@ -78,7 +78,7 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
         return (SortedMap<K, V>) super.decorated();
     }
 
-    protected abstract SortedBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range);
+    protected abstract SortedMap<K, V> wrapMap(SortedMap<K, V> map);
 
     @Override
     public Comparator<? super K> comparator() {
@@ -96,18 +96,18 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
     }
 
     @Override
-    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
-        return wrapMap(decorated().subMap(fromKey, toKey), getMapRange().subMap(fromKey, toKey));
+    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return wrapMap(decorated().subMap(fromKey, toKey));
     }
 
     @Override
-    public SortedBoundMap<K, V> headMap(final K toKey) {
-        return wrapMap(decorated().headMap(toKey), getMapRange().headMap(toKey));
+    public SortedMap<K, V> headMap(final K toKey) {
+        return wrapMap(decorated().headMap(toKey));
     }
 
     @Override
-    public SortedBoundMap<K, V> tailMap(final K fromKey) {
-        return wrapMap(decorated().tailMap(fromKey), getMapRange().tailMap(fromKey));
+    public SortedMap<K, V> tailMap(final K fromKey) {
+        return wrapMap(decorated().tailMap(fromKey));
     }
 
     @Override

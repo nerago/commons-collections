@@ -21,6 +21,7 @@ import java.util.SortedMap;
 
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedBoundMap;
+import org.apache.commons.collections4.SortedMapRange;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -93,4 +94,13 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
         return decorated().tailMap(fromKey);
     }
 
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return decorated().getKeyRange();
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return decorated().getValueRange();
+    }
 }

@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.NavigableBoundMap;
-import org.apache.commons.collections4.SortedBoundMap;
 import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.*;
@@ -70,7 +69,12 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
         return (NavigableMap<K, V>) super.decorated();
     }
 
+
     @Override
+    protected SortedMap<K, V> wrapMap(SortedMap<K, V> map) {
+        throw new IllegalArgumentException();
+    }
+
     protected abstract NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range);
 
     @Override
@@ -155,38 +159,38 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
     
     @Override
     public NavigableMap<K, V> descendingMap() {
-        return wrapMap(decorated().descendingMap(), getMapRange().reverse());
+        return wrapMap(decorated().descendingMap(), getKeyRange().reversed());
     }
     
     @Override
     public NavigableBoundMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
         return wrapMap(decorated().subMap(fromKey, fromInclusive, toKey, toInclusive),
-                getMapRange().subMap(fromKey, fromInclusive, toKey, toInclusive));
+                getKeyRange().sub(fromKey, fromInclusive, toKey, toInclusive));
     }
 
     @Override
     public NavigableBoundMap<K, V> headMap(K toKey, boolean inclusive) {
-        return wrapMap(decorated().headMap(toKey, inclusive), getMapRange().headMap(toKey, inclusive));
+        return wrapMap(decorated().headMap(toKey, inclusive), getKeyRange().head(toKey, inclusive));
     }
 
     @Override
     public NavigableBoundMap<K, V> tailMap(K fromKey, boolean inclusive) {
-        return wrapMap(decorated().tailMap(fromKey, inclusive), getMapRange().tailMap(fromKey, inclusive));
+        return wrapMap(decorated().tailMap(fromKey, inclusive), getKeyRange().tail(fromKey, inclusive));
     }
 
     @Override
     public NavigableBoundMap<K, V> subMap(K fromKey, K toKey) {
         return wrapMap(decorated().subMap(fromKey, true, toKey, false),
-                getMapRange().subMap(fromKey, true, toKey, false));
+                getKeyRange().sub(fromKey, true, toKey, false));
     }
 
     @Override
     public NavigableBoundMap<K, V> headMap(K toKey) {
-        return wrapMap(decorated().headMap(toKey, false), getMapRange().headMap(toKey, false));
+        return wrapMap(decorated().headMap(toKey, false), getKeyRange().head(toKey, false));
     }
 
     @Override
     public NavigableBoundMap<K, V> tailMap(K fromKey) {
-        return wrapMap(decorated().tailMap(fromKey, true), getMapRange().tailMap(fromKey, true));
+        return wrapMap(decorated().tailMap(fromKey, true), getKeyRange().tail(fromKey, true));
     }
 }

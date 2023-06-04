@@ -1,8 +1,9 @@
 package org.apache.commons.collections4;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
-public final class SortedMapRange<K> {
+public final class SortedMapRange<K> implements Serializable {
     /** The key to start from, null if the beginning. */
     private final K fromKey;
 
@@ -62,83 +63,82 @@ public final class SortedMapRange<K> {
         return new SortedMapRange<>(null, false, null, false, comparator);
     }
 
-    public SortedMapRange<K> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+    public SortedMapRange<K> sub(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
         if (fromKey == null && toKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a from or to!");
         }
-        return new SortedMapRange<>(fromKey, fromInclusive, toKey, toInclusive, comparator);
+        return makeSubRange(fromKey, fromInclusive, toKey, toInclusive);
     }
 
-    public SortedMapRange<K> tailMap(K fromKey, boolean fromInclusive) {
+    public SortedMapRange<K> tail(K fromKey, boolean fromInclusive) {
         if (fromKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a from!");
         }
-        int cmp = comparator.compare(fromKey, this.fromKey);
-        if (cmp < 0) {
-            fromKey = this.fromKey;
-            fromInclusive = this.fromInclusive;
-        } else if (cmp == 0) {
-            fromInclusive = !(fromInclusive & this.fromInclusive);
-        }
-        return new SortedMapRange<>(fromKey, fromInclusive, this.toKey, this.toInclusive, comparator);
+        return makeSubRange(fromKey, fromInclusive, null, false);
     }
 
-    public SortedMapRange<K> headMap(K toKey, boolean toInclusive) {
+    public SortedMapRange<K> head(K toKey, boolean toInclusive) {
         if (toKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a to!");
         }
-        int cmp = comparator.compare(toKey, this.toKey);
-        if (cmp > 0) {
-            toKey = this.toKey;
-            toInclusive = this.toInclusive;
-        } else if (cmp == 0) {
-            toInclusive = !(toInclusive & this.toInclusive);
+        return makeSubRange(null, false, toKey, toInclusive);
+    }
+
+    public SortedMapRange<K> sub(K fromKey, K toKey) {
+        return sub(fromKey, true, toKey, false);
+    }
+
+    public SortedMapRange<K> tail(K fromKey) {
+        return tail(fromKey, true);
+    }
+
+    public SortedMapRange<K> head(K toKey) {
+        return head(toKey, false);
+    }
+
+    private SortedMapRange<K> makeSubRange(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+        if (fromKey != null) {
+            if (!inToRange(fromKey) || !rangeInFromRange(fromKey, fromInclusive)) {
+                throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
+            }
         }
-        return new SortedMapRange<>(this.fromKey, this.fromInclusive, toKey, toInclusive, comparator);
-    }
 
-    public SortedMapRange<K> subMap(K fromKey, K toKey) {
-        return subMap(fromKey, true, toKey, false);
-    }
+        if (toKey != null) {
+            if (!inFromRange(toKey) || !rangeInToRange(toKey, toInclusive)) {
+                throw new IllegalArgumentException("ToKey is out of range: " + toKey);
+            }
+        }
 
-    public SortedMapRange<K> tailMap(K fromKey) {
-        return tailMap(fromKey, true);
-    }
+        if (!inRange(toKey)) {
+            throw new IllegalArgumentException("ToKey is out of range: " + toKey);
+        }
 
-    public SortedMapRange<K> headMap(K toKey) {
-        return headMap(toKey, false);
+        return new SortedMapRange<>(fromKey, fromInclusive, toKey, toInclusive, comparator);
     }
 
     /**
      * Returns true if the provided key is greater than TO and less than FROM.
      */
     public boolean inRange(final K key) {
-        final K fromKey = getFromKey();
-        final K toKey = getToKey();
-
-        return (fromKey == null || inFromRange(key, false)) && (toKey == null || inToRange(key, false));
-    }
-
-    /**
-     * This form allows the high endpoint (as well as all legit keys).
-     */
-    public boolean inRange2(final K key) {
-        final K fromKey = getFromKey();
-        final K toKey = getToKey();
-
-        return (fromKey == null || inFromRange(key, false)) && (toKey == null || inToRange(key, true));
+        return (fromKey == null || inFromRange(key)) && (toKey == null || inToRange(key));
     }
 
     /**
      * Returns true if the provided key is in the FROM range of the {@link SortedMapRange}.
      */
-    public boolean inFromRange(final K key, final boolean forceInclusive) {
-        final K fromKey = getFromKey();
-        final boolean fromInclusive = isFromInclusive();
-
+    private boolean inFromRange(final K key) {
         final int ret = comparator.compare(key, fromKey);
-        if (fromInclusive || forceInclusive) {
+        if (fromInclusive) {
             return ret >= 0;
+        }
+        return ret > 0;
+    }
+
+    private boolean rangeInFromRange(final K key, final boolean inclusive) {
+        final int ret = comparator.compare(key, this.fromKey);
+        if (ret == 0) {
+            // matching keys is fine if we're inclusive, or they don't need inclusive
+            return this.fromInclusive || !inclusive;
         }
         return ret > 0;
     }
@@ -146,13 +146,19 @@ public final class SortedMapRange<K> {
     /**
      * Returns true if the provided key is in the TO range of the {@link SortedMapRange}.
      */
-    public boolean inToRange(final K key, final boolean forceInclusive) {
-        final K toKey = getToKey();
-        final boolean toInclusive = isToInclusive();
-
+    private boolean inToRange(final K key) {
         final int ret = comparator.compare(key, toKey);
-        if (toInclusive || forceInclusive) {
+        if (toInclusive) {
             return ret <= 0;
+        }
+        return ret < 0;
+    }
+
+    private boolean rangeInToRange(final K key, final boolean inclusive) {
+        final int ret = comparator.compare(key, this.toKey);
+        if (ret == 0) {
+            // matching keys is fine if we're inclusive, or they don't need inclusive
+            return this.toInclusive || !inclusive;
         }
         return ret < 0;
     }

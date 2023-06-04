@@ -23,24 +23,25 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     protected NavigableMap<V, K> valueMap;
     protected Comparator<? super K> keyComparator;
     protected Comparator<? super V> valueComparator;
-    protected DualTreeBidi2MapBase<V, K> inverseBidiMap;
+    protected final SortedMapRange<K> keyRange;
+    protected final SortedMapRange<V> valueRange;
 
+    private DualTreeBidi2MapBase<V, K> inverseBidiMap;
+    private DualTreeBidi2MapBase<K,V> descendingBidiMap;
     private KeySet<K, V> keySet;
     private KeySet<K, V> keySetDescending;
     private Set<V> values;
     private Set<Entry<K, V>> entrySet;
 
-    protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final NavigableMap<V, K> valueMap) {
+    protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
+                                   final NavigableMap<V, K> valueMap, final SortedMapRange<V> valueRange) {
         super(keyMap);
         this.keyMap = keyMap;
-        this.valueMap = valueMap;
+        this.keyRange = keyRange;
         this.keyComparator = Objects.requireNonNull(keyMap.comparator());
+        this.valueMap = valueMap;
+        this.valueRange = valueRange;
         this.valueComparator = Objects.requireNonNull(valueMap.comparator());
-    }
-
-    protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final NavigableMap<V, K> reverseMap, final DualTreeBidi2Map<V, K> inverseBidiMap) {
-        this(keyMap, reverseMap);
-        this.inverseBidiMap = inverseBidiMap;
     }
 
     private static final Comparable<?> NULL = o -> {
@@ -76,21 +77,34 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
+    public SortedMapRange<K> getKeyRange() {
+        return keyRange;
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return valueRange;
+    }
+
+    @Override
     public SortedBidiMap<V, K> inverseBidiMap() {
-        if (inverseBidiMap == null)
+        if (inverseBidiMap == null) {
             inverseBidiMap = createInverse();
+            inverseBidiMap.inverseBidiMap = this;
+        }
         return inverseBidiMap;
     }
 
-    // what if we're in a inverse chain?
-    protected abstract DualTreeBidi2Map<?, ?> primaryMap();
-
-    protected abstract DualTreeBidi2MapBase<V, K> createInverse();
-
     @Override
     public NavigableMap<K, V> descendingMap() {
-        return new DualTreeBidi2Map<>(keyMap.descendingMap(), valueMap);
+        if (descendingBidiMap == null)
+            descendingBidiMap = createDescending();
+        return descendingBidiMap;
     }
+
+    protected abstract DualTreeBidi2Map<K, V> primaryMap();
+    protected abstract DualTreeBidi2MapBase<K, V> createDescending();
+    protected abstract DualTreeBidi2MapBase<V, K> createInverse();
 
     @Override
     protected abstract NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range);
@@ -103,11 +117,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     @Override
     public Comparator<? super V> valueComparator() {
         return valueComparator;
-    }
-
-    @Override
-    public SortedMapRange<K> getMapRange() {
-        return SortedMapRange.full(comparator());
     }
 
     protected abstract void modified();

@@ -56,7 +56,7 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
      * Creates an empty {@link DualTreeBidi2Map}.
      */
     public DualTreeBidi2Map() {
-        super(new TreeMap<>(ComparatorUtils.naturalComparator()), new TreeMap<>(ComparatorUtils.naturalComparator()));
+        this(ComparatorUtils.naturalComparator(), ComparatorUtils.naturalComparator());
     }
 
     /**
@@ -77,20 +77,19 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
      * @param valueComparator the values comparator to use
      */
     public DualTreeBidi2Map(final Comparator<? super K> keyComparator, final Comparator<? super V> valueComparator) {
-        super(new TreeMap<>(keyComparator), new TreeMap<>(valueComparator));
+        super(new TreeMap<>(keyComparator), SortedMapRange.full(keyComparator),
+                new TreeMap<>(valueComparator), SortedMapRange.full(valueComparator));
     }
 
-    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final NavigableMap<V, K> valueMap) {
-        super(Objects.requireNonNull(keyMap), Objects.requireNonNull(valueMap));
-    }
-
-    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final NavigableMap<V, K> reverseMap, final DualTreeBidi2Map<V, K> inverseBidiMap) {
-        super(keyMap, reverseMap, inverseBidiMap);
+    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
+                               final NavigableMap<V, K> valueMap, final SortedMapRange<V> valueRange) {
+        super(keyMap, keyRange, valueMap, valueRange);
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(keyComparator);
+
         out.writeObject(valueComparator);
         out.writeObject(keyMap);
     }
@@ -110,18 +109,23 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected DualTreeBidi2Map<?, ?> primaryMap() {
+    protected DualTreeBidi2Map<K, V> primaryMap() {
         return this;
     }
 
     @Override
+    protected DualTreeBidi2MapBase<K, V> createDescending() {
+        return new DualTreeBidi2Map<>(keyMap.descendingMap(), getKeyRange().reversed(), valueMap, valueRange);
+    }
+
+    @Override
     protected DualTreeBidi2Map<V, K> createInverse() {
-        return new DualTreeBidi2Map<>(valueMap, keyMap, this);
+        return new DualTreeBidi2Map<>(valueMap, valueRange, keyMap, keyRange);
     }
 
     @Override
     protected NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range) {
-        return new DualTreeBidi2MapSubKeys<>((NavigableMap<K, V>) map, range, this);
+        return new DualTreeBidi2MapSubMap<>((NavigableMap<K, V>) map, range, this);
     }
 
     @Override

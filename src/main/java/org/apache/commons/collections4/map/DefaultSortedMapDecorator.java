@@ -6,20 +6,12 @@ import org.apache.commons.collections4.SortedMapRange;
 import java.util.SortedMap;
 
 public class DefaultSortedMapDecorator<K, V> extends AbstractSortedMapDecorator<K, V> {
-    private final SortedMapRange<K> range;
-
-    public DefaultSortedMapDecorator(SortedMap<K, V> sortedMap, SortedMapRange<K> range) {
+    public DefaultSortedMapDecorator(SortedMap<K, V> sortedMap) {
         super(sortedMap);
-        this.range = SortedMapRange.full(sortedMap.comparator());
     }
 
     @Override
-    protected SortedBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range) {
-        return null;
-    }
-
-    @Override
-    public SortedMapRange<K> getMapRange() {
-        return range;
+    protected SortedMap<K, V> wrapMap(SortedMap<K, V> map) {
+        return new DefaultSortedMapDecorator<>(map);
     }
 }
