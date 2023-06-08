@@ -1,13 +1,11 @@
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.NavigableBoundMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.*;
 
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.*;
+import java.util.function.Predicate;
 
 class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         extends DualTreeBidi2MapBase<K, V> {
@@ -50,10 +48,69 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
+    protected K castKey(Object keyObject) {
+        K key = super.castKey(keyObject);
+        if (!keyRange.inRange(key))
+            throw new IllegalArgumentException();
+        return key;
+    }
+
+    private void checkKey(K key) {
+        if (!keyRange.inRange(key))
+            throw new IllegalArgumentException();
+    }
+
+    @Override
+    protected V castValue(Object valueObject) {
+        V value = super.castValue(valueObject);
+        if (!valueRange.inRange(value))
+            throw new IllegalArgumentException();
+        return value;
+    }
+
+    private void checkValue(V value) {
+        if (!valueRange.inRange(value))
+            throw new IllegalArgumentException();
+    }
+
+    @Override
+    public boolean containsKey(Object keyObject) {
+        K key = castKey(keyObject);
+        V value = keyMap.getOrDefault(key, NO_VALUE());
+        if (value != NO_VALUE())
+            return valueMap.containsKey(value);
+        else
+            return false;
+    }
+
+    @Override
+    public V get(Object keyObject) {
+        return getOrDefault(keyObject, null);
+    }
+
+    @Override
+    public V getOrDefault(Object keyObject, V defaultValue) {
+        K key = castKey(keyObject);
+        V value = keyMap.getOrDefault(key, NO_VALUE());
+        if (value != NO_VALUE()) {
+            if (valueMap.containsKey(value))
+                return value;
+        }
+        return defaultValue;
+    }
+
+    @Override
+    public boolean containsValue(Object valueObject) {
+        V value = castValue(valueObject);
+        K key = valueMap.getOrDefault(value, NO_KEY());
+        return key != NO_KEY() && keyMap.containsKey(key);
+    }
+
+    @Override
     public K getKey(Object valueObject) {
         V value = castValue(valueObject);
-        K key = valueMap.get(value);
-        if (keyMap.containsKey(key))
+        K key = valueMap.getOrDefault(value, NO_KEY());
+        if (key != NO_KEY() && keyMap.containsKey(key))
             return key;
         else
             return null;
@@ -63,21 +120,136 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     public K removeValue(Object valueObject) {
         V value = castValue(valueObject);
         K key = valueMap.getOrDefault(value, NO_KEY());
-        if (key != NO_KEY() && keyMap.containsKey(key)) {
-            keyMapRemoveChecked(key, value);
-            valueMapRemoveChecked(value, key);
-            modified();
-            return key;
-        } else {
+        if (key == NO_KEY() || !keyMap.containsKey(key))
             return null;
-        }
+        keyMapRemoveChecked(key, value);
+        valueMapRemoveChecked(value, key);
+        modified();
+        return key;
     }
 
     @Override
     protected boolean removeValueViaCollection(Object valueObject) {
         V value = castValue(valueObject);
         K key = valueMap.getOrDefault(value, NO_KEY());
-        if (key != NO_KEY() && keyMap.containsKey(key)) {
+        if (key == NO_KEY() || !keyMap.containsKey(key))
+            return false;
+        keyMapRemoveChecked(key, value);
+        valueMapRemoveChecked(value, key);
+        modified();
+        return true;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        for (Entry<K, V> entry : keyMap.entrySet()) {
+            if (valueMap.containsKey(entry.getValue()))
+                return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int size() {
+        int count = 0;
+        for (Entry<K, V> entry : keyMap.entrySet()) {
+            if (valueMap.containsKey(entry.getValue()))
+                count++;
+        }
+        return count;
+    }
+
+    @Override
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        Objects.requireNonNull(action);
+        for (Entry<K, V> entry : keyMap.entrySet()) {
+            K key = entry.getKey();
+            V value = entry.getValue();
+            if (valueMap.containsKey(value)) {
+                action.accept(key, value);
+            }
+        }
+    }
+
+    @Override
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        Objects.requireNonNull(function);
+        for (Entry<K, V> entry : keyMap.entrySet()) {
+            K key = entry.getKey();
+            V oldValue = entry.getValue();
+            if (valueMap.containsKey(oldValue)) {
+                V newValue = function.apply(key, oldValue);
+                checkValue(newValue);
+                if (!valueEquals(oldValue, newValue) && updateValueMapDuringKeyMapIteration(key, oldValue, newValue)) {
+                    entry.setValue(newValue);
+                }
+            }
+        }
+        modified();
+    }
+
+    @Override
+    public V put(K key, V newValue) {
+        checkKey(key);
+        checkValue(newValue);
+
+        V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+
+        if (currentValue == NO_VALUE()) {
+            if (primaryMap().keyMap.containsKey(key))
+                throw new ValueChangeNotAllowedException("key already exists in primary map but not this sub map");
+            keyMapAddChecked(key, newValue);
+            updateValueMapForNewValue(key, newValue);
+            modified();
+            return null;
+        } else if (valueMap.containsKey(currentValue)) {
+            if (!valueEquals(newValue, currentValue)) {
+                keyMapReplaceChecked(key, currentValue, newValue);
+                valueMapRemoveChecked(currentValue, key);
+                updateValueMapForNewValue(key, newValue);
+                modified();
+            }
+            return currentValue;
+        } else {
+            throw new ValueChangeNotAllowedException("key already exists in primary map but not this sub map");
+        }
+    }
+
+    @Override
+    protected boolean collectionRemoveIf(final Predicate<? super Entry<K, V>> filter) {
+        final Iterator<Entry<K, V>> iterator = keyMap.entrySet().iterator();
+        boolean changed = false;
+        while (iterator.hasNext()) {
+            final Entry<K, V> entry = iterator.next();
+            if (valueMap.containsKey(entry.getValue()) && filter.test(entry)) {
+                iterator.remove();
+                valueMapRemoveChecked(entry.getValue(), entry.getKey());
+                changed = true;
+            }
+        }
+        if (changed)
+            modified();
+        return changed;
+    }
+
+    @Override
+    public V remove(Object keyObject) {
+        K key = castKey(keyObject);
+        V value = keyMap.getOrDefault(key, NO_VALUE());
+        if (value != NO_VALUE() && valueMap.containsKey(value)) {
+            keyMapRemoveChecked(key, value);
+            valueMapRemoveChecked(value, key);
+            modified();
+            return value;
+        } else {
+            return null;
+        }
+    }
+
+    protected boolean removeViaCollection(Object keyObject) {
+        K key = castKey(keyObject);
+        V value = keyMap.getOrDefault(key, NO_VALUE());
+        if (value != NO_VALUE() && valueMap.containsKey(value)) {
             keyMapRemoveChecked(key, value);
             valueMapRemoveChecked(value, key);
             modified();
@@ -88,15 +260,194 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public V put(K key, V newValue) {
-        if (!keyRange.inRange(key))
-            throw new IllegalArgumentException();
+    public boolean remove(Object keyObject, Object valueObject) {
+        K key = castKey(keyObject);
+        V value = castValue(valueObject);
+        return remove2(key, value);
+    }
+
+    @Override
+    protected boolean removeViaCollection(K key, V value) {
+        checkKey(key);
+        checkValue(value);
+        return remove2(key, value);
+    }
+
+    private boolean remove2(K key, V value) {
+        if (keyMap.containsKey(key) && valueMap.containsKey(value)) {
+            keyMapRemoveChecked(key, value);
+            valueMapRemoveChecked(value, key);
+            modified();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        if (valueEquals(oldValue, newValue))
+            return false;
+        if (!valueMap.containsKey(oldValue))
+            return false;
+        if (!keyMap.replace(key, oldValue, newValue))
+            return false;
+        valueMapRemoveChecked(oldValue, key);
+        updateValueMapForNewValue(key, newValue);
+        modified();
+        return true;
+    }
+
+    @Override
+    public V replace(K key, V newValue) {
+        checkKey(key);
+        checkValue(newValue);
 
         V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+        if (currentValue == NO_VALUE())
+            return null;
+        else if (!valueMap.containsKey(currentValue))
+            return null;
+        else if (valueEquals(newValue, currentValue))
+            return currentValue;
 
+        keyMapReplaceChecked(key, currentValue, newValue);
+        valueMapRemoveChecked(currentValue, key);
+
+        updateValueMapForNewValue(key, newValue);
+        modified();
+
+        return currentValue;
+    }
+
+    @Override
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+
+        checkKey(key);
+
+        V currentValue = keyMap.get(key);
+        if (currentValue == null)
+            return null;
+        else if (!valueMap.containsKey(currentValue))
+            return null;
+
+        V newValue = remappingFunction.apply(key, currentValue);
+        if (valueEquals(newValue, currentValue)) {
+            return currentValue;
+        } else if (newValue == null) {
+            keyMapRemoveChecked(key, currentValue);
+            valueMapRemoveChecked(currentValue, key);
+            modified();
+            return null;
+        } else {
+            checkValue(newValue);
+            keyMapReplaceChecked(key, currentValue, newValue);
+            valueMapRemoveChecked(currentValue, key);
+            updateValueMapForNewValue(key, newValue);
+            modified();
+            return newValue;
+        }
+    }
+
+    @Override
+    public V putIfAbsent(K key, V newValue) {
+        checkKey(key);
+        V currentValue = keyMap.getOrDefault(key, NO_VALUE());
         if (currentValue == NO_VALUE()) {
+            if (primaryMap().keyMap.containsKey(key))
+                throw new ValueChangeNotAllowedException("key already exists in primary map but not this sub map");
             keyMapAddChecked(key, newValue);
             updateValueMapForNewValue(key, newValue);
+            modified();
+            return null;
+        } else {
+            return currentValue;
+        }
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        checkKey(key);
+        V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+        if (currentValue == NO_VALUE()) {
+            if (primaryMap().keyMap.containsKey(key))
+                throw new ValueChangeNotAllowedException("key already exists in primary map but not this sub map");
+            V newValue = mappingFunction.apply(key);
+            if (newValue != null) {
+                checkValue(newValue);
+                keyMapAddChecked(key, newValue);
+                updateValueMapForNewValue(key, newValue);
+                modified();
+            }
+            return newValue;
+        } else {
+            return currentValue;
+        }
+    }
+
+    @Override
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        checkKey(key);
+
+        V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+        if ((currentValue == NO_VALUE() && primaryMap().keyMap.containsKey(key)) || !valueMap.containsKey(currentValue))
+            throw new ValueChangeNotAllowedException("key already exists in primary map but not this sub map");
+
+        V currentValueNormal = currentValue != NO_VALUE() ? currentValue : null;
+        V newValue = remappingFunction.apply(key, currentValueNormal);
+
+        if (newValue == null) {
+            if (currentValue != NO_VALUE()) {
+                keyMapRemoveChecked(key, currentValue);
+                valueMapRemoveChecked(currentValue, key);
+                modified();
+            }
+            return null;
+        } else if (currentValue == NO_VALUE()) {
+            keyMapAddChecked(key, newValue);
+            updateValueMapForNewValue(key, newValue);
+            modified();
+            return newValue;
+        } else if (valueEquals(newValue, currentValue)) {
+            return currentValue;
+        } else {
+            keyMapReplaceChecked(key, currentValue, newValue);
+            valueMapRemoveChecked(currentValue, key);
+            updateValueMapForNewValue(key, newValue);
+            modified();
+            return newValue;
+        }
+    }
+
+    @Override
+    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+
+        V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+        if ((currentValue == NO_VALUE() && primaryMap().keyMap.containsKey(key)) || !valueMap.containsKey(currentValue))
+                throw new ValueChangeNotAllowedException("key already exists in primary map but not this sub map");
+
+        if (currentValue == NO_VALUE()) {
+            keyMapAddChecked(key, value);
+            updateValueMapForNewValue(key, value);
+            modified();
+            return value;
+        } else if (currentValue == null) {
+            keyMapReplaceChecked(key, null, value);
+            valueMapRemoveChecked(null, key);
+            updateValueMapForNewValue(key, value);
+            modified();
+            return value;
+        }
+
+        V newValue = remappingFunction.apply(currentValue, value);
+
+        if (newValue == null) {
+            keyMapRemoveChecked(key, currentValue);
+            valueMapRemoveChecked(currentValue, key);
             modified();
             return null;
         } else if (valueEquals(newValue, currentValue)) {
@@ -106,138 +457,380 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
             valueMapRemoveChecked(currentValue, key);
             updateValueMapForNewValue(key, newValue);
             modified();
-            return currentValue;
+            return newValue;
         }
     }
 
     @Override
-    protected void putWithKnownState(K key, V oldValue, V newValue) {
-        super.putWithKnownState(key, oldValue, newValue);
-    }
-
-    @Override
-    public void putAll(Map<? extends K, ? extends V> mapToCopy) {
-        super.putAll(mapToCopy);
-    }
-
-    @Override
-    public V remove(Object keyObject) {
-        return super.remove(keyObject);
-    }
-
-    @Override
-    protected boolean removeViaCollection(Object keyObject) {
-        return super.removeViaCollection(keyObject);
-    }
-
-    @Override
-    public boolean remove(Object keyObject, Object valueObject) {
-        return super.remove(keyObject, valueObject);
-    }
-
-    @Override
-    protected void removeViaMapIterator(K key, V value) {
-        super.removeViaMapIterator(key, value);
-    }
-
-    @Override
-    public boolean replace(K key, V oldValue, V newValue) {
-        return super.replace(key, oldValue, newValue);
-    }
-
-    @Override
-    public V replace(K key, V newValue) {
-        return super.replace(key, newValue);
-    }
-
-    @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        return super.computeIfPresent(key, remappingFunction);
-    }
-
-    @Override
-    public V putIfAbsent(K key, V newValue) {
-        return super.putIfAbsent(key, newValue);
-    }
-
-    @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        return super.computeIfAbsent(key, mappingFunction);
-    }
-
-    @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        return super.compute(key, remappingFunction);
-    }
-
-    @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        return super.merge(key, value, remappingFunction);
-    }
-
-    @Override
     public void clear() {
-        super.clear();
-    }
-
-    @Override
-    public boolean containsValue(Object valueObject) {
-        return super.containsValue(valueObject);
+        if (!isEmpty()) {
+            final Iterator<Entry<K, V>> iterator = keyMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                final Entry<K, V> entry = iterator.next();
+                if (valueMap.containsKey(entry.getValue())) {
+                    iterator.remove();
+                    valueMapRemoveChecked(entry.getValue(), entry.getKey());
+                }
+            }
+            modified();
+        }
     }
 
     @Override
     public Entry<K, V> pollFirstEntry() {
-        return super.pollFirstEntry();
+        Entry<K, V> entry = keyMap.firstEntry();
+        while (entry != null && !valueMap.containsKey(entry.getValue())) {
+            entry = keyMap.higherEntry(entry.getKey());
+        }
+        if (entry != null) {
+            keyMapRemoveChecked(entry.getKey(), entry.getValue());
+            valueMapRemoveChecked(entry.getValue(), entry.getKey());
+            return entry;
+        }
+        return null;
     }
 
     @Override
     public Entry<K, V> pollLastEntry() {
-        return super.pollLastEntry();
-    }
-
-    @Override
-    public NavigableSet<K> navigableKeySet() {
-        return super.navigableKeySet();
-    }
-
-    @Override
-    public NavigableSet<K> descendingKeySet() {
-        return super.descendingKeySet();
-    }
-
-    @Override
-    public Set<K> keySet() {
-        return super.keySet();
-    }
-
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-        return super.entrySet();
-    }
-
-    @Override
-    public Set<V> values() {
-        return super.values();
-    }
-
-    @Override
-    protected KeySet<K, V> createKeySet(boolean descending) {
+        Entry<K, V> entry = keyMap.lastEntry();
+        while (entry != null && !valueMap.containsKey(entry.getValue())) {
+            entry = keyMap.lowerEntry(entry.getKey());
+        }
+        if (entry != null) {
+            keyMapRemoveChecked(entry.getKey(), entry.getValue());
+            valueMapRemoveChecked(entry.getValue(), entry.getKey());
+            return entry;
+        }
         return null;
     }
 
-    @Override
-    protected ValueMapKeySet<K, V> createValueSet() {
-        return null;
+    protected boolean updateValueMapDuringKeyMapIteration(K key, V oldValue, V newValue) {
+        // caller should have checked current value is in valueMap
+        if (!valueEquals(oldValue, newValue)) {
+            if (primaryMap().valueMap.containsKey(newValue))
+                throw new ValueChangeNotAllowedException("value exists for another key and can't update during iteration");
+            valueMapRemoveChecked(oldValue, key);
+            valueMapAddChecked(newValue, key);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected void updateValueMapForNewValue(K key, V newValue) {
+        K oldKeyForNewValue = primaryMap().valueMap.getOrDefault(newValue, NO_KEY());
+        if (oldKeyForNewValue != NO_KEY()) {
+            if (!keyMap.containsKey(oldKeyForNewValue) || !keyEquals(valueMap.get(newValue), oldKeyForNewValue))
+                throw new ValueChangeNotAllowedException("old value exists outside this sub map and can't update");
+            valueMapReplaceChecked(newValue, oldKeyForNewValue, key);
+            keyMapRemoveChecked(oldKeyForNewValue, newValue);
+        } else {
+            valueMapAddChecked(newValue, key);
+        }
     }
 
     @Override
-    protected EntrySet<K, V> createEntrySet() {
-        return null;
+    protected NavigableSet<K> createKeySet(boolean descending) {
+        if (valueRange.isFull())
+            return new KeySetUsingKeyMap<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), this);
+        else if (keyRange.isFull())
+            return new KeySetUsingValueMap<>(valueMap.values(), this);
+        else if (descending)
+            return descendingMap().navigableKeySet();
+        else
+            return new KeySetUsingBoth();
+    }
+
+    @Override
+    protected NavigableSet<V> createValueSet() {
+        return new ValueSetUsingValueMap<>(valueMap.navigableKeySet(), this);
+    }
+
+    @Override
+    protected Set<Entry<K, V>> createEntrySet() {
+        return new EntrySetUsingKeyMap<>(keyMap.entrySet(), this);
     }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return super.mapIterator();
+        return new DualTreeMapIterator<>(keyMap, this);
     }
 
+    private static class KeySetUsingValueMap<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseNavigableSet<K, K, V> {
+        protected KeySetUsingValueMap(NavigableSet<K> set, DualTreeBidi2MapBase<K, V> parent) {
+            // but the order will be wrong...
+            super(set, parent);
+        }
+
+        public KeySetUsingValueMap(Collection<K> values, DualTreeBidi2MapSubMap<K,V> parent) {
+            super(null, parent);
+        }
+
+        @Override
+        protected BaseNavigableSet<K, K, V> wrapSet(NavigableSet<K> set) {
+            return null;
+        }
+    }
+
+    protected static <K, V, R> R scanFirstMatch(Supplier<Entry<K, V>> start,
+                                                Function<K, Entry<K, V>> next,
+                                                Predicate<V> confirm,
+                                                Function<Entry<K, V>, R> transform) {
+        Entry<K, V> entry = start.get();
+        while (entry != null) {
+            if (confirm.test(entry.getValue()))
+                return transform.apply(entry);
+            entry = next.apply(entry.getKey());
+        }
+        return null;
+    }
+
+    protected static <K, V, R> R scanFirstMatch(K key,
+                                                Function<K, Entry<K, V>> start,
+                                                Function<K, Entry<K, V>> next,
+                                                Predicate<V> confirm,
+                                                Function<Entry<K, V>, R> transform) {
+        Entry<K, V> entry = start.apply(key);
+        while (entry != null) {
+            if (confirm.test(entry.getValue()))
+                return transform.apply(entry);
+            entry = next.apply(entry.getKey());
+        }
+        return null;
+    }
+
+    private class KeySetUsingBoth extends AbstractCollection<K> implements NavigableSet<K> {
+        @Override
+        public K lower(K key) {
+            return scanFirstMatch(key, keyMap::lowerEntry, keyMap::lowerEntry, valueMap::containsKey, Entry::getKey);
+        }
+
+        @Override
+        public K floor(K key) {
+            return scanFirstMatch(key, keyMap::floorEntry, keyMap::lowerEntry, valueMap::containsKey, Entry::getKey);
+        }
+
+        @Override
+        public K higher(K key) {
+            return scanFirstMatch(key, keyMap::higherEntry, keyMap::higherEntry, valueMap::containsKey, Entry::getKey);
+        }
+
+        @Override
+        public K ceiling(K key) {
+            return scanFirstMatch(key, keyMap::ceilingEntry, keyMap::higherEntry, valueMap::containsKey, Entry::getKey);
+        }
+
+        @Override
+        public K first() {
+            return scanFirstMatch(keyMap::firstEntry, keyMap::higherEntry, valueMap::containsKey, Entry::getKey);
+        }
+
+        @Override
+        public K last() {
+            return scanFirstMatch(keyMap::lastEntry, keyMap::lowerEntry, valueMap::containsKey, Entry::getKey);
+        }
+
+        @Override
+        public K pollFirst() {
+            Entry<K, V> entry = scanFirstMatch(keyMap::firstEntry, keyMap::higherEntry, valueMap::containsKey, Function.identity());
+            if (entry != null) {
+                removeInternalExpectedGood(entry.getKey(), entry.getValue());
+                return entry.getKey();
+            }
+            return null;
+        }
+
+        @Override
+        public K pollLast() {
+            Entry<K, V> entry = scanFirstMatch(keyMap::lastEntry, keyMap::lowerEntry, valueMap::containsKey, Function.identity());
+            if (entry != null) {
+                removeInternalExpectedGood(entry.getKey(), entry.getValue());
+                return entry.getKey();
+            }
+            return null;
+        }
+
+        @Override
+        public int size() {
+            return DualTreeBidi2MapSubMap.this.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return DualTreeBidi2MapSubMap.this.isEmpty();
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            return DualTreeBidi2MapSubMap.this.containsKey(o);
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            return DualTreeBidi2MapSubMap.this.removeViaCollection(o);
+        }
+
+        @Override
+        public void clear() {
+            DualTreeBidi2MapSubMap.this.clear();
+        }
+
+        @Override
+        public void forEach(Consumer<? super K> action) {
+            DualTreeBidi2MapSubMap.this.forEach((k,v) -> action.accept(k));
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super K> filter) {
+            return DualTreeBidi2MapSubMap.this.collectionRemoveIf(entry -> filter.test(entry.getKey()));
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            return DualTreeBidi2MapSubMap.this.collectionRemoveIf(entry -> !c.contains(entry.getKey()));
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            return DualTreeBidi2MapSubMap.this.collectionRemoveIf(entry -> c.contains(entry.getKey()));
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return DualTreeBidi2MapSubMap.this.comparator();
+        }
+
+        @Override
+        public Iterator<K> iterator() {
+            return new BothIterator(false);
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return new BothIterator(true);
+        }
+
+        @Override
+        public NavigableSet<K> descendingSet() {
+            return DualTreeBidi2MapSubMap.this.descendingMap().navigableKeySet();
+        }
+
+        @Override
+        public NavigableSet<K> subSet(K fromElement, boolean fromInclusive, K toElement, boolean toInclusive) {
+            return DualTreeBidi2MapSubMap.this.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet();
+        }
+
+        @Override
+        public NavigableSet<K> headSet(K toElement, boolean inclusive) {
+            return DualTreeBidi2MapSubMap.this.headMap(toElement, inclusive).navigableKeySet();
+        }
+
+        @Override
+        public NavigableSet<K> tailSet(K fromElement, boolean inclusive) {
+            return DualTreeBidi2MapSubMap.this.tailMap(fromElement, inclusive).navigableKeySet();
+        }
+
+        @Override
+        public SortedSet<K> subSet(K fromElement, K toElement) {
+            return DualTreeBidi2MapSubMap.this.subMap(fromElement, toElement).navigableKeySet();
+        }
+
+        @Override
+        public SortedSet<K> headSet(K toElement) {
+            return DualTreeBidi2MapSubMap.this.headMap(toElement).navigableKeySet();
+        }
+
+        @Override
+        public SortedSet<K> tailSet(K fromElement) {
+            return DualTreeBidi2MapSubMap.this.tailMap(fromElement).navigableKeySet();
+        }
+
+        @Override
+        public boolean add(K object) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends K> coll) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private class BothIterator implements ResettableIterator<K> {
+        private Entry<K, V> next;
+        private Entry<K, V> lastResult;
+        private final Supplier<Entry<K, V>> funcFirst;
+        private final Function<K, Entry<K, V>> funcNext;
+        private int expectedModCount;
+
+        protected BothIterator(boolean reverse) {
+            if (reverse) {
+                funcFirst = keyMap::lastEntry;
+                funcNext = keyMap::lowerEntry;
+            } else {
+                funcFirst = keyMap::firstEntry;
+                funcNext = keyMap::higherEntry;
+            }
+            reset();
+        }
+
+        @Override
+        public void reset() {
+            Entry<K, V> entry = funcFirst.get();
+            while (entry != null && !valueMap.containsKey(entry.getValue())) {
+                entry = funcNext.apply(entry.getKey());
+            }
+            next = entry;
+            lastResult = null;
+            expectedModCount = primaryMap().modificationCount;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        @Override
+        public K next() {
+            Entry<K, V> result = next;
+            if (result == null)
+                throw new NoSuchElementException();
+            K key = result.getKey();
+
+            Entry<K, V> possible = funcNext.apply(key);
+            while (possible != null && !valueMap.containsKey(possible.getValue())) {
+                possible = funcNext.apply(possible.getKey());
+            }
+            next = possible;
+
+            lastResult = result;
+            return key;
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super K> action) {
+            Entry<K, V> entry = next;
+            while (entry != null) {
+                K key = entry.getKey();
+                if (valueMap.containsKey(entry.getValue())) {
+                    action.accept(key);
+                }
+                entry = funcNext.apply(key);
+            }
+            next = null;
+            lastResult = null;
+        }
+
+        @Override
+        public void remove() {
+            if (lastResult == null)
+                throw new IllegalStateException();
+            if (primaryMap().modificationCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            removeInternalExpectedGood(lastResult.getKey(), lastResult.getValue());
+            expectedModCount = primaryMap().modificationCount;
+            lastResult = null;
+        }
+    }
 }

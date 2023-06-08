@@ -63,6 +63,10 @@ public final class SortedMapRange<K> implements Serializable {
         return new SortedMapRange<>(null, false, null, false, comparator);
     }
 
+    public boolean isFull() {
+        return fromKey == null && toKey == null;
+    }
+
     public SortedMapRange<K> sub(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
         if (fromKey == null && toKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a from or to!");

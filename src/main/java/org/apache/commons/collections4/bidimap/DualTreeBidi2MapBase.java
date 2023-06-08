@@ -15,9 +15,9 @@ import java.util.function.Predicate;
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractNavigableMapDecorator<K, V>
         implements SortedBidiMap<K, V>, NavigableBoundMap<K, V> {
-    private static final boolean treeMapImplementsRemove2 = DualTreeBidi2MapBase.checkNotDefault("remove", Object.class, Object.class);
-    private static final boolean treeMapImplementsReplace3 = DualTreeBidi2MapBase.checkNotDefault("replace", Object.class, Object.class, Object.class);
-    private static final boolean treeMapImplementsPutIfAbsent = DualTreeBidi2MapBase.checkNotDefault("putIfAbsent", Object.class, Object.class);
+    protected static final boolean treeMapImplementsRemove2 = checkNotDefault("remove", Object.class, Object.class);
+    protected static final boolean treeMapImplementsReplace3 = checkNotDefault("replace", Object.class, Object.class, Object.class);
+    protected static final boolean treeMapImplementsPutIfAbsent = checkNotDefault("putIfAbsent", Object.class, Object.class);
 
     protected NavigableMap<K, V> keyMap;
     protected NavigableMap<V, K> valueMap;
@@ -28,9 +28,9 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     private DualTreeBidi2MapBase<V, K> inverseBidiMap;
     private DualTreeBidi2MapBase<K,V> descendingBidiMap;
-    private KeySet<K, V> keySet;
-    private KeySet<K, V> keySetDescending;
-    private Set<V> values;
+    private NavigableSet<K> keySet;
+    private NavigableSet<K> keySetDescending;
+    private NavigableSet<V> valueSet;
     private Set<Entry<K, V>> entrySet;
 
     protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
@@ -172,7 +172,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         modified();
     }
 
-    private boolean collectionRemoveIf(final Predicate<? super Entry<K, V>> filter) {
+    protected boolean collectionRemoveIf(final Predicate<? super Entry<K, V>> filter) {
         final Iterator<Entry<K, V>> iterator = keyMap.entrySet().iterator();
         boolean changed = false;
         while (iterator.hasNext()) {
@@ -275,10 +275,11 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected boolean removeViaEntrySetIterator(K key, V value) {
+    protected boolean removeViaCollection(K key, V value) {
         if (treeMapImplementsRemove2) {
             if (keyMap.remove(key, value)) {
                 valueMapRemoveChecked(value, key);
+                modified();
                 return true;
             }
             return false;
@@ -288,11 +289,12 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
                 return false;
             keyMapRemoveChecked(key, value);
             valueMapRemoveChecked(value, key);
+            modified();
             return true;
         }
     }
 
-    protected void removeViaMapIterator(K key, V value) {
+    protected void removeInternalExpectedGood(K key, V value) {
         keyMapRemoveChecked(key, value);
         valueMapRemoveChecked(value, key);
         modified();
@@ -508,16 +510,16 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public Set<V> values() {
-        if (values == null)
-            values = createValueSet();
-        return values;
+        if (valueSet == null)
+            valueSet = createValueSet();
+        return valueSet;
     }
 
-    protected abstract KeySet<K, V> createKeySet(boolean descending);
+    protected abstract NavigableSet<K> createKeySet(boolean descending);
 
-    protected abstract ValueMapKeySet<K, V> createValueSet();
+    protected abstract NavigableSet<V> createValueSet();
 
-    protected abstract EntrySet<K, V> createEntrySet();
+    protected abstract Set<Entry<K, V>> createEntrySet();
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
@@ -527,7 +529,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     protected boolean updateValueMapDuringKeyMapIteration(K key, V oldValue, V newValue) {
         if (!valueEquals(oldValue, newValue)) {
             if (valueMap.containsKey(newValue))
-                throw new ValueChangeNotAllowedException();
+                throw new ValueChangeNotAllowedException("value exists for another key and can't update during iteration");
             valueMapRemoveChecked(oldValue, key);
             valueMapAddChecked(newValue, key);
             return true;
@@ -616,6 +618,9 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected static class ValueChangeNotAllowedException extends IllegalArgumentException {
+        public ValueChangeNotAllowedException(String msg) {
+            super(msg);
+        }
     }
 
     protected static abstract class BaseNavigableSet<E, K extends Comparable<K>, V extends Comparable<V>>
@@ -687,7 +692,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive) {
-            // TODO or should we do subMap first, then parent references are still useful
             return wrapSet(decorated().subSet(fromElement, fromInclusive, toElement, toInclusive));
         }
 
@@ -717,25 +721,25 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected static class KeySet<K extends Comparable<K>, V extends Comparable<V>>
+    protected static class KeySetUsingKeyMap<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<K, K, V> {
-        protected KeySet(NavigableSet<K> keySet, DualTreeBidi2MapBase<K, V> parent) {
+        protected KeySetUsingKeyMap(NavigableSet<K> keySet, DualTreeBidi2MapBase<K, V> parent) {
             super(keySet, parent);
         }
 
         @Override
-        protected KeySet<K, V> wrapSet(NavigableSet<K> set) {
-            return new KeySet<>(set, parent);
+        protected KeySetUsingKeyMap<K, V> wrapSet(NavigableSet<K> set) {
+            return new KeySetUsingKeyMap<>(set, parent);
         }
 
         @Override
         public Iterator<K> iterator() {
-            return new KeyIterator<K, V>(() -> decorated().iterator(), parent.primaryMap());
+            return new KeyIterator<>(() -> decorated().iterator(), parent.primaryMap());
         }
 
         @Override
         public Iterator<K> descendingIterator() {
-            return new KeyIterator<K, V>(() -> decorated().descendingIterator(), parent.primaryMap());
+            return new KeyIterator<>(() -> decorated().descendingIterator(), parent.primaryMap());
         }
 
         @Override
@@ -755,6 +759,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         public K pollFirst() {
             if (!decorated().isEmpty()) {
                 // could be improved if we knew parent map aligned
+                // really only needed for sub set
+                // but not quite right for that either?
                 K key = decorated().first();
                 V value = parent.keyMap.remove(key);
                 parent.valueMapRemoveChecked(value, key);
@@ -780,15 +786,16 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected static class ValueMapKeySet<K extends Comparable<K>, V extends Comparable<V>>
+    protected static class ValueSetUsingValueMap<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<V, K, V> {
-        public ValueMapKeySet(NavigableSet<V> valueMapKeySet, DualTreeBidi2MapBase<K, V> parent) {
+        public ValueSetUsingValueMap(NavigableSet<V> valueMapKeySet, DualTreeBidi2MapBase<K, V> parent) {
+            // normally valueMap.navigableKeySet()
             super(valueMapKeySet, parent);
         }
 
         @Override
-        protected ValueMapKeySet<K, V> wrapSet(NavigableSet<V> set) {
-            return new ValueMapKeySet<>(set, parent);
+        protected ValueSetUsingValueMap<K, V> wrapSet(NavigableSet<V> set) {
+            return new ValueSetUsingValueMap<>(set, parent);
         }
 
         @Override
@@ -842,11 +849,11 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected static class EntrySet<K extends Comparable<K>, V extends Comparable<V>>
+    protected static class EntrySetUsingKeyMap<K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractSetDecorator<Entry<K, V>> {
         protected final DualTreeBidi2MapBase<K, V> parent;
 
-        protected EntrySet(Set<Entry<K, V>> entrySet, DualTreeBidi2MapBase<K, V> parent) {
+        protected EntrySetUsingKeyMap(Set<Entry<K, V>> entrySet, DualTreeBidi2MapBase<K, V> parent) {
             super(entrySet);
             this.parent = parent;
         }
@@ -878,7 +885,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
                 return false;
             }
             final Entry<K, V> entry = (Entry<K, V>) object;
-            return parent.removeViaEntrySetIterator(entry.getKey(), entry.getValue());
+            return parent.removeViaCollection(entry.getKey(), entry.getValue());
         }
 
         @Override
@@ -1061,17 +1068,17 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    private static class DualTreeMapIterator<K extends Comparable<K>, V extends Comparable<V>>
+    protected static class DualTreeMapIterator<K extends Comparable<K>, V extends Comparable<V>>
             implements OrderedMapIterator<K, V>, ResettableIterator<K> {
 
-        private final DualTreeBidi2MapBase<K, V> parent;
-        private final NavigableMap<K, V> map;
-        private boolean forward;
-        private Entry<K, V> previousEntry;
-        private Entry<K, V> nextEntry;
-        private Entry<K, V> latestResult;
+        protected final DualTreeBidi2MapBase<K, V> parent;
+        protected final NavigableMap<K, V> map;
+        protected boolean forward;
+        protected Entry<K, V> previousEntry;
+        protected Entry<K, V> nextEntry;
+        protected Entry<K, V> latestResult;
 
-        private DualTreeMapIterator(NavigableMap<K, V> map, DualTreeBidi2MapBase<K, V> parent) {
+        protected DualTreeMapIterator(NavigableMap<K, V> map, DualTreeBidi2MapBase<K, V> parent) {
             this.map = map;
             this.parent = parent;
             reset();
@@ -1183,7 +1190,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             if (entry == null)
                 throw new IllegalStateException();
             K key = entry.getKey();
-            parent.removeViaMapIterator(key, entry.getValue());
+            parent.removeInternalExpectedGood(key, entry.getValue());
             if (forward)
                 previousEntry = map.lowerEntry(key);
             else
@@ -1192,7 +1199,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    private static <C> boolean checkNotDefault(String name, Class<?>... parameterTypes) {
+    protected static <C> boolean checkNotDefault(String name, Class<?>... parameterTypes) {
         try {
             Method method = TreeMap.class.getMethod(name, parameterTypes);
             return !method.isDefault();

@@ -129,17 +129,17 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected KeySet<K, V> createKeySet(boolean descending) {
-        return new KeySet<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), this);
+    protected NavigableSet<K> createKeySet(boolean descending) {
+        return new KeySetUsingKeyMap<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), this);
     }
 
     @Override
-    protected ValueMapKeySet<K, V> createValueSet() {
-        return new ValueMapKeySet<>(valueMap.navigableKeySet(), this);
+    protected NavigableSet<V> createValueSet() {
+        return new ValueSetUsingValueMap<>(valueMap.navigableKeySet(), this);
     }
 
     @Override
-    protected EntrySet<K, V> createEntrySet() {
-        return new EntrySet<>(keyMap.entrySet(), this);
+    protected Set<Entry<K, V>> createEntrySet() {
+        return new EntrySetUsingKeyMap<>(keyMap.entrySet(), this);
     }
 }
