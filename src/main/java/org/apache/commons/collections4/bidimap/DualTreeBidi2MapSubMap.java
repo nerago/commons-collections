@@ -177,6 +177,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         if (!keyRange.isFull() && valueRange.isFull()) {
             keyMap.forEach(action);
         } else if (keyRange.isFull() && !valueRange.isFull()) {
+            // wrong order?
             valueMap.forEach((v, k) -> action.accept(k, v));
         } else {
             for (Entry<K, V> entry : keyMap.entrySet()) {
@@ -553,10 +554,8 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
             return new KeySetUsingKeyMap<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), this);
         else if (keyRange.isFull())
             return new KeySetUsingValueMap<>(valueMap.values(), this);
-        else if (descending)
-            return descendingMap().navigableKeySet();
         else
-            return new KeySetUsingBoth();
+            return new KeySetUsingBoth<>(this, descending);
     }
 
     @Override
@@ -617,7 +616,19 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         return null;
     }
 
-    private class KeySetUsingBoth extends AbstractCollection<K> implements NavigableSet<K> {
+    private static class KeySetUsingBoth<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractCollection<K>
+            implements NavigableSet<K> {
+        private final DualTreeBidi2MapSubMap<K, V> parent;
+        private final NavigableMap<K, V> keyMap;
+        private final Map<V, K> valueMap;
+
+        public KeySetUsingBoth(DualTreeBidi2MapSubMap<K, V> parent, boolean descending) {
+            this.parent = parent;
+            this.keyMap = descending ? parent.keyMap.descendingMap() : parent.keyMap;
+            this.valueMap = parent.valueMap;
+        }
+
         @Override
         public K lower(K key) {
             return scanFirstMatch(key, keyMap::lowerEntry, keyMap::lowerEntry, valueMap::containsKey, Entry::getKey);
@@ -652,7 +663,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         public K pollFirst() {
             Entry<K, V> entry = scanFirstMatch(keyMap::firstEntry, keyMap::higherEntry, valueMap::containsKey, Function.identity());
             if (entry != null) {
-                removeInternalExpectedGood(entry.getKey(), entry.getValue());
+                parent.removeInternalExpectedGood(entry.getKey(), entry.getValue());
                 return entry.getKey();
             }
             return null;
@@ -662,7 +673,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         public K pollLast() {
             Entry<K, V> entry = scanFirstMatch(keyMap::lastEntry, keyMap::lowerEntry, valueMap::containsKey, Function.identity());
             if (entry != null) {
-                removeInternalExpectedGood(entry.getKey(), entry.getValue());
+                parent.removeInternalExpectedGood(entry.getKey(), entry.getValue());
                 return entry.getKey();
             }
             return null;
@@ -670,102 +681,101 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public int size() {
-            return DualTreeBidi2MapSubMap.this.size();
+            return parent.size();
         }
 
         @Override
         public boolean isEmpty() {
-            return DualTreeBidi2MapSubMap.this.isEmpty();
+            return parent.isEmpty();
         }
 
         @Override
         public boolean contains(Object o) {
-            return DualTreeBidi2MapSubMap.this.containsKey(o);
+            return parent.containsKey(o);
         }
 
         @Override
         public boolean remove(Object o) {
-            return DualTreeBidi2MapSubMap.this.removeViaCollection(o);
+            return parent.removeViaCollection(o);
         }
 
         @Override
         public void clear() {
-            DualTreeBidi2MapSubMap.this.clear();
+            parent.clear();
         }
 
         @Override
         public void forEach(Consumer<? super K> action) {
-            DualTreeBidi2MapSubMap.this.forEach((k,v) -> action.accept(k));
+            // doesn't follow my order?
+            parent.forEach((k,v) -> action.accept(k));
         }
 
         @Override
         public boolean removeIf(Predicate<? super K> filter) {
-            return DualTreeBidi2MapSubMap.this.collectionRemoveIf(entry -> filter.test(entry.getKey()));
+            // doesn't follow my order?
+            return parent.collectionRemoveIf(entry -> filter.test(entry.getKey()));
         }
 
         @Override
         public boolean retainAll(Collection<?> c) {
-            return DualTreeBidi2MapSubMap.this.collectionRemoveIf(entry -> !c.contains(entry.getKey()));
+            // doesn't follow my order?
+            return parent.collectionRemoveIf(entry -> !c.contains(entry.getKey()));
         }
 
         @Override
         public boolean removeAll(Collection<?> c) {
-            return DualTreeBidi2MapSubMap.this.collectionRemoveIf(entry -> c.contains(entry.getKey()));
+            // doesn't follow my order?
+            return parent.collectionRemoveIf(entry -> c.contains(entry.getKey()));
         }
 
         @Override
         public Comparator<? super K> comparator() {
-            return DualTreeBidi2MapSubMap.this.comparator();
+            return parent.comparator();
         }
 
         @Override
         public Iterator<K> iterator() {
-            return new BothIterator(false);
+            return new BothKeyIterator<>(parent, keyMap, valueMap);
         }
 
         @Override
         public Iterator<K> descendingIterator() {
-            return new BothIterator(true);
+            return new BothKeyIterator<>(parent, keyMap.descendingMap(), valueMap);
         }
 
         @Override
         public NavigableSet<K> descendingSet() {
-            return DualTreeBidi2MapSubMap.this.descendingMap().navigableKeySet();
+            return parent.descendingMap().navigableKeySet();
         }
 
         @Override
         public NavigableSet<K> subSet(K fromElement, boolean fromInclusive, K toElement, boolean toInclusive) {
-            return DualTreeBidi2MapSubMap.this.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet();
+            return parent.subMap(fromElement, fromInclusive, toElement, toInclusive).navigableKeySet();
         }
 
         @Override
         public NavigableSet<K> headSet(K toElement, boolean inclusive) {
-            return DualTreeBidi2MapSubMap.this.headMap(toElement, inclusive).navigableKeySet();
+            return parent.headMap(toElement, inclusive).navigableKeySet();
         }
 
         @Override
         public NavigableSet<K> tailSet(K fromElement, boolean inclusive) {
-            return DualTreeBidi2MapSubMap.this.tailMap(fromElement, inclusive).navigableKeySet();
+            return parent.tailMap(fromElement, inclusive).navigableKeySet();
         }
 
         @Override
         public SortedSet<K> subSet(K fromElement, K toElement) {
-            return DualTreeBidi2MapSubMap.this.subMap(fromElement, toElement).navigableKeySet();
+            return parent.subMap(fromElement, toElement).navigableKeySet();
         }
 
         @Override
         public SortedSet<K> headSet(K toElement) {
-            return DualTreeBidi2MapSubMap.this.headMap(toElement).navigableKeySet();
+            return parent.headMap(toElement).navigableKeySet();
         }
 
         @Override
         public SortedSet<K> tailSet(K fromElement) {
-            return DualTreeBidi2MapSubMap.this.tailMap(fromElement).navigableKeySet();
-        }
-
-        @Override
-        public boolean add(K object) {
-            throw new UnsupportedOperationException();
+            return parent.tailMap(fromElement).navigableKeySet();
         }
 
         @Override
@@ -774,33 +784,31 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
-    private class BothIterator implements ResettableIterator<K> {
+    private static class BothKeyIterator<K extends Comparable<K>, V extends Comparable<V>>
+            implements ResettableIterator<K> {
+        private final DualTreeBidi2MapSubMap<K, V> parent;
+        private final NavigableMap<K, V> keyMap;
+        private final Map<V, K> valueMap;
         private Entry<K, V> next;
         private Entry<K, V> lastResult;
-        private final Supplier<Entry<K, V>> funcFirst;
-        private final Function<K, Entry<K, V>> funcNext;
         private int expectedModCount;
 
-        protected BothIterator(boolean reverse) {
-            if (reverse) {
-                funcFirst = keyMap::lastEntry;
-                funcNext = keyMap::lowerEntry;
-            } else {
-                funcFirst = keyMap::firstEntry;
-                funcNext = keyMap::higherEntry;
-            }
+        protected BothKeyIterator(DualTreeBidi2MapSubMap<K, V> parent, NavigableMap<K, V> keyMap, Map<V, K> valueMap) {
+            this.parent = parent;
+            this.keyMap = keyMap;
+            this.valueMap = valueMap;
             reset();
         }
 
         @Override
         public void reset() {
-            Entry<K, V> entry = funcFirst.get();
+            Entry<K, V> entry = keyMap.firstEntry();
             while (entry != null && !valueMap.containsKey(entry.getValue())) {
-                entry = funcNext.apply(entry.getKey());
+                entry = keyMap.higherEntry(entry.getKey());
             }
             next = entry;
             lastResult = null;
-            expectedModCount = primaryMap().modificationCount;
+            expectedModCount = parent.primaryMap().modificationCount;
         }
 
         @Override
@@ -815,9 +823,9 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
                 throw new NoSuchElementException();
             K key = result.getKey();
 
-            Entry<K, V> possible = funcNext.apply(key);
+            Entry<K, V> possible = keyMap.higherEntry(key);
             while (possible != null && !valueMap.containsKey(possible.getValue())) {
-                possible = funcNext.apply(possible.getKey());
+                possible = keyMap.higherEntry(possible.getKey());
             }
             next = possible;
 
@@ -833,7 +841,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
                 if (valueMap.containsKey(entry.getValue())) {
                     action.accept(key);
                 }
-                entry = funcNext.apply(key);
+                entry = keyMap.higherEntry(key);
             }
             next = null;
             lastResult = null;
@@ -843,10 +851,10 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         public void remove() {
             if (lastResult == null)
                 throw new IllegalStateException();
-            if (primaryMap().modificationCount != expectedModCount)
+            if (parent.primaryMap().modificationCount != expectedModCount)
                 throw new ConcurrentModificationException();
-            removeInternalExpectedGood(lastResult.getKey(), lastResult.getValue());
-            expectedModCount = primaryMap().modificationCount;
+            parent.removeInternalExpectedGood(lastResult.getKey(), lastResult.getValue());
+            expectedModCount = parent.primaryMap().modificationCount;
             lastResult = null;
         }
     }
