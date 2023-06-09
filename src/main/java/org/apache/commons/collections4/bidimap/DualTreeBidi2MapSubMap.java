@@ -142,31 +142,49 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
 
     @Override
     public boolean isEmpty() {
-        for (Entry<K, V> entry : keyMap.entrySet()) {
-            if (valueMap.containsKey(entry.getValue()))
-                return false;
+        if (!keyRange.isFull() && valueRange.isFull()) {
+            return keyMap.isEmpty();
+        } else if (keyRange.isFull() && !valueRange.isFull()) {
+            return valueMap.isEmpty();
+        } else {
+            for (Entry<K, V> entry : keyMap.entrySet()) {
+                if (valueMap.containsKey(entry.getValue()))
+                    return false;
+            }
+            return true;
         }
-        return true;
     }
 
     @Override
     public int size() {
-        int count = 0;
-        for (Entry<K, V> entry : keyMap.entrySet()) {
-            if (valueMap.containsKey(entry.getValue()))
-                count++;
+        if (!keyRange.isFull() && valueRange.isFull()) {
+            return keyMap.size();
+        } else if (keyRange.isFull() && !valueRange.isFull()) {
+            return valueMap.size();
+        } else {
+            int count = 0;
+            for (Entry<K, V> entry : keyMap.entrySet()) {
+                if (valueMap.containsKey(entry.getValue()))
+                    count++;
+            }
+            return count;
         }
-        return count;
     }
 
     @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
-        for (Entry<K, V> entry : keyMap.entrySet()) {
-            K key = entry.getKey();
-            V value = entry.getValue();
-            if (valueMap.containsKey(value)) {
-                action.accept(key, value);
+        if (!keyRange.isFull() && valueRange.isFull()) {
+            keyMap.forEach(action);
+        } else if (keyRange.isFull() && !valueRange.isFull()) {
+            valueMap.forEach((v, k) -> action.accept(k, v));
+        } else {
+            for (Entry<K, V> entry : keyMap.entrySet()) {
+                K key = entry.getKey();
+                V value = entry.getValue();
+                if (valueMap.containsKey(value)) {
+                    action.accept(key, value);
+                }
             }
         }
     }
@@ -550,7 +568,6 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     protected Set<Entry<K, V>> createEntrySet() {
         return new EntrySetUsingKeyMap<>(keyMap.entrySet(), this);
     }
-
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new DualTreeMapIterator<>(keyMap, this);
