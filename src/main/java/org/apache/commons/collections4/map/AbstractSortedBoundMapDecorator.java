@@ -72,11 +72,6 @@ public abstract class AbstractSortedBoundMapDecorator<K, V>
     }
 
     @Override
-    public SortedMapRange<V> getValueRange() {
-        return decorated().getValueRange();
-    }
-
-    @Override
     public SortedBoundMap<K, V> subMap(K fromKey, K toKey) {
         return wrapMap(decorated().subMap(fromKey, toKey), getKeyRange().sub(fromKey, toKey));
     }

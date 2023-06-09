@@ -228,12 +228,6 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
 
         @Override
-        @SuppressWarnings("unchecked")
-        public SortedMapRange<V> getValueRange() {
-            return SortedMapRange.full((Comparator<? super V>) ComparatorUtils.naturalComparator());
-        }
-
-        @Override
         public boolean containsValue(final Object value) {
             // override as default implementation uses reverseMap only
             if (decorated().reverseMap().containsKey(value)) {

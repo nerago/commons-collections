@@ -13,6 +13,4 @@ public interface SortedBoundMap<K, V> extends SortedMap<K, V> {
     SortedBoundMap<K, V> tailMap(K fromKey);
 
     SortedMapRange<K> getKeyRange();
-
-    SortedMapRange<V> getValueRange();
 }

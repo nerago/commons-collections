@@ -1740,39 +1740,28 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
         @Override
         public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
-            if (!inRange2(fromKey)) {
-                throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
-            }
-
-            if (!inRange2(toKey)) {
-                throw new IllegalArgumentException("ToKey is out of range: " + toKey);
-            }
-
             return createRangeMap(range.sub(fromKey, toKey));
         }
 
         @Override
         public SortedBoundMap<K, V> headMap(final K toKey) {
-            if (!inRange2(toKey)) {
-                throw new IllegalArgumentException("ToKey is out of range: " + toKey);
-            }
-            return createRangeMap(getFromKey(), isFromInclusive(), toKey, isToInclusive());
+            return createRangeMap(range.head(toKey));
         }
 
         @Override
         public SortedBoundMap<K, V> tailMap(final K fromKey) {
-            // this seems wrong, especially inclusive check
-            // but the out of range check makes better?
-            if (!inRange2(fromKey)) {
-                throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
-            }
-            return createRangeMap(fromKey, isFromInclusive(), getToKey(), isToInclusive());
+            return createRangeMap(range.tail(fromKey));
         }
 
         /**
          * Creates and returns a sub-range view of the current {@link RangeMap}.
          */
         protected abstract SortedBoundMap<K, V> createRangeMap(SortedMapRange<K> range);
+
+        @Override
+        public SortedMapRange<K> getKeyRange() {
+            return range;
+        }
     }
 
     /**
@@ -1786,18 +1775,18 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         @Override
         public K firstKey() {
             Map.Entry<K, V> e = null;
-            if (fromKey == null) {
+            if (range.getFromKey() == null) {
                 e = firstEntry();
             } else {
-                if (fromInclusive) {
-                    e = ceilingEntry(fromKey);
+                if (range.isFromInclusive()) {
+                    e = ceilingEntry(range.getFromKey());
                 } else {
-                    e = higherEntry(fromKey);
+                    e = higherEntry(range.getFromKey());
                 }
             }
 
             final K first = e != null ? e.getKey() : null;
-            if (e == null || toKey != null && !inToRange(first, false)) {
+            if (e == null || !range.inRange(first)) {
                 throw new NoSuchElementException();
             }
             return first;
@@ -1806,18 +1795,18 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         @Override
         public K lastKey() {
             final Map.Entry<K, V> e;
-            if (toKey == null) {
+            if (range.getToKey() == null) {
                 e = lastEntry();
             } else {
-                if (toInclusive) {
-                    e = floorEntry(toKey);
+                if (range.isToInclusive()) {
+                    e = floorEntry(range.getToKey());
                 } else {
-                    e = lowerEntry(toKey);
+                    e = lowerEntry(range.getToKey());
                 }
             }
 
             final K last = e != null ? e.getKey() : null;
-            if (e == null || fromKey != null && !inFromRange(last, false)) {
+            if (e == null || !range.inRange(last)) {
                 throw new NoSuchElementException();
             }
             return last;
@@ -1859,8 +1848,8 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            final K fromKey = delegate.getFromKey();
-            final K toKey = delegate.getToKey();
+            final K fromKey = delegate.range.getFromKey();
+            final K toKey = delegate.range.getToKey();
 
             TrieEntry<K, V> first = null;
             if (fromKey == null) {
@@ -1905,7 +1894,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
             final Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
             final K key = entry.getKey();
-            if (!delegate.inRange(key)) {
+            if (!delegate.range.inRange(key)) {
                 return false;
             }
 
@@ -1922,7 +1911,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
             final Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
             final K key = entry.getKey();
-            if (!delegate.inRange(key)) {
+            if (!delegate.range.inRange(key)) {
                 return false;
             }
 

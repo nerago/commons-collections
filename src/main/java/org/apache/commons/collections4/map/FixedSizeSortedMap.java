@@ -165,18 +165,8 @@ public class FixedSizeSortedMap<K, V>
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return new FixedSizeSortedMap<>(getSortedMap().subMap(fromKey, toKey));
-    }
-
-    @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return new FixedSizeSortedMap<>(getSortedMap().headMap(toKey));
-    }
-
-    @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return new FixedSizeSortedMap<>(getSortedMap().tailMap(fromKey));
+    protected SortedMap<K, V> wrapMap(SortedMap<K, V> map) {
+        return new FixedSizeSortedMap<>(map);
     }
 
     @Override

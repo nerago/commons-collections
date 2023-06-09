@@ -56,4 +56,6 @@ public interface SortedBidiMap<K, V> extends OrderedBidiMap<K, V>, SortedBoundMa
      * @return Comparator&lt;? super V&gt;
      */
     Comparator<? super V> valueComparator();
+
+    SortedMapRange<V> getValueRange();
 }

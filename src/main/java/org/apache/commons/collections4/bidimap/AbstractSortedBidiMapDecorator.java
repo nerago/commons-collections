@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Comparator;
-import java.util.SortedMap;
 
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedBoundMap;
