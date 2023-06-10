@@ -475,10 +475,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
     }
 
-    public BulkTest bulkTestInverseMap() {
-        return new TestInverseBidiMap(this);
-    }
-
+    @Nested
     public class TestInverseBidiMap extends AbstractBidiMapTest<V, K> {
 
         final AbstractBidiMapTest<K, V> main;
@@ -548,10 +545,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
     }
 
-    public BulkTest bulkTestBidiMapIterator() {
-        return new TestBidiMapIterator();
-    }
-
+    @Nested
     public class TestBidiMapIterator extends AbstractMapIteratorTest<K, V> {
 
         public TestBidiMapIterator() {

@@ -40,7 +40,9 @@ import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
  * Abstract test class for {@link java.util.List} methods and contracts.
@@ -1075,15 +1077,13 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      *  The verify() method is overloaded to test that the original list is
      *  modified when the sublist is.
      */
-    public BulkTest bulkTestSubList() {
-        if (getFullElements().length - 6 < 10) {
-            return null;
-        }
-        return new BulkTestSubList<>(this);
+    public boolean runBulkTestSubList() {
+        return getFullElements().length - 6 >= 10;
     }
 
-    public static class BulkTestSubList<E> extends AbstractListTest<E> {
-
+    @Nested
+    @EnabledIf("runBulkTestSubList")
+    public class BulkTestSubList<E> extends AbstractListTest<E> {
         private final AbstractListTest<E> outer;
 
         public BulkTestSubList(final AbstractListTest<E> outer) {
@@ -1282,10 +1282,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
                 m.getName() + " raised unexpected " + thrown.getTargetException());
     }
 
-    public BulkTest bulkTestListIterator() {
-        return new TestListIterator();
-    }
-
+    @Nested
     public class TestListIterator extends AbstractListIteratorTest<E> {
         public TestListIterator() {
             super("TestListIterator");

@@ -23,6 +23,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.collections4.BulkTest;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
  * Abstract test class for {@link SortedSet} methods and contracts.
@@ -136,21 +138,24 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         return (E[]) elements;
     }
 
+    protected boolean runSubSetTests() {
+        return true;
+    }
+
     /**
      * Bulk test {@link SortedSet#subSet(Object, Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the set and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing a subset.
      */
-    public BulkTest bulkTestSortedSetSubSet() {
-        final int length = getFullElements().length;
-
-        final int loBound = length / 3;
-        final int hiBound = loBound * 2;
-        return new TestSortedSetSubSet(loBound, hiBound);
-
+    @Nested
+    @EnabledIf(value = "runSubSetTests")
+    public class BulkTestSortedSetSubSet extends TestSortedSetSubSet {
+        public BulkTestSortedSetSubSet() {
+            super("BulkTestSortedSetSubSet",
+                    AbstractSortedSetTest.this.getFullElements().length / 3,
+                    AbstractSortedSetTest.this.getFullElements().length / 3 * 2);
+        }
     }
 
     /**
@@ -161,12 +166,14 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
      *
      * @return a {@link AbstractSetTest} instance for testing a headset.
      */
-    public BulkTest bulkTestSortedSetHeadSet() {
-        final int length = getFullElements().length;
-
-        final int loBound = length / 3;
-        final int hiBound = loBound * 2;
-        return new TestSortedSetSubSet(hiBound, true);
+    @Nested
+    @EnabledIf(value = "runSubSetTests")
+    public class BulkTestSortedSetHeadSet extends TestSortedSetSubSet {
+        public BulkTestSortedSetHeadSet() {
+            super("BulkTestSortedSetHeadSet",
+                    AbstractSortedSetTest.this.getFullElements().length / 3 * 2,
+                    true);
+        }
     }
 
     /**
@@ -177,10 +184,14 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
      *
      * @return a {@link AbstractSetTest} instance for testing a tailset.
      */
-    public BulkTest bulkTestSortedSetTailSet() {
-        final int length = getFullElements().length;
-        final int loBound = length / 3;
-        return new TestSortedSetSubSet(loBound, false);
+    @Nested
+    @EnabledIf(value = "runSubSetTests")
+    public class BulkTestSortedSetTailSet extends TestSortedSetSubSet {
+        public BulkTestSortedSetTailSet() {
+            super("bulkTestSortedSetTailSet",
+                    AbstractSortedSetTest.this.getFullElements().length / 3,
+                    false);
+        }
     }
 
     public class TestSortedSetSubSet extends AbstractSortedSetTest<E> {
@@ -192,8 +203,8 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         private final E[] m_OtherElements;
 
         @SuppressWarnings("unchecked")
-        public TestSortedSetSubSet(final int bound, final boolean head) {
-            super("TestSortedSetSubSet");
+        public TestSortedSetSubSet(final String name, final int bound, final boolean head) {
+            super(name);
             if (head) {
                 //System.out.println("HEADSET");
                 m_Type = TYPE_HEADSET;
@@ -227,8 +238,8 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         } //type
 
         @SuppressWarnings("unchecked")
-        public TestSortedSetSubSet(final int loBound, final int hiBound) {
-            super("TestSortedSetSubSet");
+        public TestSortedSetSubSet(final String name, final int loBound, final int hiBound) {
+            super(name);
             //System.out.println("SUBSET");
             m_Type = TYPE_SUBSET;
             m_LowBound = loBound;
@@ -261,6 +272,10 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         @Override
         public boolean isFailFastSupported() {
             return AbstractSortedSetTest.this.isFailFastSupported();
+        }
+        @Override
+        protected boolean runSubSetTests() {
+            return false;
         }
 
         @Override
@@ -299,19 +314,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         @Override
         public boolean isTestSerialization() {
             return false;
-        }
-
-        @Override
-        public BulkTest bulkTestSortedSetSubSet() {
-            return null;  // prevent infinite recursion
-        }
-        @Override
-        public BulkTest bulkTestSortedSetHeadSet() {
-            return null;  // prevent infinite recursion
-        }
-        @Override
-        public BulkTest bulkTestSortedSetTailSet() {
-            return null;  // prevent infinite recursion
         }
 
         static final int TYPE_SUBSET = 0;
