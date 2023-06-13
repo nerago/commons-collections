@@ -18,6 +18,14 @@ package org.apache.commons.collections4;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.junit.jupiter.api.*;
+import org.junit.platform.commons.support.AnnotationSupport;
+import org.junit.platform.commons.support.HierarchyTraversalMode;
+import org.junit.platform.commons.util.ReflectionUtils;
+
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * A {@link TestCase} that can define both simple and bulk test methods.
@@ -238,4 +246,25 @@ public class BulkTest implements Cloneable {
         return getName() + "(" + verboseName + ") ";
     }
 
+    protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier) {
+        N instance = instanceSupplier.get();
+        return DynamicContainer.dynamicContainer(type.getName(),
+                Stream.concat(
+                    AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
+                            .stream()
+                            .map(method -> DynamicTest.dynamicTest(method.getName(), () -> method.invoke(instance))),
+                    AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
+                            .stream()
+                            .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
+                            )
+        );
+    }
+
+    protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier, BooleanSupplier enableTests) {
+        if (enableTests.getAsBoolean()) {
+            return findTestsOnNestedClass(type, instanceSupplier);
+        } else {
+            return DynamicContainer.dynamicContainer(type.getName(), Stream.empty());
+        }
+    }
 }

@@ -39,9 +39,7 @@ import java.util.NoSuchElementException;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
@@ -1077,16 +1075,19 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      *  The verify() method is overloaded to test that the original list is
      *  modified when the sublist is.
      */
-    public boolean runBulkTestSubList() {
+    public boolean runBulkSubListTests() {
         return getFullElements().length - 6 >= 10;
     }
 
-    @Nested
-    @EnabledIf("runBulkTestSubList")
-    public class BulkTestSubList<E> extends AbstractListTest<E> {
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return findTestsOnNestedClass(BulkSubListTests.class, () -> new BulkSubListTests<>(this), this::runBulkSubListTests);
+    }
+
+    public static class BulkSubListTests<E> extends AbstractListTest<E> {
         private final AbstractListTest<E> outer;
 
-        public BulkTestSubList(final AbstractListTest<E> outer) {
+        public BulkSubListTests(final AbstractListTest<E> outer) {
             super("");
             this.outer = outer;
         }

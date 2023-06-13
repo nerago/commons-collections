@@ -19,15 +19,11 @@ package org.apache.commons.collections4.bidimap;
 import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.QueueUtilsTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -475,8 +471,12 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
     }
 
-    @Nested
-    public class TestInverseBidiMap extends AbstractBidiMapTest<V, K> {
+    @TestFactory
+    public DynamicNode inverseBidiMapTests() {
+        return findTestsOnNestedClass(TestInverseBidiMap.class, () -> new TestInverseBidiMap<>(this));
+    }
+
+    public static class TestInverseBidiMap<K, V> extends AbstractBidiMapTest<V, K> {
 
         final AbstractBidiMapTest<K, V> main;
 
