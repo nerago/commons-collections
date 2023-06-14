@@ -19,10 +19,24 @@ package org.apache.commons.collections4;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.engine.JupiterTestEngine;
+import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.util.ReflectionUtils;
+import org.junit.platform.engine.EngineDiscoveryRequest;
+import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.discovery.DiscoverySelectors;
+import org.junit.platform.engine.support.descriptor.ClassSource;
+import org.junit.platform.engine.support.descriptor.MethodSource;
+import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
+import org.junit.platform.engine.support.discovery.SelectorResolver;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -247,17 +261,50 @@ public class BulkTest implements Cloneable {
     }
 
     protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier) {
-        N instance = instanceSupplier.get();
-        return DynamicContainer.dynamicContainer(type.getName(),
-                Stream.concat(
-                    AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
-                            .stream()
-                            .map(method -> DynamicTest.dynamicTest(method.getName(), () -> method.invoke(instance))),
-                    AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
-                            .stream()
-                            .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
-                            )
-        );
+//        ClassSource cs = ClassSource.from(type);
+
+
+
+        JupiterTestEngine engine = new JupiterTestEngine();
+        LauncherDiscoveryRequest discoveryRequest = LauncherDiscoveryRequestBuilder
+                .request()
+                .selectors(DiscoverySelectors.selectClass(type))
+                .build();
+        TestDescriptor tests = engine.discover(discoveryRequest, UniqueId.forEngine(engine.getId()));
+
+        ArrayList<? extends DynamicNode> dynamicNodes = new ArrayList<>();
+        tests.accept(descriptor -> {
+            System.out.println(descriptor.getClass() + " " + (descriptor instanceof TestMethodTestDescriptor));
+
+            if (descriptor instanceof TestMethodTestDescriptor) {
+                TestMethodTestDescriptor methodDescriptor = (TestMethodTestDescriptor) descriptor;
+                Method method = methodDescriptor.getTestMethod();
+                System.out.println(method.getDeclaringClass() + " " + method.getName());
+//                DynamicTest test = DynamicTest.dynamicTest(methodDescriptor.getDisplayName(), );
+//                dynamicNodes.add(test);
+            }
+
+            // JupiterEngineDescriptor
+            // ClassTestDescriptor
+            // NestedClassTestDescriptor
+            // TestMethodTestDescriptor
+        });
+
+
+        return DynamicContainer.dynamicContainer(type.getSimpleName(), dynamicNodes);
+
+//        N instance = instanceSupplier.get();
+//        return DynamicContainer.dynamicContainer(type.getSimpleName(),
+//                Stream.concat(
+//                    AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
+//                            .stream()
+//                            .map(method -> DynamicTest.dynamicTest(method.getName(), () -> method.invoke(instance))),
+//                    AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
+//                            .stream()
+//                            .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
+//                            )
+//        );
+
     }
 
     protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier, BooleanSupplier enableTests) {
