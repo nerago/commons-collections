@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.bloomfilter;
 
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -101,5 +102,36 @@ public class BitMapTest {
         assertFalse(BitMap.contains(ary, 64));
         ary[1] = 1;
         assertTrue(BitMap.contains(ary, 64));
+    }
+
+    @Test
+    public void testMod() {
+        for (final long dividend : new long[] {0, -1, -2, -3, -6378683, -23567468136887892L,
+            Long.MIN_VALUE, 345, 678686, 67868768686878924L, Long.MAX_VALUE, Long.MAX_VALUE - 1}) {
+            for (final int divisor : new int[] {1, 2, 3, 5, 13, Integer.MAX_VALUE, Integer.MAX_VALUE - 1}) {
+                assertMod(dividend, divisor);
+            }
+        }
+    }
+
+    @Test
+    public void testModEdgeCases() {
+        for (final long dividend : new long[] {0, -1, 1, Long.MAX_VALUE}) {
+            assertThrows(ArithmeticException.class, () -> BitMap.mod(dividend, 0));
+        }
+        assertNotEquals(Math.floorMod(5, -1), BitMap.mod(5, -1));
+    }
+
+    /**
+     * Assert the {@link BitMap#mod(long, int)} method functions as an unsigned modulus.
+     *
+     * @param dividend the dividend
+     * @param divisor the divisor
+     */
+    private void assertMod(long dividend, int divisor) {
+        assertTrue(divisor > 0 && divisor <= Integer.MAX_VALUE,
+            "Incorrect usage. Divisor must be strictly positive.");
+        assertEquals((int) Long.remainderUnsigned(dividend, divisor), BitMap.mod(dividend, divisor),
+            () -> String.format("failure with dividend=%s and divisor=%s.", dividend, divisor));
     }
 }

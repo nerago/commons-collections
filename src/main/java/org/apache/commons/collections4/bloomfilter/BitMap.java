@@ -113,4 +113,29 @@ public class BitMap {
         // this will identify an incorrect bit.
         return 1L << bitIndex;
     }
+
+    /**
+     * Performs a modulus calculation on an unsigned long and a positive integer divisor.
+     *
+     * <p>This method computes the same result as {@link Long#remainderUnsigned(long, long)}
+     * but assumes that the divisor is an integer in the range 1 to 2<sup>31</sup> - 1 inclusive,
+     * that is a strictly positive integer size.
+     *
+     * <p><em>If the divisor is negative the behavior is not defined.</em></p>
+     *
+     * @param dividend an unsigned long value to calculate the modulus of.
+     * @param divisor the divisor for the modulus calculation, must be strictly positive.
+     * @return the remainder or modulus value.
+     * @throws ArithmeticException if the divisor is zero
+     * @see Long#remainderUnsigned(long, long)
+     */
+    public static int mod(final long dividend, final int divisor) {
+        // See Hacker's Delight (2nd ed), section 9.3.
+        // Assume divisor is positive.
+        // Divide half the unsigned number and then double the quotient result.
+        final long quotient = (dividend >>> 1) / divisor << 1;
+        final long remainder = dividend - quotient * divisor;
+        // remainder in [0, 2 * divisor)
+        return (int) (remainder >= divisor ? remainder - divisor : remainder);
+    }
 }
