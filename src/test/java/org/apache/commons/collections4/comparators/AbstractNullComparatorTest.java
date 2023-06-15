@@ -34,8 +34,8 @@ public abstract class AbstractNullComparatorTest extends AbstractComparatorTest<
      **/
     public static class TestNullComparator1 extends AbstractNullComparatorTest {
 
-        public TestNullComparator1(final String testName) {
-            super(testName);
+        public TestNullComparator1() {
+            super(TestNullComparator1.class.getSimpleName());
         }
 
         @Override
@@ -76,8 +76,8 @@ public abstract class AbstractNullComparatorTest extends AbstractComparatorTest<
      **/
     public static class TestNullComparator2 extends AbstractNullComparatorTest {
 
-        public TestNullComparator2(final String testName) {
-            super(testName);
+        public TestNullComparator2() {
+            super(TestNullComparator2.class.getSimpleName());
         }
 
         @Override

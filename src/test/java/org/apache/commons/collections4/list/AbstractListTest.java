@@ -1084,6 +1084,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         return findTestsOnNestedClass(BulkSubListTests.class, () -> new BulkSubListTests<>(this), this::runBulkSubListTests);
     }
 
+    @Disabled
     public static class BulkSubListTests<E> extends AbstractListTest<E> {
         private final AbstractListTest<E> outer;
 

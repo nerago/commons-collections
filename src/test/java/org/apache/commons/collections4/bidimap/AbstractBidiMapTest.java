@@ -476,6 +476,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         return findTestsOnNestedClass(TestInverseBidiMap.class, () -> new TestInverseBidiMap<>(this));
     }
 
+    @Disabled
     public static class TestInverseBidiMap<K, V> extends AbstractBidiMapTest<V, K> {
 
         final AbstractBidiMapTest<K, V> main;
@@ -542,6 +543,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         @Override
         protected int getIterationBehaviour() {
             return main.getIterationBehaviour();
+        }
+
+        @Override
+        public DynamicNode inverseBidiMapTests() {
+            return null;
         }
     }
 
