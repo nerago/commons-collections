@@ -18,13 +18,12 @@ package org.apache.commons.collections4.set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NavigableSet;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
-import org.junit.jupiter.api.Nested;
+import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
@@ -131,16 +130,31 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
         return (E[]) elements;
     }
 
+    @Override
+    @TestFactory
+    public DynamicNode subSetTests() {
+        if (runSubSetTests()) {
+            return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
+                    findTestsOnNestedClass(BulkTestSortedSetSubSet.class, BulkTestSortedSetSubSet::new),
+                    findTestsOnNestedClass(BulkTestSortedSetHeadSet.class, BulkTestSortedSetHeadSet::new),
+                    findTestsOnNestedClass(BulkTestSortedSetTailSet.class, BulkTestSortedSetTailSet::new),
+                    findTestsOnNestedClass(BulkTestNavigableSetSubSet.class, BulkTestNavigableSetSubSet::new),
+                    findTestsOnNestedClass(BulkTestNavigableSetHeadSet.class, BulkTestNavigableSetHeadSet::new),
+                    findTestsOnNestedClass(BulkTestNavigableSetTailSet.class, BulkTestNavigableSetTailSet::new)
+            ));
+        } else {
+            return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());
+        }
+    }
+
     /**
      * Bulk test {@link NavigableSet#subSet(Object, boolean, Object, boolean)}.
      * This method runs through all of the tests in {@link AbstractNavigableSetTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the set and the other collection views are still valid.
      */
-    @Nested
-    @EnabledIf(value = "runSubSetTests")
-    @SuppressWarnings("unchecked")
     public class BulkTestNavigableSetSubSet extends TestNavigableSetSubSet {
+        @SuppressWarnings("unchecked")
         public BulkTestNavigableSetSubSet() {
             super("BulkTestNavigableSetSubSet");
             lowBound = AbstractNavigableSetTest.this.getFullElements().length / 3;
@@ -169,10 +183,8 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the set and the other collection views are still valid.
      */
-    @Nested
-    @EnabledIf(value = "runSubSetTests")
-    @SuppressWarnings("unchecked")
     public class BulkTestNavigableSetHeadSet extends TestNavigableSetSubSet {
+        @SuppressWarnings("unchecked")
         public BulkTestNavigableSetHeadSet() {
             super("BulkTestNavigableSetHeadSet");
             highBound = AbstractNavigableSetTest.this.getFullElements().length / 3 * 2;
@@ -198,10 +210,8 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the set and the other collection views are still valid.
      */
-    @Nested
-    @EnabledIf(value = "runSubSetTests")
-    @SuppressWarnings("unchecked")
     public class BulkTestNavigableSetTailSet extends TestNavigableSetSubSet {
+        @SuppressWarnings("unchecked")
         public BulkTestNavigableSetTailSet() {
             super("BulkTestNavigableSetTailSet");
             lowBound = AbstractNavigableSetTest.this.getFullElements().length / 3;

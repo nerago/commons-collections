@@ -18,11 +18,17 @@ package org.apache.commons.collections4.set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
+import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
@@ -141,14 +147,25 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         return true;
     }
 
+    @TestFactory
+    public DynamicNode subSetTests() {
+        if (runSubSetTests()) {
+            return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
+                findTestsOnNestedClass(BulkTestSortedSetSubSet.class, BulkTestSortedSetSubSet::new),
+                findTestsOnNestedClass(BulkTestSortedSetHeadSet.class, BulkTestSortedSetHeadSet::new),
+                findTestsOnNestedClass(BulkTestSortedSetTailSet.class, BulkTestSortedSetTailSet::new)
+            ));
+        } else {
+            return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());
+        }
+    }
+
     /**
      * Bulk test {@link SortedSet#subSet(Object, Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
      */
-    @Nested
-    @EnabledIf(value = "runSubSetTests")
-    @SuppressWarnings("unchecked")
     public class BulkTestSortedSetSubSet extends TestSortedSetSubSet {
+        @SuppressWarnings("unchecked")
         public BulkTestSortedSetSubSet() {
             super("BulkTestSortedSetSubSet");
             final int loBound = AbstractSortedSetTest.this.getFullElements().length / 3;
@@ -174,10 +191,8 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
      * Bulk test {@link SortedSet#headSet(Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
      */
-    @Nested
-    @EnabledIf(value = "runSubSetTests")
-    @SuppressWarnings("unchecked")
     public class BulkTestSortedSetHeadSet extends TestSortedSetSubSet {
+        @SuppressWarnings("unchecked")
         public BulkTestSortedSetHeadSet() {
             super("BulkTestSortedSetHeadSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
@@ -200,10 +215,8 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
      * Bulk test {@link SortedSet#tailSet(Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
      */
-    @Nested
-    @EnabledIf(value = "runSubSetTests")
-    @SuppressWarnings("unchecked")
     public class BulkTestSortedSetTailSet extends TestSortedSetSubSet {
+        @SuppressWarnings("unchecked")
         public BulkTestSortedSetTailSet() {
             super("bulkTestSortedSetTailSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3;
