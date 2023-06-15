@@ -244,7 +244,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     /**
      * Returns true to indicate that the collection supports fail fast iterators.
-     * The default implementation returns true;
+     * The default implementation returns false;
      */
     public boolean isFailFastSupported() {
         return false;
