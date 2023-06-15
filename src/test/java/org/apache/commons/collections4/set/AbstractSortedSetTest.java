@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.commons.collections4.BulkTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.condition.EnabledIf;
 
@@ -154,16 +153,20 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
             super("BulkTestSortedSetSubSet");
             final int loBound = AbstractSortedSetTest.this.getFullElements().length / 3;
             final int hiBound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
-            m_Type = TYPE_SUBSET;
-            m_LowBound = loBound;
-            m_HighBound = hiBound;
+            lowBound = loBound;
+            highBound = hiBound;
             final int length = hiBound - loBound;
-            m_FullElements = (E[]) new Object[length];
-            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), loBound, m_FullElements, 0, length);
-            m_OtherElements = (E[]) new Object[length - 1];
+            fullElements = (E[]) new Object[length];
+            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), loBound, fullElements, 0, length);
+            otherElements = (E[]) new Object[length - 1];
             System.arraycopy(//src src_pos dst dst_pos length
-                    AbstractSortedSetTest.this.getOtherElements(), loBound, m_OtherElements, 0, length - 1);
+                    AbstractSortedSetTest.this.getOtherElements(), loBound, otherElements, 0, length - 1);
+        }
 
+        @Override
+        protected SortedSet<E> getSubSet(SortedSet<E> set) {
+            final E[] elements = AbstractSortedSetTest.this.getFullElements();
+            return set.subSet(elements[lowBound], elements[highBound]);
         }
     }
 
@@ -178,13 +181,18 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         public BulkTestSortedSetHeadSet() {
             super("BulkTestSortedSetHeadSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
-            m_Type = TYPE_HEADSET;
-            m_HighBound = bound;
-            m_FullElements = (E[]) new Object[bound];
-            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), 0, m_FullElements, 0, bound);
-            m_OtherElements = (E[]) new Object[bound - 1];
+            highBound = bound;
+            fullElements = (E[]) new Object[bound];
+            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), 0, fullElements, 0, bound);
+            otherElements = (E[]) new Object[bound - 1];
             System.arraycopy(//src src_pos dst dst_pos length
-                    AbstractSortedSetTest.this.getOtherElements(), 0, m_OtherElements, 0, bound - 1);
+                    AbstractSortedSetTest.this.getOtherElements(), 0, otherElements, 0, bound - 1);
+        }
+
+        @Override
+        protected SortedSet<E> getSubSet(SortedSet<E> set) {
+            final E[] elements = AbstractSortedSetTest.this.getFullElements();
+            return set.headSet(elements[lowBound]);
         }
     }
 
@@ -199,24 +207,28 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         public BulkTestSortedSetTailSet() {
             super("bulkTestSortedSetTailSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3;
-            m_Type = TYPE_TAILSET;
-            m_LowBound = bound;
+            lowBound = bound;
             final E[] allElements = AbstractSortedSetTest.this.getFullElements();
-            m_FullElements = (E[]) new Object[allElements.length - bound];
-            System.arraycopy(allElements, bound, m_FullElements, 0, allElements.length - bound);
-            m_OtherElements = (E[]) new Object[allElements.length - bound - 1];
+            fullElements = (E[]) new Object[allElements.length - bound];
+            System.arraycopy(allElements, bound, fullElements, 0, allElements.length - bound);
+            otherElements = (E[]) new Object[allElements.length - bound - 1];
             System.arraycopy(//src src_pos dst dst_pos length
-                    AbstractSortedSetTest.this.getOtherElements(), bound, m_OtherElements, 0, allElements.length - bound - 1);
+                    AbstractSortedSetTest.this.getOtherElements(), bound, otherElements, 0, allElements.length - bound - 1);
+        }
+
+        @Override
+        protected SortedSet<E> getSubSet(SortedSet<E> set) {
+            final E[] elements = AbstractSortedSetTest.this.getFullElements();
+            return set.tailSet(elements[lowBound]);
         }
     }
 
-    public class TestSortedSetSubSet extends AbstractSortedSetTest<E> {
+    public abstract class TestSortedSetSubSet extends AbstractSortedSetTest<E> {
 
-        protected int m_Type;
-        protected int m_LowBound;
-        protected int m_HighBound;
-        protected E[] m_FullElements;
-        protected E[] m_OtherElements;
+        protected int lowBound;
+        protected int highBound;
+        protected E[] fullElements;
+        protected E[] otherElements;
 
         public TestSortedSetSubSet(String name) {
             super(name);
@@ -245,26 +257,14 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
 
         @Override
         public E[] getFullElements() {
-            return m_FullElements;
+            return fullElements;
         }
         @Override
         public E[] getOtherElements() {
-            return m_OtherElements;
+            return otherElements;
         }
 
-        private SortedSet<E> getSubSet(final SortedSet<E> set) {
-            final E[] elements = AbstractSortedSetTest.this.getFullElements();
-            switch (m_Type) {
-            case TYPE_SUBSET :
-                return set.subSet(elements[m_LowBound], elements[m_HighBound]);
-            case TYPE_HEADSET :
-                return set.headSet(elements[m_HighBound]);
-            case TYPE_TAILSET :
-                return set.tailSet(elements[m_LowBound]);
-            default :
-                return null;
-            }
-        }
+        protected abstract SortedSet<E> getSubSet(final SortedSet<E> set);
 
         @Override
         public SortedSet<E> makeObject() {
@@ -280,11 +280,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         public boolean isTestSerialization() {
             return false;
         }
-
-        static final int TYPE_SUBSET = 0;
-        static final int TYPE_TAILSET = 1;
-        static final int TYPE_HEADSET = 2;
-
     }
 
     /**
