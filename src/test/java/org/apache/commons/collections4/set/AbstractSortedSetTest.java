@@ -145,116 +145,81 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     /**
      * Bulk test {@link SortedSet#subSet(Object, Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
-     * After modification operations, {@link #verify()} is invoked to ensure
-     * that the set and the other collection views are still valid.
      */
     @Nested
     @EnabledIf(value = "runSubSetTests")
+    @SuppressWarnings("unchecked")
     public class BulkTestSortedSetSubSet extends TestSortedSetSubSet {
         public BulkTestSortedSetSubSet() {
-            super("BulkTestSortedSetSubSet",
-                    AbstractSortedSetTest.this.getFullElements().length / 3,
-                    AbstractSortedSetTest.this.getFullElements().length / 3 * 2);
+            super("BulkTestSortedSetSubSet");
+            final int loBound = AbstractSortedSetTest.this.getFullElements().length / 3;
+            final int hiBound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
+            m_Type = TYPE_SUBSET;
+            m_LowBound = loBound;
+            m_HighBound = hiBound;
+            final int length = hiBound - loBound;
+            m_FullElements = (E[]) new Object[length];
+            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), loBound, m_FullElements, 0, length);
+            m_OtherElements = (E[]) new Object[length - 1];
+            System.arraycopy(//src src_pos dst dst_pos length
+                    AbstractSortedSetTest.this.getOtherElements(), loBound, m_OtherElements, 0, length - 1);
+
         }
     }
 
     /**
      * Bulk test {@link SortedSet#headSet(Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
-     * After modification operations, {@link #verify()} is invoked to ensure
-     * that the set and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing a headset.
      */
     @Nested
     @EnabledIf(value = "runSubSetTests")
+    @SuppressWarnings("unchecked")
     public class BulkTestSortedSetHeadSet extends TestSortedSetSubSet {
         public BulkTestSortedSetHeadSet() {
-            super("BulkTestSortedSetHeadSet",
-                    AbstractSortedSetTest.this.getFullElements().length / 3 * 2,
-                    true);
+            super("BulkTestSortedSetHeadSet");
+            final int bound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
+            m_Type = TYPE_HEADSET;
+            m_HighBound = bound;
+            m_FullElements = (E[]) new Object[bound];
+            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), 0, m_FullElements, 0, bound);
+            m_OtherElements = (E[]) new Object[bound - 1];
+            System.arraycopy(//src src_pos dst dst_pos length
+                    AbstractSortedSetTest.this.getOtherElements(), 0, m_OtherElements, 0, bound - 1);
         }
     }
 
     /**
      * Bulk test {@link SortedSet#tailSet(Object)}.  This method runs through all of
      * the tests in {@link AbstractSortedSetTest}.
-     * After modification operations, {@link #verify()} is invoked to ensure
-     * that the set and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing a tailset.
      */
     @Nested
     @EnabledIf(value = "runSubSetTests")
+    @SuppressWarnings("unchecked")
     public class BulkTestSortedSetTailSet extends TestSortedSetSubSet {
         public BulkTestSortedSetTailSet() {
-            super("bulkTestSortedSetTailSet",
-                    AbstractSortedSetTest.this.getFullElements().length / 3,
-                    false);
+            super("bulkTestSortedSetTailSet");
+            final int bound = AbstractSortedSetTest.this.getFullElements().length / 3;
+            m_Type = TYPE_TAILSET;
+            m_LowBound = bound;
+            final E[] allElements = AbstractSortedSetTest.this.getFullElements();
+            m_FullElements = (E[]) new Object[allElements.length - bound];
+            System.arraycopy(allElements, bound, m_FullElements, 0, allElements.length - bound);
+            m_OtherElements = (E[]) new Object[allElements.length - bound - 1];
+            System.arraycopy(//src src_pos dst dst_pos length
+                    AbstractSortedSetTest.this.getOtherElements(), bound, m_OtherElements, 0, allElements.length - bound - 1);
         }
     }
 
     public class TestSortedSetSubSet extends AbstractSortedSetTest<E> {
 
-        private final int m_Type;
-        private int m_LowBound;
-        private int m_HighBound;
-        private final E[] m_FullElements;
-        private final E[] m_OtherElements;
+        protected int m_Type;
+        protected int m_LowBound;
+        protected int m_HighBound;
+        protected E[] m_FullElements;
+        protected E[] m_OtherElements;
 
-        @SuppressWarnings("unchecked")
-        public TestSortedSetSubSet(final String name, final int bound, final boolean head) {
+        public TestSortedSetSubSet(String name) {
             super(name);
-            if (head) {
-                //System.out.println("HEADSET");
-                m_Type = TYPE_HEADSET;
-                m_HighBound = bound;
-                m_FullElements = (E[]) new Object[bound];
-                System.arraycopy(AbstractSortedSetTest.this.getFullElements(), 0, m_FullElements, 0, bound);
-                m_OtherElements = (E[]) new Object[bound - 1];
-                System.arraycopy(//src src_pos dst dst_pos length
-                    AbstractSortedSetTest.this.getOtherElements(), 0, m_OtherElements, 0, bound - 1);
-                //System.out.println(new TreeSet(Arrays.asList(m_FullElements)));
-                //System.out.println(new TreeSet(Arrays.asList(m_OtherElements)));
-            } else {
-                //System.out.println("TAILSET");
-                m_Type = TYPE_TAILSET;
-                m_LowBound = bound;
-                final Object[] allElements = AbstractSortedSetTest.this.getFullElements();
-                //System.out.println("bound = "+bound +"::length="+allElements.length);
-                m_FullElements = (E[]) new Object[allElements.length - bound];
-                System.arraycopy(allElements, bound, m_FullElements, 0, allElements.length - bound);
-                m_OtherElements = (E[]) new Object[allElements.length - bound - 1];
-                System.arraycopy(//src src_pos dst dst_pos length
-                    AbstractSortedSetTest.this.getOtherElements(), bound, m_OtherElements, 0, allElements.length - bound - 1);
-                //System.out.println(new TreeSet(Arrays.asList(m_FullElements)));
-                //System.out.println(new TreeSet(Arrays.asList(m_OtherElements)));
-                //resetFull();
-                //System.out.println(collection);
-                //System.out.println(confirmed);
-
-            }
-
-        } //type
-
-        @SuppressWarnings("unchecked")
-        public TestSortedSetSubSet(final String name, final int loBound, final int hiBound) {
-            super(name);
-            //System.out.println("SUBSET");
-            m_Type = TYPE_SUBSET;
-            m_LowBound = loBound;
-            m_HighBound = hiBound;
-            final int length = hiBound - loBound;
-            //System.out.println("Low=" + loBound + "::High=" + hiBound + "::Length=" + length);
-            m_FullElements = (E[]) new Object[length];
-            System.arraycopy(AbstractSortedSetTest.this.getFullElements(), loBound, m_FullElements, 0, length);
-            m_OtherElements = (E[]) new Object[length - 1];
-            System.arraycopy(//src src_pos dst dst_pos length
-                AbstractSortedSetTest.this.getOtherElements(), loBound, m_OtherElements, 0, length - 1);
-
-            //System.out.println(new TreeSet(Arrays.asList(m_FullElements)));
-            //System.out.println(new TreeSet(Arrays.asList(m_OtherElements)));
-
         }
 
         @Override
