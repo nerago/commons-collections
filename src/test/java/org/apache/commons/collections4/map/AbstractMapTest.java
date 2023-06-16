@@ -1934,48 +1934,34 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (!isSetValueSupported() || isGetStructuralModify())
                 return;
 
-            resetEmpty();
-            AbstractMapTest.this.getMap().put(getSampleKeys()[0], getSampleValues()[0]);
-            AbstractMapTest.this.getConfirmed().put(getSampleKeys()[0], getSampleValues()[0]);
+            resetFull();
             Object[] arrayObject = getCollection().toArray();
-            Object[] arrayObjectConfirmed = getConfirmed().toArray();
-            assertEquals(1, arrayObject.length);
+            assertEquals(getCollection().size(), arrayObject.length);
             for (int i = 0; i < getCollection().size(); ++i) {
                 final Entry<K,V> entry = (Entry<K, V>) arrayObject[i];
-                final Entry<K,V> entryConfirmed = (Entry<K, V>) arrayObjectConfirmed[i];
-                final K key = entryConfirmed.getKey();
-                final V value = entryConfirmed.getValue();
+                final K key = entry.getKey();
+                final V value = entry.getValue();
                 final V newValue = getNewSampleValues()[i];
-                assertEquals(key, entry.getKey());
-                assertEquals(value, entry.getValue());
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
                 entry.setValue(newValue);
                 AbstractMapTest.this.getConfirmed().put(key, newValue);
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
-                assertEquals(newValue, entryConfirmed.getValue());
                 assertEquals(newValue, getMap().get(key));
                 assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
             }
             verify();
 
-            resetEmpty();
-            AbstractMapTest.this.getMap().put(getSampleKeys()[0], getSampleValues()[0]);
-            AbstractMapTest.this.getConfirmed().put(getSampleKeys()[0], getSampleValues()[0]);
+            resetFull();
             Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
-            Entry<K, V>[] arrayTypedConfirmed = getConfirmed().toArray(new Entry[0]);
             assertEquals(getCollection().size(), arrayTyped.length);
             for (int i = 0; i < getCollection().size(); ++i) {
                 final Entry<K,V> entry = arrayTyped[i];
-                final Entry<K,V> entryConfirmed = arrayTypedConfirmed[i];
-                final K key = entryConfirmed.getKey();
-                final V value = entryConfirmed.getValue();
+                final K key = entry.getKey();
+                final V value = entry.getValue();
                 final V newValue = getNewSampleValues()[i];
-                assertEquals(key, entry.getKey());
-                assertEquals(value, entry.getValue());
-                assertEquals(value, entryConfirmed.getValue());
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
                 assertFalse(getMap().containsValue(newValue));
@@ -1983,7 +1969,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 AbstractMapTest.this.getConfirmed().put(key, newValue);
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
-                assertEquals(newValue, entryConfirmed.getValue());
                 assertEquals(newValue, getMap().get(key));
                 assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
