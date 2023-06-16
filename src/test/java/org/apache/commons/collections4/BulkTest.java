@@ -23,6 +23,7 @@ import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.util.ReflectionUtils;
 
+import java.net.URI;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -252,7 +253,10 @@ public class BulkTest implements Cloneable {
                 Stream.concat(
                     AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
                             .stream()
-                            .map(method -> DynamicTest.dynamicTest(method.getName(), () -> method.invoke(instance))),
+                            .map(method -> DynamicTest.dynamicTest(
+                                    method.getName(),
+                                    URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
+                                    () -> ReflectionUtils.invokeMethod(method, instance))),
                     AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
                             .stream()
                             .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
