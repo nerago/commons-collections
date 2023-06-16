@@ -252,6 +252,10 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         verify();
     }
 
+    /**
+     *  Tests bounds checking for {@link List#addAll(int, Collection)} on an
+     *  empty list.
+     */
     @Test
     public void testListAddAllByIndexBoundsChecking() {
         if (!isAddSupported()) {
@@ -278,7 +282,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
     }
 
     /**
-     *  Tests bounds checking for {@link List#add(int, Object)} on a
+     *  Tests bounds checking for {@link List#addAll(int, Collection)} on a
      *  full list.
      */
     @Test

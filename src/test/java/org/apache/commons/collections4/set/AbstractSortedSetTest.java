@@ -207,7 +207,7 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         @Override
         protected SortedSet<E> getSubSet(SortedSet<E> set) {
             final E[] elements = AbstractSortedSetTest.this.getFullElements();
-            return set.headSet(elements[lowBound]);
+            return set.headSet(elements[highBound]);
         }
     }
 

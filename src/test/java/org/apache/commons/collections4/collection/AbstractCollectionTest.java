@@ -16,14 +16,6 @@
  */
 package org.apache.commons.collections4.collection;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -37,6 +29,8 @@ import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link java.util.Collection} methods and contracts.
@@ -1077,8 +1071,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     public void testCollectionSize() {
         resetEmpty();
         assertEquals(0, getCollection().size(), "Size of new Collection is 0.");
+        assertTrue(getCollection().isEmpty(), "Size of new Collection is 0.");
 
         resetFull();
+        assertNotEquals(0, getCollection().size(), "Size of full collection should be greater than zero");
         assertFalse(getCollection().isEmpty(), "Size of full collection should be greater than zero");
     }
 

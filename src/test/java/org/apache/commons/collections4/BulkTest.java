@@ -250,6 +250,7 @@ public class BulkTest implements Cloneable {
     protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier) {
         N instance = instanceSupplier.get();
         return DynamicContainer.dynamicContainer(type.getSimpleName(),
+                URI.create("class:" + type.getName()),
                 Stream.concat(
                     AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
                             .stream()

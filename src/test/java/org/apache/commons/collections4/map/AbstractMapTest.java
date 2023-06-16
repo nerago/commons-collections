@@ -217,6 +217,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     /**
      * Returns true if the maps produced by
      * {@link #makeObject()} and {@link #makeFullMap()}
+     * support the {@code setValue} operation on entrySet entries
+     * in toArray results and foreach functions.
+     * <p>
+     * Default implementation returns isSetValueSupported().
+     * Override if your collection class does support setValue in some cases
+     * but not where generally unneeded.
+     */
+    public boolean isSetValueInArraySupported() {
+        return isSetValueSupported();
+    }
+
+    /**
+     * Returns true if the maps produced by
+     * {@link #makeObject()} and {@link #makeFullMap()}
      * support the {@code remove} and {@code clear} operations.
      * <p>
      * Default implementation returns true.
@@ -1931,7 +1945,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         @Test
         @SuppressWarnings("unchecked")
         public void testMapEntryInArray() {
-            if (!isSetValueSupported() || isGetStructuralModify())
+            if (!isSetValueInArraySupported()) //  || isGetStructuralModify()
                 return;
 
             resetFull();
@@ -1949,10 +1963,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
                 assertEquals(newValue, getMap().get(key));
-                assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
+                verify();
             }
-            verify();
 
             resetFull();
             Entry<K, V>[] arrayTyped = getCollection().toArray(new Entry[0]);
@@ -1964,22 +1977,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 final V newValue = getNewSampleValues()[i];
                 assertEquals(value, getMap().get(key));
                 assertTrue(getMap().containsValue(value));
-                assertFalse(getMap().containsValue(newValue));
                 entry.setValue(newValue);
                 AbstractMapTest.this.getConfirmed().put(key, newValue);
                 assertEquals(key, entry.getKey());
                 assertEquals(newValue, entry.getValue());
                 assertEquals(newValue, getMap().get(key));
-                assertFalse(getMap().containsValue(value));
                 assertTrue(getMap().containsValue(newValue));
+                verify();
             }
-            verify();
         }
 
         @Test
         @SuppressWarnings("unchecked")
         public void testMapEntryInArrayUnsupported() {
-            if (isSetValueSupported())
+            if (isSetValueInArraySupported())
                 return;
 
             final V newValue = getNewSampleValues()[0];
@@ -2006,7 +2017,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         @Test
         @SuppressWarnings("unchecked")
         public void testMapEntryInForeachModifiable() {
-            if (!isSetValueSupported() || isGetStructuralModify())
+            if (!isSetValueInArraySupported() || isGetStructuralModify())
                 return;
 
             final Queue<V> newValueQueue = new LinkedList<>(Arrays.asList(getNewSampleValues()));
@@ -2031,7 +2042,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         @Test
         @SuppressWarnings("unchecked")
         public void testMapEntryInForeachReadOnly() {
-            if (isSetValueSupported())
+            if (isSetValueInArraySupported())
                 return;
 
             final V newValue = getNewSampleValues()[0];
