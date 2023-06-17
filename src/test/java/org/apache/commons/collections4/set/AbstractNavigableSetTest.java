@@ -200,7 +200,7 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
         @Override
         protected NavigableSet<E> getSubSet(NavigableSet<E> set) {
             final E[] elements = AbstractNavigableSetTest.this.getFullElements();
-            return set.headSet(elements[lowBound], true);
+            return set.headSet(elements[highBound], true);
         }
     }
 
