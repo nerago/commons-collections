@@ -233,15 +233,6 @@ public class ListOrderedSet<E>
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This implementation iterates over the elements of this set, checking
-     * each element in turn to see if it's contained in {@code coll}.
-     * If it's not contained, it's removed from this set. As a consequence,
-     * it is advised to use a collection type for {@code coll} that provides
-     * a fast (e.g. O(1)) implementation of {@link Collection#contains(Object)}.
-     */
     @Override
     public boolean retainAll(final Collection<?> coll) {
         final boolean result = decorated().retainAll(coll);
