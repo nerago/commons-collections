@@ -40,7 +40,6 @@ import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
  * Abstract test class for {@link java.util.List} methods and contracts.
@@ -72,6 +71,18 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      *  class does not support set.
      */
     public boolean isSetSupported() {
+        return true;
+    }
+
+    /**
+     * Returns true if the collections produced by
+     * {@link #makeObject()} and {@link #makeFullCollection()}
+     * support duplicate values.
+     * <p>
+     * Default implementation returns true.
+     * Override if your collection class does not support duplicate values.
+     */
+    public boolean isAllowDuplicateValues() {
         return true;
     }
 
@@ -1312,6 +1323,11 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         @Override
         public boolean supportsSet() {
             return AbstractListTest.this.isSetSupported();
+        }
+
+        @Override
+        public boolean isAllowDuplicateValues() {
+            return AbstractListTest.this.isAllowDuplicateValues();
         }
 
         @Override
