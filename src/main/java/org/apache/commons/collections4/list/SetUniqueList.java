@@ -26,6 +26,7 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
@@ -279,6 +280,33 @@ public class SetUniqueList<E> extends AbstractSerializableListDecorator<E> {
             super.retainAll(set);
         }
         return result;
+    }
+
+    @Override
+    public void replaceAll(UnaryOperator<E> operator) {
+        Objects.requireNonNull(operator);
+        final HashSet<E> newValues = new HashSet<>(set.size());
+        ListIterator<E> it = super.listIterator();
+        while (it.hasNext()) {
+            E oldVal = it.next();
+            E newVal = operator.apply(oldVal);
+            newValues.add(newVal);
+        }
+        it = super.listIterator();
+        while (it.hasNext()) {
+            E oldVal = it.next();
+            E newVal = operator.apply(oldVal);
+            if (newValues.remove(newVal)) {
+                if (!Objects.equals(oldVal, newVal)) {
+                    set.remove(oldVal);
+                    set.add(newVal);
+                    it.set(newVal);
+                }
+            } else {
+                set.remove(oldVal);
+                it.remove();
+            }
+        }
     }
 
     @Override

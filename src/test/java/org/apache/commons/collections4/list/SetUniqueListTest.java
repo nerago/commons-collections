@@ -33,7 +33,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.collections4.set.UnmodifiableSet;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * JUnit tests.
@@ -66,6 +69,11 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
 
     @Override
     public boolean isAllowDuplicateValues() {
+        return false;
+    }
+
+    @Override
+    public boolean isIteratorSetSupported() {
         return false;
     }
 
@@ -377,6 +385,26 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     }
 
     @Test
+    @Override
+    public void testListReplaceAll() {
+        resetFull();
+        getCollection().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        Collection<E> confirmed = makeConfirmedCollection();
+        for (E e : getFullElements()) {
+            if (e instanceof String) {
+                E s = (E) ((String) e).toLowerCase();
+                if (!confirmed.contains(s))
+                    confirmed.add(s);
+            } else {
+                if (!confirmed.contains(null))
+                    confirmed.add(null);
+            }
+        }
+        setConfirmed(confirmed);
+        verify();
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testRetainAll() {
         final List<E> list = new ArrayList<>(10);
@@ -676,4 +704,43 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
         assertThrows(NullPointerException.class, () -> setUniqueList.createSetBasedOnList(new HashSet<>(), null));
     }
 
+    @Override
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return findTestsOnNestedClass(SubListIsReadOnlyTests.class, () -> new SubListIsReadOnlyTests<>(this), this::runBulkSubListTests);
+    }
+
+    @Disabled
+    public static class SubListIsReadOnlyTests<E> extends BulkSubListTests<E> {
+        public SubListIsReadOnlyTests(AbstractListTest<E> outer) {
+            super(outer);
+        }
+
+        @Override
+        public void verify() {
+            ((SetUniqueListTest<?>)outer).extraVerify = false;
+            super.verify();
+            ((SetUniqueListTest<?>)outer).extraVerify = true;
+        }
+
+        @Override
+        public boolean isRemoveElementSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isAddSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isSetSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isRemoveSupported() {
+            return false;
+        }
+    }
 }

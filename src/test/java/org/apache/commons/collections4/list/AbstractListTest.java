@@ -75,6 +75,17 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
     }
 
     /**
+     *  Returns true if the collections produced by
+     *  {@link #makeObject()} and {@link #makeFullCollection()}
+     *  return iterators that support the <code>set operation.<p>
+     *  Default implementation returns true.  Override if your collection
+     *  class support set but not on iterator objects.
+     */
+    public boolean isIteratorSetSupported() {
+        return isSetSupported();
+    }
+
+    /**
      * Returns true if the collections produced by
      * {@link #makeObject()} and {@link #makeFullCollection()}
      * support duplicate values.
@@ -1101,7 +1112,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
     @Disabled
     public static class BulkSubListTests<E> extends AbstractListTest<E> {
-        private final AbstractListTest<E> outer;
+        protected final AbstractListTest<E> outer;
 
         public BulkSubListTests(final AbstractListTest<E> outer) {
             super("");
@@ -1322,7 +1333,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         @Override
         public boolean supportsSet() {
-            return AbstractListTest.this.isSetSupported();
+            return AbstractListTest.this.isIteratorSetSupported();
         }
 
         @Override

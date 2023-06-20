@@ -197,10 +197,10 @@ public abstract class AbstractListIteratorTest<E> extends AbstractIteratorTest<E
             }
         } else {
             assertTrue(it.hasNext());
-            it.next();
+            assertNotSame(addValue, it.next());
             it.add(addValue);
             assertEquals(addValue, it.previous());
-            assertNotSame(addValue, it.next());
+            assertEquals(addValue, it.next());
             while (it.hasNext()) {
                 assertNotSame(addValue, it.next());
                 // check won't add again
