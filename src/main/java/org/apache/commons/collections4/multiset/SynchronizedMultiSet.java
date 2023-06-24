@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.collection.SynchronizedCollection;
+import org.apache.commons.collections4.set.SynchronizedSet;
 
 /**
  * Decorates another {@link MultiSet} to synchronize its behavior
@@ -141,22 +142,4 @@ public class SynchronizedMultiSet<E> extends SynchronizedCollection<E> implement
             return new SynchronizedSet<>(set, lock);
         }
     }
-
-    /**
-     * Synchronized Set for the MultiSet class.
-     */
-    static class SynchronizedSet<T> extends SynchronizedCollection<T> implements Set<T> {
-        /** Serialization version */
-        private static final long serialVersionUID = 20150629L;
-
-        /**
-         * Constructor.
-         * @param set  the set to decorate
-         * @param lock  the lock to use, shared with the multiset
-         */
-        SynchronizedSet(final Set<T> set, final Object lock) {
-            super(set, lock);
-        }
-    }
-
 }

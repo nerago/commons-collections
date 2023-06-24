@@ -21,11 +21,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
 
 /**
@@ -40,7 +43,7 @@ import org.apache.commons.collections4.set.AbstractSetDecorator;
  * @since 3.0
  */
 public final class UnmodifiableEntrySet<K, V>
-        extends AbstractSetDecorator<Map.Entry<K, V>> implements Unmodifiable {
+        extends AbstractEntrySetDecorator<K, V> implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 1678353579659253473L;
@@ -70,6 +73,11 @@ public final class UnmodifiableEntrySet<K, V>
      */
     private UnmodifiableEntrySet(final Set<Map.Entry<K, V>> set) {
         super(set);
+    }
+
+    @Override
+    protected Map.Entry<K, V> wrapEntry(Map.Entry<K, V> entry) {
+        return new UnmodifiableMapEntry<>(entry);
     }
 
     @Override
@@ -112,79 +120,6 @@ public final class UnmodifiableEntrySet<K, V>
 
     @Override
     public Iterator<Map.Entry<K, V>> iterator() {
-        return new UnmodifiableEntrySetIterator(decorated().iterator());
+        return UnmodifiableIterator.unmodifiableIterator(super.iterator());
     }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public Object[] toArray() {
-        final Object[] array = decorated().toArray();
-        for (int i = 0; i < array.length; i++) {
-            array[i] = new UnmodifiableEntry((Map.Entry<K, V>) array[i]);
-        }
-        return array;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T[] toArray(final T[] array) {
-        Object[] result = array;
-        if (array.length > 0) {
-            // we must create a new array to handle multithreaded situations
-            // where another thread could access data before we decorate it
-            result = (Object[]) Array.newInstance(array.getClass().getComponentType(), 0);
-        }
-        result = decorated().toArray(result);
-        for (int i = 0; i < result.length; i++) {
-            result[i] = new UnmodifiableEntry((Map.Entry<K, V>) result[i]);
-        }
-
-        // check to see if result should be returned straight
-        if (result.length > array.length) {
-            return (T[]) result;
-        }
-
-        // copy back into input array to fulfill the method contract
-        System.arraycopy(result, 0, array, 0, result.length);
-        if (array.length > result.length) {
-            array[result.length] = null;
-        }
-        return array;
-    }
-
-    /**
-     * Implementation of an entry set iterator.
-     */
-    private class UnmodifiableEntrySetIterator extends AbstractIteratorDecorator<Map.Entry<K, V>> {
-
-        protected UnmodifiableEntrySetIterator(final Iterator<Map.Entry<K, V>> iterator) {
-            super(iterator);
-        }
-
-        @Override
-        public Map.Entry<K, V> next() {
-            return new UnmodifiableEntry(getIterator().next());
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    /**
-     * Implementation of a map entry that is unmodifiable.
-     */
-    private class UnmodifiableEntry extends AbstractMapEntryDecorator<K, V> {
-
-        protected UnmodifiableEntry(final Map.Entry<K, V> entry) {
-            super(entry);
-        }
-
-        @Override
-        public V setValue(final V obj) {
-            throw new UnsupportedOperationException();
-        }
-    }
-
 }
