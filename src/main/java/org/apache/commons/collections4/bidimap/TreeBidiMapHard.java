@@ -91,13 +91,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private transient Set<Entry<K, V>> entrySet;
     private transient Inverse inverse;
 
-    private void setRootNode(DataElement element, Node<K, V> node) {
-        if (element == KEY)
-            rootNodeKey = node;
-        else
-            rootNodeValue = node;
-    }
-
     /**
      * Constructs a new empty TreeBidiMap.
      */
@@ -439,6 +432,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return true if equal
      */
     @Override
+    @SuppressWarnings("all")
     public boolean equals(final Object obj) {
         return this.doEquals(obj, KEY);
     }
@@ -508,7 +502,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     final Node<K, V> newNode = new Node<>(key, value);
                     node.keyLeftNode = newNode;
                     newNode.keyParentNode = node;
-                    doRedBlackInsert(newNode, KEY);
+                    doRedBlackInsertKey(newNode);
                     keyNode = newNode;
                     grow();
                     break;
@@ -520,7 +514,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     final Node<K, V> newNode = new Node<>(key, value);
                     node.keyRightNode = newNode;
                     newNode.keyParentNode = node;
-                    doRedBlackInsert(newNode, KEY);
+                    doRedBlackInsertKey(newNode);
                     keyNode = newNode;
                     grow();
                     break;
@@ -543,7 +537,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (cmp == 0) {
                 // replace existing value node (assume different key)
                 assert !Objects.equals(node.key, key);
-                copyColor(node, keyNode, VALUE);
+                keyNode.copyColorValue(node);
                 replaceNodeValue(node, keyNode, true);
                 doRedBlackDeleteKey(node);
                 shrink();
@@ -552,7 +546,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 if (node.valueLeftNode == null) {
                     node.valueLeftNode = keyNode;
                     keyNode.valueParentNode = node;
-                    doRedBlackInsert(keyNode, VALUE);
+                    doRedBlackInsertValue(keyNode);
                     break;
                 }
                 node = node.valueLeftNode;
@@ -560,7 +554,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 if (node.valueRightNode == null) {
                     node.valueRightNode = keyNode;
                     keyNode.valueParentNode = node;
-                    doRedBlackInsert(keyNode, VALUE);
+                    doRedBlackInsertValue(keyNode);
                     break;
                 }
                 node = node.valueRightNode;
@@ -789,240 +783,114 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
-     * Copies the color from one node to another, dealing with the fact
-     * that one or both nodes may, in fact, be null.
-     *
-     * @param from        the node whose color we're copying; may be null
-     * @param to          the node whose color we're changing; may be null
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private void copyColor(final Node<K, V> from, final Node<K, V> to, final DataElement dataElement) {
-        if (to != null) {
-            if (from == null) {
-                // by default, make it black
-                to.setBlack(dataElement);
-            } else {
-                to.copyColor(from, dataElement);
-            }
-        }
-    }
-
-    /**
-     * Is the specified node red? If the node does not exist, no, it's
-     * black, thank you.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private static boolean isRed(final Node<?, ?> node, final DataElement dataElement) {
-        return node != null && node.isRed(dataElement);
-    }
-
-    /**
-     * Is the specified black red? If the node does not exist, sure,
-     * it's black, thank you.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private static boolean isBlack(final Node<?, ?> node, final DataElement dataElement) {
-        return node == null || node.isBlack(dataElement);
-    }
-
-    /**
-     * Forces a node (if it exists) red.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private static void makeRed(final Node<?, ?> node, final DataElement dataElement) {
-        if (node != null) {
-            node.setRed(dataElement);
-        }
-    }
-
-    /**
-     * Forces a node (if it exists) black.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private static void makeBlack(final Node<?, ?> node, final DataElement dataElement) {
-        if (node != null) {
-            node.setBlack(dataElement);
-        }
-    }
-
-    /**
-     * Gets a node's grandparent. mind you, the node, its parent, or
-     * its grandparent may not exist. No problem.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private Node<K, V> getGrandParent(final Node<K, V> node, final DataElement dataElement) {
-        return getParent(getParent(node, dataElement), dataElement);
-    }
-
-    /**
-     * Gets a node's parent. mind you, the node, or its parent, may not
-     * exist. no problem.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private Node<K, V> getParent(final Node<K, V> node, final DataElement dataElement) {
-        return node == null ? null : dataElement == KEY ? node.keyParentNode : node.valueParentNode;
-    }
-
-    /**
-     * Gets a node's right child. mind you, the node may not exist. no
-     * problem.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private Node<K, V> getRightChild(final Node<K, V> node, final DataElement dataElement) {
-        return node == null ? null : dataElement == KEY ? node.keyRightNode : node.valueRightNode;
-    }
-
-    /**
-     * Gets a node's left child. mind you, the node may not exist. no
-     * problem.
-     *
-     * @param node        the node (may be null) in question
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     */
-    private Node<K, V> getLeftChild(final Node<K, V> node, final DataElement dataElement) {
-        if (node == null) {
-            return null;
-        } else {
-            return dataElement == KEY ? node.keyLeftNode : node.valueLeftNode;
-        }
-    }
-
-    /**
      * Does a rotate left. standard fare in the world of balanced trees.
      *
      * @param node        the node to be rotated
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
      */
-    private void rotateLeft(final Node<K, V> node, final DataElement dataElement) {
-        final Node<K, V> rightChild = dataElement == KEY ? node.keyRightNode : node.valueRightNode;
-        final Node<K, V> node2 = dataElement == KEY ? rightChild.keyLeftNode : rightChild.valueLeftNode;
-        if (dataElement == KEY)
-            node.keyRightNode = node2;
-        else
-            node.valueRightNode = node2;
+    private void rotateLeftKey(final Node<K, V> node) {
+        final Node<K, V> rightChild = node.keyRightNode;
+        node.keyRightNode = rightChild.keyLeftNode;
 
-        if ((dataElement == KEY ? rightChild.keyLeftNode : rightChild.valueLeftNode) != null) {
-            Node<K, V> kvNode = dataElement == KEY ? rightChild.keyLeftNode : rightChild.valueLeftNode;
-            if (dataElement == KEY)
-                kvNode.keyParentNode = node;
-            else
-                kvNode.valueParentNode = node;
+        if (rightChild.keyLeftNode != null) {
+            rightChild.keyLeftNode.keyParentNode = node;
         }
-        final Node<K, V> node1 = dataElement == KEY ? node.keyParentNode : node.valueParentNode;
-        if (dataElement == KEY)
-            rightChild.keyParentNode = node1;
-        else
-            rightChild.valueParentNode = node1;
+        rightChild.keyParentNode = node.keyParentNode;
 
-        if ((dataElement == KEY ? node.keyParentNode : node.valueParentNode) == null) {
+        Node<K, V> parent = node.keyParentNode;
+        if (parent == null) {
             // node was the root ... now its right child is the root
-            setRootNode(dataElement, rightChild);
+            rootNodeKey = rightChild;
         } else {
-            Node<K, V> kvNode1 = (dataElement == KEY ? node.keyParentNode : node.valueParentNode);
-            if ((dataElement == KEY ? kvNode1.keyLeftNode : kvNode1.valueLeftNode) == node) {
-                Node<K, V> kvNode = dataElement == KEY ? node.keyParentNode : node.valueParentNode;
-                if (dataElement == KEY)
-                    kvNode.keyLeftNode = rightChild;
-                else
-                    kvNode.valueLeftNode = rightChild;
+            if (parent.keyLeftNode == node) {
+                parent.keyLeftNode = rightChild;
             } else {
-                Node<K, V> kvNode = (dataElement == KEY ? node.keyParentNode : node.valueParentNode);
-                if (dataElement == KEY)
-                    kvNode.keyRightNode = rightChild;
-                else
-                    kvNode.valueRightNode = rightChild;
+                parent.keyRightNode = rightChild;
             }
         }
 
-        if (dataElement == KEY)
-            rightChild.keyLeftNode = node;
-        else
-            rightChild.valueLeftNode = node;
-        if (dataElement == KEY)
-            node.keyParentNode = rightChild;
-        else
-            node.valueParentNode = rightChild;
+        rightChild.keyLeftNode = node;
+        node.keyParentNode = rightChild;
     }
+
+    private void rotateLeftValue(final Node<K, V> node) {
+        final Node<K, V> rightChild = node.valueRightNode;
+        node.valueRightNode = rightChild.valueLeftNode;
+
+        if (rightChild.valueLeftNode != null) {
+            rightChild.valueLeftNode.valueParentNode = node;
+        }
+        rightChild.valueParentNode = node.valueParentNode;
+
+        Node<K, V> parent = node.valueParentNode;
+        if (parent == null) {
+            // node was the root ... now its right child is the root
+            rootNodeValue = rightChild;
+        } else {
+            if (parent.valueLeftNode == node) {
+                parent.valueLeftNode = rightChild;
+            } else {
+                parent.valueRightNode = rightChild;
+            }
+        }
+
+        rightChild.valueLeftNode = node;
+        node.valueParentNode = rightChild;
+    }
+
 
     /**
      * Does a rotate right. standard fare in the world of balanced trees.
      *
      * @param node        the node to be rotated
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
      */
-    private void rotateRight(final Node<K, V> node, final DataElement dataElement) {
-        final Node<K, V> leftChild = dataElement == KEY ? node.keyLeftNode : node.valueLeftNode;
-        final Node<K, V> node1 = dataElement == KEY ? leftChild.keyRightNode : leftChild.valueRightNode;
-        if (dataElement == KEY)
-            node.keyLeftNode = node1;
-        else
-            node.valueLeftNode = node1;
-        if ((dataElement == KEY ? leftChild.keyRightNode : leftChild.valueRightNode) != null) {
-            Node<K, V> kvNode = dataElement == KEY ? leftChild.keyRightNode : leftChild.valueRightNode;
-            if (dataElement == KEY)
-                kvNode.keyParentNode = node;
-            else
-                kvNode.valueParentNode = node;
+    private void rotateRightKey(final Node<K, V> node) {
+        final Node<K, V> leftChild = node.keyLeftNode;
+        node.keyLeftNode = leftChild.keyRightNode;
+        if (leftChild.keyRightNode != null) {
+            Node<K, V> kvNode = leftChild.keyRightNode;
+            kvNode.keyParentNode = node;
         }
-        final Node<K, V> node2 = dataElement == KEY ? node.keyParentNode : node.valueParentNode;
-        if (dataElement == KEY)
-            leftChild.keyParentNode = node2;
-        else
-            leftChild.valueParentNode = node2;
+        leftChild.keyParentNode = node.keyParentNode;
 
-        if ((dataElement == KEY ? node.keyParentNode : node.valueParentNode) == null) {
+        Node<K, V> parent = node.keyParentNode;
+        if (parent == null) {
             // node was the root ... now its left child is the root
-            setRootNode(dataElement, leftChild);
+            rootNodeKey = leftChild;
         } else {
-            Node<K, V> kvNode1 = dataElement == KEY ? node.keyParentNode : node.valueParentNode;
-            if ((dataElement == KEY ? kvNode1.keyRightNode : kvNode1.valueRightNode) == node) {
-                Node<K, V> kvNode = (dataElement == KEY ? node.keyParentNode : node.valueParentNode);
-                if (dataElement == KEY)
-                    kvNode.keyRightNode = leftChild;
-                else
-                    kvNode.valueRightNode = leftChild;
+            if (parent.keyRightNode == node) {
+                parent.keyRightNode = leftChild;
             } else {
-                Node<K, V> kvNode = dataElement == KEY ? node.keyParentNode : node.valueParentNode;
-                if (dataElement == KEY)
-                    kvNode.keyLeftNode = leftChild;
-                else
-                    kvNode.valueLeftNode = leftChild;
+                parent.keyLeftNode = leftChild;
             }
         }
 
-        if (dataElement == KEY)
-            leftChild.keyRightNode = node;
-        else
-            leftChild.valueRightNode = node;
-        if (dataElement == KEY)
-            node.keyParentNode = leftChild;
-        else
-            node.valueParentNode = leftChild;
+        leftChild.keyRightNode = node;
+        node.keyParentNode = leftChild;
+    }
+
+    private void rotateRightValue(final Node<K, V> node) {
+        final Node<K, V> leftChild = node.valueLeftNode;
+        node.valueLeftNode = leftChild.valueRightNode;
+        if (leftChild.valueRightNode != null) {
+            Node<K, V> kvNode = leftChild.valueRightNode;
+            kvNode.valueParentNode = node;
+        }
+        leftChild.valueParentNode = node.valueParentNode;
+
+        Node<K, V> parent = node.valueParentNode;
+        if (node.valueParentNode == null) {
+            // node was the root ... now its left child is the root
+            rootNodeValue = leftChild;
+        } else {
+            if (parent.valueRightNode == node) {
+                parent.valueRightNode = leftChild;
+            } else {
+                parent.valueLeftNode = leftChild;
+            }
+        }
+
+        leftChild.valueRightNode = node;
+        node.valueParentNode = leftChild;
     }
 
     /**
@@ -1030,65 +898,101 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * implementation, though it's barely recognizable anymore.
      *
      * @param insertedNode the node to be inserted
-     * @param dataElement  the KEY or VALUE int
      */
-    private void doRedBlackInsert(final Node<K, V> insertedNode, final DataElement dataElement) {
+    private void doRedBlackInsertKey(final Node<K, V> insertedNode) {
         Node<K, V> currentNode = insertedNode;
-        makeRed(currentNode, dataElement);
+        if (currentNode != null) {
+            currentNode.setRedKey();
+        }
 
-        while (currentNode != null && (currentNode != (dataElement == KEY ? rootNodeKey : rootNodeValue) && isRed(dataElement == KEY ? currentNode.keyParentNode : currentNode.valueParentNode, dataElement))) {
-            if (currentNode.isLeftChild(dataElement)) {
-                final Node<K, V> y = getRightChild(getGrandParent(currentNode, dataElement), dataElement);
+        while (currentNode != null && currentNode != rootNodeKey && currentNode.keyParentNode != null && currentNode.keyParentNode.isRedKey()) {
+            final Node<K, V> parent = currentNode.keyParentNode;
+            final Node<K, V> grandParent = parent.keyParentNode;
+            if (parent.keyLeftNode == currentNode) {
+                final Node<K, V> grandParentRight = grandParent != null ? grandParent.keyRightNode : null;
 
-                if (isRed(y, dataElement)) {
-                    makeBlack(getParent(currentNode, dataElement), dataElement);
-                    makeBlack(y, dataElement);
-                    makeRed(getGrandParent(currentNode, dataElement), dataElement);
-
-                    currentNode = getGrandParent(currentNode, dataElement);
+                if (grandParentRight != null && grandParentRight.isRedKey()) {
+                    parent.setBlackKey();
+                    grandParentRight.setBlackKey();
+                    grandParent.setRedKey();
+                    currentNode = grandParent;
                 } else {
-                    if (currentNode.isRightChild(dataElement)) {
-                        currentNode = getParent(currentNode, dataElement);
-
-                        rotateLeft(currentNode, dataElement);
-                    }
-
-                    makeBlack(getParent(currentNode, dataElement), dataElement);
-                    makeRed(getGrandParent(currentNode, dataElement), dataElement);
-
-                    if (getGrandParent(currentNode, dataElement) != null) {
-                        rotateRight(getGrandParent(currentNode, dataElement), dataElement);
+                    parent.setBlackKey();
+                    if (grandParent != null) {
+                        grandParent.setRedKey();
+                        rotateRightKey(grandParent);
                     }
                 }
             } else {
-
                 // just like clause above, except swap left for right
-                final Node<K, V> y = getLeftChild(getGrandParent(currentNode, dataElement), dataElement);
+                final Node<K, V> grandParentLeft = grandParent != null ? grandParent.keyLeftNode : null;
 
-                if (isRed(y, dataElement)) {
-                    makeBlack(getParent(currentNode, dataElement), dataElement);
-                    makeBlack(y, dataElement);
-                    makeRed(getGrandParent(currentNode, dataElement), dataElement);
-
-                    currentNode = getGrandParent(currentNode, dataElement);
+                if (grandParentLeft != null && grandParentLeft.isRedKey()) {
+                    parent.setBlackKey();
+                    grandParentLeft.setBlackKey();
+                    grandParent.setRedKey();
+                    currentNode = grandParent;
                 } else {
-                    if (currentNode.isLeftChild(dataElement)) {
-                        currentNode = getParent(currentNode, dataElement);
-
-                        rotateRight(currentNode, dataElement);
-                    }
-
-                    makeBlack(getParent(currentNode, dataElement), dataElement);
-                    makeRed(getGrandParent(currentNode, dataElement), dataElement);
-
-                    if (getGrandParent(currentNode, dataElement) != null) {
-                        rotateLeft(getGrandParent(currentNode, dataElement), dataElement);
+                    parent.setBlackKey();
+                    if (grandParent != null) {
+                        grandParent.setRedKey();
+                        rotateLeftKey(grandParent);
                     }
                 }
             }
         }
 
-        makeBlack(dataElement == KEY ? rootNodeKey : rootNodeValue, dataElement);
+        if (rootNodeKey != null) {
+            rootNodeKey.setBlackKey();
+        }
+    }
+
+    private void doRedBlackInsertValue(final Node<K, V> insertedNode) {
+        Node<K, V> currentNode = insertedNode;
+        if (currentNode != null) {
+            currentNode.setRedValue();
+        }
+
+        while (currentNode != null && currentNode != rootNodeValue && currentNode.valueParentNode != null && currentNode.valueParentNode.isRedValue()) {
+            final Node<K, V> parent = currentNode.valueParentNode;
+            final Node<K, V> grandParent = parent.valueParentNode;
+            if (parent.valueLeftNode == currentNode) {
+                final Node<K, V> grandParentRight = grandParent != null ? grandParent.valueRightNode : null;
+
+                if (grandParentRight != null && grandParentRight.isRedValue()) {
+                    parent.setBlackValue();
+                    grandParentRight.setBlackValue();
+                    grandParent.setRedValue();
+                    currentNode = grandParent;
+                } else {
+                    parent.setBlackValue();
+                    if (grandParent != null) {
+                        grandParent.setRedValue();
+                        rotateRightValue(grandParent);
+                    }
+                }
+            } else {
+                // just like clause above, except swap left for right
+                final Node<K, V> grandParentLeft = grandParent != null ? grandParent.valueLeftNode : null;
+
+                if (grandParentLeft != null && grandParentLeft.isRedValue()) {
+                    parent.setBlackValue();
+                    grandParentLeft.setBlackValue();
+                    grandParent.setRedValue();
+                    currentNode = grandParent;
+                } else {
+                    parent.setBlackValue();
+                    if (grandParent != null) {
+                        grandParent.setRedValue();
+                        rotateLeftValue(grandParent);
+                    }
+                }
+            }
+        }
+
+        if (rootNodeValue != null) {
+            rootNodeValue.setBlackValue();
+        }
     }
 
     /**
@@ -1104,12 +1008,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private void doRedBlackDeleteKey(Node<K, V> deletedNode) {
-        DataElement dataElement = KEY;
-
         // if deleted node has both left and children, swap with
         // the next greater node
         if (deletedNode.keyLeftNode != null && deletedNode.keyRightNode != null) {
-            swapPosition(nextGreaterKey(deletedNode), deletedNode, dataElement);
+            swapPosition(nextGreaterKey(deletedNode), deletedNode, KEY);
         }
 
         final Node<K, V> replacement;
@@ -1125,11 +1027,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             // replacement is null
             if (deletedNode.keyParentNode == null) {
                 // empty tree
-                setRootNode(dataElement, null);
+                rootNodeKey = null;
             } else {
                 // deleted node had no children
-                if (isBlack(deletedNode, dataElement)) {
-                    doRedBlackDeleteFixup(deletedNode, dataElement);
+                if (deletedNode.isBlackKey()) {
+                    doRedBlackDeleteFixupKey(deletedNode);
                 }
 
                 if (deletedNode.keyParentNode != null) {
@@ -1147,12 +1049,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private void doRedBlackDeleteValue(Node<K, V> deletedNode) {
-        DataElement dataElement = VALUE;
-
         // if deleted node has both left and children, swap with
         // the next greater node
         if (deletedNode.valueLeftNode != null && deletedNode.valueRightNode != null) {
-            swapPosition(nextGreaterValue(deletedNode), deletedNode, dataElement);
+            swapPosition(nextGreaterValue(deletedNode), deletedNode, VALUE);
         }
 
         final Node<K, V> replacement;
@@ -1168,11 +1068,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             // replacement is null
             if (deletedNode.valueParentNode == null) {
                 // empty tree
-                setRootNode(dataElement, null);
+                rootNodeValue = null;
             } else {
                 // deleted node had no children
-                if (isBlack(deletedNode, dataElement)) {
-                    doRedBlackDeleteFixup(deletedNode, dataElement);
+                if (deletedNode.isBlackValue()) {
+                    doRedBlackDeleteFixupValue(deletedNode);
                 }
 
                 if (deletedNode.valueParentNode != null) {
@@ -1196,88 +1096,230 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * perfectly balanced -- perfect balancing takes longer)
      *
      * @param replacementNode the node being replaced
-     * @param dataElement     the KEY or VALUE int
      */
-    private void doRedBlackDeleteFixup(final Node<K, V> replacementNode, final DataElement dataElement) {
+    private void doRedBlackDeleteFixupKey(final Node<K, V> replacementNode) {
         Node<K, V> currentNode = replacementNode;
 
-        while (currentNode != (dataElement == KEY ? rootNodeKey : rootNodeValue) && isBlack(currentNode, dataElement)) {
-            if (currentNode.isLeftChild(dataElement)) {
-                Node<K, V> siblingNode = getRightChild(getParent(currentNode, dataElement), dataElement);
+        while (currentNode != rootNodeKey && currentNode != null && currentNode.keyParentNode != null) {
+            if (!currentNode.isBlackKey()) break;
+            Node<K, V> parent = currentNode.keyParentNode;
+            boolean isLeftChild = parent.keyLeftNode == currentNode;
+            if (isLeftChild) {
+                Node<K, V> siblingNode = parent.keyRightNode;
 
-                if (isRed(siblingNode, dataElement)) {
-                    makeBlack(siblingNode, dataElement);
-                    makeRed(getParent(currentNode, dataElement), dataElement);
-                    rotateLeft(getParent(currentNode, dataElement), dataElement);
-
-                    siblingNode = getRightChild(getParent(currentNode, dataElement), dataElement);
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
                 }
 
-                if (isBlack(getLeftChild(siblingNode, dataElement), dataElement)
-                        && isBlack(getRightChild(siblingNode, dataElement), dataElement)) {
-                    makeRed(siblingNode, dataElement);
+                if (siblingNode.isRedKey()) {
+                    siblingNode.setBlackKey();
+                    parent.setRedKey();
+                    rotateLeftKey(parent);
+                    parent = currentNode.keyParentNode;
+                    siblingNode = parent.keyRightNode;
+                }
 
-                    currentNode = getParent(currentNode, dataElement);
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
+                }
+                
+                Node<K, V> siblingLeft = siblingNode.keyLeftNode, siblingRight = siblingNode.keyRightNode;
+                if ((siblingLeft == null || siblingLeft.isBlackKey()) && (siblingRight == null || siblingRight.isBlackKey())) {
+                    siblingNode.setRedKey();
+                    currentNode = parent;
                 } else {
-                    if (isBlack(getRightChild(siblingNode, dataElement), dataElement)) {
-                        makeBlack(getLeftChild(siblingNode, dataElement), dataElement);
-                        makeRed(siblingNode, dataElement);
-                        rotateRight(siblingNode, dataElement);
-
-                        siblingNode = getRightChild(getParent(currentNode, dataElement), dataElement);
+                    if (siblingRight == null || siblingRight.isBlackKey()) {
+                        if (siblingLeft != null) {
+                            siblingLeft.setBlackKey();
+                        }
+                        siblingNode.setRedKey();
+                        rotateRightKey(siblingNode);
+                        parent = currentNode.keyParentNode;
+                        siblingNode = parent.keyRightNode;
                     }
 
-                    copyColor(getParent(currentNode, dataElement), siblingNode, dataElement);
-                    makeBlack(getParent(currentNode, dataElement), dataElement);
-                    makeBlack(getRightChild(siblingNode, dataElement), dataElement);
-                    rotateLeft(getParent(currentNode, dataElement), dataElement);
-
-                    currentNode = dataElement == KEY ? rootNodeKey : rootNodeValue;
+                    if (siblingNode != null) {
+                        siblingNode.copyColorKey(parent);
+                    }
+                    parent.setBlackKey();
+                    if (siblingRight != null) {
+                        siblingRight.setBlackKey();
+                    }
+                    rotateLeftKey(parent);
+                    break;
                 }
             } else {
-                Node<K, V> siblingNode = getLeftChild(getParent(currentNode, dataElement), dataElement);
+                Node<K, V> siblingNode = parent.keyLeftNode;
 
-                if (isRed(siblingNode, dataElement)) {
-                    makeBlack(siblingNode, dataElement);
-                    makeRed(getParent(currentNode, dataElement), dataElement);
-                    rotateRight(getParent(currentNode, dataElement), dataElement);
-
-                    siblingNode = getLeftChild(getParent(currentNode, dataElement), dataElement);
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
                 }
 
-                if (isBlack(getRightChild(siblingNode, dataElement), dataElement)
-                        && isBlack(getLeftChild(siblingNode, dataElement), dataElement)) {
-                    makeRed(siblingNode, dataElement);
+                if (siblingNode.isRedKey()) {
+                    siblingNode.setBlackKey();
+                    parent.setRedKey();
+                    rotateRightKey(parent);
 
-                    currentNode = getParent(currentNode, dataElement);
+                    Node<K, V> result;
+                    result = parent.keyLeftNode;
+                    siblingNode = result;
+                }
+                
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
+                }
+
+                Node<K, V> siblingLeft = siblingNode.keyLeftNode, siblingRight = siblingNode.keyRightNode;
+                if ((siblingLeft == null || siblingLeft.isBlackKey()) && (siblingRight == null || siblingRight.isBlackKey())) {
+                    siblingNode.setRedKey();
+                    currentNode = parent;
                 } else {
-                    if (isBlack(getLeftChild(siblingNode, dataElement), dataElement)) {
-                        makeBlack(getRightChild(siblingNode, dataElement), dataElement);
-                        makeRed(siblingNode, dataElement);
-                        rotateLeft(siblingNode, dataElement);
-
-                        siblingNode = getLeftChild(getParent(currentNode, dataElement), dataElement);
+                    if (siblingLeft == null || siblingLeft.isBlackKey()) {
+                        if (siblingRight != null) {
+                            siblingRight.setBlackKey();
+                        }
+                        siblingNode.setRedKey();
+                        rotateLeftKey(siblingNode);
+                        parent = currentNode.keyParentNode;
+                        siblingNode = parent.keyLeftNode;
                     }
 
-                    copyColor(getParent(currentNode, dataElement), siblingNode, dataElement);
-                    makeBlack(getParent(currentNode, dataElement), dataElement);
-                    makeBlack(getLeftChild(siblingNode, dataElement), dataElement);
-                    rotateRight(getParent(currentNode, dataElement), dataElement);
-
-                    currentNode = dataElement == KEY ? rootNodeKey : rootNodeValue;
+                    if (siblingNode != null) {
+                        siblingNode.copyColorKey(parent);
+                    }
+                    parent.setBlackKey();
+                    if (siblingLeft != null) {
+                        siblingLeft.setBlackKey();
+                    }
+                    rotateRightKey(parent);
+                    break;
                 }
             }
         }
 
-        makeBlack(currentNode, dataElement);
+        if (currentNode != null) {
+            currentNode.setBlackKey();
+        }
+    }
+
+    private void doRedBlackDeleteFixupValue(final Node<K, V> replacementNode) {
+        Node<K, V> currentNode = replacementNode;
+
+        while (currentNode != rootNodeValue && currentNode != null && currentNode.valueParentNode != null) {
+            if (!currentNode.isBlackValue()) break;
+            Node<K, V> parent = currentNode.valueParentNode;
+            boolean isLeftChild = parent.valueLeftNode == currentNode;
+            if (isLeftChild) {
+                Node<K, V> siblingNode = parent.valueRightNode;
+
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
+                }
+
+                if (siblingNode.isRedValue()) {
+                    siblingNode.setBlackValue();
+                    parent.setRedValue();
+                    rotateLeftValue(parent);
+                    parent = currentNode.valueParentNode;
+                    siblingNode = parent.valueRightNode;
+                }
+
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
+                }
+
+                Node<K, V> siblingLeft = siblingNode.valueLeftNode, siblingRight = siblingNode.valueRightNode;
+                if ((siblingLeft == null || siblingLeft.isBlackValue()) && (siblingRight == null || siblingRight.isBlackValue())) {
+                    siblingNode.setRedValue();
+                    currentNode = parent;
+                } else {
+                    if (siblingRight == null || siblingRight.isBlackValue()) {
+                        if (siblingLeft != null) {
+                            siblingLeft.setBlackValue();
+                        }
+                        siblingNode.setRedValue();
+                        rotateRightValue(siblingNode);
+                        parent = currentNode.valueParentNode;
+                        siblingNode = parent.valueRightNode;
+                    }
+
+                    if (siblingNode != null) {
+                        siblingNode.copyColorValue(parent);
+                    }
+                    parent.setBlackValue();
+                    if (siblingRight != null) {
+                        siblingRight.setBlackValue();
+                    }
+                    rotateLeftValue(parent);
+                    break;
+                }
+            } else {
+                Node<K, V> siblingNode = parent.valueLeftNode;
+
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
+                }
+
+                if (siblingNode.isRedValue()) {
+                    siblingNode.setBlackValue();
+                    parent.setRedValue();
+                    rotateRightValue(parent);
+
+                    Node<K, V> result;
+                    result = parent.valueLeftNode;
+                    siblingNode = result;
+                }
+
+                if (siblingNode == null) {
+                    currentNode = parent;
+                    continue;
+                }
+
+                Node<K, V> siblingLeft = siblingNode.valueLeftNode, siblingRight = siblingNode.valueRightNode;
+                if ((siblingLeft == null || siblingLeft.isBlackValue()) && (siblingRight == null || siblingRight.isBlackValue())) {
+                    siblingNode.setRedValue();
+                    currentNode = parent;
+                } else {
+                    if (siblingLeft == null || siblingLeft.isBlackValue()) {
+                        if (siblingRight != null) {
+                            siblingRight.setBlackValue();
+                        }
+                        siblingNode.setRedValue();
+                        rotateLeftValue(siblingNode);
+                        parent = currentNode.valueParentNode;
+                        siblingNode = parent.valueLeftNode;
+                    }
+
+                    if (siblingNode != null) {
+                        siblingNode.copyColorValue(parent);
+                    }
+                    parent.setBlackValue();
+                    if (siblingLeft != null) {
+                        siblingLeft.setBlackValue();
+                    }
+                    rotateRightValue(parent);
+                    break;
+                }
+            }
+        }
+
+        if (currentNode != null) {
+            currentNode.setBlackValue();
+        }
     }
 
     private void replaceNodeKey(Node<K, V> previous, Node<K, V> replacement) {
-        DataElement dataElement = KEY;
         replacement.keyParentNode = previous.keyParentNode;
 
         if (previous.keyParentNode == null) {
-            setRootNode(dataElement, replacement);
+            rootNodeKey = replacement;
         } else {
             Node<K, V> parentNode = previous.keyParentNode;
             if (previous == parentNode.keyLeftNode) {
@@ -1291,17 +1333,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         previous.keyRightNode = null;
         previous.keyParentNode = null;
 
-        if (isBlack(previous, dataElement)) {
-            doRedBlackDeleteFixup(replacement, dataElement);
+        if (previous.isBlackKey()) {
+            doRedBlackDeleteFixupKey(replacement);
         }
     }
 
     private void replaceNodeValue(Node<K, V> previous, Node<K, V> replacement, boolean keepChildren) {
-        DataElement dataElement = VALUE;
         replacement.valueParentNode = previous.valueParentNode;
 
         if (previous.valueParentNode == null) {
-            setRootNode(dataElement, replacement);
+            rootNodeValue = replacement;
         } else {
             Node<K, V> parentNode = previous.valueParentNode;
             if (previous == parentNode.valueLeftNode) {
@@ -1329,8 +1370,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         previous.valueRightNode = null;
         previous.valueParentNode = null;
 
-        if (isBlack(previous, dataElement)) {
-            doRedBlackDeleteFixup(replacement, dataElement);
+        if (previous.isBlackValue()) {
+            doRedBlackDeleteFixupValue(replacement);
         }
     }
 
@@ -1354,7 +1395,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         final Node<K, V> bFormerRightChild = dataElement == KEY ? b.keyRightNode : b.valueRightNode;
         Node<K, V> kvNode2 = (dataElement == KEY ? a.keyParentNode : a.valueParentNode);
         final boolean xWasLeftChild =
-                a.getParentNode(dataElement) != null && a == (dataElement == KEY ? kvNode2.keyLeftNode : kvNode2.valueLeftNode);
+                (dataElement == KEY ? a.keyParentNode : a.valueParentNode) != null && a == (dataElement == KEY ? kvNode2.keyLeftNode : kvNode2.valueLeftNode);
         Node<K, V> kvNode1 = (dataElement == KEY ? b.keyParentNode : b.valueParentNode);
         final boolean yWasLeftChild =
                 (dataElement == KEY ? b.keyParentNode : b.valueParentNode) != null && b == (dataElement == KEY ? kvNode1.keyLeftNode : kvNode1.valueLeftNode);
@@ -1503,13 +1544,23 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 kvNode.valueParentNode = b;
         }
 
-        a.swapColors(b, dataElement);
+        if (dataElement == KEY) {
+            a.swapColorsKey(b);
+        } else {
+            a.swapColorsValue(b);
+        }
 
         // Check if root changed
         if ((dataElement == KEY ? rootNodeKey : rootNodeValue) == a) {
-            setRootNode(dataElement, b);
+            if (dataElement == KEY)
+                rootNodeKey = b;
+            else
+                rootNodeValue = b;
         } else if ((dataElement == KEY ? rootNodeKey : rootNodeValue) == b) {
-            setRootNode(dataElement, a);
+            if (dataElement == KEY)
+                rootNodeKey = a;
+            else
+                rootNodeValue = a;
         }
     }
 
@@ -1619,18 +1670,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         if (nodeCount > 0) {
             try {
-                MapIterator<?, ?> it;
-                switch (dataElement) {
-                    case KEY:
-                        it = new MapIteratorKeyByKey();
-                        break;
-                    case VALUE:
-                        it = new MapIteratorValueByValue();
-                        break;
-                    default:
-                        throw new IllegalArgumentException();
-                }
-                for (; it.hasNext(); ) {
+                MapIterator<?, ?> it = dataElement == KEY ? new MapIteratorKeyByKey() : new MapIteratorValueByValue();
+                while (it.hasNext()) {
                     final Object key = it.next();
                     final Object value = it.getValue();
                     if (!value.equals(other.get(key))) {
@@ -2249,34 +2290,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private final class EntryIteratorStandardByValue extends IteratorByValue implements OrderedIterator<Entry<K, V>> {
-        @Override
-        public Entry<K, V> next() {
-            return navigateNext().copyEntryStandard();
-        }
-
-        @Override
-        public Entry<K, V> previous() {
-            return navigatePrevious().copyEntryStandard();
-        }
-    }
-
-    /**
-     * An iterator over the inverse map entries.
-     */
-    private final class EntryIteratorInvertedByKey extends IteratorByKey implements OrderedIterator<Entry<V, K>> {
-        @Override
-        public Entry<V, K> next() {
-            return navigateNext().copyEntryInverted();
-        }
-
-        @Override
-        public Entry<V, K> previous() {
-            return navigatePrevious().copyEntryInverted();
-        }
-
-    }
-
     private final class EntryIteratorInvertedByValue extends IteratorByValue implements OrderedIterator<Entry<V, K>> {
         @Override
         public Entry<V, K> next() {
@@ -2320,103 +2333,56 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             calculatedHashCode = false;
         }
 
-        private Node<K, V> getParentNode(DataElement dataElement) {
-            return dataElement == KEY ? this.keyParentNode : this.valueParentNode;
+        private void swapColorsValue(Node<K, V> node) {
+            int tmp = node.colorFlags & 0x2;
+            node.colorFlags = (short) ((node.colorFlags & 0x1) | (colorFlags & 0x2));
+            colorFlags = (short) ((colorFlags & 0x1) | tmp);
         }
 
-        /**
-         * Exchanges colors with another node.
-         *
-         * @param node        the node to swap with
-         * @param dataElement either the {@link DataElement#KEY key}
-         *                    or the {@link DataElement#VALUE value}.
-         */
-        private void swapColors(final Node<K, V> node, final DataElement dataElement) {
-            if (dataElement == KEY) {
-                int tmp = node.colorFlags & 0x1;
-                node.colorFlags = (short) ((node.colorFlags & 0x2) | (colorFlags & 0x1));
-                colorFlags = (short) ((colorFlags & 0x2) | tmp);
-            } else {
-                int tmp = node.colorFlags & 0x2;
-                node.colorFlags = (short) ((node.colorFlags & 0x1) | (colorFlags & 0x2));
-                colorFlags = (short) ((colorFlags & 0x1) | tmp);
-            }
+        private void swapColorsKey(Node<K, V> node) {
+            int tmp = node.colorFlags & 0x1;
+            node.colorFlags = (short) ((node.colorFlags & 0x2) | (colorFlags & 0x1));
+            colorFlags = (short) ((colorFlags & 0x2) | tmp);
         }
 
-        /**
-         * Is this node black?
-         *
-         * @param dataElement either the {@link DataElement#KEY key}
-         *                    or the {@link DataElement#VALUE value}.
-         * @return true if black (which is represented as a true boolean)
-         */
-        private boolean isBlack(final DataElement dataElement) {
-            return dataElement == KEY ? (colorFlags & 0x1) != 0 : (colorFlags & 0x2) != 0;
+        private boolean isBlackValue() {
+            return (colorFlags & 0x2) != 0;
         }
 
-        /**
-         * Is this node red?
-         *
-         * @param dataElement either the {@link DataElement#KEY key}
-         *                    or the {@link DataElement#VALUE value}.
-         * @return true if non-black
-         */
-        private boolean isRed(final DataElement dataElement) {
-            return dataElement == KEY ? (colorFlags & 0x1) == 0 : (colorFlags & 0x2) == 0;
+        private boolean isBlackKey() {
+            return (colorFlags & 0x1) != 0;
         }
 
-        /**
-         * Makes this node black.
-         *
-         * @param dataElement either the {@link DataElement#KEY key}
-         *                    or the {@link DataElement#VALUE value}.
-         */
-        private void setBlack(final DataElement dataElement) {
-            if (dataElement == KEY)
-                colorFlags |= 0x1;
-            else
-                colorFlags |= 0x2;
+        private boolean isRedValue() {
+            return (colorFlags & 0x2) == 0;
         }
 
-        /**
-         * Makes this node red.
-         *
-         * @param dataElement either the {@link DataElement#KEY key}
-         *                    or the {@link DataElement#VALUE value}.
-         */
-        private void setRed(final DataElement dataElement) {
-            if (dataElement == KEY)
-                colorFlags &= 0xFFFE;
-            else
-                colorFlags &= 0xFFFD;
+        private boolean isRedKey() {
+            return (colorFlags & 0x1) == 0;
         }
 
-        /**
-         * Makes this node the same color as another.
-         *
-         * @param node        the node whose color we're adopting
-         * @param dataElement either the {@link DataElement#KEY key}
-         *                    or the {@link DataElement#VALUE value}.
-         */
-        private void copyColor(final Node<K, V> node, final DataElement dataElement) {
-            if (dataElement == KEY)
-                colorFlags = (short) ((colorFlags & 0x2) | (node.colorFlags & 0x1));
-            else
-                colorFlags = (short) ((colorFlags & 0x1) | (node.colorFlags & 0x2));
+        private void setBlackValue() {
+            colorFlags |= 0x2;
         }
 
-        private boolean isLeftChild(final DataElement dataElement) {
-            if (dataElement == KEY)
-                return keyParentNode != null && keyParentNode.keyLeftNode == this;
-            else
-                return valueParentNode != null && valueParentNode.valueLeftNode == this;
+        private void setBlackKey() {
+            colorFlags |= 0x1;
         }
 
-        private boolean isRightChild(final DataElement dataElement) {
-            if (dataElement == KEY)
-                return keyParentNode != null && keyParentNode.keyRightNode == this;
-            else
-                return valueParentNode != null && valueParentNode.valueRightNode == this;
+        private void setRedValue() {
+            colorFlags &= 0xFFFD;
+        }
+
+        private void setRedKey() {
+            colorFlags &= 0xFFFE;
+        }
+
+        private void copyColorValue(Node<K, V> node) {
+            colorFlags = (short) ((colorFlags & 0x1) | (node.colorFlags & 0x2));
+        }
+
+        private void copyColorKey(Node<K, V> node) {
+            colorFlags = (short) ((colorFlags & 0x2) | (node.colorFlags & 0x1));
         }
 
         private Entry<V, K> copyEntryInverted() {
@@ -2635,6 +2601,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        @SuppressWarnings("all")
         public boolean equals(final Object obj) {
             return TreeBidiMapHard.this.doEquals(obj, VALUE);
         }
