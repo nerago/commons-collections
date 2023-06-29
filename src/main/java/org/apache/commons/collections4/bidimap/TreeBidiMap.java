@@ -266,6 +266,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public V remove(final Object key) {
+        checkKey(key);
         return doRemoveKey(key);
     }
 
@@ -313,6 +314,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public K removeValue(final Object value) {
+        checkValue(value);
         return doRemoveValue(value);
     }
 
@@ -1512,13 +1514,14 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public boolean contains(final Object obj) {
-            checkNonNullComparable(obj, KEY);
+            checkKey(obj);
             return lookupKey(obj) != null;
         }
 
         @Override
-        public boolean remove(final Object o) {
-            return doRemoveKey(o) != null;
+        public boolean remove(final Object obj) {
+            checkKey(obj);
+            return doRemoveKey(obj) != null;
         }
 
     }
@@ -1539,13 +1542,14 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public boolean contains(final Object obj) {
-            checkNonNullComparable(obj, VALUE);
+            checkValue(obj);
             return lookupValue(obj) != null;
         }
 
         @Override
-        public boolean remove(final Object o) {
-            return doRemoveValue(o) != null;
+        public boolean remove(final Object obj) {
+            checkValue(obj);
+            return doRemoveValue(obj) != null;
         }
 
     }
@@ -1565,8 +1569,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 return false;
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
+            final Object key = entry.getKey();
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupKey(entry.getKey());
+            checkKeyAndValue(key, value);
+            final Node<K, V> node = lookupKey(key);
             return node != null && node.getValue().equals(value);
         }
 
@@ -1576,8 +1582,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 return false;
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
+            final Object key = entry.getKey();
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupKey(entry.getKey());
+            checkKeyAndValue(key, value);
+            final Node<K, V> node = lookupKey(key);
             if (node != null && node.getValue().equals(value)) {
                 doRedBlackDelete(node);
                 return true;
@@ -1839,6 +1847,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         public Map.Entry<K, V> previous() {
             return navigatePrevious();
         }
+
+        // TODO make unmodifiable here too?
     }
 
     /**
