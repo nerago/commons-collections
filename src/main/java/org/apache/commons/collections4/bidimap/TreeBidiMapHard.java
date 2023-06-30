@@ -785,7 +785,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * Does a rotate left. standard fare in the world of balanced trees.
      *
-     * @param node        the node to be rotated
+     * @param node the node to be rotated
      */
     private void rotateLeftKey(final Node<K, V> node) {
         final Node<K, V> rightChild = node.keyRightNode;
@@ -841,7 +841,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * Does a rotate right. standard fare in the world of balanced trees.
      *
-     * @param node        the node to be rotated
+     * @param node the node to be rotated
      */
     private void rotateRightKey(final Node<K, V> node) {
         final Node<K, V> leftChild = node.keyLeftNode;
@@ -1011,7 +1011,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         // if deleted node has both left and children, swap with
         // the next greater node
         if (deletedNode.keyLeftNode != null && deletedNode.keyRightNode != null) {
-            swapPosition(nextGreaterKey(deletedNode), deletedNode, KEY);
+            swapPositionKey(nextGreaterKey(deletedNode), deletedNode);
         }
 
         final Node<K, V> replacement;
@@ -1052,7 +1052,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         // if deleted node has both left and children, swap with
         // the next greater node
         if (deletedNode.valueLeftNode != null && deletedNode.valueRightNode != null) {
-            swapPosition(nextGreaterValue(deletedNode), deletedNode, VALUE);
+            swapPositionValue(nextGreaterValue(deletedNode), deletedNode);
         }
 
         final Node<K, V> replacement;
@@ -1124,7 +1124,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     currentNode = parent;
                     continue;
                 }
-                
+
                 Node<K, V> siblingLeft = siblingNode.keyLeftNode, siblingRight = siblingNode.keyRightNode;
                 if ((siblingLeft == null || siblingLeft.isBlackKey()) && (siblingRight == null || siblingRight.isBlackKey())) {
                     siblingNode.setRedKey();
@@ -1167,7 +1167,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     result = parent.keyLeftNode;
                     siblingNode = result;
                 }
-                
+
                 if (siblingNode == null) {
                     currentNode = parent;
                     continue;
@@ -1316,12 +1316,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private void replaceNodeKey(Node<K, V> previous, Node<K, V> replacement) {
-        replacement.keyParentNode = previous.keyParentNode;
+        Node<K, V> parentNode = previous.keyParentNode;
+        replacement.keyParentNode = parentNode;
 
-        if (previous.keyParentNode == null) {
+        if (parentNode == null) {
             rootNodeKey = replacement;
         } else {
-            Node<K, V> parentNode = previous.keyParentNode;
             if (previous == parentNode.keyLeftNode) {
                 parentNode.keyLeftNode = replacement;
             } else {
@@ -1339,12 +1339,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private void replaceNodeValue(Node<K, V> previous, Node<K, V> replacement, boolean keepChildren) {
-        replacement.valueParentNode = previous.valueParentNode;
+        Node<K, V> parentNode = previous.valueParentNode;
+        replacement.valueParentNode = parentNode;
 
-        if (previous.valueParentNode == null) {
+        if (parentNode == null) {
             rootNodeValue = replacement;
         } else {
-            Node<K, V> parentNode = previous.valueParentNode;
             if (previous == parentNode.valueLeftNode) {
                 parentNode.valueLeftNode = replacement;
             } else {
@@ -1355,14 +1355,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         if (keepChildren) {
             if (previous.valueLeftNode != null) {
                 replacement.valueLeftNode = previous.valueLeftNode;
-                Node<K, V> kvNode = previous.valueLeftNode;
-                kvNode.valueParentNode = replacement;
+                previous.valueLeftNode.valueParentNode = replacement;
             }
 
             if (previous.valueRightNode != null) {
                 replacement.valueRightNode = previous.valueRightNode;
-                Node<K, V> kvNode = previous.valueRightNode;
-                kvNode.valueParentNode = replacement;
+                previous.valueRightNode.valueParentNode = replacement;
             }
         }
 
@@ -1381,187 +1379,225 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * special cases where one is the other's parent ... hey, it
      * happens.
      *
-     * @param a           one node
-     * @param b           another node
-     * @param dataElement the KEY or VALUE int
+     * @param a one node
+     * @param b another node
      */
-    private void swapPosition(final Node<K, V> a, final Node<K, V> b, final DataElement dataElement) {
+    private void swapPositionKey(final Node<K, V> a, final Node<K, V> b) {
         // Save initial values.
-        final Node<K, V> aFormerParent = dataElement == KEY ? a.keyParentNode : a.valueParentNode;
-        final Node<K, V> aFormerLeftChild = dataElement == KEY ? a.keyLeftNode : a.valueLeftNode;
-        final Node<K, V> aFormerRightChild = dataElement == KEY ? a.keyRightNode : a.valueRightNode;
-        final Node<K, V> bFormerParent = dataElement == KEY ? b.keyParentNode : b.valueParentNode;
-        final Node<K, V> bFormerLeftChild = dataElement == KEY ? b.keyLeftNode : b.valueLeftNode;
-        final Node<K, V> bFormerRightChild = dataElement == KEY ? b.keyRightNode : b.valueRightNode;
-        Node<K, V> kvNode2 = (dataElement == KEY ? a.keyParentNode : a.valueParentNode);
-        final boolean xWasLeftChild =
-                (dataElement == KEY ? a.keyParentNode : a.valueParentNode) != null && a == (dataElement == KEY ? kvNode2.keyLeftNode : kvNode2.valueLeftNode);
-        Node<K, V> kvNode1 = (dataElement == KEY ? b.keyParentNode : b.valueParentNode);
-        final boolean yWasLeftChild =
-                (dataElement == KEY ? b.keyParentNode : b.valueParentNode) != null && b == (dataElement == KEY ? kvNode1.keyLeftNode : kvNode1.valueLeftNode);
+        final Node<K, V> aParent = a.keyParentNode;
+        final Node<K, V> aLeftChild = a.keyLeftNode;
+        final Node<K, V> aRightChild = a.keyRightNode;
+        final Node<K, V> bParent = b.keyParentNode;
+        final Node<K, V> bLeftChild = b.keyLeftNode;
+        final Node<K, V> bRightChild = b.keyRightNode;
 
-        // Swap, handling special cases of one being the other's parent.
-        if (a == bFormerParent) { // x was y's parent
-            if (dataElement == KEY)
-                a.keyParentNode = b;
-            else
-                a.valueParentNode = b;
-
-            if (yWasLeftChild) {
-                if (dataElement == KEY)
-                    b.keyLeftNode = a;
+        if (a == bParent) {
+            a.keyParentNode = b;
+            b.keyParentNode = aParent;
+            if (aParent != null) {
+                if (a == aParent.keyLeftNode)
+                    aParent.keyLeftNode = b;
                 else
-                    b.valueLeftNode = a;
-                if (dataElement == KEY)
-                    b.keyRightNode = aFormerRightChild;
-                else
-                    b.valueRightNode = aFormerRightChild;
+                    aParent.keyRightNode = b;
+            }
+            a.keyLeftNode = bLeftChild;
+            a.keyRightNode = bRightChild;
+            if (b == aLeftChild) {
+                b.keyLeftNode = a;
+                b.keyRightNode = aRightChild;
             } else {
-                if (dataElement == KEY)
-                    b.keyRightNode = a;
-                else
-                    b.valueRightNode = a;
-                if (dataElement == KEY)
-                    b.keyLeftNode = aFormerLeftChild;
-                else
-                    b.valueLeftNode = aFormerLeftChild;
+                b.keyLeftNode = aLeftChild;
+                b.keyRightNode = a;
             }
-        } else {
-            if (dataElement == KEY)
-                a.keyParentNode = bFormerParent;
-            else
-                a.valueParentNode = bFormerParent;
-
-            if (bFormerParent != null) {
-                if (yWasLeftChild) {
-                    if (dataElement == KEY)
-                        bFormerParent.keyLeftNode = a;
-                    else
-                        bFormerParent.valueLeftNode = a;
-                } else {
-                    if (dataElement == KEY)
-                        bFormerParent.keyRightNode = a;
-                    else
-                        bFormerParent.valueRightNode = a;
-                }
+        } else if (b == aParent) {
+            a.keyParentNode = bParent;
+            b.keyParentNode = a;
+            if (bParent != null) {
+                if (b == bParent.keyLeftNode)
+                    bParent.keyLeftNode = a;
+                else
+                    bParent.keyRightNode = a;
             }
-
-            if (dataElement == KEY)
-                b.keyLeftNode = aFormerLeftChild;
-            else
-                b.valueLeftNode = aFormerLeftChild;
-            if (dataElement == KEY)
-                b.keyRightNode = aFormerRightChild;
-            else
-                b.valueRightNode = aFormerRightChild;
-        }
-
-        if (b == aFormerParent) { // y was x's parent
-            if (dataElement == KEY)
-                b.keyParentNode = a;
-            else
-                b.valueParentNode = a;
-
-            if (xWasLeftChild) {
-                if (dataElement == KEY)
-                    a.keyLeftNode = b;
-                else
-                    a.valueLeftNode = b;
-                if (dataElement == KEY)
-                    a.keyRightNode = bFormerRightChild;
-                else
-                    a.valueRightNode = bFormerRightChild;
+            if (a == bLeftChild) {
+                a.keyLeftNode = b;
+                a.keyRightNode = bRightChild;
             } else {
-                if (dataElement == KEY)
-                    a.keyRightNode = b;
-                else
-                    a.valueRightNode = b;
-                if (dataElement == KEY)
-                    a.keyLeftNode = bFormerLeftChild;
-                else
-                    a.valueLeftNode = bFormerLeftChild;
+                a.keyRightNode = b;
+                a.keyLeftNode = bLeftChild;
             }
+            b.keyLeftNode = aLeftChild;
+            b.keyRightNode = aRightChild;
+        } else if (aParent != null && bParent != null) {
+            a.keyParentNode = bParent;
+            b.keyParentNode = aParent;
+            if (a == aParent.keyLeftNode)
+                aParent.keyLeftNode = b;
+            else
+                aParent.keyRightNode = b;
+            if (b == bParent.keyLeftNode)
+                bParent.keyLeftNode = a;
+            else
+                bParent.keyRightNode = a;
+            a.keyLeftNode = bLeftChild;
+            a.keyRightNode = bRightChild;
+            b.keyLeftNode = aLeftChild;
+            b.keyRightNode = aRightChild;
+        } else if (aParent != null) {
+            a.keyParentNode = null;
+            b.keyParentNode = aParent;
+            if (a == aParent.keyLeftNode)
+                aParent.keyLeftNode = b;
+            else
+                aParent.keyRightNode = b;
+            a.keyLeftNode = bLeftChild;
+            a.keyRightNode = bRightChild;
+            b.keyLeftNode = aLeftChild;
+            b.keyRightNode = aRightChild;
+        } else if (bParent != null) {
+            a.keyParentNode = bParent;
+            b.keyParentNode = null;
+            if (b == bParent.keyLeftNode) {
+                bParent.keyLeftNode = a;
+            } else {
+                bParent.keyRightNode = a;
+            }
+            a.keyLeftNode = bLeftChild;
+            a.keyRightNode = bRightChild;
+            b.keyLeftNode = aLeftChild;
+            b.keyRightNode = aRightChild;
         } else {
-            if (dataElement == KEY)
-                b.keyParentNode = aFormerParent;
-            else
-                b.valueParentNode = aFormerParent;
-
-            if (aFormerParent != null) {
-                if (xWasLeftChild) {
-                    if (dataElement == KEY)
-                        aFormerParent.keyLeftNode = b;
-                    else
-                        aFormerParent.valueLeftNode = b;
-                } else {
-                    if (dataElement == KEY)
-                        aFormerParent.keyRightNode = b;
-                    else
-                        aFormerParent.valueRightNode = b;
-                }
-            }
-
-            if (dataElement == KEY)
-                a.keyLeftNode = bFormerLeftChild;
-            else
-                a.valueLeftNode = bFormerLeftChild;
-            if (dataElement == KEY)
-                a.keyRightNode = bFormerRightChild;
-            else
-                a.valueRightNode = bFormerRightChild;
+            a.keyLeftNode = bLeftChild;
+            a.keyRightNode = bRightChild;
+            b.keyLeftNode = aLeftChild;
+            b.keyRightNode = aRightChild;
         }
 
         // Fix children's parent pointers
-        if ((dataElement == KEY ? a.keyLeftNode : a.valueLeftNode) != null) {
-            Node<K, V> kvNode = dataElement == KEY ? a.keyLeftNode : a.valueLeftNode;
-            if (dataElement == KEY)
-                kvNode.keyParentNode = a;
-            else
-                kvNode.valueParentNode = a;
-        }
+        if (a.keyLeftNode != null)
+            a.keyLeftNode.keyParentNode = a;
+        if (a.keyRightNode != null)
+            a.keyRightNode.keyParentNode = a;
+        if (b.keyLeftNode != null)
+            b.keyLeftNode.keyParentNode = b;
+        if (b.keyRightNode != null)
+            b.keyRightNode.keyParentNode = b;
 
-        if ((dataElement == KEY ? a.keyRightNode : a.valueRightNode) != null) {
-            Node<K, V> kvNode = dataElement == KEY ? a.keyRightNode : a.valueRightNode;
-            if (dataElement == KEY)
-                kvNode.keyParentNode = a;
-            else
-                kvNode.valueParentNode = a;
-        }
-
-        if ((dataElement == KEY ? b.keyLeftNode : b.valueLeftNode) != null) {
-            Node<K, V> kvNode = dataElement == KEY ? b.keyLeftNode : b.valueLeftNode;
-            if (dataElement == KEY)
-                kvNode.keyParentNode = b;
-            else
-                kvNode.valueParentNode = b;
-        }
-
-        if ((dataElement == KEY ? b.keyRightNode : b.valueRightNode) != null) {
-            Node<K, V> kvNode = dataElement == KEY ? b.keyRightNode : b.valueRightNode;
-            if (dataElement == KEY)
-                kvNode.keyParentNode = b;
-            else
-                kvNode.valueParentNode = b;
-        }
-
-        if (dataElement == KEY) {
-            a.swapColorsKey(b);
-        } else {
-            a.swapColorsValue(b);
-        }
+        a.swapColorsKey(b);
 
         // Check if root changed
-        if ((dataElement == KEY ? rootNodeKey : rootNodeValue) == a) {
-            if (dataElement == KEY)
-                rootNodeKey = b;
+        if (rootNodeKey == a)
+            rootNodeKey = b;
+        else if (rootNodeKey == b)
+            rootNodeKey = a;
+    }
+
+    private void swapPositionValue(final Node<K, V> a, final Node<K, V> b) {
+        // Save initial values.
+        final Node<K, V> aParent = a.valueParentNode;
+        final Node<K, V> aLeftChild = a.valueLeftNode;
+        final Node<K, V> aRightChild = a.valueRightNode;
+        final Node<K, V> bParent = b.valueParentNode;
+        final Node<K, V> bLeftChild = b.valueLeftNode;
+        final Node<K, V> bRightChild = b.valueRightNode;
+
+        if (a == bParent) {
+            a.valueParentNode = b;
+            b.valueParentNode = aParent;
+            if (aParent != null) {
+                if (a == aParent.valueLeftNode)
+                    aParent.valueLeftNode = b;
+                else
+                    aParent.valueRightNode = b;
+            }
+            a.valueLeftNode = bLeftChild;
+            a.valueRightNode = bRightChild;
+            if (b == aLeftChild) {
+                b.valueLeftNode = a;
+                b.valueRightNode = aRightChild;
+            } else {
+                b.valueLeftNode = aLeftChild;
+                b.valueRightNode = a;
+            }
+        } else if (b == aParent) {
+            a.valueParentNode = bParent;
+            b.valueParentNode = a;
+            if (bParent != null) {
+                if (b == bParent.valueLeftNode)
+                    bParent.valueLeftNode = a;
+                else
+                    bParent.valueRightNode = a;
+            }
+            if (a == bLeftChild) {
+                a.valueLeftNode = b;
+                a.valueRightNode = bRightChild;
+            } else {
+                a.valueRightNode = b;
+                a.valueLeftNode = bLeftChild;
+            }
+            b.valueLeftNode = aLeftChild;
+            b.valueRightNode = aRightChild;
+        } else if (aParent != null && bParent != null) {
+            a.valueParentNode = bParent;
+            b.valueParentNode = aParent;
+            if (a == aParent.valueLeftNode)
+                aParent.valueLeftNode = b;
             else
-                rootNodeValue = b;
-        } else if ((dataElement == KEY ? rootNodeKey : rootNodeValue) == b) {
-            if (dataElement == KEY)
-                rootNodeKey = a;
+                aParent.valueRightNode = b;
+            if (b == bParent.valueLeftNode)
+                bParent.valueLeftNode = a;
             else
-                rootNodeValue = a;
+                bParent.valueRightNode = a;
+            a.valueLeftNode = bLeftChild;
+            a.valueRightNode = bRightChild;
+            b.valueLeftNode = aLeftChild;
+            b.valueRightNode = aRightChild;
+        } else if (aParent != null) {
+            a.valueParentNode = null;
+            b.valueParentNode = aParent;
+            if (a == aParent.valueLeftNode)
+                aParent.valueLeftNode = b;
+            else
+                aParent.valueRightNode = b;
+            a.valueLeftNode = bLeftChild;
+            a.valueRightNode = bRightChild;
+            b.valueLeftNode = aLeftChild;
+            b.valueRightNode = aRightChild;
+        } else if (bParent != null) {
+            a.valueParentNode = bParent;
+            b.valueParentNode = null;
+            if (b == bParent.valueLeftNode) {
+                bParent.valueLeftNode = a;
+            } else {
+                bParent.valueRightNode = a;
+            }
+            a.valueLeftNode = bLeftChild;
+            a.valueRightNode = bRightChild;
+            b.valueLeftNode = aLeftChild;
+            b.valueRightNode = aRightChild;
+        } else {
+            a.valueLeftNode = bLeftChild;
+            a.valueRightNode = bRightChild;
+            b.valueLeftNode = aLeftChild;
+            b.valueRightNode = aRightChild;
         }
+
+        // Fix children's parent pointers
+        if (a.valueLeftNode != null)
+            a.valueLeftNode.valueParentNode = a;
+        if (a.valueRightNode != null)
+            a.valueRightNode.valueParentNode = a;
+        if (b.valueLeftNode != null)
+            b.valueLeftNode.valueParentNode = b;
+        if (b.valueRightNode != null)
+            b.valueRightNode.valueParentNode = b;
+
+        a.swapColorsValue(b);
+
+        // Check if root changed
+        if (rootNodeValue == a)
+            rootNodeValue = b;
+        else if (rootNodeValue == b)
+            rootNodeValue = a;
     }
 
     /**
@@ -1820,6 +1856,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
     }
+
     private final class ValueViewByKey extends ValueView {
         @Override
         public Iterator<V> iterator() {
