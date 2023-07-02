@@ -26,9 +26,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
-import static org.apache.commons.collections4.bidimap.TreeBidiMapHard.DataElement.KEY;
-import static org.apache.commons.collections4.bidimap.TreeBidiMapHard.DataElement.VALUE;
-
 
 /**
  * Red-Black tree-based implementation of BidiMap where all objects added
@@ -75,10 +72,6 @@ import static org.apache.commons.collections4.bidimap.TreeBidiMapHard.DataElemen
  */
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
         implements OrderedBidiMap<K, V>, Serializable {
-
-    enum DataElement {
-        KEY, VALUE;
-    }
 
     private static final long serialVersionUID = 721969328361807L;
 
@@ -432,9 +425,33 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return true if equal
      */
     @Override
-    @SuppressWarnings("all")
     public boolean equals(final Object obj) {
-        return this.doEquals(obj, KEY);
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Map)) {
+            return false;
+        }
+        final Map<?, ?> other = (Map<?, ?>) obj;
+        if (other.size() != size()) {
+            return false;
+        }
+
+        if (nodeCount > 0) {
+            try {
+                MapIterator<?, ?> it = new MapIteratorKeyByKey();
+                while (it.hasNext()) {
+                    final Object key = it.next();
+                    final Object value = it.getValue();
+                    if (!value.equals(other.get(key))) {
+                        return false;
+                    }
+                }
+            } catch (final ClassCastException | NullPointerException ex) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -444,7 +461,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @Override
     public int hashCode() {
-        return this.doHashCode(KEY);
+        int total = 0;
+        if (nodeCount > 0) {
+            MapIterator<?, ?> it = new MapIteratorKeyByKey();
+            while (it.hasNext()) {
+                final Object key = it.next();
+                final Object value = it.getValue();
+                total += key.hashCode() ^ value.hashCode();
+            }
+        }
+        return total;
     }
 
     /**
@@ -454,7 +480,23 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @Override
     public String toString() {
-        return this.doToString(KEY);
+        if (nodeCount == 0) {
+            return "{}";
+        }
+
+        final StringBuilder buf = new StringBuilder(nodeCount * 32);
+        buf.append('{');
+
+        Node<K, V> node = leastNodeKey(rootNodeKey);
+        buf.append(node.getKey()).append('=').append(node.getValue());
+        node = nextGreaterKey(node);
+        while (node != null) {
+            buf.append(", ").append(node.getKey()).append('=').append(node.getValue());
+            node = nextGreaterKey(node);
+        }
+
+        buf.append('}');
+        return buf.toString();
     }
 
     /**
@@ -1601,23 +1643,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
-     * Checks if an object is fit to be proper input ... has to be
-     * Comparable and non-null.
-     *
-     * @param obj         the object being checked
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     * @throws NullPointerException if o is null
-     * @throws ClassCastException   if o is not Comparable
-     */
-    private static void checkNonNullComparable(final Object obj, final DataElement dataElement) {
-        Objects.requireNonNull(obj, Objects.toString(dataElement));
-        if (!(obj instanceof Comparable)) {
-            throw new ClassCastException(dataElement + " must be Comparable");
-        }
-    }
-
-    /**
      * Checks a key for validity (non-null and implements Comparable)
      *
      * @param key the key to be checked
@@ -1627,7 +1652,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @SuppressWarnings("unchecked")
     private K checkKey(final Object key) {
-        checkNonNullComparable(key, KEY);
+        Objects.requireNonNull(key, "key");
+        if (!(key instanceof Comparable)) {
+            throw new ClassCastException("key must be Comparable");
+        }
         return (K) key;
     }
 
@@ -1641,7 +1669,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @SuppressWarnings("unchecked")
     private V checkValue(final Object value) {
-        checkNonNullComparable(value, VALUE);
+        Objects.requireNonNull(value, "value");
+        if (!(value instanceof Comparable)) {
+            throw new ClassCastException("key must be Comparable");
+        }
         return (V) value;
     }
 
@@ -1682,92 +1713,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private void shrink() {
         modify();
         nodeCount--;
-    }
-
-    /**
-     * Compares for equals as per the API.
-     *
-     * @param obj         the object to compare to
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     * @return true if equal
-     */
-    private boolean doEquals(final Object obj, final DataElement dataElement) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof Map)) {
-            return false;
-        }
-        final Map<?, ?> other = (Map<?, ?>) obj;
-        if (other.size() != size()) {
-            return false;
-        }
-
-        if (nodeCount > 0) {
-            try {
-                MapIterator<?, ?> it = dataElement == KEY ? new MapIteratorKeyByKey() : new MapIteratorValueByValue();
-                while (it.hasNext()) {
-                    final Object key = it.next();
-                    final Object value = it.getValue();
-                    if (!value.equals(other.get(key))) {
-                        return false;
-                    }
-                }
-            } catch (final ClassCastException | NullPointerException ex) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Gets the hash code value for this map as per the API.
-     *
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     * @return the hash code value for this map
-     */
-    private int doHashCode(final DataElement dataElement) {
-        int total = 0;
-        if (nodeCount > 0) {
-            MapIterator<?, ?> it = dataElement == KEY ? new MapIteratorKeyByKey() : new MapIteratorValueByValue();
-            while (it.hasNext()) {
-                final Object key = it.next();
-                final Object value = it.getValue();
-                total += key.hashCode() ^ value.hashCode();
-            }
-        }
-        return total;
-    }
-
-    /**
-     * Gets the string form of this map as per AbstractMap.
-     *
-     * @param dataElement either the {@link DataElement#KEY key}
-     *                    or the {@link DataElement#VALUE value}.
-     * @return the string form of this map
-     */
-    private String doToString(final DataElement dataElement) {
-        if (nodeCount == 0) {
-            return "{}";
-        }
-        final StringBuilder buf = new StringBuilder(nodeCount * 32);
-        buf.append('{');
-        MapIterator<?, ?> it = dataElement == KEY ? new MapIteratorKeyByKey() : new MapIteratorValueByValue();
-        while (it.hasNext()) {
-            final Object key = it.next();
-            final Object value = it.getValue();
-            buf.append(key)
-                    .append('=')
-                    .append(value);
-            if (it.hasNext()) {
-                buf.append(", ");
-            }
-        }
-
-        buf.append('}');
-        return buf.toString();
     }
 
     /**
@@ -2638,19 +2583,68 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        @SuppressWarnings("all")
         public boolean equals(final Object obj) {
-            return TreeBidiMapHard.this.doEquals(obj, VALUE);
+            if (obj == TreeBidiMapHard.this) {
+                return true;
+            }
+            if (!(obj instanceof Map)) {
+                return false;
+            }
+            final Map<?, ?> other = (Map<?, ?>) obj;
+            if (other.size() != TreeBidiMapHard.this.size()) {
+                return false;
+            }
+
+            if (nodeCount > 0) {
+                try {
+                    MapIterator<?, ?> it = new MapIteratorValueByValue();
+                    while (it.hasNext()) {
+                        final Object key = it.next();
+                        final Object value = it.getValue();
+                        if (!value.equals(other.get(key))) {
+                            return false;
+                        }
+                    }
+                } catch (final ClassCastException | NullPointerException ex) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override
         public int hashCode() {
-            return TreeBidiMapHard.this.doHashCode(VALUE);
+            int total = 0;
+            if (nodeCount > 0) {
+                MapIterator<?, ?> it = new MapIteratorKeyByValue();
+                while (it.hasNext()) {
+                    final Object key = it.next();
+                    final Object value = it.getValue();
+                    total += key.hashCode() ^ value.hashCode();
+                }
+            }
+            return total;
         }
 
         @Override
         public String toString() {
-            return TreeBidiMapHard.this.doToString(VALUE);
+            if (nodeCount == 0) {
+                return "{}";
+            }
+
+            final StringBuilder buf = new StringBuilder(nodeCount * 32);
+            buf.append('{');
+
+            Node<K, V> node = leastNodeKey(rootNodeValue);
+            buf.append(node.getValue()).append('=').append(node.getKey());
+            node = nextGreaterValue(node);
+            while (node != null) {
+                buf.append(", ").append(node.getKey()).append('=').append(node.getValue());
+                node = nextGreaterValue(node);
+            }
+
+            buf.append('}');
+            return buf.toString();
         }
 
         private Node<K, V> lookupValueHigher(final V value) {
