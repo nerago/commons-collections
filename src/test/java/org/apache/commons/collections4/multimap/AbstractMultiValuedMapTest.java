@@ -1264,6 +1264,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
+        public boolean isToStringLikeCommonMaps() {
+            return false;
+        }
+
+        @Override
         public boolean areEqualElementsDistinguishable() {
             // work-around for a problem with the EntrySet: the entries contain
             // the wrapped collection, which will be automatically cleared
