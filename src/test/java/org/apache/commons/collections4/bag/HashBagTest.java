@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bag;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * Extension of {@link AbstractBagTest} for exercising the {@link HashBag}
@@ -39,8 +40,8 @@ public class HashBagTest<T> extends AbstractBagTest<T> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {

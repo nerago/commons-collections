@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.CompositeSet.SetMutator;
 import org.junit.jupiter.api.Test;
 
@@ -212,8 +213,8 @@ public class CompositeSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {

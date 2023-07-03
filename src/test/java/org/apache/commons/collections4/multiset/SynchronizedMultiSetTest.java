@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.multiset;
 
 import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * Extension of {@link AbstractMultiSetTest} for exercising the
@@ -41,8 +42,8 @@ public class SynchronizedMultiSetTest<T> extends AbstractMultiSetTest<T> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {

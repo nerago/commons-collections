@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -45,8 +46,13 @@ public class TransformedBagTest<T> extends AbstractBagTest<T> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
+    }
+
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
     }
 
     @Test

@@ -16,30 +16,23 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
-import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link java.util.Map} methods and contracts.
@@ -327,6 +320,17 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
+     * Does toString on the map return a value similar to "standard" JRE collections.
+     * Since there's no specification can override freely if not relevant for some collection.
+     * <p>
+     * Default implementation returns true.
+     * Override if your collection class does not support toString or has different format.
+     */
+    public boolean isToStringLikeCommonMaps() {
+        return true;
+    }
+
+    /**
      *  Returns the set of keys in the mappings used to test the map.  This
      *  method must return an array with the same length as {@link
      *  #getSampleValues()} and all array elements must be different. The
@@ -560,10 +564,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * The default implementation returns 0 which indicates ordered iteration behavior.
      *
      * @return the iteration behavior
-     * @see AbstractCollectionTest#UNORDERED
+     * @see IterationBehaviour
      */
-    protected int getIterationBehaviour(){
-        return 0;
+    protected IterationBehaviour getIterationBehaviour(){
+        return IterationBehaviour.DEFAULT;
     }
 
     // tests begin here.  Each test adds a little bit of tested functionality.
@@ -775,11 +779,30 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     public void testMapToString() {
         resetEmpty();
         assertNotNull(getMap().toString(), "Empty map toString() should not return null");
+        String confirmedString = getConfirmed().toString(), mapString = getMap().toString();
+        if (isToStringLikeCommonMaps() && stringsHaveDifferentTokens(confirmedString, mapString)) {
+            fail("toString from map is not standard\nexpected: " + confirmedString + "\nactual: " + mapString);
+        }
+
         verify();
 
         resetFull();
-        assertNotNull(getMap().toString(), "Empty map toString() should not return null");
+        assertNotNull(getMap().toString(), "Full map toString() should not return null");
+        confirmedString = getConfirmed().toString();
+        mapString = getMap().toString();
+        if (isToStringLikeCommonMaps() && stringsHaveDifferentTokens(confirmedString, mapString)) {
+            fail("toString from map is not standard\nexpected: " + confirmedString + "\nactual: " + mapString);
+        }
         verify();
+    }
+
+    private boolean stringsHaveDifferentTokens(String strA, String strB) {
+        Pattern pattern = Pattern.compile("(\\{|, |})");
+        String[] partsA = pattern.split(strA);
+        String[] partsB = pattern.split(strB);
+        Arrays.sort(partsA);
+        Arrays.sort(partsB);
+        return !Arrays.equals(partsA, partsB);
     }
 
     /**
@@ -1757,7 +1780,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        protected int getIterationBehaviour(){
+        protected IterationBehaviour getIterationBehaviour(){
             return AbstractMapTest.this.getIterationBehaviour();
         }
 
@@ -2168,7 +2191,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        protected int getIterationBehaviour(){
+        protected IterationBehaviour getIterationBehaviour(){
             return AbstractMapTest.this.getIterationBehaviour();
         }
 
@@ -2272,7 +2295,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        protected int getIterationBehaviour(){
+        protected IterationBehaviour getIterationBehaviour(){
             return AbstractMapTest.this.getIterationBehaviour();
         }
 

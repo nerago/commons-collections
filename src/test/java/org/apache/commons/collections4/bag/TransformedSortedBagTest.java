@@ -42,6 +42,11 @@ public class TransformedSortedBagTest<T> extends AbstractSortedBagTest<T> {
         return TransformedSortedBag.transformingSortedBag(new TreeBag<T>(), (Transformer<T, T>) TransformedCollectionTest.NOOP_TRANSFORMER);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testTransformedBag() {

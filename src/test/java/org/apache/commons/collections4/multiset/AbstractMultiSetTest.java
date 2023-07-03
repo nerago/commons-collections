@@ -33,9 +33,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Nested;
@@ -691,7 +691,7 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
         }
 
         @Override
-        protected int getIterationBehaviour() {
+        protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiSetTest.this.getIterationBehaviour();
         }
     }

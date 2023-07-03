@@ -22,13 +22,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -132,12 +133,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     // tests on Collection.equals nor any for Collection.hashCode.
     //
 
-    /**
-     * Flag to indicate the collection makes no ordering guarantees for the iterator. If this is not used
-     * then the behavior is assumed to be ordered and the output order of the iterator is matched by
-     * the toArray method.
-     */
-    public static final int UNORDERED = 0x1;
+    ;
 
     // These fields are used by reset() and verify(), and any test
     // method that tests a modification.
@@ -251,6 +247,15 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     @Override
     public boolean isEqualsCheckable() {
         return false;
+    }
+
+    /**
+     * Is a constructor with parameters of (Collection obj) available and should be tested
+     * as a copy constructor.
+     * See {@link #makeObjectCopy}
+     */
+    public boolean isCopyConstructorSupported() {
+        return true;
     }
 
     /**
@@ -368,6 +373,23 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Override
     public abstract Collection<E> makeObject();
+
+    /**
+     * Return a new {@link Collection} to be used for testing with contents of a shallow copy of parameter.
+     * See {@link #isCopyConstructorSupported}
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<E> makeObjectCopy(Collection<E> coll) {
+        // throw new UnsupportedOperationException("override makeObjectCopy with copy constructor");
+
+        try {
+            Collection<E> obj = makeObject();
+            Constructor<Collection<E>> constructor = (Constructor<Collection<E>>) obj.getClass().getDeclaredConstructor(Collection.class);
+            return ReflectionUtils.newInstance(constructor, coll);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      *  Returns a full collection to be used for testing.  The collection
@@ -509,13 +531,31 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * The default implementation returns 0 which indicates ordered iteration behavior.
      *
      * @return the iteration behavior
-     * @see #UNORDERED
+     * @see IterationBehaviour
      */
-    protected int getIterationBehaviour(){
-        return 0;
+    protected IterationBehaviour getIterationBehaviour(){
+        return IterationBehaviour.DEFAULT;
     }
 
     // Tests
+    /**
+     *  Tests constructor(Collection).
+     */
+    @Test
+    public void testCollectionCopy() {
+        if (!isCopyConstructorSupported())
+            return;
+
+        // empty
+        setConfirmed(makeConfirmedCollection());
+        setCollection(makeObjectCopy(getConfirmed()));
+        verify();
+
+        setConfirmed(makeConfirmedFullCollection());
+        setCollection(makeObjectCopy(getConfirmed()));
+        verify();
+    }
+
     /**
      *  Tests {@link Collection#add(Object)}.
      */
@@ -1148,7 +1188,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         array = getCollection().toArray(ArrayUtils.EMPTY_OBJECT_ARRAY);
         a = getCollection().toArray();
 
-        if ((getIterationBehaviour() & UNORDERED) != 0) {
+        if (getIterationBehaviour() == IterationBehaviour.UNORDERED) {
             assertUnorderedArrayEquals(array, a, "toArray(Object[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array), Arrays.asList(a), "toArrays should be equal");
@@ -1172,7 +1212,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertEquals(a.getClass(), array.getClass(),
                 "toArray(Object[]) should return correct array type");
 
-        if ((getIterationBehaviour() & UNORDERED) != 0) {
+        if (getIterationBehaviour() == IterationBehaviour.UNORDERED) {
             assertUnorderedArrayEquals(array, getCollection().toArray(), "type-specific toArray(T[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array),
@@ -1374,7 +1414,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     @Test
     public void testSpliterator() {
-        if ((getIterationBehaviour() & AbstractCollectionTest.UNORDERED) != 0)
+        if (getIterationBehaviour() == IterationBehaviour.UNORDERED)
             return;
 
         resetEmpty();

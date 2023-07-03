@@ -56,6 +56,11 @@ public class UnmodifiableTrieTest<V> extends AbstractSortedMapTest<String, V> {
     public boolean isRemoveSupported() {
         return false;
     }
+    
+    @Override
+    public boolean isToStringLikeCommonMaps() {
+        return false;
+    }
 
     @Override
     public Trie<String, V> makeFullMap() {

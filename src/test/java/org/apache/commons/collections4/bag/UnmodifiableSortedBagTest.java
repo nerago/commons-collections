@@ -71,6 +71,11 @@ public class UnmodifiableSortedBagTest<E> extends AbstractSortedBagTest<E> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testUnmodifiable() {
         assertTrue(makeObject() instanceof Unmodifiable);

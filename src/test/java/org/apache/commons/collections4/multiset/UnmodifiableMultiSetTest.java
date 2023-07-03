@@ -24,6 +24,7 @@ import java.util.Arrays;
 
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -71,8 +72,8 @@ public class UnmodifiableMultiSetTest<E> extends AbstractMultiSetTest<E> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Test

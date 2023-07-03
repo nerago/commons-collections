@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -107,8 +108,8 @@ public class TransformedSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {

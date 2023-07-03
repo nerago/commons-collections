@@ -35,7 +35,6 @@ import java.util.Set;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiSet;
@@ -44,6 +43,7 @@ import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.bag.AbstractBagTest;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.apache.commons.collections4.multiset.AbstractMultiSetTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
@@ -224,10 +224,9 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * The default implementation returns 0 which indicates ordered iteration behavior.
      *
      * @return the iteration behavior
-     * @see AbstractCollectionTest#UNORDERED
      */
-    protected int getIterationBehaviour() {
-        return 0;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.DEFAULT;
     }
 
     @Test
@@ -969,7 +968,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        protected int getIterationBehaviour() {
+        protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiValuedMapTest.this.getIterationBehaviour();
         }
 
@@ -1026,7 +1025,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        protected int getIterationBehaviour() {
+        protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiValuedMapTest.this.getIterationBehaviour();
         }
     }
@@ -1108,7 +1107,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        protected int getIterationBehaviour() {
+        protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiValuedMapTest.this.getIterationBehaviour();
         }
     }
@@ -1179,7 +1178,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        protected int getIterationBehaviour() {
+        protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiValuedMapTest.this.getIterationBehaviour();
         }
     }
@@ -1264,6 +1263,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
+        public boolean isToStringLikeCommonMaps() {
+            return false;
+        }
+
+        @Override
         public boolean areEqualElementsDistinguishable() {
             // work-around for a problem with the EntrySet: the entries contain
             // the wrapped collection, which will be automatically cleared
@@ -1278,7 +1282,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        protected int getIterationBehaviour() {
+        protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiValuedMapTest.this.getIterationBehaviour();
         }
     }

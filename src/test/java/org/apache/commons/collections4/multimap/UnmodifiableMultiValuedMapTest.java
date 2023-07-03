@@ -29,11 +29,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MultiSet;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -82,8 +80,8 @@ public class UnmodifiableMultiValuedMapTest<K, V> extends AbstractMultiValuedMap
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return AbstractCollectionTest.UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Test

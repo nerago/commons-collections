@@ -36,6 +36,7 @@ import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Nested;
@@ -126,7 +127,7 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
     }
 
     /**
-     * Returns the {@link #collection} field cast to a {@link Bag}.
+     * Returns the collection field cast to a {@link Bag}.
      *
      * @return the collection field as a Bag
      */
@@ -744,6 +745,11 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public void resetEmpty() {
             AbstractBagTest.this.resetEmpty();
             TestBagUniqueSet.this.setCollection(AbstractBagTest.this.getCollection().uniqueSet());
@@ -763,7 +769,7 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         }
 
         @Override
-        protected int getIterationBehaviour(){
+        protected IterationBehaviour getIterationBehaviour(){
             return AbstractBagTest.this.getIterationBehaviour();
         }
     }

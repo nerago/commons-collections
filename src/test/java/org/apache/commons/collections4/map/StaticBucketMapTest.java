@@ -46,6 +46,12 @@ public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return false;
     }
 
+    // wouldn't really want to implement toString anyway since could bogus synchronisation during debugging etc
+    @Override
+    public boolean isToStringLikeCommonMaps() {
+        return false;
+    }
+
     @Override
     public String[] ignoredTests() {
         final String pre = "StaticBucketMapTest.bulkTestMap";

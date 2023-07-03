@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
 
@@ -60,8 +61,8 @@ public class PredicatedMultiSetTest<T> extends AbstractMultiSetTest<T> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Test

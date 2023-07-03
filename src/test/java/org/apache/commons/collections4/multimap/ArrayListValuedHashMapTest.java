@@ -28,9 +28,11 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -50,8 +52,8 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return AbstractCollectionTest.UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Test

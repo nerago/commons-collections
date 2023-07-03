@@ -498,6 +498,11 @@ public class CompositeMap<K, V> extends AbstractIterableMap<K, V> implements Ser
         return code;
     }
 
+    @Override
+    public String toString() {
+        return "CompositeMap{" + Arrays.toString(composite) + '}';
+    }
+
     /**
      * This interface allows definition for all of the indeterminate
      * mutators in a CompositeMap, as well as providing a hook for
