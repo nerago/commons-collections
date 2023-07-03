@@ -60,6 +60,11 @@ public class PredicatedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return decorateMap(new HashMap<K, V>(), testPredicate, testPredicate);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testEntrySet() {

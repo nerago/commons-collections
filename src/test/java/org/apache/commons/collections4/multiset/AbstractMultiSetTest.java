@@ -672,6 +672,11 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public void resetEmpty() {
             AbstractMultiSetTest.this.resetEmpty();
             TestMultiSetUniqueSet.this.setCollection(AbstractMultiSetTest.this.getCollection().uniqueSet());

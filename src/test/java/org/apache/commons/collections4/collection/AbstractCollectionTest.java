@@ -22,14 +22,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -379,16 +377,8 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * See {@link #isCopyConstructorSupported}
      */
     @SuppressWarnings("unchecked")
-    public Collection<E> makeObjectCopy(Collection<E> coll) {
-        // throw new UnsupportedOperationException("override makeObjectCopy with copy constructor");
-
-        try {
-            Collection<E> obj = makeObject();
-            Constructor<Collection<E>> constructor = (Constructor<Collection<E>>) obj.getClass().getDeclaredConstructor(Collection.class);
-            return ReflectionUtils.newInstance(constructor, coll);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+    public Collection<E> makeObjectCopy(Collection<E> orig) {
+        return (Collection<E>) makeObjectCopy(orig, Collection.class);
     }
 
     /**
@@ -551,6 +541,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         setCollection(makeObjectCopy(getConfirmed()));
         verify();
 
+        // full
         setConfirmed(makeConfirmedFullCollection());
         setCollection(makeObjectCopy(getConfirmed()));
         verify();

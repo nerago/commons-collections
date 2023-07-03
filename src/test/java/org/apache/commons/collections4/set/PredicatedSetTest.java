@@ -64,6 +64,11 @@ public class PredicatedSetTest<E> extends AbstractSetTest<E> {
         return decorateSet(new HashSet<E>(), testPredicate);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testGetSet() {
         final PredicatedSet<E> set = makeTestSet();

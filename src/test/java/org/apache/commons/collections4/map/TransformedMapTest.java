@@ -49,6 +49,11 @@ public class TransformedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
                 TransformerUtils.<V>nopTransformer());
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testTransformedMap() {

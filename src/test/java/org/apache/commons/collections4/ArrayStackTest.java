@@ -40,6 +40,11 @@ public class ArrayStackTest<E> extends AbstractArrayListTest<E> {
         return new ArrayStack<>();
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testNewStack() {
         final ArrayStack<E> stack = makeObject();

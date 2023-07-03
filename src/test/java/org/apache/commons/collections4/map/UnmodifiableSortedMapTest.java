@@ -59,6 +59,11 @@ public class UnmodifiableSortedMapTest<K, V> extends AbstractSortedMapTest<K, V>
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public SortedMap<K, V> makeFullMap() {
         final SortedMap<K, V> m = new TreeMap<>();
         addSampleMappings(m);

@@ -60,6 +60,11 @@ public class UnmodifiableMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public IterableMap<K, V> makeFullMap() {
         final Map<K, V> m = new HashMap<>();
         addSampleMappings(m);

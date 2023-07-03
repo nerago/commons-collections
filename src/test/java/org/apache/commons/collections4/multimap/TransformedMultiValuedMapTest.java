@@ -54,6 +54,11 @@ public class TransformedMultiValuedMapTest<K, V> extends AbstractMultiValuedMapT
         return IterationBehaviour.UNORDERED;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testKeyTransformedMap() {

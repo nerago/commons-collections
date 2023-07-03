@@ -64,6 +64,11 @@ public class UnmodifiableNavigableSetTest<E> extends AbstractNavigableSetTest<E>
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     protected void setupSet() {
         set = makeFullCollection();

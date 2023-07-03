@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -64,6 +65,11 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
     @Override
     public abstract Comparator<T> makeObject();
 
+    @SuppressWarnings("unchecked")
+    protected Comparator<T> makeObjectCopy(Comparator<T> original) {
+        return (Comparator<T>) makeObjectCopy(original, Comparator.class);
+    }
+
     /**
      * Overrides superclass to block tests.
      */
@@ -78,6 +84,15 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
     @Override
     public boolean supportsFullCollections() {
         return false;
+    }
+
+    /**
+     * Is a constructor with parameters of (Comparator obj) available and should be tested
+     * as a copy constructor.
+     * See {@link #makeObjectCopy}
+     */
+    public boolean isCopyConstructorSupported() {
+        return true;
     }
 
     /**
@@ -215,5 +230,19 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
 
             assertEquals(orderedList, randomList, "Comparator did not reorder the List correctly");
         }
+    }
+
+    @Test
+    public void testCopy() {
+        Comparator<T> original = makeObject();
+        Comparator<T> copy = makeObjectCopy(original);
+
+        final List<T> listOriginal = getComparableObjectsOrdered();
+        final List<T> listCopy = new LinkedList<>(listOriginal);
+
+        sortObjects(listOriginal, original);
+        sortObjects(listCopy, copy);
+
+        assertEquals(listOriginal, listCopy, "Comparator did not reorder the List correctly");
     }
 }

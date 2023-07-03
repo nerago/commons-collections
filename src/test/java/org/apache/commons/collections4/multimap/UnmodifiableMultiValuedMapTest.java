@@ -67,6 +67,11 @@ public class UnmodifiableMultiValuedMapTest<K, V> extends AbstractMultiValuedMap
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public MultiValuedMap<K, V> makeObject() {
         return UnmodifiableMultiValuedMap.<K, V>unmodifiableMultiValuedMap(
                 new ArrayListValuedHashMap<K, V>());

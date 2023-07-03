@@ -65,6 +65,11 @@ public class PredicatedMultiSetTest<T> extends AbstractMultiSetTest<T> {
         return IterationBehaviour.UNORDERED;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testLegalAddRemove() {

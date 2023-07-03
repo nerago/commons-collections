@@ -331,6 +331,15 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
+     * Is a constructor with parameters of (Collection obj) available and should be tested
+     * as a copy constructor.
+     * See {@link #makeObjectCopy}
+     */
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    /**
      *  Returns the set of keys in the mappings used to test the map.  This
      *  method must return an array with the same length as {@link
      *  #getSampleValues()} and all array elements must be different. The
@@ -460,6 +469,14 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 "size must reflect number of mappings added.");
     }
 
+    private void addSampleMappingsUnchecked(final Map<K, V> m) {
+        final K[] keys = getSampleKeys();
+        final V[] values = getSampleValues();
+        for (int i = 0; i < keys.length; i++) {
+            m.put(keys[i], values[i]);
+        }
+    }
+
     /**
      * Return a new, empty {@link Map} to be used for testing.
      *
@@ -490,6 +507,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     public Map<K, V> makeConfirmedMap() {
         return new HashMap<>();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map<K, V> makeObjectCopy(Map<K,V> map) {
+        return (Map<K, V>) makeObjectCopy(map, Map.class);
     }
 
     /**
@@ -1671,6 +1693,31 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
     }
 
+    @Test
+    public void testCopy() {
+        if (!isCopyConstructorSupported())
+            return;
+
+        // empty
+        confirmed = makeConfirmedMap();
+        map = makeObjectCopy(confirmed);
+        views();
+        assertNotSame(confirmed, map);
+        assertNotSame(confirmed.values(), map.values());
+        assertNotSame(confirmed.keySet(), map.keySet());
+        assertNotSame(confirmed.entrySet(), map.entrySet());
+        verify();
+
+        confirmed = makeConfirmedFullMap();
+        map = makeObjectCopy(confirmed);
+        views();
+        assertNotSame(confirmed, map);
+        assertNotSame(confirmed.values(), map.values());
+        assertNotSame(confirmed.keySet(), map.keySet());
+        assertNotSame(confirmed.entrySet(), map.entrySet());
+        verify();
+    }
+
     /**
      * Utility methods to create an array of Map.Entry objects
      * out of the given key and value arrays.<P>
@@ -1762,6 +1809,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         @Override
         public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
+        public boolean isCopyConstructorSupported() {
             return false;
         }
 
@@ -2171,6 +2223,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public void resetEmpty() {
             AbstractMapTest.this.resetEmpty();
             setCollection(AbstractMapTest.this.getMap().keySet());
@@ -2256,6 +2313,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public boolean areEqualElementsDistinguishable() {
             // equal values are associated with different keys, so they are
             // distinguishable.
@@ -2322,12 +2384,19 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     public void resetFull() {
         this.map = makeFullMap();
         views();
-        this.confirmed = makeConfirmedMap();
-        final K[] k = getSampleKeys();
-        final V[] v = getSampleValues();
-        for (int i = 0; i < k.length; i++) {
-            confirmed.put(k[i], v[i]);
-        }
+        this.confirmed = makeConfirmedFullMap();
+    }
+
+    /**
+     *  Returns a confirmed full map. The returned map
+     *  should use the same mappings as {@link #getSampleKeys} and {@link #getSampleValues()}.
+     *
+     *  @return a confirmed full map
+     */
+    protected Map<K, V> makeConfirmedFullMap() {
+        Map<K, V> map = makeConfirmedMap();
+        addSampleMappingsUnchecked(map);
+        return map;
     }
 
     /**

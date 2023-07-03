@@ -58,6 +58,11 @@ public class PredicatedListTest<E> extends AbstractListTest<E> {
         return (E[]) new Object[] { "1", "3", "5", "7", "2", "4", "6" };
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     protected Predicate<E> testPredicate =
         o -> o instanceof String;
 

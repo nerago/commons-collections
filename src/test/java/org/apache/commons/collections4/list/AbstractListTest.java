@@ -1147,6 +1147,11 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public List<E> makeObject() {
             return outer.makeFullCollection().subList(4, 4);
         }

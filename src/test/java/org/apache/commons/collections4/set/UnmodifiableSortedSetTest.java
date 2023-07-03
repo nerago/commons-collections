@@ -65,6 +65,11 @@ public class UnmodifiableSortedSetTest<E> extends AbstractSortedSetTest<E> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     protected void setupSet() {
         set = makeFullCollection();

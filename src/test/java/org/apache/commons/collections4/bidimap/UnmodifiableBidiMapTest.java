@@ -80,6 +80,11 @@ public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.UNORDERED;
     }

@@ -66,6 +66,11 @@ public class TransformedQueueTest<E> extends AbstractQueueTest<E> {
         return TransformedQueue.transformingQueue(list, (Transformer<E, E>) TransformedCollectionTest.NOOP_TRANSFORMER);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testTransformedQueue() {
         final Queue<Object> queue = TransformedQueue.transformingQueue(new LinkedList<>(),

@@ -67,6 +67,11 @@ public class TransformedSetTest<E> extends AbstractSetTest<E> {
                 (Transformer<E, E>) TransformedCollectionTest.NOOP_TRANSFORMER);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testTransformedSet() {

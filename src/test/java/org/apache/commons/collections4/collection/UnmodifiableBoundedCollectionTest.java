@@ -73,6 +73,11 @@ public class UnmodifiableBoundedCollectionTest<E> extends AbstractCollectionTest
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     protected boolean skipSerializedCanonicalTests() {
         return true;
     }

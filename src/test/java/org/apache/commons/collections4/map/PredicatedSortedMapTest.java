@@ -89,6 +89,11 @@ public class PredicatedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     // from TestPredicatedMap
     @Test
     @SuppressWarnings("unchecked")

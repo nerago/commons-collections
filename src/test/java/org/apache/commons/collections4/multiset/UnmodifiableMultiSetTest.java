@@ -72,6 +72,11 @@ public class UnmodifiableMultiSetTest<E> extends AbstractMultiSetTest<E> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.UNORDERED;
     }

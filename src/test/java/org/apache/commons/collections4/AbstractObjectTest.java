@@ -27,9 +27,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -100,6 +102,16 @@ public abstract class AbstractObjectTest extends BulkTest {
      */
     public boolean isEqualsCheckable() {
         return true;
+    }
+
+    protected Object makeObjectCopy(Object original, Class<?> paramType) {
+        try {
+            Object obj = makeObject();
+            Constructor<?> constructor = obj.getClass().getDeclaredConstructor(paramType);
+            return ReflectionUtils.newInstance(constructor, original);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

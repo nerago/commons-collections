@@ -264,6 +264,10 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
             return AbstractSortedSetTest.this.isFailFastSupported();
         }
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+        @Override
         protected boolean runSubSetTests() {
             return false;
         }

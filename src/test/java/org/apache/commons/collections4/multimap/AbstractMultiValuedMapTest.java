@@ -16,13 +16,6 @@
  */
 package org.apache.commons.collections4.multimap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +42,8 @@ import org.apache.commons.collections4.multiset.AbstractMultiSetTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Abstract test class for {@link MultiValuedMap} contract and methods.
@@ -131,6 +126,15 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     }
 
     /**
+     * Is a constructor with parameters of (Collection obj) available and should be tested
+     * as a copy constructor.
+     * See {@link #makeObjectCopy}
+     */
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    /**
      * Returns the set of keys in the mappings used to test the map. This method
      * must return an array with the same length as {@link #getSampleValues()}
      * and all array elements must be different. The default implementation
@@ -173,6 +177,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         for (int i = 0; i < keys.length; i++) {
             map.put(keys[i], values[i]);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected MultiValuedMap<K, V> makeObjectCopy(MultiValuedMap<K, V> original) {
+        return (MultiValuedMap<K, V>) makeObjectCopy(original, MultiValuedMap.class);
     }
 
     /**
@@ -885,6 +894,28 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
         if (isRemoveSupported()) {
             assertEquals(0, map2.size(), "Map had extra values");
+        }
+    }
+
+    @Test
+    public void testCopy() {
+        MultiValuedMap<K, V> original = makeConfirmedMap();
+        original.put((K) "A", (V) "W");
+        original.put((K) "A", (V) "X");
+        original.put((K) "B", (V) "Y");
+        original.put((K) "C", (V) "F");
+        MultiValuedMap<K, V> copy = makeObjectCopy(original);
+        assertNotSame(original, copy);
+        assertNotSame(original.values(), copy.values());
+        assertNotSame(original.entries(), copy.entries());
+        assertNotSame(original.keySet(), copy.keySet());
+        assertEquals(original.size(), copy.size());
+        assertEquals(original.values().size(), copy.values().size());
+        assertEquals(original.entries().size(), copy.entries().size());
+        assertEquals(original.keySet().size(), copy.keySet().size());
+        for (K key : original.keySet()) {
+            assertNotSame(original.get(key), copy.get(key));
+            assertEquals(original.get(key), copy.get(key));
         }
     }
 
