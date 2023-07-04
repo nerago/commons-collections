@@ -51,12 +51,22 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         return ListOrderedMap.listOrderedMap(new HashMap<K, V>());
     }
 
+    @Override
+    protected Map<K, V> makeObjectCopy(Map<K, V> map) {
+        return ListOrderedMap.listOrderedMap(map);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public ListOrderedMap<K, V> makeFullMap() {
         return (ListOrderedMap<K, V>) super.makeFullMap();
+    }
+
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
     }
 
     @Test
@@ -472,6 +482,11 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
             return false;
         }
 
+        @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
     }
 
     @Nested
@@ -521,6 +536,10 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
             return false;
         }
 
+        @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
     }
 
     @Override

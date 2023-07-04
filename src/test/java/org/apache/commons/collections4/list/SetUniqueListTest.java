@@ -78,6 +78,11 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public E[] getFullNonNullElements() {
         // override to avoid duplicate "One"

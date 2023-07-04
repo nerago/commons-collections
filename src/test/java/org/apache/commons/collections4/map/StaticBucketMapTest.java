@@ -53,6 +53,11 @@ public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public String[] ignoredTests() {
         final String pre = "StaticBucketMapTest.bulkTestMap";
         final String post = ".testCollectionIteratorFailFast";

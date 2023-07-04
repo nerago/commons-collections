@@ -217,6 +217,11 @@ public class CompositeSetTest<E> extends AbstractSetTest<E> {
         return IterationBehaviour.UNORDERED;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
 //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/CompositeSet.emptyCollection.version4.obj");

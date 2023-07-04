@@ -31,6 +31,7 @@ import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1694,11 +1695,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     @Test
-    public void testCopy() {
+    public void testCopyEmpty() {
         if (!isCopyConstructorSupported())
             return;
 
-        // empty
         confirmed = makeConfirmedMap();
         map = makeObjectCopy(confirmed);
         views();
@@ -1707,6 +1707,12 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertNotSame(confirmed.keySet(), map.keySet());
         assertNotSame(confirmed.entrySet(), map.entrySet());
         verify();
+    }
+
+    @Test
+    public void testCopyFull() {
+        if (!isCopyConstructorSupported())
+            return;
 
         confirmed = makeConfirmedFullMap();
         map = makeObjectCopy(confirmed);
@@ -2402,7 +2408,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     /**
      * Resets the collection view fields.
      */
-    private void views() {
+    protected void views() {
         this.keySet = getMap().keySet();
         // see verifyValues: retrieve the values collection only when verifying them
         // this.values = getMap().values();

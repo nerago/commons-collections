@@ -160,6 +160,11 @@ public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return "4";
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
 //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk(

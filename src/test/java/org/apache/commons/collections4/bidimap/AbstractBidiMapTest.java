@@ -555,6 +555,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public DynamicNode inverseBidiMapTests() {
             return null;
         }

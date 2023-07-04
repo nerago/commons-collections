@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedMap;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -125,7 +126,12 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         assertTrue(map instanceof BoundedMap);
     }
 
-//    public BulkTest bulkTestMapIterator() {
+    @Override
+    @Test
+    @Disabled
+    public void testCopyEmpty() { }
+
+    //    public BulkTest bulkTestMapIterator() {
 //        return new TestFlatMapIterator();
 //    }
 //

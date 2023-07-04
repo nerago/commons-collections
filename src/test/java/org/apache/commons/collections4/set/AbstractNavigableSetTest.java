@@ -259,6 +259,10 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
             return AbstractNavigableSetTest.this.isFailFastSupported();
         }
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+        @Override
         protected boolean runSubSetTests() {
             return false;
         }

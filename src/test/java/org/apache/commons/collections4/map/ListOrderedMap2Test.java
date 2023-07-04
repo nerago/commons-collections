@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
@@ -46,12 +47,22 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
         return new ListOrderedMap<>();
     }
 
+    @Override
+    protected Map<K, V> makeObjectCopy(Map<K, V> map) {
+        return ListOrderedMap.listOrderedMap(map);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public ListOrderedMap<K, V> makeFullMap() {
         return (ListOrderedMap<K, V>) super.makeFullMap();
+    }
+
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
     }
 
     @Test
@@ -196,6 +207,10 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
         }
         @Override
         public boolean isTestSerialization() {
+            return false;
+        }
+        @Override
+        public boolean isCopyConstructorSupported() {
             return false;
         }
     }

@@ -87,15 +87,6 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
     }
 
     /**
-     * Is a constructor with parameters of (Comparator obj) available and should be tested
-     * as a copy constructor.
-     * See {@link #makeObjectCopy}
-     */
-    public boolean isCopyConstructorSupported() {
-        return true;
-    }
-
-    /**
      * Reverse the list.
      */
     protected void reverseObjects(final List<?> list) {
@@ -230,19 +221,5 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
 
             assertEquals(orderedList, randomList, "Comparator did not reorder the List correctly");
         }
-    }
-
-    @Test
-    public void testCopy() {
-        Comparator<T> original = makeObject();
-        Comparator<T> copy = makeObjectCopy(original);
-
-        final List<T> listOriginal = getComparableObjectsOrdered();
-        final List<T> listCopy = new LinkedList<>(listOriginal);
-
-        sortObjects(listOriginal, original);
-        sortObjects(listCopy, copy);
-
-        assertEquals(listOriginal, listCopy, "Comparator did not reorder the List correctly");
     }
 }

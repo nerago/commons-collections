@@ -98,6 +98,11 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     protected boolean skipSerializedCanonicalTests() {
         // FIXME: support canonical tests
         return true;

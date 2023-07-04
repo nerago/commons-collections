@@ -899,6 +899,9 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
     @Test
     public void testCopy() {
+        if (!isCopyConstructorSupported())
+            return;
+
         MultiValuedMap<K, V> original = makeConfirmedMap();
         original.put((K) "A", (V) "W");
         original.put((K) "A", (V) "X");
@@ -915,7 +918,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         assertEquals(original.keySet().size(), copy.keySet().size());
         for (K key : original.keySet()) {
             assertNotSame(original.get(key), copy.get(key));
-            assertEquals(original.get(key), copy.get(key));
+            assertArrayEquals(original.get(key).toArray(), copy.get(key).toArray());
         }
     }
 
@@ -969,6 +972,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         @Override
         public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
+        public boolean isCopyConstructorSupported() {
             return false;
         }
 
@@ -1056,6 +1064,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         protected IterationBehaviour getIterationBehaviour() {
             return AbstractMultiValuedMapTest.this.getIterationBehaviour();
         }
@@ -1108,6 +1121,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         @Override
         public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
+        public boolean isCopyConstructorSupported() {
             return false;
         }
 
@@ -1191,6 +1209,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         @Override
         public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
+        public boolean isCopyConstructorSupported() {
             return false;
         }
 
@@ -1295,6 +1318,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         @Override
         public boolean isToStringLikeCommonMaps() {
+            return false;
+        }
+
+        @Override
+        public boolean isCopyConstructorSupported() {
             return false;
         }
 

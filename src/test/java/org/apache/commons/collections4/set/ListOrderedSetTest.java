@@ -58,6 +58,11 @@ public class ListOrderedSetTest<E>
         return ListOrderedSet.listOrderedSet(new HashSet<E>());
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     protected ListOrderedSet<E> setupSet() {
         final ListOrderedSet<E> set = makeObject();
