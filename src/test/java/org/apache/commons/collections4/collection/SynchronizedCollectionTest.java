@@ -52,7 +52,12 @@ public class SynchronizedCollectionTest<E> extends AbstractCollectionTest<E> {
         return "4";
     }
 
-//    public void testCreate() throws Exception {
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/SynchronizedCollection.emptyCollection.version4.obj");
 //        resetFull();

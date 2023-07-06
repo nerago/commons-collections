@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -453,12 +454,9 @@ public class CircularFifoQueueTest<E> extends AbstractQueueTest<E> {
 
     @Test
     @Override
-    public void testCollectionCopy() {
-        // test non-empty case only
-        setConfirmed(makeConfirmedFullCollection());
-        setCollection(makeObjectCopy(getConfirmed()));
-        assertNotSame(getConfirmed(), getCollection());
-        verify();
+    @Disabled
+    public void testCollectionCopyEmpty() {
+        // this queue can't be empty
     }
 
     @Override

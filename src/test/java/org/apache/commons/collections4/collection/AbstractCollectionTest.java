@@ -528,28 +528,9 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     // Tests
-    /**
-     *  Tests constructor(Collection).
-     */
-    @Test
-    public void testCollectionCopy() {
-        if (!isCopyConstructorSupported())
-            return;
-
-        // empty
-        setConfirmed(makeConfirmedCollection());
-        setCollection(makeObjectCopy(getConfirmed()));
-        verify();
-
-        // full
-        setConfirmed(makeConfirmedFullCollection());
-        setCollection(makeObjectCopy(getConfirmed()));
-        verify();
-    }
-
-    /**
-     *  Tests {@link Collection#add(Object)}.
-     */
+        /**
+         *  Tests {@link Collection#add(Object)}.
+         */
     @Test
     public void testCollectionAdd() {
         if (!isAddSupported()) {
@@ -1401,6 +1382,67 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj)) - FULL Collection");
             }
         }
+    }
+
+    /**
+     *  Tests constructor(Collection) with empty collection.
+     */
+    @Test
+    public void testCollectionCopyEmpty() {
+        if (!isCopyConstructorSupported())
+            return;
+
+        // empty
+        setConfirmed(makeConfirmedCollection());
+        setCollection(makeObjectCopy(getConfirmed()));
+        verify();
+    }
+
+    /**
+     *  Tests constructor(Collection) with full collection.
+     */
+    @Test
+    public void testCollectionCopyFull() {
+        if (!isCopyConstructorSupported())
+            return;
+
+        setConfirmed(makeConfirmedFullCollection());
+        setCollection(makeObjectCopy(getConfirmed()));
+        verify();
+    }
+
+    /**
+     *  Tests constructor(Collection) after add/remove only modifies target collection and not original.
+     */
+    @Test
+    public void testCollectionCopyModify() {
+        if (!isCopyConstructorSupported())
+            return;
+
+        // check modify doesn't change original when copied from same type
+        setConfirmed(makeConfirmedFullCollection());
+        Collection<E> original = makeFullCollection(); // original we'll leave unchanged
+        int originalSize = original.size();
+        setCollection(makeObjectCopy(original)); // copy of original
+        verify();
+
+        final E[] elements = getFullElements();
+        final E[] other = getOtherElements();
+        if (isAddSupported()) {
+            getCollection().add(other[0]);
+            getConfirmed().add(other[0]);
+        }
+        if (isRemoveSupported()) {
+            getCollection().remove(elements[0]);
+            getConfirmed().remove(elements[0]);
+        }
+        verify();
+
+        assertEquals(originalSize, original.size());
+
+        setConfirmed(makeConfirmedFullCollection());
+        setCollection(original);
+        verify();
     }
 
     @Test
