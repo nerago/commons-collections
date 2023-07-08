@@ -43,32 +43,22 @@ public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     protected final Factory<V> nullFactory = FactoryUtils.<V>nullFactory();
     protected final Transformer<K, V> nullTransformer = TransformerUtils.<K, V>nullTransformer();
+    private static final Factory<Integer> oneFactory = FactoryUtils.constantFactory(1);
 
     public DefaultedMapTest() {
         super(DefaultedMapTest.class.getSimpleName());
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public IterableMap<K, V> makeObject() {
-        return DefaultedMap.defaultedMap(new HashMap<K, V>(), nullFactory);
+        return DefaultedMap.defaultedMap(new HashMap<K, V>(), (Factory<V>) oneFactory);
     }
 
-    @Test
     @Override
     @SuppressWarnings("unchecked")
-    public void testMapGet() {
-        final Map<K, V> map = new DefaultedMap<>((V) "NULL");
-
-        assertEquals(0, map.size());
-        assertFalse(map.containsKey("NotInMap"));
-        assertEquals("NULL", map.get("NotInMap"));
-
-        map.put((K) "Key", (V) "Value");
-        assertEquals(1, map.size());
-        assertTrue(map.containsKey("Key"));
-        assertEquals("Value", map.get("Key"));
-        assertFalse(map.containsKey("NotInMap"));
-        assertEquals("NULL", map.get("NotInMap"));
+    public V getMissingEntryGetExpectValue() {
+        return (V) (Integer) 1;
     }
 
     @Test

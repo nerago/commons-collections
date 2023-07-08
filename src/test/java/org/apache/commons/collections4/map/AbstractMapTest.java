@@ -438,6 +438,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         return (V[]) result;
     }
 
+    public V getMissingEntryGetExpectValue() {
+        return null;
+    }
+
     /**
      *  Helper method to add all the mappings described by
      * {@link #getSampleKeys()} and {@link #getSampleValues()}.
@@ -701,6 +705,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             assertTrue(getMap().containsKey(key), "Map must contain key for a mapping in the map. " +
                     "Missing: " + key);
         }
+        for (final Object key : getOtherKeys()) {
+            assertFalse(getMap().containsKey(key), "Map must not contain other key");
+        }
         verify();
     }
 
@@ -723,6 +730,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         for (final Object value : values) {
             assertTrue(getMap().containsValue(value),
                     "Map must contain value for a mapping in the map.");
+        }
+        for (final Object value : getOtherValues()) {
+            assertFalse(getMap().containsValue(value), "Map must not contain other values");
         }
         verify();
     }
@@ -760,20 +770,52 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Test
     public void testMapGet() {
-        resetEmpty();
-
         final Object[] keys = getSampleKeys();
+        final Object[] otherKeys = getOtherKeys();
         final Object[] values = getSampleValues();
+        final Object expectMissing = getMissingEntryGetExpectValue();
 
+        resetEmpty();
         for (final Object key : keys) {
-            assertNull(getMap().get(key), "Empty map.get() should return null.");
+            assertEquals(expectMissing, getMap().get(key), "Empty map.get() should return null.");
         }
-        verify();
+        if (!isGetStructuralModify())
+            verify();
 
         resetFull();
         for (int i = 0; i < keys.length; i++) {
             assertEquals(values[i], getMap().get(keys[i]),
                     "Full map.get() should return value from mapping.");
+        }
+        for (final Object key : otherKeys) {
+            assertEquals(expectMissing, getMap().get(key), "Other keys with map.get() should return null.");
+        }
+        if (!isGetStructuralModify())
+            verify();
+    }
+
+    @Test
+    public void testMapGetOrDefault() {
+        final Object[] keys = getSampleKeys();
+        final Object[] otherKeys = getOtherKeys();
+        final Object[] values = getSampleValues();
+        final V missingValue = (V) "abc";
+
+        resetEmpty();
+        for (final Object key : keys) {
+            assertEquals(missingValue, getMap().getOrDefault(key, missingValue),
+                    "getOrDefault should always return parameter for missing");
+        }
+        verify();
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            assertEquals(values[i], getMap().getOrDefault(keys[i], missingValue),
+                    "Full map.getOrDefault() should return value from mapping.");
+        }
+        for (final Object key : otherKeys) {
+            assertEquals(missingValue, getMap().getOrDefault(key, missingValue),
+                    "getOrDefault should always return parameter for missing");
         }
     }
 

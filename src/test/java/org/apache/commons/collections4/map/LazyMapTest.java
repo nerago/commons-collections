@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.FactoryUtils;
 import org.apache.commons.collections4.Transformer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -46,13 +47,23 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     @Override
     public LazyMap<K, V> makeObject() {
-        return lazyMap(new HashMap<K, V>(), FactoryUtils.<V>nullFactory());
+        return lazyMap(new HashMap<K, V>(), (Factory<V>) oneFactory);
     }
 
-    @Test
     @Override
-    public void testMapGet() {
-        //TODO eliminate need for this via superclass - see svn history.
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
+    public boolean isGetStructuralModify() {
+        return true;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public V getMissingEntryGetExpectValue() {
+        return (V) (Integer) 1;
     }
 
     @Test
@@ -81,11 +92,6 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         final Number i1 = map.get(123L);
         assertEquals(123, i1);
         assertEquals(1, map.size());
-    }
-
-    @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
     }
 
     @Override
