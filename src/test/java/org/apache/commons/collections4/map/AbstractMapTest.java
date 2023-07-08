@@ -819,6 +819,43 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
     }
 
+    @Test
+    public void testForeach() {
+        resetEmpty();
+        HashMap<K, V> seen = new HashMap<>();
+        getMap().forEach((k, v) -> seen.put(k, v));
+        assertEquals(makeConfirmedMap(), seen);
+
+        resetFull();
+        seen.clear();
+        getMap().forEach((k, v) -> seen.put(k, v));
+        assertEquals(makeConfirmedFullMap(), seen);
+    }
+
+    @Test
+    public void testReplaceAll() {
+        if (!isSetValueSupported())
+            return;
+
+        final Queue<V> newValueQueueMap = new LinkedList<>(Arrays.asList(getNewSampleValues()));
+
+        resetFull();
+        final HashMap<K, V> seen = new HashMap<>();
+        final HashMap<K, V> after = new HashMap<>();
+        getMap().replaceAll((k, v) -> {
+            seen.put(k, v);
+            V replace = newValueQueueMap.poll();
+            after.put(k, replace);
+            return replace;
+        });
+        assertEquals(makeConfirmedFullMap(), seen);
+
+        // can't use same sequence of values on confirmed since contract doesn't guarantee order
+        // just use lookup
+        getConfirmed().replaceAll((k, v) -> after.get(k));
+        verify();
+    }
+
     /**
      * Tests Map.hashCode()
      */
