@@ -83,6 +83,10 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         assertEquals(1, map.size());
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
 
     @Override
     public String getCompatibilityVersion() {

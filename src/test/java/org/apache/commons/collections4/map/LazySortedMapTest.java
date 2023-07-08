@@ -72,6 +72,11 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     // from LazyMapTest
     @Test
     @Override

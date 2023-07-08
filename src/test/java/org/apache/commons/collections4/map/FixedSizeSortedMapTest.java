@@ -60,6 +60,11 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

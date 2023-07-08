@@ -99,6 +99,11 @@ public class PassiveExpiringMapTest<K, V> extends AbstractMapTest<K, V> {
         return IterationBehaviour.UNORDERED;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     private Map<Integer, String> makeTestMap() {
         final Map<Integer, String> m =
                 new PassiveExpiringMap<>(new TestExpirationPolicy());
