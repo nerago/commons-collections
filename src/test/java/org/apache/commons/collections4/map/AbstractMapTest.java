@@ -127,6 +127,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * cases.  For example, if your map does not allow duplicate values, override
  * {@link #isAllowDuplicateValues()} and have it return {@code false}
  */
+@SuppressWarnings("unchecked")
 public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     /**
@@ -823,16 +824,18 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testMapPutIfAbsent() {
-        if (!isPutAddSupported()) {
-            assertThrows(UnsupportedOperationException.class, () -> makeObject().putIfAbsent(null, null));
-            return;
-        }
-
         final K[] keys = getSampleKeys();
         final K[] otherKeys = getOtherKeys();
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
+
+        if (!isPutAddSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().putIfAbsent(otherKeys[0], otherValues[0]));
+            verify();
+            return;
+        }
 
         resetEmpty();
         for (int i = 0; i < keys.length; i++) {
@@ -870,14 +873,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testMapComputeIfAbsent() {
-        if (!isPutAddSupported()) {
-            assertThrows(UnsupportedOperationException.class, () -> makeObject().computeIfAbsent(null, k -> null));
-            return;
-        }
-
         final K[] keys = getSampleKeys();
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
+
+        if (!isPutAddSupported()) {
+            resetEmpty();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfAbsent(keys[0], k -> values[0]));
+            verify();
+            return;
+        }
 
         resetEmpty();
         for (int i = 0; i < keys.length; i++) {
@@ -888,7 +893,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                     "computeIfAbsent should always return mapped value for missing");
             assertEquals(value, getMap().computeIfAbsent(key, mappingFunction),
                     "computeIfAbsent should always return mapped value for missing");
-            assertEquals(value, getMap().get(key));
         }
         verify();
 
@@ -903,10 +907,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                         "computeIfAbsent should return existing value from map.");
             } else if (oldValue == null) {
                 final Function<? super K, ? extends V> mappingFunction = k -> replaceValue;
+                assertEquals(replaceValue, getConfirmed().computeIfAbsent(key, mappingFunction),
+                        "computeIfAbsent should return new value from function");
                 assertEquals(replaceValue, getMap().computeIfAbsent(key, mappingFunction),
                         "computeIfAbsent should return new value from function");
-                assertEquals(replaceValue, getMap().get(key));
-                getConfirmed().put(key, replaceValue);
             } else {
                 final Function<? super K, ? extends V> mappingFunction = k -> replaceValue;
                 assertEquals(oldValue, getConfirmed().computeIfAbsent(key, mappingFunction),
@@ -932,15 +936,17 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testMapComputeIfPresent() {
-        if (!isPutChangeSupported()) {
-            assertThrows(UnsupportedOperationException.class, () -> makeObject().computeIfPresent(null, (k, v) -> v));
-            return;
-        }
-
         final K[] keys = getSampleKeys();
         final K[] otherKeys = getOtherKeys();
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
+
+        if (!isPutChangeSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfPresent(keys[0], (k, v) -> newValues[0]));
+            verify();
+            return;
+        }
 
         resetEmpty();
         for (final K key : keys) {
@@ -1011,16 +1017,19 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testMapCompute() {
-        if (!isPutAddSupported() || !isPutChangeSupported()) {
-            assertThrows(UnsupportedOperationException.class, () -> makeObject().compute(null, (k, v) -> v));
-            return;
-        }
-
         final K[] keys = getSampleKeys();
         final K[] otherKeys = getOtherKeys();
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
+
+        if (!isPutAddSupported() && !isPutChangeSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().compute(keys[0], (k, v) -> newValues[0]));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().compute(otherKeys[0], (k, v) -> otherValues[0]));
+            verify();
+            return;
+        }
 
         resetEmpty();
         for (int i = 0; i < keys.length; i++) {
@@ -1035,7 +1044,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertNull(getConfirmed().compute(key, mappingFunction), "compute should return null for missing");
                 assertNull(getMap().compute(key, mappingFunction), "compute should return null for missing");
                 assertFalse(getMap().containsKey(key));
-            } else {
+            } else if (isPutAddSupported()) {
                 // add new value
                 final V replaceValue = newValues[i];
                 final BiFunction<? super K, ? super V, ? extends V> mappingFunction = (k, v) -> {
@@ -1043,6 +1052,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                     assertNull(v);
                     return replaceValue;
                 };
+                if (replaceValue == null)
+                    assertTrue(isRemoveSupported());
                 assertEquals(replaceValue, getConfirmed().compute(key, mappingFunction),
                         "compute should return new value from mapping function");
                 assertEquals(replaceValue, getMap().compute(key, mappingFunction),
@@ -1061,7 +1072,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             final K key = keys[i];
             final V originalValue = values[i];
             final V replaceValue = newValues[i];
-            if (i % 2 == 0 || replaceValue == null) {
+            if ((i % 2 == 0 || replaceValue == null) && isRemoveSupported()) {
                 // delete every second
                 final BiFunction<? super K, ? super V, ? extends V> mappingFunction = (k, v) -> {
                     assertEquals(key, k);
@@ -1072,7 +1083,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertNull(getConfirmed().compute(key, mappingFunction), "compute should return null for missing");
                 assertNull(getMap().compute(key, mappingFunction), "compute should return null for missing");
                 assertFalse(getMap().containsKey(key));
-            } else {
+            } else if (isPutChangeSupported()) {
                 // change value
                 final BiFunction<? super K, ? super V, ? extends V> mappingFunction = (k, v) -> {
                     assertEquals(key, k);
@@ -1100,7 +1111,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertNull(getConfirmed().compute(key, mappingFunction), "compute should return null for missing");
                 assertNull(getMap().compute(key, mappingFunction), "compute should return null for missing");
                 assertFalse(getMap().containsKey(key));
-            } else {
+            } else if (isPutAddSupported()) {
                 // add new value
                 final V replaceValue = otherValues[i];
                 final BiFunction<? super K, ? super V, ? extends V> mappingFunction = (k, v) -> {
@@ -1119,14 +1130,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testMapMerge() {
-        if (!isPutAddSupported() || !isPutChangeSupported()) {
-            assertThrows(UnsupportedOperationException.class,
-                    () -> makeObject().merge(getSampleKeys()[0], getSampleValues()[0], (v, p) -> v));
-            return;
-        }
-
         final K[] keys = getSampleKeys();
         final K[] otherKeys = getOtherKeys();
         final V[] values = getSampleValues();
@@ -1134,11 +1138,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] otherValues = getOtherValues();
         final V dummy = (V) "xyz";
 
+        if (!isPutAddSupported() && !isPutChangeSupported() && !isRemoveSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], dummy, (k, v) -> newValues[0]));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], dummy, (k, v) -> null));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(otherKeys[0], otherValues[0], (k, v) -> fail()));
+            verify();
+            return;
+        }
+
         resetEmpty();
         for (int i = 0; i < keys.length; i++) {
             final K key = keys[i];
             final V replaceValue = newValues[i];
-            if (replaceValue != null) { // not null parameter
+            if (replaceValue != null && isPutAddSupported()) { // not null parameter
                 final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
                     fail("shouldn't call func");
                     return null;
@@ -1157,7 +1170,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             final K key = keys[i];
             final V originalValue = values[i];
             final V replaceValue = newValues[i];
-            if (i % 2 == 0 || replaceValue == null) {
+            if ((i % 2 == 0 || replaceValue == null) && isRemoveSupported()) {
                 // delete every second
                 final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
                     assertEquals(originalValue, v);
@@ -1168,7 +1181,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertNull(getConfirmed().merge(key, dummy, mappingFunction), "merge should return null after remove");
                 assertNull(getMap().merge(key, dummy, mappingFunction), "merge should return null after remove");
                 assertFalse(getMap().containsKey(key));
-            } else if (originalValue == null) {
+            } else if (originalValue == null && isPutChangeSupported()) {
                 // change value
                 final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
                     fail("shouldn't call func");
@@ -1183,7 +1196,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                         "merge should return new value from param");
                 assertEquals(replaceValue, getMap().get(key));
                 assertTrue(getMap().containsKey(key));
-            } else {
+            } else if (isPutChangeSupported()) {
                 // change value
                 final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
                     assertEquals(originalValue, v);
@@ -1202,32 +1215,177 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         for (int i = 0; i < otherKeys.length; i++) {
             final K key = otherKeys[i];
             final V replaceValue = otherValues[i];
-            if (replaceValue != null) { // not null parameter
+            if (replaceValue != null && isPutAddSupported()) { // not null parameter
                 final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
                     fail("shouldn't call func");
                     return null;
                 };
-                assertEquals(replaceValue, getConfirmed().merge(key, replaceValue, mappingFunction), "merge should return null for missing");
-                assertEquals(replaceValue, getMap().merge(key, replaceValue, mappingFunction), "merge should return null for missing");
+                assertEquals(replaceValue, getConfirmed().merge(key, replaceValue, mappingFunction), "merge should return new value");
+                assertEquals(replaceValue, getMap().merge(key, replaceValue, mappingFunction), "merge should return new value");
                 assertTrue(getMap().containsKey(key));
             }
         }
         verify();
     }
-
+    
     @Test
-    public void testRemove2() {
-        fail("TODO");
+    public void testMapRemove2() {
+        final K[] keys = getSampleKeys();
+        final K[] otherKeys = getOtherKeys();
+        final V[] values = getSampleValues();
+        final V[] newValues = getNewSampleValues();
+        final V[] otherValues = getOtherValues();
+        final V dummy = (V) "xyz";
+
+        if (!isRemoveSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().remove(keys[0], values[0]));
+            verify();
+            return;
+        }
+
+        resetEmpty();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V notValue = newValues[i];
+            assertFalse(getConfirmed().remove(key, notValue),"remove should do nothing on empty");
+            assertFalse(getMap().remove(key, notValue), "remove should do nothing on empty");
+            assertFalse(getMap().containsKey(key));
+        }
+        verify();
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V notValue = newValues[i];
+            assertFalse(getConfirmed().remove(key, notValue),"remove should do nothing on wrong value");
+            assertFalse(getMap().remove(key, notValue), "remove should do nothing on wrong value");
+            assertTrue(getMap().containsKey(key));
+            assertTrue(getConfirmed().remove(key, oldValue), "remove should succeed on value match");
+            assertTrue(getMap().remove(key, oldValue), "remove should return old value");
+            assertFalse(getMap().containsKey(key));
+        }
+        for (int i = 0; i < otherKeys.length; i++) {
+            final K key = otherKeys[i];
+            final V notValue = otherValues[i];
+            assertFalse(getConfirmed().remove(key, notValue),"remove should do nothing on empty");
+            assertFalse(getMap().remove(key, notValue), "remove should do nothing on empty");
+            assertFalse(getMap().containsKey(key));
+        }
+        verify();
+    }
+    
+    @Test
+    public void testMapReplace2() {
+        final K[] keys = getSampleKeys();
+        final K[] otherKeys = getOtherKeys();
+        final V[] values = getSampleValues();
+        final V[] newValues = getNewSampleValues();
+        final V[] otherValues = getOtherValues();
+
+        if (!isPutChangeSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getMap().replace(keys[0], newValues[0]));
+            verify();
+            return;
+        }
+
+        resetEmpty();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V replaceValue = newValues[i];
+            assertNull(getConfirmed().replace(key, replaceValue),
+                    "replace should do nothing on empty");
+            assertNull(getMap().replace(key, replaceValue),
+                    "replace should do nothing on empty");
+            assertFalse(getMap().containsKey(key));
+        }
+        verify();
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
+            assertEquals(oldValue, getConfirmed().replace(key, replaceValue),
+                    "replace should return old value");
+            assertEquals(oldValue, getMap().replace(key, replaceValue),
+                    "replace should return old value");
+            assertTrue(getMap().containsKey(key));
+        }
+        for (int i = 0; i < otherKeys.length; i++) {
+            final K key = otherKeys[i];
+            final V replaceValue = otherValues[i];
+            assertNull(getConfirmed().replace(key, replaceValue), "replace should do nothing for missing");
+            assertNull(getMap().replace(key, replaceValue), "replace should do nothing for for missing");
+            assertFalse(getMap().containsKey(key));
+        }
+        verify();
     }
 
     @Test
-    public void testReplace2() {
-        fail("TODO");
-    }
+    @SuppressWarnings("unchecked")
+    public void testMapReplace3() {
+        final K[] keys = getSampleKeys();
+        final K[] otherKeys = getOtherKeys();
+        final V[] values = getSampleValues();
+        final V[] newValues = getNewSampleValues();
+        final V[] otherValues = getOtherValues();
+        final V dummy = (V) "xyz";
 
-    @Test
-    public void testReplace3() {
-        fail("TODO");
+        if (!isPutChangeSupported()) {
+            resetFull();
+            assertThrows(UnsupportedOperationException.class,
+                    () -> getMap().replace(keys[0], values[0], newValues[0]));
+            verify();
+            return;
+        }
+
+        resetEmpty();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
+            assertFalse(getConfirmed().replace(key, oldValue, replaceValue),
+                    "replace should do nothing on empty");
+            assertFalse(getMap().replace(key, oldValue, replaceValue),
+                    "replace should do nothing on empty");
+            assertFalse(getMap().containsKey(key));
+        }
+        verify();
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
+            assertTrue(getConfirmed().replace(key, oldValue, replaceValue),
+                    "replace should return true");
+            assertTrue(getMap().replace(key, oldValue, replaceValue),
+                    "replace should return true");
+            assertTrue(getMap().containsKey(key));
+            if (!Objects.equals(oldValue, replaceValue)) {
+                assertFalse(getConfirmed().replace(key, oldValue, replaceValue),
+                        "replace should return false since current changed");
+                assertFalse(getMap().replace(key, oldValue, replaceValue),
+                        "replace should return false since current changed");
+            }
+        }
+        for (int i = 0; i < otherKeys.length; i++) {
+            final K key = otherKeys[i];
+            final V replaceValue = otherValues[i];
+            if (replaceValue != null) { // not null parameter
+                final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
+                    fail("shouldn't call func");
+                    return null;
+                };
+                assertFalse(getConfirmed().replace(key, replaceValue, dummy), "replace should do nothing for missing");
+                assertFalse(getMap().replace(key, replaceValue, dummy), "replace should do nothing for for missing");
+                assertFalse(getMap().containsKey(key));
+            }
+        }
+        verify();
     }
 
     @Test

@@ -16,18 +16,18 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedMap;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * JUnit tests.
@@ -98,6 +98,18 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         return (V[]) new Object[] { TEN };
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public K[] getOtherKeys() {
+        return (K[]) new Object[] { Integer.valueOf(5) };
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public V[] getOtherValues() {
+        return (V[]) new Object[] { Integer.valueOf(6) };
+    }
+
     @Test
     public void testClone() {
         final SingletonMap<K, V> map = makeFullMap();
@@ -130,6 +142,25 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Test
     @Disabled
     public void testCopyEmpty() { }
+
+    @Override
+    @Test
+    public void testMapComputeIfAbsent() {
+        final Function<? super K, ? extends V> func = k -> (V) "a";
+        resetFull();
+        assertEquals(getSampleValues()[0], getMap().computeIfAbsent(getSampleKeys()[0], func), "should do nothing");
+        assertThrows(IllegalArgumentException.class, () -> getMap().computeIfAbsent(getOtherKeys()[0], func));
+        verify();
+    }
+
+    @Override
+    @Test
+    public void testMapPutIfAbsent() {
+        resetFull();
+        assertEquals(getSampleValues()[0], getMap().putIfAbsent(getSampleKeys()[0], getNewSampleValues()[0]), "should do nothing");
+        assertThrows(IllegalArgumentException.class, () -> getMap().putIfAbsent(getOtherKeys()[0], getOtherValues()[0]));
+        verify();
+    }
 
     //    public BulkTest bulkTestMapIterator() {
 //        return new TestFlatMapIterator();
