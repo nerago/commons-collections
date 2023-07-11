@@ -17,16 +17,17 @@
 package org.apache.commons.collections4.collection;
 
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.commons.collections4.TestUtils;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.TransformerUtils;
+import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -56,6 +57,15 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         @Override
         public Integer transform(final String input) {
             return Integer.valueOf(input);
+        }
+    }
+
+    private static final class LowerCaseTransformer implements Transformer<String, String>, Serializable {
+        private static final long serialVersionUID = 809439581512072949L;
+
+        @Override
+        public String transform(final String input) {
+            return input.toLowerCase();
         }
     }
 
@@ -89,10 +99,6 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         return new ArrayList<>(Arrays.asList(getFullElements()));
     }
 
-    public Collection<String> makeTestCollection() {
-        return decorateCollection(new ArrayList<String>());
-    }
-
     public Collection<String> makeUniqueTestCollection() {
         return decorateUniqueCollection(new ArrayList<String>());
     }
@@ -110,7 +116,7 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
 
     @Test
     public void testAddedObjectsCanBeRetrievedByKey() throws Exception {
-        final Collection<String> coll = makeTestCollection();
+        final Collection<String> coll = makeObject();
         coll.add("12");
         coll.add("16");
         coll.add("1");
@@ -165,4 +171,103 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         assertEquals("3", indexed.get(3));
     }
 
+    @Test
+    public void testNonUniqueGet() {
+        final IndexedCollection<String, String> indexed =
+                IndexedCollection.nonUniqueIndexedCollection(new ArrayList<>(), new LowerCaseTransformer());
+        indexed.add("aa");
+        indexed.add("aA");
+        indexed.add("bB");
+        indexed.add("bb");
+        indexed.add("CC");
+
+        assertNull(indexed.get("zz"), "should be null for non present");
+        assertNull(indexed.get("aA"), "should be null for value that is an entry but not a valid key");
+        assertTrue(Arrays.asList("aa", "aA").contains(indexed.get("aa")), "should return either value");
+        assertTrue(Arrays.asList("bb", "bB").contains(indexed.get("bb")), "should return either value");
+        assertEquals("CC", indexed.get("cc"), "should return either value");
+    }
+
+    @Test
+    public void testNonUniqueValues() {
+        final IndexedCollection<String, String> indexed =
+                IndexedCollection.nonUniqueIndexedCollection(new ArrayList<>(), new LowerCaseTransformer());
+        indexed.add("aa");
+        indexed.add("aA");
+        indexed.add("bB");
+        indexed.add("bb");
+        indexed.add("CC");
+
+        assertNull(indexed.values("zz"), "should be null for non present");
+        assertNull(indexed.values("aA"), "should be null for value that is an entry but not a valid key");
+        assertUnorderedArrayEquals(new String[] { "aa", "aA" }, indexed.values("aa").toArray(),
+                "values should return all mapped entries");
+        assertUnorderedArrayEquals(new String[] { "bB", "bb" }, indexed.values("bb").toArray(),
+                "values should return all mapped entries");
+        assertUnorderedArrayEquals(new String[] { "CC" }, indexed.values("cc").toArray(), "values should return all mapped entries");
+        assertTrue(indexed.values("cc") instanceof Unmodifiable);
+    }
+
+    @Test
+    public void testNonUniqueContains() {
+        final IndexedCollection<String, String> indexed =
+                IndexedCollection.nonUniqueIndexedCollection(new ArrayList<>(), new LowerCaseTransformer());
+        indexed.add("aa");
+        indexed.add("aA");
+        indexed.add("CC");
+
+        assertTrue(indexed.contains("aa"));
+        assertTrue(indexed.contains("aA"));
+        assertFalse(indexed.contains("Aa"));
+        assertFalse(indexed.contains("AA"));
+        assertFalse(indexed.contains("cc"));
+        assertTrue(indexed.contains("CC"));
+        assertFalse(indexed.contains("zz"));
+    }
+
+    @Test
+    public void testNonUniqueRemove() {
+        final IndexedCollection<String, String> indexed =
+                IndexedCollection.nonUniqueIndexedCollection(new ArrayList<>(), new LowerCaseTransformer());
+        indexed.add("aa");
+        indexed.add("aA");
+
+        // verify initial state
+        assertEquals(2, indexed.size());
+        assertFalse(indexed.isEmpty());
+        assertNotNull(indexed.get("aa"));
+        assertTrue(indexed.contains("aa"));
+        assertTrue(indexed.contains("aA"));
+        assertUnorderedArrayEquals(new String[] { "aa", "aA" }, indexed.values("aa").toArray(),
+                "values should return all mapped entries");
+
+        // remove second
+        assertTrue(indexed.remove("aA"));
+        assertEquals(1, indexed.size());
+        assertFalse(indexed.isEmpty());
+        assertNotNull(indexed.get("aa"));
+        assertTrue(indexed.contains("aa"));
+        assertFalse(indexed.contains("aA"));
+        assertUnorderedArrayEquals(new String[] { "aa" }, indexed.values("aa").toArray(),
+                "values should return all mapped entries");
+
+        // try removing same again
+        assertFalse(indexed.remove("aA"));
+        assertEquals(1, indexed.size());
+        assertFalse(indexed.isEmpty());
+        assertNotNull(indexed.get("aa"));
+        assertTrue(indexed.contains("aa"));
+        assertFalse(indexed.contains("aA"));
+        assertUnorderedArrayEquals(new String[] { "aa" }, indexed.values("aa").toArray(),
+                "values should return all mapped entries");
+
+        // remove last
+        assertTrue(indexed.remove("aa"));
+        assertEquals(0, indexed.size());
+        assertTrue(indexed.isEmpty());
+        assertNull(indexed.get("aa"));
+        assertFalse(indexed.contains("aa"));
+        assertFalse(indexed.contains("aA"));
+        assertNull(indexed.values("aa"));
+    }
 }
