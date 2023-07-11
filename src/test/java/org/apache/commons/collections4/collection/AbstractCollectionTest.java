@@ -490,32 +490,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     /**
-     *  Returns a list of string elements suitable for return by
-     *  {@link #getFullElements()}.  Override getFullElements to return
-     *  the results of this method if your collection does not support
-     *  heterogeneous elements or the null element.
-     */
-    public Object[] getFullNonNullStringElements() {
-        return new Object[] {
-            "If", "the", "dull", "substance", "of", "my", "flesh", "were",
-            "thought", "Injurious", "distance", "could", "not", "stop", "my", "way",
-        };
-    }
-
-    /**
-     *  Returns a list of string elements suitable for return by
-     *  {@link #getOtherElements()}.  Override getOtherElements to return
-     *  the results of this method if your collection does not support
-     *  heterogeneous elements or the null element.
-     */
-    public Object[] getOtherNonNullStringElements() {
-        return new Object[] {
-            "For", "then", "despite", /* of */"space", "I", "would", "be",
-            "brought", "From", "limits", "far", "remote", "where", "thou", "dost", "stay"
-        };
-    }
-
-    /**
      * Return a flag specifying the iteration behavior of the collection.
      * This is used to change the assertions used by specific tests.
      * The default implementation returns 0 which indicates ordered iteration behavior.
