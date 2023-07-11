@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,12 @@ public class FixedSizeListTest<E> extends AbstractListTest<E> {
 
     @Override
     public List<E> makeObject() {
-        return FixedSizeList.fixedSizeList(new ArrayList<E>());
+        return FixedSizeList.fixedSizeList(new ArrayList<>());
+    }
+
+    @Override
+    public Collection<E> makeObjectCopy(Collection<E> orig) {
+        return FixedSizeList.fixedSizeList((List<E>) orig);
     }
 
     @Override

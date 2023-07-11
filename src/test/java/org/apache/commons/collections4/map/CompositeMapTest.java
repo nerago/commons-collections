@@ -53,6 +53,11 @@ public class CompositeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @BeforeEach
     public void setUp() throws Exception {
         this.pass = false;

@@ -16,11 +16,6 @@
  */
 package org.apache.commons.collections4.queue;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -32,7 +27,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 /**
  * Test cases for CircularFifoQueue.
@@ -451,6 +450,13 @@ public class CircularFifoQueueTest<E> extends AbstractQueueTest<E> {
         fifo.add((E) "5");
         assertEquals(5, fifo.size());
         assertThrows(NoSuchElementException.class, () -> fifo.get(-2));
+    }
+
+    @Test
+    @Override
+    @Disabled
+    public void testCollectionCopyEmpty() {
+        // this queue can't be empty
     }
 
     @Override

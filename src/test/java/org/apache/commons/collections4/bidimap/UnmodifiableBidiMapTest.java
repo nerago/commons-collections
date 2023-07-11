@@ -23,9 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -78,8 +80,13 @@ public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return AbstractCollectionTest.UNORDERED;
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Test

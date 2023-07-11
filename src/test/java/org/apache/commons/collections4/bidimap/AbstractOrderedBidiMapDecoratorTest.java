@@ -62,6 +62,11 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
         return true;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     /**
      * Simple class to actually test.
      */

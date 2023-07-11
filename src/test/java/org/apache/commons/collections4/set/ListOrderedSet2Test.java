@@ -48,6 +48,11 @@ public class ListOrderedSet2Test<E> extends AbstractSetTest<E> {
         return new ListOrderedSet<>();
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     protected ListOrderedSet<E> setupSet() {
         final ListOrderedSet<E> set = makeObject();

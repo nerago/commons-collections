@@ -54,6 +54,12 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    protected Object makeObjectCopy(Object original, Class<?> paramType) {
+        return ((MultiKeyMap<K,V>)original).clone();
+    }
+
+    @Override
     public MultiKey<K>[] getSampleKeys() {
         return getMultiKeyKeys();
     }
@@ -111,6 +117,11 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
 
     @Override
     public boolean isAllowNullKey() {
+        return false;
+    }
+
+    @Override
+    public boolean isCopyConstructorSupported() {
         return false;
     }
 

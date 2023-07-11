@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -63,6 +64,11 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
      */
     @Override
     public abstract Comparator<T> makeObject();
+
+    @SuppressWarnings("unchecked")
+    protected Comparator<T> makeObjectCopy(Comparator<T> original) {
+        return (Comparator<T>) makeObjectCopy(original, Comparator.class);
+    }
 
     /**
      * Overrides superclass to block tests.

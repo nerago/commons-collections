@@ -59,6 +59,11 @@ public class UnmodifiableOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, 
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public OrderedMap<K, V> makeFullMap() {
         final OrderedMap<K, V> m = ListOrderedMap.listOrderedMap(new HashMap<K, V>());
         addSampleMappings(m);

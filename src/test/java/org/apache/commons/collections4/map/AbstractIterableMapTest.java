@@ -21,10 +21,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Spliterator;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -80,6 +79,13 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
         getMap().clear();
         final Iterator<Map.Entry<K, V>> finalIt1 = it;
         assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+
+        resetFull();
+        it = getMap().entrySet().iterator();
+        it.next();
+        getMap().put(getOtherKeys()[0], getOtherValues()[0]);
+        final Iterator<Map.Entry<K, V>> finalIt2 = it;
+        assertThrows(ConcurrentModificationException.class, () -> finalIt2.next());
     }
 
     @Test
@@ -103,6 +109,13 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
         getMap().clear();
         final Iterator<K> finalIt1 = it;
         assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+
+        resetFull();
+        it = getMap().keySet().iterator();
+        it.next();
+        getMap().put(getOtherKeys()[0], getOtherValues()[0]);
+        final Iterator<K> finalIt2 = it;
+        assertThrows(ConcurrentModificationException.class, () -> finalIt2.next());
     }
 
     @Test
@@ -126,11 +139,18 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
         getMap().clear();
         final Iterator<V> finalIt1 = it;
         assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+
+        resetFull();
+        it = getMap().values().iterator();
+        it.next();
+        getMap().put(getOtherKeys()[0], getOtherValues()[0]);
+        final Iterator<V> finalIt2 = it;
+        assertThrows(ConcurrentModificationException.class, () -> finalIt2.next());
     }
 
     @Test
     public void testCompareMapIterators() {
-        if ((getIterationBehaviour() & AbstractCollectionTest.UNORDERED) != 0)
+        if (getIterationBehaviour() == IterationBehaviour.UNORDERED)
             return;
 
         resetEmpty();

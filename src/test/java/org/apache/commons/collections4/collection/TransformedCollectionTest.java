@@ -38,6 +38,11 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     private static class StringToInteger implements Transformer<Object, Object> {
         @Override
         public Object transform(final Object input) {

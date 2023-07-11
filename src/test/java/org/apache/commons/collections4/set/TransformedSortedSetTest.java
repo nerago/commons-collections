@@ -54,6 +54,11 @@ public class TransformedSortedSetTest<E> extends AbstractSortedSetTest<E> {
         return TransformedSortedSet.transformingSortedSet(set, (Transformer<E, E>) TransformedCollectionTest.NOOP_TRANSFORMER);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testTransformedSet() {

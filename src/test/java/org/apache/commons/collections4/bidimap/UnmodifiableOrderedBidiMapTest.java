@@ -86,6 +86,11 @@ public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends C
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testUnmodifiable() {
         assertTrue(makeObject() instanceof Unmodifiable);

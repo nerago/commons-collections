@@ -44,6 +44,11 @@ public class SynchronizedQueueTest<T> extends AbstractQueueTest<T> {
         return SynchronizedQueue.synchronizedQueue(new LinkedList<T>());
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @Disabled("Run once")
     public void testCreate() throws Exception {

@@ -57,6 +57,11 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionBagTest<T> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public Bag<T> makeObject() {
         return CollectionSortedBag.collectionSortedBag(new TreeBag<T>());
     }

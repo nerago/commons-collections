@@ -23,10 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 
+import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +50,13 @@ public class TransformedMultiValuedMapTest<K, V> extends AbstractMultiValuedMapT
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return AbstractCollectionTest.UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
+    }
+
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
     }
 
     @Test

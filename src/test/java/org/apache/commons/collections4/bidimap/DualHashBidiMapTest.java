@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * JUnit tests.
@@ -44,8 +45,8 @@ public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return AbstractCollectionTest.UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {

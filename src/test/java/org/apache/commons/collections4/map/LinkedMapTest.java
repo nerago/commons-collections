@@ -269,6 +269,10 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         public boolean isTestSerialization() {
             return false;
         }
+        @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
     }
 
     @Test

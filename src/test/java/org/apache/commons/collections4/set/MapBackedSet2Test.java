@@ -41,6 +41,11 @@ public class MapBackedSet2Test<E> extends AbstractSetTest<E> {
         return MapBackedSet.mapBackedSet(new LinkedMap<E, Object>());
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     protected Set<E> setupSet() {
         final Set<E> set = makeObject();

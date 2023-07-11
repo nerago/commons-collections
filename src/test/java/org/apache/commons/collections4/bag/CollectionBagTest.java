@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -80,11 +80,16 @@ public class CollectionBagTest<T> extends AbstractCollectionBagTest<T> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
-//    public void testCreate() throws Exception {
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/CollectionBag.emptyCollection.version4.obj");
 //        resetFull();

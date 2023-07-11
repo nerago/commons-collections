@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -60,6 +61,11 @@ public class UnmodifiableSetTest<E> extends AbstractSetTest<E> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testUnmodifiable() {
         assertTrue(makeObject() instanceof Unmodifiable);
@@ -80,8 +86,8 @@ public class UnmodifiableSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {

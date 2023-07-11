@@ -56,8 +56,9 @@ public class PredicatedSortedBagTest<T> extends AbstractSortedBagTest<T> {
         return decorateBag(new TreeBag<T>(), truePredicate);
     }
 
-    protected SortedBag<T> makeTestBag() {
-        return decorateBag(new TreeBag<T>(), stringPredicate());
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
     }
 
     @Test

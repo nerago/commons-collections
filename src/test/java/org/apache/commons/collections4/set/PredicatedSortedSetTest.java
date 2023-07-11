@@ -56,6 +56,11 @@ public class PredicatedSortedSetTest<E> extends AbstractSortedSetTest<E> {
         return PredicatedSortedSet.predicatedSortedSet(set, truePredicate);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     protected Predicate<E> testPredicate =
         o -> o instanceof String && ((String) o).startsWith("A");
 

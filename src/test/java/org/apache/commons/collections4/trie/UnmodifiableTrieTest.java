@@ -63,6 +63,11 @@ public class UnmodifiableTrieTest<V> extends AbstractSortedMapTest<String, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public Trie<String, V> makeFullMap() {
         final Trie<String, V> m = new PatriciaTrie<>();
         addSampleMappings(m);

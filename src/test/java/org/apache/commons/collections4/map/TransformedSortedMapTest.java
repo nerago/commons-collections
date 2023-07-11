@@ -62,6 +62,11 @@ public class TransformedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> 
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testTransformedMap() {

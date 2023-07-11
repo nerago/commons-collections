@@ -64,7 +64,13 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
 
     @Override
     public SortedMap<K, V> makeObject() {
-        return lazySortedMap(new TreeMap<K, V>(), FactoryUtils.<V>nullFactory());
+        return lazySortedMap(new TreeMap<K, V>(), (Factory<V>) oneFactory);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public V getMissingEntryGetExpectValue() {
+        return (V) (Integer) 1;
     }
 
     @Override
@@ -72,15 +78,18 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         return false;
     }
 
-    // from LazyMapTest
-    @Test
     @Override
-    public void testMapGet() {
-        //TODO eliminate need for this via superclass - see svn history.
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
+    public boolean isGetStructuralModify() {
+        return true;
     }
 
     @Test
-    public void mapGet() {
+    public void mapGetLazy() {
         Map<Integer, Number> map = lazySortedMap(new TreeMap<Integer, Number>(), oneFactory);
         assertEquals(0, map.size());
         final Number i1 = map.get(5);

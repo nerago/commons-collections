@@ -63,6 +63,11 @@ public class PredicatedNavigableSetTest<E> extends AbstractNavigableSetTest<E> {
         return PredicatedNavigableSet.predicatedNavigableSet(new TreeSet<E>(), testPredicate);
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     public void testGetSet() {
         final PredicatedNavigableSet<E> set = makeTestSet();

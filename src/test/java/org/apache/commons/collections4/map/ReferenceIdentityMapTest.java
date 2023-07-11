@@ -106,6 +106,11 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public Map<K, V> makeConfirmedMap() {
         // Testing against another [collections] class generally isn't a good idea,
         // but the closest alternative is IdentityHashMap, which propagates reference-equality down to keySet and values.

@@ -65,6 +65,11 @@ public class UnmodifiableListTest<E> extends AbstractListTest<E> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     protected UnmodifiableList<E> list;
     protected ArrayList<E> array;
 

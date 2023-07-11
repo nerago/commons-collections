@@ -70,6 +70,11 @@ public class PredicatedQueueTest<E> extends AbstractQueueTest<E> {
         return list;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     protected Predicate<E> testPredicate = o -> o instanceof String;
 
     public Queue<E> makeTestQueue() {

@@ -82,6 +82,11 @@ public class UnmodifiableQueueTest<E> extends AbstractQueueTest<E> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
     @Test
     @Override
     public void testQueueRemove() {

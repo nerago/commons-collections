@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +62,11 @@ public class PredicatedSetTest<E> extends AbstractSetTest<E> {
 
     protected PredicatedSet<E> makeTestSet() {
         return decorateSet(new HashSet<E>(), testPredicate);
+    }
+
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
     }
 
     @Test
@@ -102,8 +108,8 @@ public class PredicatedSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    protected int getIterationBehaviour() {
-        return UNORDERED;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
 //    public void testCreate() throws Exception {
