@@ -1062,6 +1062,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         resetFull();
         assertNotEquals(0, getCollection().size(), "Size of full collection should be greater than zero");
         assertFalse(getCollection().isEmpty(), "Size of full collection should be greater than zero");
+        assertEquals(getConfirmed().size(), getCollection().size(), "Size should match confirmed collection");
     }
 
     /**
@@ -1366,7 +1367,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         if (!isCopyConstructorSupported())
             return;
 
-        // empty
         setConfirmed(makeConfirmedCollection());
         setCollection(makeObjectCopy(getConfirmed()));
         verify();
@@ -1476,58 +1476,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     public void setConfirmed(final Collection<E> confirmed) {
         this.confirmed = confirmed;
-    }
-
-    /**
-     * Handle the optional exceptions declared by {@link Collection#contains(Object)}
-     * @param coll
-     * @param element
-     */
-    protected static void assertNotCollectionContains(final Collection<?> coll, final Object element) {
-        try {
-            assertFalse(coll.contains(element));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle the optional exceptions declared by {@link Collection#containsAll(Collection)}
-     * @param coll
-     * @param sub
-     */
-    protected static void assertNotCollectionContainsAll(final Collection<?> coll, final Collection<?> sub) {
-        try {
-            assertFalse(coll.containsAll(sub));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle optional exceptions of {@link Collection#remove(Object)}
-     * @param coll
-     * @param element
-     */
-    protected static void assertNotRemoveFromCollection(final Collection<?> coll, final Object element) {
-        try {
-            assertFalse(coll.remove(element));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle optional exceptions of {@link Collection#removeAll(Collection)}
-     * @param coll
-     * @param sub
-     */
-    protected static void assertNotRemoveAllFromCollection(final Collection<?> coll, final Collection<?> sub) {
-        try {
-            assertFalse(coll.removeAll(sub));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
     }
 
 }
