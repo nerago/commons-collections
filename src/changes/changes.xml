@@ -197,6 +197,9 @@
     <action issue="COLLECTIONS-793" type="fix" dev="kinow" due-to="Arturo Bernal">
       Simplify Assertion.
     </action>
+    <action dev="ggregory" type="fix" due-to="step-security-bot, Gary Gregory">
+      [StepSecurity] ci: Harden GitHub Actions #401.
+    </action>
     <!-- ADD -->
     <action issue="COLLECTIONS-748" dev="ggregory" type="add" due-to="Gary Gregory">
       Let org.apache.commons.collections4.properties.[Sorted]PropertiesFactory accept XML input.
@@ -314,7 +317,7 @@
       Bump maven-pmd-plugin from 3.12.0 to 3.19.0 #167, #196, #253, #311, #334.
     </action>
     <action type="update" dev="ggregory" due-to="Gary Gregory">
-      Bump optional commons-codec from 1.14 to 1.15.
+      Bump optional commons-codec:commons-codec from 1.14 to 1.16.0.
     </action>
     <action type="update" dev="ggregory" due-to="Dependabot">
       Bump commons.junit.version from 5.6.2 to 5.8.2 #181 #213 #236 #252 #254 #268.
@@ -353,7 +356,7 @@
       Bump pmd from 6.46.0 to 6.52.0 #318, #327, #333, #347.
     </action>
     <action type="update" dev="ggregory" due-to="Dependabot">
-      Bump guava-testlib from 31.1-jre to 32.0.1-jre #394, #395.
+      Bump guava-testlib from 31.1-jre to 32.1.1-jre #394, #395, #404, #405.
     </action>
   </release>
   <release version="4.4" date="2019-07-05" description="Maintenance release.">

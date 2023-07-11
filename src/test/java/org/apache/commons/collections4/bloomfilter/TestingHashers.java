@@ -15,19 +15,20 @@
  * limitations under the License.
  */
 package org.apache.commons.collections4.bloomfilter;
+
 /**
  * A collection of methods and statics that represent standard hashers in testing.
  */
-class TestingHashers {
+public class TestingHashers {
     /**
      * Hasher that increments from 1.
      */
-    static final Hasher FROM1 = new IncrementingHasher(1, 1);
+    public static final Hasher FROM1 = new IncrementingHasher(1, 1);
 
     /**
      * Hasher that increments from 11.
      */
-    static final Hasher FROM11 = new IncrementingHasher(11, 1);
+    public static final Hasher FROM11 = new IncrementingHasher(11, 1);
 
     /**
      * Do not instantiate.
@@ -41,7 +42,7 @@ class TestingHashers {
      * @param hashers The hashers to merge
      * @return {@code filter} for chaining
      */
-    static <T extends BloomFilter> T mergeHashers(T filter, Hasher...hashers) {
+    public static <T extends BloomFilter> T mergeHashers(T filter, Hasher...hashers) {
         for (Hasher h : hashers) {
             filter.merge(h);
         }
@@ -54,22 +55,37 @@ class TestingHashers {
      * @param filter The Bloom filter to populate
      * @return {@code filter} for chaining
      */
-    static <T extends BloomFilter> T populateFromHashersFrom1AndFrom11(T filter) {
+    public static <T extends BloomFilter> T populateFromHashersFrom1AndFrom11(T filter) {
         return mergeHashers(filter, FROM1, FROM11);
     }
 
     /**
-     * Create a hasher that fills the entire range.
+     * Enables all bits in the filter.
      * @param <T> the Bloom filter type.
      * @param filter the Bloom filter to populate
      * @return {@code filter} for chaining
      */
-    static <T extends BloomFilter> T populateEntireFilter(T filter) {
-        int n = filter.getShape().getNumberOfBits();
-        int k = filter.getShape().getNumberOfHashFunctions();
-        for (int i = 0; i < n; i += k) {
-            filter.merge(new IncrementingHasher(i, 1));
-        }
+    public static <T extends BloomFilter> T populateEntireFilter(T filter) {
+        return populateRange(filter, 0, filter.getShape().getNumberOfBits() - 1);
+    }
+
+    /**
+     * Enables all bits in a range (inclusive).
+     * @param <T> the Bloom filter type.
+     * @param filter the Bloom filter to populate
+     * @param start the starting bit to enable.
+     * @param end the last bit to enable.
+     * @return {@code filter} for chaining
+     */
+    public static <T extends BloomFilter> T populateRange(T filter, int start, int end) {
+        filter.merge((IndexProducer) p -> {
+            for (int i = start; i <= end; i++) {
+                if (!p.test(i)) {
+                    return false;
+                }
+            }
+            return true;
+        });
         return filter;
     }
 }
