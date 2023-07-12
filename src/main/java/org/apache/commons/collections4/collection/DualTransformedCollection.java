@@ -41,7 +41,7 @@ import java.util.function.Predicate;
  * @param <I> the type of the elements external collection interface for the transformed collection
  * @since X.X
  */
-public class DualTransformedCollection<S, I> implements Collection<I>, Serializable {
+public class DualTransformedCollection<I, S> implements Collection<I>, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 4488366779197789058L;

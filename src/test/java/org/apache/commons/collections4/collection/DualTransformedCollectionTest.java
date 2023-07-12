@@ -17,10 +17,10 @@
 package org.apache.commons.collections4.collection;
 
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.TransformerUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -70,54 +70,91 @@ public class DualTransformedCollectionTest extends AbstractCollectionTest<Intege
 
     @Override
     public Collection<Integer> makeObject() {
-        return DualTransformedCollection.transformingCollection(new ArrayList<>(), NOOP_TRANSFORMER);
+        final List<String> list = new ArrayList<>();
+        return DualTransformedCollection.transformingCollection(list, INTEGER_TO_STRING_TRANSFORMER, STRING_TO_INTEGER_TRANSFORMER);
     }
 
     @Override
     public Collection<Integer> makeFullCollection() {
-        final List<Object> list = new ArrayList<>(Arrays.asList(getFullElements()));
-        return DualTransformedCollection.transformingCollection(list, NOOP_TRANSFORMER);
+        final List<Integer> input = Arrays.asList(getFullElements());
+        final List<String> list = new ArrayList<>();
+        return DualTransformedCollection.transformedCollection(input, list, INTEGER_TO_STRING_TRANSFORMER, STRING_TO_INTEGER_TRANSFORMER);
     }
+
+    public String[] getFullElementsInternal() { return new String[]{"1", "3", "5", "7", "2", "4", "6"}; }
 
     @Override
     public Integer[] getFullElements() {
-        return new Object[]{"1", "3", "5", "7", "2", "4", "6"};
+        return new Integer[]{1, 3, 5, 7, 2, 4, 6};
     }
 
     @Override
     public Integer[] getOtherElements() {
-        return new Object[]{"9", "88", "678", "87", "98", "78", "99"};
+        return new Integer[]{9, 88, 678, 87, 98, 78, 99};
+    }
+
+    protected Collection<String> getInternal(Collection<Integer> coll) {
+        return ((DualTransformedCollection<Integer, String>)coll).decorated();
     }
 
     @Test
     public void testTransformedCollection() {
-        final Collection<Object> coll = DualTransformedCollection.transformingCollection(new ArrayList<>(), STRING_TO_INTEGER_TRANSFORMER);
+        final Collection<Integer> coll = makeObject();
         assertEquals(0, coll.size());
-        final Object[] elements = getFullElements();
+        final Integer[] elements = getFullElements();
+        final String[] internalElements = getFullElementsInternal();
         for (int i = 0; i < elements.length; i++) {
+            final Integer e = elements[i];
+            final String s = internalElements[i];
             coll.add(elements[i]);
             assertEquals(i + 1, coll.size());
-            assertTrue(coll.contains(Integer.valueOf((String) elements[i])));
-            assertFalse(coll.contains(elements[i]));
+            assertTrue(coll.contains(e));
+            assertFalseOrThrows(ClassCastException.class, () -> coll.contains(s));
+            assertFalseOrThrows(ClassCastException.class, () -> getInternal(coll).contains(e));
+            assertTrue(getInternal(coll).contains(s));
         }
 
-        assertTrue(coll.remove(Integer.valueOf((String) elements[0])));
+        assertTrue(coll.remove(elements[0]));
+        assertFalseOrThrows(ClassCastException.class, () -> coll.remove(internalElements[1]));
     }
 
     @Test
     public void testTransformedCollection_decorateTransform() {
-        final Collection<Object> originalCollection = new ArrayList<>();
-        final Object[] elements = getFullElements();
-        Collections.addAll(originalCollection, elements);
-        final Collection<Object> collection = DualTransformedCollection.transformedCollection(originalCollection, TransformedCollectionTest.STRING_TO_INTEGER_TRANSFORMER);
+        final Collection<Integer> inputCollection = new ArrayList<>();
+        final Integer[] elements = getFullElements();
+        final String[] internalElements = getFullElementsInternal();
+        Collections.addAll(inputCollection, elements);
+        Collection<String> storedCollection = new ArrayList<>();
+        final DualTransformedCollection<Integer, String> collection =
+                (DualTransformedCollection<Integer, String>) DualTransformedCollection.transformedCollection(
+                inputCollection, storedCollection, INTEGER_TO_STRING_TRANSFORMER, STRING_TO_INTEGER_TRANSFORMER);
         assertEquals(elements.length, collection.size());
         for (final Object element : elements) {
-            assertTrue(collection.contains(Integer.valueOf((String) element)));
-            assertFalse(collection.contains(element));
+            final Object str = element.toString();
+            assertTrue(collection.contains(element));
+            assertFalseOrThrows(ClassCastException.class, () -> collection.contains(str));
+            assertFalseOrThrows(ClassCastException.class, () -> collection.decorated().contains(element));
+            assertTrue(collection.decorated().contains(str));
         }
 
-        assertFalse(collection.remove(elements[0]));
-        assertTrue(collection.remove(Integer.valueOf((String) elements[0])));
+        assertTrue(collection.remove(elements[0]));
+        assertFalseOrThrows(ClassCastException.class, () -> collection.remove(internalElements[1]));
+    }
+
+    private void assertFalseOrThrows(Class<?> expectedType, Callable<Boolean> executable) {
+        try {
+            boolean result = executable.call();
+            assertFalse(result);
+            return;
+        }
+        catch (Throwable actualException) {
+            if (expectedType.isInstance(actualException)) {
+                return;
+            } else {
+                fail("Expected exception " + expectedType + " to be thrown, but " + actualException.getClass() + " was thrown.");
+            }
+        }
+        fail("Expected exception " + expectedType + " to be thrown, but nothing was thrown.");
     }
 
     @Override
