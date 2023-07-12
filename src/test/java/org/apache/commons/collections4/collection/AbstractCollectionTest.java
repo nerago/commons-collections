@@ -1211,7 +1211,19 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertNotNull(getCollection().toString(), "toString shouldn't return null");
 
         resetFull();
-        assertNotNull(getCollection().toString(), "toString shouldn't return null");
+        final String fullString = getCollection().toString();
+        assertNotNull(fullString, "toString shouldn't return null");
+
+        // no standard format but should attempt to contain text of contents
+        for (E e : getFullElements()) {
+            if (e != null) {
+                String s = e.toString();
+                if (s.length() > 0 && !fullString.contains(s)) {
+                    System.out.println(fullString);
+                    fail("toString of collection does not contain toString of element " + s);
+                }
+            }
+        }
     }
 
     /**
