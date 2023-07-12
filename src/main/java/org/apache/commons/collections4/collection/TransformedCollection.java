@@ -32,6 +32,12 @@ import org.apache.commons.collections4.Transformer;
  * use the Integer form to remove objects.
  * </p>
  * <p>
+ * You can use the class with such transforming types however to do so
+ * you will have to give up on type safety and just use Object
+ * type, the collection interface doesn't work nicely with mixed types.
+ * </p>
+ * <p>See also {@link DualTransformedCollection}.</p>
+ * <p>
  * This class is Serializable from Commons Collections 3.1.
  * </p>
  *
