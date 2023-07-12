@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public final class LongMap<V> {
@@ -461,6 +462,25 @@ public final class LongMap<V> {
             entry = entry.next;
         }
         return false;
+    }
+
+    private boolean removeIf(Predicate<LongHashEntry<V>> predicate) {
+        Objects.requireNonNull(predicate);
+        boolean modified = false;
+        for (int bucketIndex = 0; bucketIndex < data.length; ++bucketIndex) {
+            LongHashEntry<V> entry = data[bucketIndex];
+            LongHashEntry<V> previous = null;
+            while (entry != null) {
+                if (predicate.test(entry)) {
+                    removeMapping(entry, bucketIndex, previous);
+                    modified = true;
+                } else {
+                    previous = entry;
+                }
+                entry = entry.next;
+            }
+        }
+        return modified;
     }
 
     /**
@@ -939,17 +959,50 @@ public final class LongMap<V> {
         }
 
         @Override
-        public boolean contains(Object k) {
-            return parent.containsKey((long) k);
+        public boolean contains(Object key) {
+            return parent.containsKey((long) key);
         }
 
-        public boolean contains(long k) {
-            return parent.containsKey(k);
+        public boolean contains(long key) {
+            return parent.containsKey(key);
         }
-        
+
+        @Override
+        public boolean containsAll(Collection<?> coll) {
+            for (Object key : coll) {
+                if (!parent.containsKey((Long) key))
+                    return false;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean remove(long key) {
+            return parent.removeKey(key);
+        }
+
         @Override
         public boolean remove(Object o) {
             return parent.removeKey((long) o);
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> coll) {
+            boolean modified = false;
+            for (Object key : coll) {
+                modified |= parent.removeKey((Long) key);
+            }
+            return modified;
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            return false;
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super Long> filter) {
+            return parent.removeIf(e -> filter.test(e.key));
         }
 
         @Override
@@ -976,10 +1029,18 @@ public final class LongMap<V> {
         public boolean addAll(Collection<? extends Long> c) {
             throw new UnsupportedOperationException();
         }
-
     }
 
     private Iterator<Long> keyIterator() {
+        return null; // TODO
+    }
+
+    private Iterator<Map.Entry<Long, V>> createEntrySetIterator() {
+        return null; // TODO
+    }
+
+    private Iterator<V> createValuesIterator() {
+        return null; // TODO
     }
 
     interface LongSet {
@@ -995,7 +1056,7 @@ public final class LongMap<V> {
         /** The parent map */
         private final LongMap<V> parent;
 
-        protected EntrySet(final LongMap<V> parent) {
+        private EntrySet(final LongMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1020,7 +1081,7 @@ public final class LongMap<V> {
         }
 
         @Override
-        public Iterator<Map.Entry<K, V>> iterator() {
+        public Iterator<Map.Entry<Long, V>> iterator() {
             return parent.createEntrySetIterator();
         }
     }
@@ -1054,4 +1115,5 @@ public final class LongMap<V> {
             return parent.createValuesIterator();
         }
     }
+
 }
