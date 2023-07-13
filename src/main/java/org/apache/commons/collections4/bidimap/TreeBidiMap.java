@@ -23,13 +23,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.AbstractSet;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
@@ -1864,6 +1860,174 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
+    private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL };
+
+    class ViewMapSpliterator<E> implements Spliterator<E> {
+        private final int expectedModifications;
+        /** Whether to return KEY or VALUE order. */
+        private final DataElement orderType;
+        private final Function<Node<K, V>, E> convertForAction;
+        private SplitState state;
+        /** The next node to be returned by the spliterator. */
+        private Node<K, V> currentNode;
+        /** The final node to be returned by the spliterator (just needed when split). */
+        private Node<K, V> lastNode;
+        private int estimatedSize;
+
+        /**
+         * Constructor.
+         * @param orderType  the KEY or VALUE int for the order
+         */
+        ViewMapSpliterator(final DataElement orderType, final Function<Node<K, V>, E> convertForAction) {
+            this.expectedModifications = modifications;
+            this.orderType = orderType;
+            this.convertForAction = convertForAction;
+            this.state = SplitState.INITIAL;
+            this.currentNode = rootNode[orderType.ordinal()];
+            this.lastNode = greatestNode(currentNode, orderType);
+            this.estimatedSize = nodeCount;
+        }
+
+        private ViewMapSpliterator(DataElement orderType, Function<Node<K, V>, E> convertForAction, SplitState state,
+                                   Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            this.expectedModifications = modifications;
+            this.orderType = orderType;
+            this.convertForAction = convertForAction;
+            this.state = state;
+            this.currentNode = currentNode;
+            this.lastNode = lastNode;
+            this.estimatedSize = estimatedSize;
+        }
+
+        private void checkInit() {
+            if (state != SplitState.READY && state != SplitState.READY_SPLIT) {
+                if (state == SplitState.INITIAL) {
+                    currentNode = leastNode(currentNode, orderType);
+                    state = SplitState.READY;
+                } else if (state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID) {
+                    currentNode = leastNode(currentNode, orderType);
+                    state = SplitState.READY_SPLIT;
+                } else if (state == SplitState.SPLITTING_LEFT) {
+                    lastNode = greatestNode(lastNode, orderType);
+                    state = SplitState.READY_SPLIT;
+                }
+            }
+        }
+
+        @Override
+        public boolean tryAdvance(Consumer<? super E> action) {
+            if (modifications != expectedModifications) {
+                throw new ConcurrentModificationException();
+            }
+            checkInit();
+            Node<K, V> current = currentNode;
+            if (current != null) {
+                action.accept(convertForAction.apply(current));
+                if (current != lastNode)
+                    currentNode = nextGreater(current, orderType);
+                else
+                    currentNode = null;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super E> action) {
+            checkInit();
+            Node<K, V> current = currentNode, last = lastNode;
+            while (current != null) {
+                action.accept(convertForAction.apply(current));
+                if (current != last)
+                    current = nextGreater(current, orderType);
+                else
+                    current = null;
+            }
+            if (modifications != expectedModifications)
+                throw new ConcurrentModificationException();
+            currentNode = null;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            final Node<K, V> left = currentNode.getLeft(orderType), right = currentNode.getRight(orderType);
+            if (left == null || right == null)
+                return null;
+
+            ViewMapSpliterator<E> split = null;
+            if (state == SplitState.INITIAL) {
+                // our range is full tree
+                Node<K, V> splitLast = nextSmaller(currentNode, orderType);
+                if (left.isLessThan(splitLast, orderType) && currentNode.isLessThan(lastNode, orderType)) {
+                    // give prefix split left subtree only
+                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_MID,
+                            left, splitLast, estimatedSize >>>= 1);
+                    // keep current node and right subtree
+                    state = SplitState.SPLITTING_RIGHT;
+                }
+            } else if (state == SplitState.SPLITTING_MID) {
+                // our range is full spread under currentNode
+                Node<K, V> splitLast = nextSmaller(currentNode, orderType);
+                if (left.isLessThan(splitLast, orderType) && currentNode.isLessThan(lastNode, orderType)) {
+                    // give prefix split left subtree only
+                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_MID,
+                            left, splitLast, estimatedSize >>>= 1);
+                    // keep current node and right subtree, keep last as-is
+                    state = SplitState.SPLITTING_RIGHT;
+                }
+            } else if (state == SplitState.SPLITTING_RIGHT) {
+                // our range is current node plus right subtree
+                Node<K, V> rightLeft = right.getLeft(orderType);
+                if (rightLeft != null && currentNode.isLessThan(rightLeft, orderType) && right.isLessThan(lastNode, orderType)) {
+                    // give prefix current node plus right.left subtree
+                    // note that rightLeft isn't actually the lastNode for that case, but the ref they need
+                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_LEFT,
+                            currentNode, rightLeft, estimatedSize >>>= 1);
+                    // remain should be right plus right.right subtree
+                    state = SplitState.SPLITTING_RIGHT;
+                    currentNode = right;
+                }
+            } else if (state == SplitState.SPLITTING_LEFT) {
+                // our range is current node plus a successor subtree
+                Node<K, V> passedSubTree = lastNode;
+                Node<K, V> subTreeLeft = passedSubTree.getLeft(orderType), subTreeRight = passedSubTree.getRight(orderType);
+                if (subTreeLeft != null && currentNode.isLessThan(subTreeLeft, orderType) && subTreeRight != null) {
+                    // make prefix another left split
+                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_LEFT,
+                            currentNode, subTreeLeft, estimatedSize >>>= 1);
+
+                    // make this a right split
+                    state = SplitState.SPLITTING_RIGHT;
+                    currentNode = passedSubTree;
+                    lastNode = greatestNode(passedSubTree, orderType);
+                }
+            } else {
+                throw new IllegalStateException();
+            }
+
+            return split;
+        }
+
+        @Override
+        public Comparator<? super E> getComparator() {
+            return null; // null == natural order. but that might not work for entries?
+        }
+
+        @Override
+        public long estimateSize() {
+            return estimatedSize;
+        }
+
+        @Override
+        public int characteristics() {
+            if (state == SplitState.READY_SPLIT || state == SplitState.SPLITTING_LEFT || state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID)
+                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED;
+            else
+                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED | Spliterator.SIZED;
+        }
+    }
+    
     /**
      * A node used to store the data.
      */
@@ -2020,6 +2184,17 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         private boolean isRightChild(final DataElement dataElement) {
             return parentNode[dataElement.ordinal()] != null
                     && parentNode[dataElement.ordinal()].rightNode[dataElement.ordinal()] == this;
+        }
+
+        public boolean isLessThan(final Node<K, V> other, final DataElement dataElement) {
+            switch (dataElement) {
+                case KEY:
+                    return TreeBidiMap.compare(key, other.key) < 0;
+                case VALUE:
+                    return TreeBidiMap.compare(value, other.value) < 0;
+                default:
+                    throw new IllegalArgumentException();
+            }
         }
 
         /**
