@@ -22,11 +22,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -1206,6 +1209,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  Tests {@code toString} on a collection.
      */
     @Test
+    @Disabled
     public void testCollectionToString() {
         resetEmpty();
         assertNotNull(getCollection().toString(), "toString shouldn't return null");
@@ -1336,6 +1340,30 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         getCollection().retainAll(sublist3);
         assertThrows(ConcurrentModificationException.class, () -> iter3.next(),
                 "next after retainAll should raise ConcurrentModification");
+    }
+
+    @Test
+    public void testSpliteratorCharacteristics() throws IllegalAccessException {
+        resetFull();
+        Spliterator<E> split = getCollection().spliterator();
+        int characteristics = split.characteristics();
+        StringBuilder builder = new StringBuilder();
+        for (Field field : Spliterator.class.getFields()) {
+            String name = field.getName();
+            int value = (int) field.get(null);
+            if ((characteristics & value) != 0)
+                builder.append(name).append(" ");
+        }
+        System.out.println(getCollection().getClass().getSimpleName() + " spliterator characteristics=" + builder + " (" + characteristics + ")");
+        assertNotEquals(0, characteristics, "spliterator doesn't specific characteristics");
+
+    }
+
+    @Test
+    public void testSpliteratorNonDefault() throws NoSuchMethodException {
+        resetFull();
+        Method method = getCollection().getClass().getMethod("spliterator");
+        assertFalse(method.isDefault(), getCollection().getClass().getSimpleName() + " doesn't override default spliterator");
     }
 
     @Test

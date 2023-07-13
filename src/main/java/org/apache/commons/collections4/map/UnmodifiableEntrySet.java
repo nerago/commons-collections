@@ -17,16 +17,15 @@
 package org.apache.commons.collections4.map;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
+import org.apache.commons.collections4.spliterators.UnmodifiableEntrySetSpliterator;
 
 /**
  * Decorates a map entry {@code Set} to ensure it can't be altered.
@@ -116,11 +115,16 @@ public final class UnmodifiableEntrySet<K, V>
     }
 
     @Override
+    public Spliterator<Map.Entry<K, V>> spliterator() {
+        return new UnmodifiableEntrySetSpliterator<>(decorated().spliterator());
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public Object[] toArray() {
         final Object[] array = decorated().toArray();
         for (int i = 0; i < array.length; i++) {
-            array[i] = new UnmodifiableEntry((Map.Entry<K, V>) array[i]);
+            array[i] = new UnmodifiableMapEntry<>((Map.Entry<K, V>) array[i]);
         }
         return array;
     }
@@ -136,7 +140,7 @@ public final class UnmodifiableEntrySet<K, V>
         }
         result = decorated().toArray(result);
         for (int i = 0; i < result.length; i++) {
-            result[i] = new UnmodifiableEntry((Map.Entry<K, V>) result[i]);
+            result[i] = new UnmodifiableMapEntry<>((Map.Entry<K, V>) result[i]);
         }
 
         // check to see if result should be returned straight
@@ -163,26 +167,11 @@ public final class UnmodifiableEntrySet<K, V>
 
         @Override
         public Map.Entry<K, V> next() {
-            return new UnmodifiableEntry(getIterator().next());
+            return new UnmodifiableMapEntry<>(getIterator().next());
         }
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    /**
-     * Implementation of a map entry that is unmodifiable.
-     */
-    private class UnmodifiableEntry extends AbstractMapEntryDecorator<K, V> {
-
-        protected UnmodifiableEntry(final Map.Entry<K, V> entry) {
-            super(entry);
-        }
-
-        @Override
-        public V setValue(final V obj) {
             throw new UnsupportedOperationException();
         }
     }
