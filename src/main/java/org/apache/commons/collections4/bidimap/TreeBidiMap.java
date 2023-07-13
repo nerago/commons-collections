@@ -1822,15 +1822,17 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Map.Entry<K, V> next() {
-            return navigateNext();
+            return createEntry(navigateNext());
         }
 
         @Override
         public Map.Entry<K, V> previous() {
-            return navigatePrevious();
+            return createEntry(navigatePrevious());
         }
 
-        // TODO make unmodifiable here too?
+        private Map.Entry<K, V> createEntry(final Node<K, V> node) {
+            return new UnmodifiableMapEntry<>((Map.Entry<K, V>) node);
+        }
     }
 
     /**

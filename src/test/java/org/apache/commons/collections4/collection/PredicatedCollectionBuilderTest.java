@@ -27,6 +27,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.Predicate;
 import org.junit.jupiter.api.Test;
 
@@ -86,6 +87,9 @@ public class PredicatedCollectionBuilderTest {
 
         final Queue<String> predicatedQueue = builder.createPredicatedQueue();
         checkPredicatedCollection1(predicatedQueue);
+
+        final MultiSet<String> predicatedMultiSet = builder.createPredicatedMultiSet();
+        checkPredicatedCollection1(predicatedMultiSet);
     }
 
     private void checkPredicatedCollection1(final Collection<String> collection) {
@@ -118,6 +122,9 @@ public class PredicatedCollectionBuilderTest {
 
         final Queue<Integer> predicatedQueue = builder.createPredicatedQueue();
         checkPredicatedCollection2(predicatedQueue);
+        
+        final MultiSet<Integer> predicatedMultiSet = builder.createPredicatedMultiSet();
+        checkPredicatedCollection2(predicatedMultiSet);
     }
 
     private void checkPredicatedCollection2(final Collection<Integer> collection) {

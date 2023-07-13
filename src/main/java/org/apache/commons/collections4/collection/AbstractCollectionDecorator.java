@@ -20,7 +20,10 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Decorates another {@code Collection} to provide additional behavior.
@@ -175,6 +178,26 @@ public abstract class AbstractCollectionDecorator<E>
     @Override
     public boolean retainAll(final Collection<?> coll) {
         return decorated().retainAll(coll);
+    }
+
+    @Override
+    public void forEach(Consumer<? super E> action) {
+        decorated().forEach(action);
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return decorated().spliterator();
+    }
+
+    @Override
+    public Stream<E> stream() {
+        return decorated().stream();
+    }
+
+    @Override
+    public Stream<E> parallelStream() {
+        return decorated().parallelStream();
     }
 
     @Override

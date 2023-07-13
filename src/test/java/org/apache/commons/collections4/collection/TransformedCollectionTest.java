@@ -50,16 +50,16 @@ public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
         }
     }
 
-    private static class ToLowerCase implements Transformer<Object, Object> {
+    private static class ToLowerCase implements Transformer<String, String> {
         @Override
-        public Object transform(final Object input) {
-            return ((String) input).toLowerCase();
+        public String transform(final String input) {
+            return input.toLowerCase();
         }
     }
 
     public static final Transformer<Object, Object> NOOP_TRANSFORMER = TransformerUtils.nopTransformer();
     public static final Transformer<Object, Object> STRING_TO_INTEGER_TRANSFORMER = new StringToInteger();
-    public static final Transformer<Object, Object> TO_LOWER_CASE_TRANSFORMER = new ToLowerCase();
+    public static final Transformer<String, String> TO_LOWER_CASE_TRANSFORMER = new ToLowerCase();
 
     public TransformedCollectionTest() {
         super(TransformedCollectionTest.class.getSimpleName());

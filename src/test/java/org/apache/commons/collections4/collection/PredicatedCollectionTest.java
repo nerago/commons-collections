@@ -16,9 +16,6 @@
  */
 package org.apache.commons.collections4.collection;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,6 +24,8 @@ import java.util.List;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Extension of {@link AbstractCollectionTest} for exercising the
@@ -113,6 +112,27 @@ public class PredicatedCollectionTest<E> extends AbstractCollectionTest<E> {
         assertFalse(c.contains("two"), "Collection shouldn't contain illegal element");
         assertFalse(c.contains(3), "Collection shouldn't contain illegal element");
         assertFalse(c.contains("four"), "Collection shouldn't contain illegal element");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testValidateOnCreate() {
+        final List<E> elements1 = new ArrayList<>();
+        elements1.add((E) "one");
+        elements1.add((E) Integer.valueOf(2));
+        assertThrows(IllegalArgumentException.class, () -> decorateCollection(elements1, testPredicate));
+
+        final List<E> elements2 = new ArrayList<>();
+        elements2.add((E) "one");
+        elements2.add((E) "two");
+        final Collection<E> c2 = decorateCollection(elements2, testPredicate);
+        assertEquals(2, c2.size());
+        assertTrue(c2.contains("one"));
+        assertTrue(c2.contains("two"));
+
+        final List<E> elements3 = new ArrayList<>();
+        final Collection<E> c3 = decorateCollection(elements3, testPredicate);
+        assertEquals(0, c3.size());
     }
 
     @Override

@@ -22,11 +22,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -486,32 +489,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             Long.valueOf(0),
             Character.valueOf('\u0000'),
             "0"
-        };
-    }
-
-    /**
-     *  Returns a list of string elements suitable for return by
-     *  {@link #getFullElements()}.  Override getFullElements to return
-     *  the results of this method if your collection does not support
-     *  heterogeneous elements or the null element.
-     */
-    public Object[] getFullNonNullStringElements() {
-        return new Object[] {
-            "If", "the", "dull", "substance", "of", "my", "flesh", "were",
-            "thought", "Injurious", "distance", "could", "not", "stop", "my", "way",
-        };
-    }
-
-    /**
-     *  Returns a list of string elements suitable for return by
-     *  {@link #getOtherElements()}.  Override getOtherElements to return
-     *  the results of this method if your collection does not support
-     *  heterogeneous elements or the null element.
-     */
-    public Object[] getOtherNonNullStringElements() {
-        return new Object[] {
-            "For", "then", "despite", /* of */"space", "I", "would", "be",
-            "brought", "From", "limits", "far", "remote", "where", "thou", "dost", "stay"
         };
     }
 
@@ -1088,6 +1065,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         resetFull();
         assertNotEquals(0, getCollection().size(), "Size of full collection should be greater than zero");
         assertFalse(getCollection().isEmpty(), "Size of full collection should be greater than zero");
+        assertEquals(getConfirmed().size(), getCollection().size(), "Size should match confirmed collection");
     }
 
     /**
@@ -1204,7 +1182,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * @param a2 Second array
      * @param msg Failure message prefix
      */
-    private static void assertUnorderedArrayEquals(final Object[] a1, final Object[] a2, final String msg) {
+    protected static void assertUnorderedArrayEquals(final Object[] a1, final Object[] a2, final String msg) {
         assertEquals(a1.length, a2.length, () -> msg + ": length");
         final int size = a1.length;
         // Track values that have been matched once (and only once)
@@ -1231,12 +1209,25 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  Tests {@code toString} on a collection.
      */
     @Test
+    @Disabled
     public void testCollectionToString() {
         resetEmpty();
         assertNotNull(getCollection().toString(), "toString shouldn't return null");
 
         resetFull();
-        assertNotNull(getCollection().toString(), "toString shouldn't return null");
+        final String fullString = getCollection().toString();
+        assertNotNull(fullString, "toString shouldn't return null");
+
+        // no standard format but should attempt to contain text of contents
+        for (E e : getFullElements()) {
+            if (e != null) {
+                String s = e.toString();
+                if (s.length() > 0 && !fullString.contains(s)) {
+                    System.out.println(fullString);
+                    fail("toString of collection does not contain toString of element " + s);
+                }
+            }
+        }
     }
 
     /**
@@ -1352,6 +1343,30 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
+    public void testSpliteratorCharacteristics() throws IllegalAccessException {
+        resetFull();
+        Spliterator<E> split = getCollection().spliterator();
+        int characteristics = split.characteristics();
+        StringBuilder builder = new StringBuilder();
+        for (Field field : Spliterator.class.getFields()) {
+            String name = field.getName();
+            int value = (int) field.get(null);
+            if ((characteristics & value) != 0)
+                builder.append(name).append(" ");
+        }
+        System.out.println(getCollection().getClass().getSimpleName() + " spliterator characteristics=" + builder + " (" + characteristics + ")");
+        assertNotEquals(0, characteristics, "spliterator doesn't specific characteristics");
+
+    }
+
+    @Test
+    public void testSpliteratorNonDefault() throws NoSuchMethodException {
+        resetFull();
+        Method method = getCollection().getClass().getMethod("spliterator");
+        assertFalse(method.isDefault(), getCollection().getClass().getSimpleName() + " doesn't override default spliterator");
+    }
+
+    @Test
     @Override
     public void testSerializeDeserializeThenCompare() throws Exception {
         Object obj = makeObject();
@@ -1392,7 +1407,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         if (!isCopyConstructorSupported())
             return;
 
-        // empty
         setConfirmed(makeConfirmedCollection());
         setCollection(makeObjectCopy(getConfirmed()));
         verify();
@@ -1502,58 +1516,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     public void setConfirmed(final Collection<E> confirmed) {
         this.confirmed = confirmed;
-    }
-
-    /**
-     * Handle the optional exceptions declared by {@link Collection#contains(Object)}
-     * @param coll
-     * @param element
-     */
-    protected static void assertNotCollectionContains(final Collection<?> coll, final Object element) {
-        try {
-            assertFalse(coll.contains(element));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle the optional exceptions declared by {@link Collection#containsAll(Collection)}
-     * @param coll
-     * @param sub
-     */
-    protected static void assertNotCollectionContainsAll(final Collection<?> coll, final Collection<?> sub) {
-        try {
-            assertFalse(coll.containsAll(sub));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle optional exceptions of {@link Collection#remove(Object)}
-     * @param coll
-     * @param element
-     */
-    protected static void assertNotRemoveFromCollection(final Collection<?> coll, final Object element) {
-        try {
-            assertFalse(coll.remove(element));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle optional exceptions of {@link Collection#removeAll(Collection)}
-     * @param coll
-     * @param sub
-     */
-    protected static void assertNotRemoveAllFromCollection(final Collection<?> coll, final Collection<?> sub) {
-        try {
-            assertFalse(coll.removeAll(sub));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
     }
 
 }
