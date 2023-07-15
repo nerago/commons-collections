@@ -16,15 +16,9 @@
  */
 package org.apache.commons.collections4.list;
 
-import java.util.AbstractList;
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.lang.reflect.Array;
+import java.util.*;
+import java.util.function.*;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedIterator;
@@ -115,6 +109,14 @@ public class TreeList<E> extends AbstractList<E> {
     }
 
     /**
+     * Returns true if this collection contains no elements.
+     */
+    @Override
+    public boolean isEmpty() {
+        return root == null;
+    }
+
+    /**
      * Gets an iterator over the list.
      *
      * @return an iterator over the list
@@ -150,6 +152,14 @@ public class TreeList<E> extends AbstractList<E> {
         return new TreeListIterator<>(this, fromIndex);
     }
 
+    @Override
+    public Spliterator<E> spliterator() {
+        if (root != null)
+            return new TreeListSpliterator<>(this);
+        else
+            return Spliterators.emptySpliterator();
+    }
+
     /**
      * Searches for the index of an object in the list.
      *
@@ -163,6 +173,14 @@ public class TreeList<E> extends AbstractList<E> {
             return -1;
         }
         return root.indexOf(object, root.relativePosition);
+    }
+
+    @Override
+    public int lastIndexOf(final Object object) {
+        if (root == null) {
+            return -1;
+        }
+        return root.lastIndexOf(object, root.relativePosition);
     }
 
     /**
@@ -187,6 +205,21 @@ public class TreeList<E> extends AbstractList<E> {
         final Object[] array = new Object[size()];
         if (root != null) {
             root.toArray(array, root.relativePosition);
+        }
+        return array;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] array) {
+        if (root != null) {
+            if (array.length < size)
+                array = (T[]) Array.newInstance(array.getClass().getComponentType(), size);
+            root.toArray(array, root.relativePosition);
+            if (array.length > size)
+                array[size] = null;
+        } else if (array.length > 0) {
+            array[0] = null;
         }
         return array;
     }
@@ -265,6 +298,32 @@ public class TreeList<E> extends AbstractList<E> {
         return result;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean remove(Object object) {
+        if (root != null) {
+            AVLNode.BoolHolder isRemoved = new AVLNode.BoolHolder();
+            root = root.remove((E) object, isRemoved);
+            if (isRemoved.flag) {
+                size--;
+                modCount++;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void forEach(Consumer<? super E> action) {
+        if (root != null) {
+            AVLNode<E> node = root.get(0);
+            do {
+                action.accept(node.value);
+                node = node.next();
+            } while (node != null);
+        }
+    }
+
     /**
      * Clears the list, removing all entries.
      */
@@ -273,6 +332,40 @@ public class TreeList<E> extends AbstractList<E> {
         modCount++;
         root = null;
         size = 0;
+    }
+
+    @Override
+    protected void removeRange(int fromIndex, int toIndex) {
+        root = root.removeRange(fromIndex, toIndex, new AVLNode.IntHolder());
+    }
+
+    /**
+     * Returns a view of the portion of this list between the specified
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.  (If
+     * {@code fromIndex} and {@code toIndex} are equal, the returned list is
+     * empty.)  The returned list is backed by this list, so non-structural
+     * changes in the returned list are reflected in this list, and vice-versa.
+     * The returned list supports all of the optional list operations supported
+     * by this list.<p>
+     *
+     * The semantics of the list returned by this method become undefined if
+     * the backing list (i.e., this list) is <i>structurally modified</i> in
+     * any way other than via the returned list.  (Structural modifications are
+     * those that change the size of this list, or otherwise perturb it in such
+     * a fashion that iterations in progress may yield incorrect results.)
+     *
+     * @param fromIndex low endpoint (inclusive) of the subList
+     * @param toIndex high endpoint (exclusive) of the subList
+     * @return a view of the specified range within this list
+     * @throws IndexOutOfBoundsException for an illegal endpoint index value
+     *         ({@code fromIndex < 0 || toIndex > size ||
+     *         fromIndex > toIndex})
+     */
+    @Override
+    public List<E> subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex)
+            throw new IndexOutOfBoundsException();
+        return new TreeSubList<>(this, fromIndex, toIndex - 1);
     }
 
     /**
@@ -443,6 +536,25 @@ public class TreeList<E> extends AbstractList<E> {
         }
 
         /**
+         * Locate the index that contains the specified object.
+         */
+        int lastIndexOf(final Object object, final int index) {
+            if (getRightSubTree() != null) {
+                final int result = right.lastIndexOf(object, index + right.relativePosition);
+                if (result != -1) {
+                    return result;
+                }
+            }
+            if (Objects.equals(value, object)) {
+                return index;
+            }
+            if (getLeftSubTree() != null) {
+                return left.lastIndexOf(object, index + left.relativePosition);
+            }
+            return -1;
+        }
+
+        /**
          * Stores the node and its children into the array specified.
          *
          * @param array the array to be filled
@@ -586,6 +698,83 @@ public class TreeList<E> extends AbstractList<E> {
             return balance();
         }
 
+        private static class BoolHolder {
+            boolean flag = false;
+        }
+
+        /**
+         * Removes the first node with a given value.
+         *
+         * @param removeValue the value to be found and removed.
+         */
+        AVLNode<E> remove(final E removeValue, BoolHolder isRemoved) {
+            AVLNode<E> leftNode = getLeftSubTree();
+            if (leftNode != null) {
+                setLeft(leftNode.remove(removeValue, isRemoved), leftNode.left);
+                if (isRemoved.flag) {
+                    if (relativePosition > 0)
+                        relativePosition--;
+                    recalcHeight();
+                    return balance();
+                }
+            }
+
+            if (Objects.equals(value, removeValue)) {
+                isRemoved.flag = true;
+                return removeSelf();
+            }
+
+            AVLNode<E> rightNode = getRightSubTree();
+            if (rightNode != null) {
+                setRight(rightNode.remove(removeValue, isRemoved), rightNode.right);
+                if (isRemoved.flag) {
+                    if (relativePosition < 0)
+                        relativePosition++;
+                    recalcHeight();
+                    return balance();
+                }
+            }
+
+            return this;
+        }
+
+        private static class IntHolder {
+            int value = 0;
+        }
+
+        public AVLNode<E> removeRange(final int fromIndex, final  int toIndex, final IntHolder parentPositionChange) {
+            final int fromRelativeToMe = fromIndex - relativePosition;
+            final int toRelativeToMe = toIndex - relativePosition;
+
+            if (fromRelativeToMe <= 0 && 0 <= toRelativeToMe) {
+                final AVLNode<E> selfReplacement = removeSelf();
+                parentPositionChange.value++;
+                if (selfReplacement != null)
+                    return selfReplacement.removeRange(fromIndex, toIndex, parentPositionChange);
+                else
+                    return null;
+            }
+
+            if (fromRelativeToMe < 0) {
+                final IntHolder positionChange = new IntHolder();
+                setLeft(left.removeRange(fromRelativeToMe, toRelativeToMe, positionChange), left.left);
+                if (relativePosition > 0) {
+                    relativePosition -= positionChange.value;
+                }
+            }
+
+            if (toRelativeToMe > 0) {
+                final IntHolder positionChange = new IntHolder();
+                setRight(right.removeRange(fromRelativeToMe, toRelativeToMe, positionChange), right.right);
+                if (relativePosition < 0) {
+                    relativePosition += positionChange.value;
+                }
+            }
+
+            recalcHeight();
+            return balance();
+        }
+
         private AVLNode<E> removeMax() {
             if (getRightSubTree() == null) {
                 return removeSelf();
@@ -703,13 +892,11 @@ public class TreeList<E> extends AbstractList<E> {
         /**
          * Sets the relative position.
          */
-        private int setOffset(final AVLNode<E> node, final int newOffset) {
+        private void setOffset(final AVLNode<E> node, final int newOffset) {
             if (node == null) {
-                return 0;
+                return;
             }
-            final int oldOffset = getOffset(node);
             node.relativePosition = newOffset;
-            return oldOffset;
         }
 
         /**
@@ -972,36 +1159,175 @@ public class TreeList<E> extends AbstractList<E> {
         }
     }
 
+    private static class TreeSubList<E> extends AbstractList<E> {
+        private final TreeList<E> parent;
+        private final int fromIndex;
+        private int toIndex;
+
+        public TreeSubList(final TreeList<E> parent, final int fromIndex, final int toIndex) {
+            this.parent = parent;
+            this.fromIndex = fromIndex;
+            this.toIndex = toIndex;
+        }
+
+        private int checkSubListIndex(final int relative, final int toModifier) {
+            int index = fromIndex + relative;
+            if (index < fromIndex || index > toIndex + toModifier) {
+                throw new IndexOutOfBoundsException("Invalid index:" + relative + ", size=" + size());
+            } else if (index >= parent.size + toModifier) {
+                throw new IndexOutOfBoundsException("Invalid index:" + relative +
+                        ", refers to main list index " + index + ", size " + parent.size);
+            }
+            return index;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return toIndex < fromIndex;
+        }
+
+        @Override
+        public int size() {
+            return toIndex - fromIndex + 1;
+        }
+
+        @Override
+        public E get(final int relative) {
+            int index = checkSubListIndex(relative, 0);
+            return parent.root.get(index).getValue();
+        }
+
+        @Override
+        public boolean contains(final Object o) {
+            return indexOf(o) != -1;
+        }
+
+        @Override
+        public int indexOf(final Object object) {
+            int index = fromIndex;
+            AVLNode<E> node = parent.root.get(index);
+            while (index <= toIndex && node != null) {
+                if (Objects.equals(node.value, object))
+                    return index - fromIndex;
+                node = node.next();
+                index++;
+            }
+            return -1;
+        }
+
+        @Override
+        public int lastIndexOf(final Object object) {
+            int index = toIndex;
+            AVLNode<E> node = parent.root.get(index);
+            while (index >= fromIndex && node != null) {
+                if (Objects.equals(node.value, object))
+                    return index - fromIndex;
+                node = node.previous();
+                index--;
+            }
+            return -1;
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return new SubListIterator<>(parent, this, fromIndex, fromIndex, toIndex);
+        }
+
+        @Override
+        public ListIterator<E> listIterator() {
+            return new SubListIterator<>(parent, this, fromIndex, fromIndex, toIndex);
+        }
+
+        @Override
+        public ListIterator<E> listIterator(final int relative) {
+            int index = checkSubListIndex(relative, 1);
+            return new SubListIterator<>(parent, this, index, fromIndex, toIndex);
+        }
+
+        @Override
+        public Spliterator<E> spliterator() {
+            return new TreeListSpliterator<>(parent, fromIndex, toIndex);
+        }
+
+        @Override
+        public boolean add(final E element) {
+            parent.add(toIndex + 1, element);
+            toIndex++;
+            return true;
+        }
+
+        @Override
+        public void add(final int relative, final E element) {
+            int index = checkSubListIndex(relative, 1);
+            parent.add(index, element);
+            toIndex++;
+        }
+
+        @Override
+        public E set(final int relative, final E element) {
+            int index = checkSubListIndex(relative, 0);
+            return parent.set(index, element);
+        }
+
+        @Override
+        public E remove(final int relative) {
+            int index = checkSubListIndex(relative, 0);
+            toIndex--;
+            return parent.remove(index);
+        }
+
+        @Override
+        public void clear() {
+            parent.removeRange(fromIndex, toIndex);
+            toIndex = fromIndex - 1;
+        }
+
+        @Override
+        protected void removeRange(final int fromRelative, final int toRelative) {
+            int fromMain = checkSubListIndex(fromRelative, 0);
+            int toMain = checkSubListIndex(toRelative, 0);
+            parent.removeRange(fromMain, toMain);
+            toIndex -= toRelative - fromRelative + 1;
+        }
+
+        @Override
+        public List<E> subList(final int fromRelative, final int toRelative) {
+            int fromMain = checkSubListIndex(fromRelative, 0);
+            int toMain = checkSubListIndex(toRelative, 1);
+            return new TreeSubList<>(parent, fromMain, toMain - 1);
+        }
+    }
+
     /**
      * A list iterator over the linked list.
      */
     static class TreeListIterator<E> implements ListIterator<E>, OrderedIterator<E> {
         /** The parent list */
-        private final TreeList<E> parent;
+        protected final TreeList<E> parent;
         /**
          * Cache of the next node that will be returned by {@link #next()}.
          */
-        private AVLNode<E> next;
+        protected AVLNode<E> next;
         /**
          * The index of the next node to be returned.
          */
-        private int nextIndex;
+        protected int nextIndex;
         /**
          * Cache of the last node that was returned by {@link #next()}
          * or {@link #previous()}.
          */
-        private AVLNode<E> current;
+        protected AVLNode<E> current;
         /**
          * The index of the last node that was returned.
          */
-        private int currentIndex;
+        protected int currentIndex;
         /**
          * The modification count that the list is expected to have. If the list
          * doesn't have this count, then a
          * {@link java.util.ConcurrentModificationException} may be thrown by
          * the operations.
          */
-        private int expectedModCount;
+        protected int expectedModCount;
 
         /**
          * Create a ListIterator for a list.
@@ -1122,4 +1448,151 @@ public class TreeList<E> extends AbstractList<E> {
         }
     }
 
+    /**
+     * A list iterator over the linked list, with limited range of indexes.
+     */
+    static class SubListIterator<E> extends TreeListIterator<E> {
+        protected final TreeSubList<E> sublist;
+
+        /**
+         * Create a ListIterator for a list.
+         *
+         * @param parent  the parent list
+         * @param fromIndex  the index to start at
+         */
+        protected SubListIterator(final TreeList<E> parent, final TreeSubList<E> sublist, final int startIndex, final int fromIndex, final int toIndex) throws IndexOutOfBoundsException {
+            super(parent, startIndex);
+            this.sublist = sublist;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextIndex <= sublist.toIndex;
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return nextIndex > sublist.fromIndex;
+        }
+
+        @Override
+        public int nextIndex() {
+            return nextIndex - sublist.fromIndex;
+        }
+
+        @Override
+        public void add(final E obj) {
+            super.add(obj);
+            sublist.toIndex++;
+        }
+
+        @Override
+        public void remove() {
+            super.remove();
+            sublist.toIndex--;
+        }
+    }
+
+    static class TreeListSpliterator<E> implements Spliterator<E> {
+        private final TreeList<E> parent;
+        /**
+         * The modification count that the list is expected to have. If the list
+         * doesn't have this count, then a
+         * {@link java.util.ConcurrentModificationException} may be thrown by
+         * the operations.
+         */
+        private final int expectedModCount;
+        /**
+         * The index of the next node to be supplied.
+         */
+        private int nextIndex;
+        /**
+         * The last index this spliterator should supply.
+         */
+        private final int lastIndex;
+        /**
+         * Cache of the next node that will be returned by {@link #tryAdvance}.
+         */
+        private AVLNode<E> next;
+
+        public TreeListSpliterator(final TreeList<E> parent) {
+            this(parent, 0, parent.size - 1);
+        }
+
+        public TreeListSpliterator(final TreeList<E> parent, final int firstIndex, final int lastIndex) {
+            this.parent = parent;
+            this.expectedModCount = parent.modCount;
+            this.nextIndex = firstIndex;
+            this.lastIndex = lastIndex;
+        }
+
+        /**
+         * Checks the modification count of the list is the value that this
+         * object expects.
+         *
+         * @throws ConcurrentModificationException If the list's modification
+         * count isn't the value that was expected.
+         */
+        protected void checkModCount() {
+            if (parent.modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super E> action) {
+            checkModCount();
+            if (nextIndex <= lastIndex) {
+                if (next == null) {
+                    next = parent.root.get(nextIndex);
+                }
+                action.accept(next.getValue());
+                nextIndex++;
+                next = next.next();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void forEachRemaining(final Consumer<? super E> action) {
+            checkModCount();
+            int ni = nextIndex, li = lastIndex;
+            if (ni > li)
+                return;
+            AVLNode<E> n = next;
+            if (n == null) {
+                n = parent.root.get(ni);
+            }
+            while (ni <= li) {
+                action.accept(n.getValue());
+                ni++;
+                n = n.next();
+            }
+            nextIndex = ni;
+            next = null;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            checkModCount();
+            int splitIndex = nextIndex + (lastIndex - nextIndex) / 2;
+            if (nextIndex < splitIndex && splitIndex < lastIndex) {
+                Spliterator<E> split = new TreeListSpliterator<>(parent, nextIndex, splitIndex);
+                nextIndex = splitIndex + 1;
+                return split;
+            }
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            return lastIndex - nextIndex + 1;
+        }
+
+        @Override
+        public int characteristics() {
+            return Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED;
+        }
+    }
 }
