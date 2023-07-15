@@ -19,16 +19,8 @@ package org.apache.commons.collections4.multimap;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.AbstractCollection;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IteratorUtils;
@@ -436,7 +428,16 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             if (coll == null) {
                 return IteratorUtils.EMPTY_ITERATOR;
             }
-            return new ValuesIterator(key);
+            return new ValuesIterator(key, coll);
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            final Collection<V> coll = getMapping();
+            if (coll == null) {
+                return Spliterators.emptySpliterator();
+            }
+            return Spliterators.spliterator(new ValuesIterator(key, coll), coll.size(), Spliterator.SIZED);
         }
 
         @Override
@@ -620,6 +621,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
 
         @Override
+        public Spliterator<Entry<K, V>> spliterator() {
+            return Spliterators.spliterator(this, 0);
+        }
+
+        @Override
         public int size() {
             return AbstractMultiValuedMap.this.size();
         }
@@ -711,6 +717,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
 
         @Override
+        public Spliterator<V> spliterator() {
+            return Spliterators.spliterator(this, 0);
+        }
+
+        @Override
         public int size() {
             return AbstractMultiValuedMap.this.size();
         }
@@ -732,6 +743,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         ValuesIterator(final Object key) {
             this.key = key;
             this.values = getMap().get(key);
+            this.iterator = values.iterator();
+        }
+
+        ValuesIterator(final Object key, Collection<V> coll) {
+            this.key = key;
+            this.values = coll;
             this.iterator = values.iterator();
         }
 
@@ -791,6 +808,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
 
         @Override
+        public Collection<Collection<V>> values() {
+            return decoratedMap.values();
+        }
+
+        @Override
         public int size() {
             return decoratedMap.size();
         }
@@ -838,6 +860,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             @Override
             public Iterator<Map.Entry<K, Collection<V>>> iterator() {
                 return new AsMapEntrySetIterator(decoratedMap.entrySet().iterator());
+            }
+
+            @Override
+            public Spliterator<Entry<K, Collection<V>>> spliterator() {
+                return super.spliterator();
             }
 
             @Override

@@ -25,6 +25,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 /**
@@ -693,6 +695,33 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
+     * Gets the next smaller node from the specified node.
+     *
+     * @param node the node to be searched from
+     * @return the specified node
+     */
+    private Node<K, V> nextSmallerKey(final Node<K, V> node) {
+        if (node == null) {
+            return null;
+        } else if (node.keyLeftNode != null) {
+            return greatestNodeKey(node.keyLeftNode);
+        } else {
+            Node<K, V> parent = node.keyParentNode;
+            Node<K, V> child = node;
+
+            while (parent != null) {
+                if (child != parent.keyLeftNode) {
+                    break;
+                } else {
+                    child = parent;
+                    parent = parent.keyParentNode;
+                }
+            }
+            return parent;
+        }
+    }
+    
+    /**
      * Gets the next larger node from the specified node.
      *
      * @param node the node to be searched from
@@ -717,6 +746,33 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return parent;
         }
 
+    }
+    
+    /**
+     * Gets the next smaller node from the specified node.
+     *
+     * @param node the node to be searched from
+     * @return the specified node
+     */
+    private Node<K, V> nextSmallerValue(final Node<K, V> node) {
+        if (node == null) {
+            return null;
+        } else if (node.valueLeftNode != null) {
+            return greatestNodeValue(node.valueLeftNode);
+        } else {
+            Node<K, V> parent = node.valueParentNode;
+            Node<K, V> child = node;
+
+            while (parent != null) {
+                if (child != parent.valueLeftNode) {
+                    break;
+                } else {
+                    child = parent;
+                    parent = parent.valueParentNode;
+                }
+            }
+            return parent;
+        }
     }
 
     /**
@@ -1780,12 +1836,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public Iterator<K> iterator() {
             return new MapIteratorKeyByKey();
         }
+
+        @Override
+        public Spliterator<K> spliterator() {
+            return new SpliteratorKeyByKey();
+        }
     }
 
     private final class KeyViewByValue extends View<K> {
         @Override
         public Iterator<K> iterator() {
             return new MapIteratorKeyByValue();
+        }
+
+        @Override
+        public Spliterator<K> spliterator() {
+            return new SpliteratorKeyByValue();
         }
     }
 
@@ -1807,12 +1873,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public Iterator<V> iterator() {
             return new MapIteratorValueByKey();
         }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return new SpliteratorValueByKey();
+        }
     }
 
     private final class ValueViewByValue extends ValueView {
         @Override
         public Iterator<V> iterator() {
             return new MapIteratorValueByValue();
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return new SpliteratorValueByValue();
         }
     }
 
@@ -1852,6 +1928,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public Iterator<Entry<K, V>> iterator() {
             return new EntryIteratorStandardByKey();
         }
+
+        @Override
+        public Spliterator<Entry<K, V>> spliterator() {
+            return new SpliteratorEntryByKey();
+        }
     }
 
     /**
@@ -1889,6 +1970,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public Iterator<Entry<V, K>> iterator() {
             return new EntryIteratorInvertedByValue();
+        }
+
+        @Override
+        public Spliterator<Entry<V, K>> spliterator() {
+            return new SpliteratorEntryInvertedByValue();
         }
     }
 
@@ -2008,33 +2094,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
             lastReturnedNode = null;
         }
-
-        /**
-         * Gets the next smaller node from the specified node.
-         *
-         * @param node the node to be searched from
-         * @return the specified node
-         */
-        private Node<K, V> nextSmallerKey(final Node<K, V> node) {
-            if (node == null) {
-                return null;
-            } else if (node.keyLeftNode != null) {
-                return greatestNodeKey(node.keyLeftNode);
-            } else {
-                Node<K, V> parent = node.keyParentNode;
-                Node<K, V> child = node;
-
-                while (parent != null) {
-                    if (child != parent.keyLeftNode) {
-                        break;
-                    } else {
-                        child = parent;
-                        parent = parent.keyParentNode;
-                    }
-                }
-                return parent;
-            }
-        }
     }
 
     /**
@@ -2098,33 +2157,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 }
             }
             lastReturnedNode = null;
-        }
-
-        /**
-         * Gets the next smaller node from the specified node.
-         *
-         * @param node the node to be searched from
-         * @return the specified node
-         */
-        private Node<K, V> nextSmallerValue(final Node<K, V> node) {
-            if (node == null) {
-                return null;
-            } else if (node.valueLeftNode != null) {
-                return greatestNodeValue(node.valueLeftNode);
-            } else {
-                Node<K, V> parent = node.valueParentNode;
-                Node<K, V> child = node;
-
-                while (parent != null) {
-                    if (child != parent.valueLeftNode) {
-                        break;
-                    } else {
-                        child = parent;
-                        parent = parent.valueParentNode;
-                    }
-                }
-                return parent;
-            }
         }
     }
 
@@ -2283,6 +2315,405 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return navigatePrevious().copyEntryInverted();
         }
     }
+    
+    private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL };
+
+    private abstract class BaseSpliterator<E> implements Spliterator<E> {
+        protected final int expectedModifications;
+        /** Whether to return KEY or VALUE order. */
+        protected SplitState state;
+        /** The next node to be returned by the spliterator. */
+        protected Node<K, V> currentNode;
+        /** The final node to be returned by the spliterator (just needed when split). */
+        protected Node<K, V> lastNode;
+        protected int estimatedSize;
+
+        BaseSpliterator(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            this.expectedModifications = modifications;
+            this.state = state;
+            this.currentNode = currentNode;
+            this.lastNode = lastNode;
+            this.estimatedSize = estimatedSize;
+        }
+
+        protected abstract Spliterator<E> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize);
+        
+        @Override
+        public long estimateSize() {
+            return estimatedSize;
+        }
+
+        @Override
+        public int characteristics() {
+            if (state == SplitState.READY_SPLIT || state == SplitState.SPLITTING_LEFT || state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID)
+                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED;
+            else
+                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED | Spliterator.SIZED;
+        }
+
+        @Override
+        public Comparator<? super E> getComparator() {
+            return null;
+        }
+    }
+
+    private abstract class SpliteratorByKey<E> extends BaseSpliterator<E> {
+        SpliteratorByKey() {
+            super(SplitState.INITIAL, rootNodeKey, greatestNodeKey(rootNodeKey), nodeCount);
+        }
+        
+        SpliteratorByKey(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+        
+        private void checkInit() {
+            if (state != SplitState.READY && state != SplitState.READY_SPLIT) {
+                if (state == SplitState.INITIAL) {
+                    currentNode = leastNodeKey(currentNode);
+                    state = SplitState.READY;
+                } else if (state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID) {
+                    currentNode = leastNodeKey(currentNode);
+                    state = SplitState.READY_SPLIT;
+                } else if (state == SplitState.SPLITTING_LEFT) {
+                    lastNode = greatestNodeKey(lastNode);
+                    state = SplitState.READY_SPLIT;
+                }
+            }
+        }
+
+        protected boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
+            if (modifications != expectedModifications) {
+                throw new ConcurrentModificationException();
+            }
+            checkInit();
+            Node<K, V> current = currentNode;
+            if (current != null) {
+                action.accept(current);
+                if (current != lastNode)
+                    currentNode = nextGreaterKey(current);
+                else
+                    currentNode = null;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        protected void forEachNode(Consumer<Node<K, V>> action) {
+            checkInit();
+            Node<K, V> current = currentNode, last = lastNode;
+            while (current != null) {
+                action.accept(current);
+                if (current != last)
+                    current = nextGreaterKey(current);
+                else
+                    current = null;
+            }
+            if (modifications != expectedModifications)
+                throw new ConcurrentModificationException();
+            currentNode = null;
+        }
+        
+        public Spliterator<E> trySplit() {
+            final Node<K, V> left = currentNode.keyLeftNode, right = currentNode.keyRightNode;
+            if (left == null || right == null)
+                return null;
+
+            Spliterator<E> split = null;
+            if (state == SplitState.INITIAL) {
+                Node<K, V> splitLast = nextSmallerKey(currentNode);
+                if (left.isKeyLessThan(splitLast) && currentNode.isKeyLessThan(lastNode)) {
+                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                }
+            } else if (state == SplitState.SPLITTING_MID) {
+                Node<K, V> splitLast = nextSmallerKey(currentNode);
+                if (left.isKeyLessThan(splitLast) && currentNode.isKeyLessThan(lastNode)) {
+                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                }
+            } else if (state == SplitState.SPLITTING_RIGHT) {
+                Node<K, V> rightLeft = right.keyLeftNode;
+                if (rightLeft != null && currentNode.isKeyLessThan(rightLeft) && right.isKeyLessThan(lastNode)) {
+                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                    currentNode = right;
+                }
+            } else if (state == SplitState.SPLITTING_LEFT) {
+                Node<K, V> passedSubTree = lastNode;
+                Node<K, V> subTreeLeft = passedSubTree.keyLeftNode, subTreeRight = passedSubTree.keyRightNode;
+                if (subTreeLeft != null && currentNode.isKeyLessThan(subTreeLeft) && subTreeRight != null) {
+                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                    currentNode = passedSubTree;
+                    lastNode = greatestNodeKey(passedSubTree);
+                }
+            } else {
+                throw new IllegalStateException();
+            }
+
+            return split;
+        }
+    }
+
+    private abstract class SpliteratorByValue<E> extends BaseSpliterator<E> {
+        SpliteratorByValue() {
+            super(SplitState.INITIAL, rootNodeValue, greatestNodeValue(rootNodeValue), nodeCount);
+        }
+
+        SpliteratorByValue(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        private void checkInit() {
+            if (state != SplitState.READY && state != SplitState.READY_SPLIT) {
+                if (state == SplitState.INITIAL) {
+                    currentNode = leastNodeValue(currentNode);
+                    state = SplitState.READY;
+                } else if (state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID) {
+                    currentNode = leastNodeValue(currentNode);
+                    state = SplitState.READY_SPLIT;
+                } else if (state == SplitState.SPLITTING_LEFT) {
+                    lastNode = greatestNodeValue(lastNode);
+                    state = SplitState.READY_SPLIT;
+                }
+            }
+        }
+
+        protected boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
+            if (modifications != expectedModifications) {
+                throw new ConcurrentModificationException();
+            }
+            checkInit();
+            Node<K, V> current = currentNode;
+            if (current != null) {
+                action.accept(current);
+                if (current != lastNode)
+                    currentNode = nextGreaterValue(current);
+                else
+                    currentNode = null;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        protected void forEachNode(Consumer<Node<K, V>> action) {
+            checkInit();
+            Node<K, V> current = currentNode, last = lastNode;
+            while (current != null) {
+                action.accept(current);
+                if (current != last)
+                    current = nextGreaterValue(current);
+                else
+                    current = null;
+            }
+            if (modifications != expectedModifications)
+                throw new ConcurrentModificationException();
+            currentNode = null;
+        }
+
+        public Spliterator<E> trySplit() {
+            final Node<K, V> left = currentNode.valueLeftNode, right = currentNode.valueRightNode;
+            if (left == null || right == null)
+                return null;
+
+            Spliterator<E> split = null;
+            if (state == SplitState.INITIAL) {
+                Node<K, V> splitLast = nextSmallerValue(currentNode);
+                if (left.isValueLessThan(splitLast) && currentNode.isValueLessThan(lastNode)) {
+                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                }
+            } else if (state == SplitState.SPLITTING_MID) {
+                Node<K, V> splitLast = nextSmallerValue(currentNode);
+                if (left.isValueLessThan(splitLast) && currentNode.isValueLessThan(lastNode)) {
+                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                }
+            } else if (state == SplitState.SPLITTING_RIGHT) {
+                Node<K, V> rightLeft = right.valueLeftNode;
+                if (rightLeft != null && currentNode.isValueLessThan(rightLeft) && right.isValueLessThan(lastNode)) {
+                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                    currentNode = right;
+                }
+            } else if (state == SplitState.SPLITTING_LEFT) {
+                Node<K, V> passedSubTree = lastNode;
+                Node<K, V> subTreeLeft = passedSubTree.valueLeftNode, subTreeRight = passedSubTree.valueRightNode;
+                if (subTreeLeft != null && currentNode.isValueLessThan(subTreeLeft) && subTreeRight != null) {
+                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
+                    state = SplitState.SPLITTING_RIGHT;
+                    currentNode = passedSubTree;
+                    lastNode = greatestNodeValue(passedSubTree);
+                }
+            } else {
+                throw new IllegalStateException();
+            }
+
+            return split;
+        }
+    }
+
+    private class SpliteratorKeyByKey extends SpliteratorByKey<K> {
+        public SpliteratorKeyByKey() {
+            super();
+        }
+
+        private SpliteratorKeyByKey(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Spliterator<K> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new SpliteratorKeyByKey(state, currentNode, lastNode, estimatedSize);
+        }
+        
+        @Override
+        public boolean tryAdvance(Consumer<? super K> action) {
+            return tryAdvanceNode(node -> action.accept(node.key));
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super K> action) {
+            forEachNode(node -> action.accept(node.key));
+        }
+    }
+
+    private class SpliteratorKeyByValue extends SpliteratorByValue<K> {
+        public SpliteratorKeyByValue() {
+            super();
+        }
+
+        private SpliteratorKeyByValue(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Spliterator<K> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new SpliteratorKeyByValue(state, currentNode, lastNode, estimatedSize);
+        }
+        
+        @Override
+        public boolean tryAdvance(Consumer<? super K> action) {
+            return tryAdvanceNode(node -> action.accept(node.key));
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super K> action) {
+            forEachNode(node -> action.accept(node.key));
+        }
+    }
+
+    private class SpliteratorValueByKey extends SpliteratorByKey<V> {
+        public SpliteratorValueByKey() {
+            super();
+        }
+
+        private SpliteratorValueByKey(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Spliterator<V> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new SpliteratorValueByKey(state, currentNode, lastNode, estimatedSize);
+        }
+        
+        @Override
+        public boolean tryAdvance(Consumer<? super V> action) {
+            return tryAdvanceNode(node -> action.accept(node.value));
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super V> action) {
+            forEachNode(node -> action.accept(node.value));
+        }
+    }
+
+    private class SpliteratorValueByValue extends SpliteratorByValue<V> {
+        public SpliteratorValueByValue() {
+            super();
+        }
+
+        private SpliteratorValueByValue(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Spliterator<V> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new SpliteratorValueByValue(state, currentNode, lastNode, estimatedSize);
+        }
+        
+        @Override
+        public boolean tryAdvance(Consumer<? super V> action) {
+            return tryAdvanceNode(node -> action.accept(node.value));
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super V> action) {
+            forEachNode(node -> action.accept(node.value));
+        }
+    }
+
+    private class SpliteratorEntryByKey extends SpliteratorByKey<Entry<K, V>> {
+        public SpliteratorEntryByKey() {
+            super();
+        }
+
+        private SpliteratorEntryByKey(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Spliterator<Entry<K, V>> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new SpliteratorEntryByKey(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        public boolean tryAdvance(Consumer<? super Entry<K, V>> action) {
+            return tryAdvanceNode(node -> action.accept(node.copyEntryStandard()));
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super Entry<K, V>> action) {
+            forEachNode(node -> action.accept(node.copyEntryStandard()));
+        }
+        
+        @Override
+        public Comparator<? super Entry<K, V>> getComparator() {
+            return Entry.comparingByKey();
+        }
+    }
+
+    private class SpliteratorEntryInvertedByValue extends SpliteratorByValue<Entry<V, K>> {
+        public SpliteratorEntryInvertedByValue() {
+            super();
+        }
+
+        private SpliteratorEntryInvertedByValue(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Spliterator<Entry<V, K>> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new SpliteratorEntryInvertedByValue(state, currentNode, lastNode, estimatedSize);
+        }
+        
+        @Override
+        public boolean tryAdvance(Consumer<? super Entry<V, K>> action) {
+            return tryAdvanceNode(node -> action.accept(node.copyEntryInverted()));
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super Entry<V, K>> action) {
+            forEachNode(node -> action.accept(node.copyEntryInverted()));
+        }
+
+        @Override
+        public Comparator<? super Entry<V, K>> getComparator() {
+            return Entry.comparingByKey();
+        }
+    }
 
     /**
      * A node used to store the data.
@@ -2405,6 +2836,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public V setValue(final V ignored) throws UnsupportedOperationException {
             throw new UnsupportedOperationException("Map.Entry.setValue is not supported");
+        }
+
+        public boolean isKeyLessThan(Node<K, V> other) {
+            return compare(key, other.key) < 0;
+        }
+
+        public boolean isValueLessThan(Node<K, V> other) {
+            return compare(value, other.value) < 0;
         }
 
         /**

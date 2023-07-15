@@ -1495,6 +1495,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
+        public Spliterator<K> spliterator() {
+            return new ViewMapSpliterator<>(orderType, node -> node.key);
+        }
+
+        @Override
         public boolean contains(final Object obj) {
             checkKey(obj);
             return lookupKey(obj) != null;
@@ -1520,6 +1525,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Iterator<V> iterator() {
             return new InverseViewMapIterator(orderType);
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return new ViewMapSpliterator<>(orderType, node -> node.value);
         }
 
         @Override
@@ -1579,6 +1589,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         public Iterator<Map.Entry<K, V>> iterator() {
             return new ViewMapEntryIterator();
         }
+
+        @Override
+        public Spliterator<Entry<K, V>> spliterator() {
+            return new ViewMapSpliterator<>(orderType, Node::toUnmodifiableMapEntry);
+        }
     }
 
     /**
@@ -1619,6 +1634,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Iterator<Map.Entry<V, K>> iterator() {
             return new InverseViewMapEntryIterator();
+        }
+
+        @Override
+        public Spliterator<Entry<V, K>> spliterator() {
+            return new ViewMapSpliterator<>(orderType, Node::toInverseUnmodifiableMapEntry);
         }
     }
 
@@ -1822,16 +1842,12 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Map.Entry<K, V> next() {
-            return createEntry(navigateNext());
+            return navigateNext().toUnmodifiableMapEntry();
         }
 
         @Override
         public Map.Entry<K, V> previous() {
-            return createEntry(navigatePrevious());
-        }
-
-        private Map.Entry<K, V> createEntry(final Node<K, V> node) {
-            return new UnmodifiableMapEntry<>((Map.Entry<K, V>) node);
+            return navigatePrevious().toUnmodifiableMapEntry();
         }
     }
 
@@ -1849,16 +1865,12 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Map.Entry<V, K> next() {
-            return createEntry(navigateNext());
+            return navigateNext().toInverseUnmodifiableMapEntry();
         }
 
         @Override
         public Map.Entry<V, K> previous() {
-            return createEntry(navigatePrevious());
-        }
-
-        private Map.Entry<V, K> createEntry(final Node<K, V> node) {
-            return new UnmodifiableMapEntry<>(node.getValue(), node.getKey());
+            return navigatePrevious().toInverseUnmodifiableMapEntry();
         }
     }
 
@@ -2229,6 +2241,14 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public V setValue(final V ignored) throws UnsupportedOperationException {
             throw new UnsupportedOperationException("Map.Entry.setValue is not supported");
+        }
+
+        public Entry<K, V> toUnmodifiableMapEntry() {
+            return new UnmodifiableMapEntry<>(key, value);
+        }
+
+        public Entry<V, K> toInverseUnmodifiableMapEntry() {
+            return new UnmodifiableMapEntry<>(value, key);
         }
 
         /**

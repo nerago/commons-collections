@@ -19,16 +19,7 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.AbstractCollection;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
@@ -872,6 +863,12 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         public Iterator<Map.Entry<K, V>> iterator() {
             return parent.createEntrySetIterator();
         }
+
+        @Override
+        public Spliterator<Entry<K, V>> spliterator() {
+            // TODO could do better splits
+            return Spliterators.spliterator(parent.createEntrySetIterator(), parent.size, 0);
+        }
     }
 
     /**
@@ -959,6 +956,13 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         public Iterator<K> iterator() {
             return parent.createKeySetIterator();
         }
+
+        @Override
+        public Spliterator<K> spliterator() {
+            // TODO could do better splits
+            return Spliterators.spliterator(parent.createKeySetIterator(), parent.size,
+                    Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.SUBSIZED);
+        }
     }
 
     /**
@@ -1038,6 +1042,13 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         @Override
         public Iterator<V> iterator() {
             return parent.createValuesIterator();
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            // TODO could do better splits
+            return Spliterators.spliterator(parent.createValuesIterator(), parent.size,
+                    Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.SUBSIZED);
         }
     }
 

@@ -19,6 +19,7 @@ package org.apache.commons.collections4.collection;
 import org.apache.commons.collections4.Transformer;
 import org.junit.jupiter.api.Test;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -37,14 +38,18 @@ public class DualTransformedCollectionTest extends AbstractCollectionTest<Intege
         return false;
     }
 
-    private static class StringToInteger implements Transformer<String, Integer> {
+    private static class StringToInteger implements Transformer<String, Integer>, Serializable {
+        private static final long serialVersionUID = 6210576099579022361L;
+
         @Override
         public Integer transform(final String input) {
             return Integer.valueOf(input);
         }
     }
 
-    private static class IntegerToString implements Transformer<Integer, String> {
+    private static class IntegerToString implements Transformer<Integer, String>, Serializable {
+        private static final long serialVersionUID = 3091292970818955357L;
+
         @Override
         public String transform(final Integer input) {
             return String.valueOf(input);
