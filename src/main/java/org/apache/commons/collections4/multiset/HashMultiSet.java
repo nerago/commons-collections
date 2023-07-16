@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Spliterator;
 
 /**
  * Implements {@code MultiSet}, using a {@link HashMap} to provide the

@@ -23,9 +23,12 @@ import java.lang.reflect.Array;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.spliterators.AbstractSpliteratorDecorator;
 
 /**
  * Abstract implementation of the {@link MultiSet} interface to simplify the
@@ -206,6 +209,59 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
             }
             parent.size--;
             canRemove = false;
+        }
+    }
+
+    private static class MapBasedMultiSetSpliterator<E> implements Spliterator<E> {
+        private final Spliterator<Map.Entry<E, MutableInteger>> entrySpliterator;
+        private int estimateSize;
+        private boolean isSplit;
+        private Map.Entry<E, MutableInteger> current;
+        private int itemCount;
+
+        public MapBasedMultiSetSpliterator(final AbstractMapMultiSet<E> parent) {
+            this.entrySpliterator = parent.map.entrySet().spliterator();
+            this.estimateSize = parent.size;
+        }
+
+        public MapBasedMultiSetSpliterator(final Spliterator<Map.Entry<E, MutableInteger>> entrySpliterator, final int estimateSize) {
+            this.entrySpliterator = entrySpliterator;
+            this.estimateSize = estimateSize;
+            this.isSplit = true;
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super E> action) {
+            if (itemCount == 0) {
+                if (!entrySpliterator.tryAdvance(entry -> current = entry))
+                    return false;
+                itemCount = current.getValue().value;
+            }
+
+            action.accept(current.getKey());
+            itemCount--;
+            return true;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            Spliterator<Map.Entry<E, MutableInteger>> partitionedEntries = entrySpliterator.trySplit();
+            if (partitionedEntries != null) {
+                isSplit = true;
+                return new MapBasedMultiSetSpliterator<>(partitionedEntries, estimateSize >>>= 1);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public long estimateSize() {
+            return estimateSize;
+        }
+
+        @Override
+        public int characteristics() {
+            return isSplit ? 0 : Spliterator.SIZED;
         }
     }
 

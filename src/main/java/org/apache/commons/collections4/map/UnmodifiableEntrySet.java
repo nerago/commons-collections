@@ -121,7 +121,7 @@ public final class UnmodifiableEntrySet<K, V>
 
     @Override
     public Spliterator<Map.Entry<K, V>> spliterator() {
-        return new UnmodifiableEntrySetSpliterator<>(decorated().spliterator());
+        return UnmodifiableEntrySetSpliterator.unmodifiableEntrySetSpliterator(decorated().spliterator());
     }
 
     @Override
