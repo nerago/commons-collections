@@ -337,6 +337,7 @@ public class TreeList<E> extends AbstractList<E> {
     @Override
     protected void removeRange(int fromIndex, int toIndex) {
         root = root.removeRange(fromIndex, toIndex, new AVLNode.IntHolder());
+        size -= toIndex - fromIndex + 1;
     }
 
     /**
@@ -746,29 +747,28 @@ public class TreeList<E> extends AbstractList<E> {
             final int fromRelativeToMe = fromIndex - relativePosition;
             final int toRelativeToMe = toIndex - relativePosition;
 
-            if (fromRelativeToMe <= 0 && 0 <= toRelativeToMe) {
-                final AVLNode<E> selfReplacement = removeSelf();
-                parentPositionChange.value++;
-                if (selfReplacement != null)
-                    return selfReplacement.removeRange(fromIndex, toIndex, parentPositionChange);
-                else
-                    return null;
-            }
-
-            if (fromRelativeToMe < 0) {
+            if (fromRelativeToMe < 0 && !leftIsPrevious) {
                 final IntHolder positionChange = new IntHolder();
                 setLeft(left.removeRange(fromRelativeToMe, toRelativeToMe, positionChange), left.left);
                 if (relativePosition > 0) {
                     relativePosition -= positionChange.value;
                 }
+                parentPositionChange.value += positionChange.value;
             }
 
-            if (toRelativeToMe > 0) {
+            if (toRelativeToMe > 0 && !rightIsNext) {
                 final IntHolder positionChange = new IntHolder();
                 setRight(right.removeRange(fromRelativeToMe, toRelativeToMe, positionChange), right.right);
                 if (relativePosition < 0) {
                     relativePosition += positionChange.value;
                 }
+                parentPositionChange.value += positionChange.value;
+            }
+
+            if (fromRelativeToMe <= 0 && 0 <= toRelativeToMe) {
+                final AVLNode<E> selfReplacement = removeSelf();
+                parentPositionChange.value++;
+                return selfReplacement;
             }
 
             recalcHeight();
@@ -1188,7 +1188,7 @@ public class TreeList<E> extends AbstractList<E> {
 
         @Override
         public int size() {
-            return toIndex - fromIndex + 1;
+            return toIndex >= fromIndex ? toIndex - fromIndex + 1 : 0;
         }
 
         @Override
