@@ -772,7 +772,7 @@ public class TreeList<E> extends AbstractList<E> {
             }
 
             recalcHeight();
-            return balance();
+            return superBalance();
         }
 
         private AVLNode<E> removeMax() {
@@ -876,6 +876,26 @@ public class TreeList<E> extends AbstractList<E> {
                 return rotateLeft();
             default :
                 throw new IllegalStateException("tree inconsistent!");
+            }
+        }
+
+        /**
+         * Recursively balance extension to standard AVL algorithm for bigger discrepancies.
+         */
+        private AVLNode<E> superBalance() {
+            final int diff = heightRightMinusLeft();
+            if (diff <= -2) {
+                if (left.heightRightMinusLeft() > 0) {
+                    setLeft(left.rotateLeft(), null);
+                }
+                return rotateRight().superBalance();
+            } else if (diff >= 2) {
+                if (right.heightRightMinusLeft() < 0) {
+                    setRight(right.rotateRight(), null);
+                }
+                return rotateLeft().superBalance();
+            } else {
+                return this;
             }
         }
 
