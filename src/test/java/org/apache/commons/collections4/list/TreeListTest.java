@@ -248,6 +248,19 @@ public class TreeListTest<E> extends AbstractListTest<E> {
     }
 
     @Test
+    public void testRemoveRange() {
+        int elementCount = getFullElements().length;
+        for (int start = 0; start < elementCount; start++) {
+            for (int end = start + 1; end <= elementCount; end++) {
+                resetFull();
+                getCollection().subList(start, end).clear();
+                getConfirmed().subList(start, end).clear();
+                verify();
+            }
+        }
+    }
+
+    @Test
     public void testBugCollections447() {
         final List<String> treeList = new TreeList<>();
         treeList.add("A");
