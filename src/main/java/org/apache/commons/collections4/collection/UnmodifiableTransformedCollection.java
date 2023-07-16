@@ -19,7 +19,7 @@ package org.apache.commons.collections4.collection;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.TransformIterator;
-import org.apache.commons.collections4.iterators.TransformSpliterator;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
