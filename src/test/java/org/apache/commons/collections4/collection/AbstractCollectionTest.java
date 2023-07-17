@@ -1362,8 +1362,11 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     @Test
     public void testSpliteratorNonDefault() throws NoSuchMethodException {
         resetFull();
-        Method method = getCollection().getClass().getMethod("spliterator");
-        assertFalse(method.isDefault(), getCollection().getClass().getSimpleName() + " doesn't override default spliterator");
+        Method spliterator = getCollection().getClass().getMethod("spliterator");
+        Method stream = getCollection().getClass().getMethod("stream");
+        Method parallelStream = getCollection().getClass().getMethod("parallelStream");
+        boolean condition = !spliterator.isDefault() || (!stream.isDefault() && !parallelStream.isDefault());
+        assertFalse(condition, getCollection().getClass().getSimpleName() + " doesn't override default spliterator or stream+parallelStream");
     }
 
     @Test

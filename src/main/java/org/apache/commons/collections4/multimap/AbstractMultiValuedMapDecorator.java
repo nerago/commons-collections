@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 /**
  * Decorates another {@code MultiValuedMap} to provide additional behavior.
@@ -161,6 +162,11 @@ public abstract class AbstractMultiValuedMapDecorator<K, V>
     @Override
     public MapIterator<K, V> mapIterator() {
         return decorated().mapIterator();
+    }
+
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        return decorated().mapSpliterator();
     }
 
     @Override

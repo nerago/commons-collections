@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.spliterators.UnmodifiableEntrySetSpliterator;
+import org.apache.commons.collections4.spliterators.UnmodifiableMapSpliterator;
 
 /**
  * Decorates a map entry {@code Set} to ensure it can't be altered.
@@ -121,7 +121,7 @@ public final class UnmodifiableEntrySet<K, V>
 
     @Override
     public Spliterator<Map.Entry<K, V>> spliterator() {
-        return UnmodifiableEntrySetSpliterator.unmodifiableEntrySetSpliterator(decorated().spliterator());
+        return UnmodifiableMapSpliterator.unmodifiableMapSpliterator(decorated().spliterator());
     }
 
     @Override

@@ -30,6 +30,8 @@ import org.apache.commons.collections4.iterators.UnmodifiableMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableMap;
 import org.apache.commons.collections4.multiset.UnmodifiableMultiSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
+import org.apache.commons.collections4.spliterators.UnmodifiableMapSpliterator;
 
 /**
  * Decorates another {@link MultiValuedMap} to ensure it can't be altered.
@@ -132,6 +134,11 @@ public final class UnmodifiableMultiValuedMap<K, V>
     @Override
     public MapIterator<K, V> mapIterator() {
         return UnmodifiableMapIterator.unmodifiableMapIterator(decorated().mapIterator());
+    }
+
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        return UnmodifiableMapSpliterator.unmodifiableMapSpliterator(decorated().mapSpliterator());
     }
 
     @Override

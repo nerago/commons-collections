@@ -150,7 +150,7 @@ public class SpliteratorUtils {
      * @return an immutable version of the spliterator
      */
     public static <K, V> MapSpliterator<K, V> unmodifiableMapSpliterator(final Spliterator<Map.Entry<K,V>> mapSpliterator) {
-        return UnmodifiableEntrySetSpliterator.unmodifiableEntrySetSpliterator(mapSpliterator);
+        return UnmodifiableMapSpliterator.unmodifiableMapSpliterator(mapSpliterator);
     }
 
     public static <I, O> Spliterator<O> transformedSpliterator(final Spliterator<? extends I> spliterator,

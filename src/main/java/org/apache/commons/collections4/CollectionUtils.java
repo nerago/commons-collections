@@ -1303,6 +1303,41 @@ public class CollectionUtils {
     }
 
     /**
+     * Adds all elements in the {@link Iterable} to the given collection. If the
+     * {@link Iterable} is a {@link Collection} then it is cast and will be
+     * added using {@link Collection#addAll(Collection)} instead of iterating.
+     *
+     * @param <C>  the type of object the {@link Collection} contains
+     * @param collection  the collection to add to, must not be null
+     * @param iterable  the iterable of elements to add, must not be null
+     * @return the count of elements added to the collection
+     * @throws NullPointerException if the collection or iterable is null
+     */
+    public static <C> int addAllCounted(final Collection<C> collection, final Iterable<? extends C> iterable) {
+        return addAllCounted(collection, iterable.iterator());
+    }
+
+    /**
+     * Adds all elements in the iteration to the given collection.
+     *
+     * @param <C>  the type of object the {@link Collection} contains
+     * @param collection  the collection to add to, must not be null
+     * @param iterator  the iterator of elements to add, must not be null
+     * @return the count of elements added to the collection
+     * @throws NullPointerException if the collection or iterator is null
+     */
+    public static <C> int addAllCounted(final Collection<C> collection, final Iterator<? extends C> iterator) {
+        Objects.requireNonNull(collection, "collection");
+        Objects.requireNonNull(iterator, "iterator");
+        int addCount = 0;
+        while (iterator.hasNext()) {
+            if (collection.add(iterator.next()))
+                addCount++;
+        }
+        return addCount;
+    }
+
+    /**
      * Adds all elements in the enumeration to the given collection.
      *
      * @param <C>  the type of object the {@link Collection} contains

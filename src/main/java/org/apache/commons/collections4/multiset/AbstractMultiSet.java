@@ -19,15 +19,12 @@ package org.apache.commons.collections4.multiset;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.AbstractCollection;
-import java.util.AbstractSet;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.SpliteratorUtils;
 import org.apache.commons.collections4.Transformer;
 
 /**
@@ -119,6 +116,11 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
         return new MultiSetIterator<>(this);
     }
 
+    @Override
+    public Spliterator<E> spliterator() {
+        return new MultiSetSpliterator<>(this);
+    }
+
     /**
      * Inner class iterator for the MultiSet.
      */
@@ -172,6 +174,59 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
                 entryIterator.remove();
             }
             canRemove = false;
+        }
+    }
+
+    private static class MultiSetSpliterator<E> implements Spliterator<E> {
+        private final Spliterator<Entry<E>> entrySpliterator;
+        private int estimateSize;
+        private boolean isSplit;
+        private Entry<E> current;
+        private int itemCount;
+
+        public MultiSetSpliterator(final AbstractMultiSet<E> parent) {
+            this.entrySpliterator = parent.entrySet().spliterator();
+            this.estimateSize = parent.size();
+        }
+
+        public MultiSetSpliterator(final Spliterator<Entry<E>> entrySpliterator, final int estimateSize) {
+            this.entrySpliterator = entrySpliterator;
+            this.estimateSize = estimateSize;
+            this.isSplit = true;
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super E> action) {
+            if (itemCount == 0) {
+                if (!entrySpliterator.tryAdvance(entry -> current = entry))
+                    return false;
+                itemCount = current.getCount();
+            }
+
+            action.accept(current.getElement());
+            itemCount--;
+            return true;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            Spliterator<Entry<E>> partitionedEntries = entrySpliterator.trySplit();
+            if (partitionedEntries != null) {
+                isSplit = true;
+                return new MultiSetSpliterator<>(partitionedEntries, estimateSize >>>= 1);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public long estimateSize() {
+            return estimateSize;
+        }
+
+        @Override
+        public int characteristics() {
+            return isSplit ? 0 : Spliterator.SIZED;
         }
     }
 
@@ -248,7 +303,18 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
      */
     protected Iterator<E> createUniqueSetIterator() {
         final Transformer<Entry<E>, E> transformer = Entry::getElement;
-        return IteratorUtils.transformedIterator(entrySet().iterator(), transformer);
+        return IteratorUtils.transformedIterator(createEntrySetIterator(), transformer);
+    }
+
+    /**
+     * Creates a unique set iterator.
+     * Subclasses can override this to return spliterators with different properties.
+     *
+     * @return the uniqueSet spliterator
+     */
+    protected Spliterator<E> createUniqueSetSpliterator() {
+        final Transformer<Entry<E>, E> transformer = Entry::getElement;
+        return SpliteratorUtils.transformedSpliterator(createEntrySetSpliterator(), transformer);
     }
 
     /**
@@ -289,6 +355,14 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
     protected abstract Iterator<Entry<E>> createEntrySetIterator();
 
     /**
+     * Creates an entry set spliterator.
+     * Subclasses can override this to return iterators with different properties.
+     *
+     * @return the entrySet spliterator
+     */
+    protected abstract Spliterator<Entry<E>> createEntrySetSpliterator();
+
+    /**
      * Inner class UniqueSet.
      */
     protected static class UniqueSet<E> extends AbstractSet<E> {
@@ -308,6 +382,11 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
         @Override
         public Iterator<E> iterator() {
             return parent.createUniqueSetIterator();
+        }
+
+        @Override
+        public Spliterator<E> spliterator() {
+            return parent.createUniqueSetSpliterator();
         }
 
         @Override
@@ -360,6 +439,11 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
         @Override
         public Iterator<Entry<E>> iterator() {
             return parent.createEntrySetIterator();
+        }
+
+        @Override
+        public Spliterator<Entry<E>> spliterator() {
+            return parent.createEntrySetSpliterator();
         }
 
         @Override

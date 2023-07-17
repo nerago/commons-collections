@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4;
 
+import org.apache.commons.collections4.spliterators.MapSpliterator;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -319,5 +321,15 @@ public interface MultiValuedMap<K, V> {
      * @return a map iterator
      */
     MapIterator<K, V> mapIterator();
+
+    /**
+     * Obtains a {@code MapSpliterator} over this multivalued map.
+     * <p>
+     * A map spliterator is an efficient way of iterating over maps. There is no
+     * need to access the entries collection or use {@code Map.Entry} objects.
+     *
+     * @return a map spliterator
+     */
+    MapSpliterator<K, V> mapSpliterator();
 
 }

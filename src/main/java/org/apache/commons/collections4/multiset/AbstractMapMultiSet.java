@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.spliterators.AbstractSpliteratorDecorator;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 /**
  * Abstract implementation of the {@link MultiSet} interface to simplify the
@@ -145,6 +146,11 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
     @Override
     public Iterator<E> iterator() {
         return new MapBasedMultiSetIterator<>(this);
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return new MapBasedMultiSetSpliterator<>(this);
     }
 
     /**
@@ -352,7 +358,13 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
 
     @Override
     protected Iterator<E> createUniqueSetIterator() {
-        return new UniqueSetIterator<>(getMap().keySet().iterator(), this);
+        return new UniqueSetIterator<>(map.keySet().iterator(), this);
+    }
+
+    @Override
+    protected Spliterator<E> createUniqueSetSpliterator() {
+        // don't need to handle a remove function like iterator so just use map's directly
+        return map.keySet().spliterator();
     }
 
     @Override
@@ -363,6 +375,12 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
     @Override
     protected Iterator<Entry<E>> createEntrySetIterator() {
         return new EntrySetIterator<>(map.entrySet().iterator(), this);
+    }
+
+    @Override
+    protected Spliterator<Entry<E>> createEntrySetSpliterator() {
+        // don't need to handle a remove function like iterator so just use map's version with a type transform
+        return new TransformSpliterator<>(map.entrySet().spliterator(), MultiSetEntry::new);
     }
 
     /**
