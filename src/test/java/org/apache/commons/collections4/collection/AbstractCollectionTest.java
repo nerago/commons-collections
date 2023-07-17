@@ -1355,7 +1355,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 builder.append(name).append(" ");
         }
         System.out.println(getCollection().getClass().getSimpleName() + " spliterator characteristics=" + builder + " (" + characteristics + ")");
-        assertNotEquals(0, characteristics, "spliterator doesn't specific characteristics");
+        assertNotEquals(0, characteristics, "spliterator doesn't specify characteristics");
 
     }
 
@@ -1366,7 +1366,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         Method stream = getCollection().getClass().getMethod("stream");
         Method parallelStream = getCollection().getClass().getMethod("parallelStream");
         boolean condition = !spliterator.isDefault() || (!stream.isDefault() && !parallelStream.isDefault());
-        assertFalse(condition, getCollection().getClass().getSimpleName() + " doesn't override default spliterator or stream+parallelStream");
+        assertTrue(condition, getCollection().getClass().getSimpleName() + " doesn't override default spliterator or stream+parallelStream");
     }
 
     @Test

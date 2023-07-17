@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.iterators.*;
@@ -33,6 +32,7 @@ import org.apache.commons.collections4.multiset.UnmodifiableMultiSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 /**
  * Abstract implementation of the {@link MultiValuedMap} interface to simplify
@@ -51,7 +51,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     private transient Collection<V> valuesView;
 
     /** The EntryValues view */
-    private transient EntryValues entryValuesView;
+    private transient EntriesView entriesView;
 
     /** The KeyMultiSet view */
     private transient MultiSet<K> keysMultiSetView;
@@ -104,6 +104,10 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
     protected abstract Collection<V> createCollection();
 
+    protected void updateEntryCount(int delta) {
+        entryCount += delta;
+    }
+
     @Override
     public boolean containsKey(final Object key) {
         return getMap().containsKey(key);
@@ -111,7 +115,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
     @Override
     public boolean containsValue(final Object value) {
-        return values().contains(value);
+        for (Collection<V> coll : getMap().values()) {
+            if (coll.contains(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -122,7 +131,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
     @Override
     public Collection<Entry<K, V>> entries() {
-        return entryValuesView != null ? entryValuesView : (entryValuesView = new EntryValues());
+        return entriesView != null ? entriesView : (entriesView = new EntriesView());
     }
 
     /**
@@ -153,7 +162,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     @Override
     public Collection<V> remove(final Object key) {
         Collection<V> removed = CollectionUtils.emptyIfNull(getMap().remove(key));
-        entryCount -= removed.size();
+        updateEntryCount(-removed.size());
         return removed;
     }
 
@@ -181,7 +190,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             getMap().remove(key);
         }
         if (changed) {
-            entryCount--;
+            updateEntryCount(-1);
         }
         return changed;
     }
@@ -243,6 +252,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         if (coll == null) {
             coll = createCollection();
             if (coll.add(value)) {
+                updateEntryCount(+1);
                 map.put(key, coll);
                 return true;
             }
@@ -250,7 +260,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
         final boolean changed = coll.add(value);
         if (changed) {
-            entryCount++;
+            updateEntryCount(+1);
         }
         return changed;
     }
@@ -303,11 +313,8 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     public boolean putAll(final MultiValuedMap<? extends K, ? extends V> map) {
         Objects.requireNonNull(map, "map");
         boolean changed = false;
-        MapIterator<? extends K, ? extends V> mapIterator = map.mapIterator();
-        while (mapIterator.hasNext()) {
-            K key = mapIterator.next();
-            V value = mapIterator.getValue();
-            changed |= put(key, value);
+        for (Entry<? extends K, ? extends Collection<? extends V>> entry : map.asMap().entrySet()) {
+            changed |= putAll(entry.getKey(), entry.getValue());
         }
         return changed;
     }
@@ -325,7 +332,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     @Override
     public MultiSet<K> keys() {
         if (keysMultiSetView == null) {
-            keysMultiSetView = UnmodifiableMultiSet.unmodifiableMultiSet(new KeysMultiSet());
+            keysMultiSetView = UnmodifiableMultiSet.unmodifiableMultiSet(new KeysMultiSet<>(this, map));
         }
         return keysMultiSetView;
     }
@@ -356,7 +363,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         if (!it.hasNext())
             return false;
         int addCount = CollectionUtils.addAllCounted(get(key), it);
-        entryCount += addCount;
+        updateEntryCount(addCount);
         return addCount > 0;
     }
 
@@ -365,7 +372,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         if (isEmpty()) {
             return EmptyMapIterator.emptyMapIterator();
         }
-        return new MultiValuedMapIterator();
+        return new FullMapIterator<>(this);
     }
 
     @Override
@@ -373,7 +380,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         if (isEmpty()) {
             return EmptyMapSpliterator.emptyMapSpliterator();
         }
-        return new MultiValuedMapSpliterator();
+        return new FullMapSpliterator<>(this);
     }
 
     @Override
@@ -424,11 +431,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             Collection<V> coll = getMapping();
             if (coll == null) {
                 coll = createCollection();
-                AbstractMultiValuedMap.this.map.put(key, coll);
+                map.put(key, coll);
             }
             boolean changed = coll.add(value);
             if (changed)
-                entryCount++;
+                updateEntryCount(+1);
             return changed;
         }
 
@@ -437,11 +444,11 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             Collection<V> coll = getMapping();
             if (coll == null) {
                 coll = createCollection();
-                AbstractMultiValuedMap.this.map.put(key, coll);
+                map.put(key, coll);
             }
             final int oldSize = coll.size();
             if (coll.addAll(other)) {
-                entryCount += coll.size() - oldSize;
+                updateEntryCount(coll.size() - oldSize);
                 return true;
             } else {
                 return false;
@@ -452,9 +459,9 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         public void clear() {
             final Collection<V> coll = getMapping();
             if (coll != null) {
-                entryCount -= coll.size();
                 coll.clear();
-                AbstractMultiValuedMap.this.remove(key);
+                getMap().remove(key);
+                updateEntryCount(-coll.size());
             }
         }
 
@@ -464,7 +471,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             if (coll == null) {
                 return IteratorUtils.emptyIterator();
             }
-            return new ValuesIterator(key, coll);
+            return new CollectionValuesIterator(key, coll);
         }
 
         @Override
@@ -509,10 +516,10 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
             final boolean result = coll.remove(item);
             if (coll.isEmpty()) {
-                AbstractMultiValuedMap.this.remove(key);
+                getMap().remove(key);
             }
             if (result) {
-                entryCount--;
+                updateEntryCount(-1);
             }
             return result;
         }
@@ -527,10 +534,10 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             final int oldSize = coll.size();
             final boolean result = coll.removeAll(c);
             if (coll.isEmpty()) {
-                AbstractMultiValuedMap.this.remove(key);
+                getMap().remove(key);
             }
             if (result) {
-                entryCount -= coll.size() - oldSize;
+                updateEntryCount(coll.size() - oldSize);
             }
             return result;
         }
@@ -545,10 +552,10 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             final int oldSize = coll.size();
             final boolean result = coll.retainAll(c);
             if (coll.isEmpty()) {
-                AbstractMultiValuedMap.this.remove(key);
+                getMap().remove(key);
             }
             if (result) {
-                entryCount -= coll.size() - oldSize;
+                updateEntryCount(coll.size() - oldSize);;
             }
             return result;
         }
@@ -587,7 +594,14 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
      * Inner class that provides a MultiSet<K> keys view.
      * Only used with unmodifiable wrapper.
      */
-    private class KeysMultiSet extends AbstractMultiSet<K> {
+    private static class KeysMultiSet<K, V> extends AbstractMultiSet<K> {
+        private AbstractMultiValuedMap<K, V> parent;
+        private Map<K, Collection<V>> map;
+
+        protected KeysMultiSet(final AbstractMultiValuedMap<K, V> parent, final Map<K, Collection<V>> map) {
+            this.parent = parent;
+            this.map = map;
+        }
 
         @Override
         public boolean contains(final Object o) {
@@ -596,12 +610,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
         @Override
         public Iterator<K> iterator() {
-            return new MapBasedMultiSetIterator<>(map);
+            return new MultiSetIterator<>(map);
         }
 
         @Override
         public Spliterator<K> spliterator() {
-            return new MapBasedMultiSetSpliterator<>(map, size());
+            return new MultiSetSpliterator<>(map, parent.size());
         }
 
         @Override
@@ -626,7 +640,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
         @Override
         public int size() {
-            return AbstractMultiValuedMap.this.size();
+            return parent.size();
         }
 
         @Override
@@ -682,7 +696,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     /**
      * Inner class iterator for the MultiSet view.
      */
-    private static class MapBasedMultiSetIterator<K, V> implements Iterator<K>, Unmodifiable {
+    private static class MultiSetIterator<K, V> implements Iterator<K>, Unmodifiable {
         private final Iterator<Entry<K, Collection<V>>> entryIterator;
         private Entry<K, Collection<V>> current;
         private int itemCount;
@@ -692,7 +706,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
          *
          * @param map the parent's internal map
          */
-        MapBasedMultiSetIterator(final Map<K, Collection<V>> map) {
+        MultiSetIterator(final Map<K, Collection<V>> map) {
             this.entryIterator = map.entrySet().iterator();
             this.current = null;
         }
@@ -715,47 +729,34 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
     }
 
-    private static class MapBasedMultiSetSpliterator<K, V> implements Spliterator<K> {
-        private final Spliterator<Entry<K, Collection<V>>> entrySpliterator;
-        private int estimateSize;
-        private boolean isSplit;
-        private Entry<K, Collection<V>> current;
-        private int itemCount;
+    private static abstract class BaseEntrySpliterator<E, K, V> implements Spliterator<E> {
+        protected final Spliterator<Entry<K, Collection<V>>> entrySpliterator;
+        protected int estimateSize;
+        protected boolean isSplit;
 
-        public MapBasedMultiSetSpliterator(final Map<K, Collection<V>> map, final int size) {
+        protected BaseEntrySpliterator(final Map<K, Collection<V>> map, final int exactSize) {
             this.entrySpliterator = map.entrySet().spliterator();
-            this.estimateSize = size;
+            this.estimateSize = exactSize;
         }
 
-        public MapBasedMultiSetSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected BaseEntrySpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
             this.entrySpliterator = entrySpliterator;
             this.estimateSize = estimateSize;
             this.isSplit = true;
         }
 
         @Override
-        public boolean tryAdvance(final Consumer<? super K> action) {
-            if (itemCount == 0) {
-                if (!entrySpliterator.tryAdvance(entry -> current = entry))
-                    return false;
-                itemCount = current.getValue().size();
-            }
-
-            action.accept(current.getKey());
-            itemCount--;
-            return true;
-        }
-
-        @Override
-        public Spliterator<K> trySplit() {
+        public Spliterator<E> trySplit() {
             Spliterator<Entry<K, Collection<V>>> partitionedEntries = entrySpliterator.trySplit();
             if (partitionedEntries != null) {
                 isSplit = true;
-                return new MapBasedMultiSetSpliterator<>(partitionedEntries, estimateSize >>>= 1);
+                return makeSplit(partitionedEntries, estimateSize >>>= 1);
             } else {
                 return null;
             }
         }
+
+        protected abstract Spliterator<E> makeSplit(Spliterator<Entry<K, Collection<V>>> entrySpliterator, int estimateSize);
 
         @Override
         public long estimateSize() {
@@ -768,47 +769,53 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
     }
 
+    private static class MultiSetSpliterator<K, V> extends BaseEntrySpliterator<K, K, V> {
+        private K currentKey;
+        private int itemCount;
+
+        protected MultiSetSpliterator(final Map<K, Collection<V>> map, final int exactSize) {
+            super(map, exactSize);
+        }
+
+        protected MultiSetSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+            super(entrySpliterator, estimateSize);
+        }
+
+        @Override
+        protected Spliterator<K> makeSplit(Spliterator<Entry<K, Collection<V>>> entrySpliterator, int estimateSize) {
+            return new MultiSetSpliterator<>(entrySpliterator, estimateSize);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super K> action) {
+            if (itemCount == 0 && !entrySpliterator.tryAdvance(this::handleNextEntry)) {
+                return false;
+            }
+
+            action.accept(currentKey);
+            itemCount--;
+            return true;
+        }
+
+        private void handleNextEntry(final Entry<K, Collection<V>> entry) {
+            currentKey = entry.getKey();
+            itemCount = entry.getValue().size();
+        }
+    }
+
 
     /**
      * Inner class that provides the Entry<K, V> view
      */
-    private class EntryValues extends AbstractCollection<Entry<K, V>> {
-
+    private class EntriesView extends AbstractCollection<Entry<K, V>> {
         @Override
         public Iterator<Entry<K, V>> iterator() {
-            return new LazyIteratorChain<Entry<K, V>>() {
-
-                final Collection<K> keysCol = new ArrayList<>(getMap().keySet());
-                final Iterator<K> keyIterator = keysCol.iterator();
-
-                @Override
-                protected Iterator<? extends Entry<K, V>> nextIterator(final int count) {
-                    if (!keyIterator.hasNext()) {
-                        return null;
-                    }
-                    final K key = keyIterator.next();
-                    final Transformer<V, Entry<K, V>> entryTransformer = input -> new UnmodifiableMapEntry<>(key, input);
-                    return new TransformIterator<>(new ValuesIterator(key), entryTransformer);
-                }
-            };
+            return new FullEntriesIterator<>(AbstractMultiValuedMap.this);
         }
 
         @Override
-        public Stream<Entry<K, V>> stream() {
-            return prepareStream(getMap().entrySet().stream());
-        }
-
-        @Override
-        public Stream<Entry<K, V>> parallelStream() {
-            return prepareStream(getMap().entrySet().parallelStream());
-        }
-
-        private Stream<Entry<K,V>> prepareStream(Stream<? extends Entry<K, ? extends Collection<V>>> stream) {
-            return stream.flatMap(
-                    mapEntry -> mapEntry.getValue()
-                                        .stream()
-                                        .map(value -> new UnmodifiableMapEntry<>(mapEntry.getKey(), value))
-            );
+        public Spliterator<Entry<K, V>> spliterator() {
+            return new FullMapSpliterator<>(AbstractMultiValuedMap.this);
         }
 
         @Override
@@ -816,34 +823,63 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             return AbstractMultiValuedMap.this.size();
         }
 
-    }
-
-    /**
-     * Inner class for MapIterator.
-     */
-    private class MultiValuedMapIterator implements MapIterator<K, V> {
-        private final Iterator<Entry<K, Collection<V>>> entryIterator;
-        private K currentKey;
-        private Collection<V> currentCollection;
-        private Iterator<V> collectionIterator;
-        private V currentValue;
-        private boolean haveCurrent = false;
-
-        MultiValuedMapIterator() {
-            entryIterator = map.entrySet().iterator();
+        @Override
+        public void clear() {
+            AbstractMultiValuedMap.this.clear();
         }
 
         @Override
+        public boolean contains(Object obj) {
+            if (obj instanceof Entry) {
+                Entry<?, ?> entry = (Entry<?, ?>) obj;
+                return containsMapping(entry.getKey(), entry.getValue());
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean remove(Object obj) {
+            if (obj instanceof Entry) {
+                Entry<?, ?> entry = (Entry<?, ?>) obj;
+                return removeMapping(entry.getKey(), entry.getValue());
+            } else {
+                return false;
+            }
+        }
+    }
+
+    private static class BaseFullEntriesIterator<K, V> {
+        private final AbstractMultiValuedMap<K, V> parent;
+        private Iterator<Entry<K, Collection<V>>> entryIterator;
+        protected K currentKey;
+        private Collection<V> currentCollection;
+        private Iterator<V> collectionIterator;
+        protected V currentValue;
+        protected boolean haveCurrent = false;
+
+        BaseFullEntriesIterator(final AbstractMultiValuedMap<K, V> parent) {
+            this.parent = parent;
+            this.entryIterator = parent.map.entrySet().iterator();
+        }
+
+        public void reset() {
+            entryIterator = parent.map.entrySet().iterator();
+            currentKey = null;
+            currentCollection = null;
+            collectionIterator = null;
+            currentValue = null;
+            haveCurrent = false;
+        }
+
         public boolean hasNext() {
             return (collectionIterator != null && collectionIterator.hasNext()) || entryIterator.hasNext();
         }
 
-        @Override
-        public K next() {
+        public boolean nextEntry() {
             if (collectionIterator != null && collectionIterator.hasNext()) {
                 currentValue = collectionIterator.next();
                 haveCurrent = true;
-                return currentKey;
             } else if (entryIterator.hasNext()) {
                 Entry<K, Collection<V>> entry = entryIterator.next();
                 currentKey = entry.getKey();
@@ -851,11 +887,44 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
                 collectionIterator = currentCollection.iterator();
                 currentValue = collectionIterator.next();
                 haveCurrent = true;
-                return currentKey;
             } else {
                 haveCurrent = false;
-                throw new NoSuchElementException();
             }
+            return haveCurrent;
+        }
+
+        public void remove() {
+            if (!haveCurrent) {
+                throw new IllegalStateException();
+            }
+            collectionIterator.remove();
+            haveCurrent = false;
+            parent.updateEntryCount(-1);
+            if (currentCollection.isEmpty()) {
+                entryIterator.remove();
+                collectionIterator = null;
+            }
+        }
+
+        public V setValue(V value) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Inner class for MapIterator.
+     */
+    private static class FullMapIterator<K, V> extends BaseFullEntriesIterator<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
+        FullMapIterator(AbstractMultiValuedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public K next() {
+            if (nextEntry())
+                return currentKey;
+            else
+                throw new NoSuchElementException();
         }
 
         @Override
@@ -873,49 +942,105 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             }
             return currentValue;
         }
+    }
 
-        @Override
-        public void remove() {
-            if (!haveCurrent) {
-                throw new IllegalStateException();
-            }
-            collectionIterator.remove();
-            // if (currentCollection.size())
-            // TODO continue
-            haveCurrent = false;
-            entryCount--;
+    private static class FullEntriesIterator<K, V> extends BaseFullEntriesIterator<K, V> implements Iterator<Entry<K, V>> {
+        FullEntriesIterator(AbstractMultiValuedMap<K, V> parent) {
+            super(parent);
         }
 
         @Override
-        public V setValue(V value) {
-            throw new UnsupportedOperationException();
+        public Entry<K, V> next() {
+            if (nextEntry())
+                return new UnmodifiableMapEntry<>(currentKey, currentValue);
+            else
+                throw new NoSuchElementException();
         }
     }
 
-    private class MultiValuedMapSpliterator implements MapSpliterator<K, V> {
-        @Override
-        public boolean tryAdvance(BiConsumer<? super K, ? super V> action) {
-            return false;
+    private static class FullValuesIterator<K, V> extends BaseFullEntriesIterator<K, V> implements Iterator<V> {
+        FullValuesIterator(AbstractMultiValuedMap<K, V> parent) {
+            super(parent);
         }
 
         @Override
-        public boolean tryAdvance(Consumer<? super Entry<K, V>> action) {
-            return false;
+        public V next() {
+            if (nextEntry())
+                return currentValue;
+            else
+                throw new NoSuchElementException();
+        }
+    }
+
+    private static class FullMapSpliterator<K, V> extends BaseEntrySpliterator<Entry<K, V>, K, V> implements MapSpliterator<K, V> {
+        private K currentKey;
+        private Iterator<V> collectionIterator;
+
+        protected FullMapSpliterator(final AbstractMultiValuedMap<K, V> parent) {
+            super(parent.map, parent.entryCount);
+        }
+
+        protected FullMapSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+            super(entrySpliterator, estimateSize);
+        }
+
+        @Override
+        protected Spliterator<Entry<K, V>> makeSplit(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+            return new FullMapSpliterator<>(entrySpliterator, estimateSize);
         }
 
         @Override
         public MapSpliterator<K, V> trySplit() {
-            return null;
+            return (MapSpliterator<K, V>) super.trySplit();
         }
 
         @Override
-        public long estimateSize() {
-            return 0;
+        public boolean tryAdvance(final BiConsumer<? super K, ? super V> action) {
+            if ((collectionIterator != null && collectionIterator.hasNext())
+                    || entrySpliterator.tryAdvance(this::handleNextEntry)) {
+                V value = collectionIterator.next();
+                action.accept(currentKey, value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private void handleNextEntry(final Entry<K, Collection<V>> entry) {
+            currentKey = entry.getKey();
+            collectionIterator = entry.getValue().iterator();
+        }
+    }
+
+    private static class FullValuesSpliterator<K, V> extends BaseEntrySpliterator<V, K, V> {
+        private Iterator<V> collectionIterator;
+
+        protected FullValuesSpliterator(final AbstractMultiValuedMap<K, V> parent) {
+            super(parent.map, parent.entryCount);
+        }
+
+        protected FullValuesSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+            super(entrySpliterator, estimateSize);
         }
 
         @Override
-        public int characteristics() {
-            return 0;
+        protected Spliterator<V> makeSplit(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+            return new FullValuesSpliterator<>(entrySpliterator, estimateSize);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super V> action) {
+            if ((collectionIterator != null && collectionIterator.hasNext())
+                    || entrySpliterator.tryAdvance(this::handleNextEntry)) {
+                action.accept(collectionIterator.next());
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private void handleNextEntry(final Entry<K, Collection<V>> entry) {
+            collectionIterator = entry.getValue().iterator();
         }
     }
 
@@ -925,21 +1050,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     private class Values extends AbstractCollection<V> {
         @Override
         public Iterator<V> iterator() {
-            final IteratorChain<V> chain = new IteratorChain<>();
-            for (final K k : keySet()) {
-                chain.addIterator(new ValuesIterator(k));
-            }
-            return chain;
+            return new FullValuesIterator<>(AbstractMultiValuedMap.this);
         }
 
         @Override
-        public Stream<V> stream() {
-            return keySet().stream().flatMap(key -> getMap().get(key).stream());
-        }
-
-        @Override
-        public Stream<V> parallelStream() {
-            return keySet().parallelStream().flatMap(key -> getMap().get(key).stream());
+        public Spliterator<V> spliterator() {
+            return new FullValuesSpliterator<>(AbstractMultiValuedMap.this);
         }
 
         @Override
@@ -951,44 +1067,86 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         public void clear() {
             AbstractMultiValuedMap.this.clear();
         }
+
+        @Override
+        public boolean contains(Object obj) {
+            return containsValue(obj);
+        }
+
+        @Override
+        public boolean remove(Object obj) {
+            final Iterator<Collection<V>> iterator = map.values().iterator();
+            while (iterator.hasNext()) {
+                final Collection<V> coll = iterator.next();
+                if (coll.remove(obj)) {
+                    updateEntryCount(-1);
+                    if (coll.isEmpty()) {
+                        iterator.remove();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> removeCollection) {
+            boolean changed = false;
+            final Iterator<Collection<V>> iterator = map.values().iterator();
+            while (iterator.hasNext()) {
+                final Collection<V> coll = iterator.next();
+                final int oldSize = coll.size();
+                if (coll.removeAll(removeCollection)) {
+                    updateEntryCount(coll.size() - oldSize);;
+                    if (coll.isEmpty()) {
+                        iterator.remove();
+                    }
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> retainCollection) {
+            boolean changed = false;
+            final Iterator<Collection<V>> iterator = map.values().iterator();
+            while (iterator.hasNext()) {
+                final Collection<V> coll = iterator.next();
+                final int oldSize = coll.size();
+                if (coll.retainAll(retainCollection)) {
+                    updateEntryCount(coll.size() - oldSize);;
+                    if (coll.isEmpty()) {
+                        iterator.remove();
+                    }
+                    changed = true;
+                }
+            }
+            return changed;
+        }
     }
 
     /**
      * Inner class that provides the values iterator.
+     * This wraps the collection's iterator to do remove updates.
      */
-    private class ValuesIterator implements Iterator<V> {
+    private class CollectionValuesIterator extends AbstractIteratorDecorator<V> {
         private final Object key;
         private final Collection<V> values;
-        private final Iterator<V> iterator;
 
-        ValuesIterator(final Object key) {
+        CollectionValuesIterator(final Object key, Collection<V> values) {
+            super(values.iterator());
             this.key = key;
-            this.values = getMap().get(key);
-            this.iterator = values.iterator();
-        }
-
-        ValuesIterator(final Object key, Collection<V> coll) {
-            this.key = key;
-            this.values = coll;
-            this.iterator = values.iterator();
+            this.values = values;
         }
 
         @Override
         public void remove() {
-            iterator.remove();
+            getIterator().remove();
+            updateEntryCount(-1);
             if (values.isEmpty()) {
                 AbstractMultiValuedMap.this.remove(key);
             }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        @Override
-        public V next() {
-            return iterator.next();
         }
     }
 
@@ -1030,7 +1188,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
         @Override
         public Collection<Collection<V>> values() {
-            return decoratedMap.values();
+            return new AsMapValues();
         }
 
         @Override
@@ -1044,6 +1202,8 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             if (collection == null) {
                 return null;
             }
+
+            updateEntryCount(-collection.size());
 
             final Collection<V> output = createCollection();
             output.addAll(collection);
@@ -1077,16 +1237,19 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
 
         class AsMapEntrySet extends AbstractSet<Map.Entry<K, Collection<V>>> {
-
-            @Override
-            public Iterator<Map.Entry<K, Collection<V>>> iterator() {
-                return new AsMapEntrySetIterator(decoratedMap.entrySet().iterator());
+            private Entry<K, Collection<V>> wrapEntry(final Entry<K, Collection<V>> entry) {
+                final K key = entry.getKey();
+                return new UnmodifiableMapEntry<>(key, wrappedCollection(key));
             }
 
             @Override
-            // TODO
+            public Iterator<Map.Entry<K, Collection<V>>> iterator() {
+                return new TransformIterator<>(decoratedMap.entrySet().iterator(), this::wrapEntry);
+            }
+
+            @Override
             public Spliterator<Entry<K, Collection<V>>> spliterator() {
-                return super.spliterator();
+                return new TransformSpliterator<>(decoratedMap.entrySet().spliterator(), this::wrapEntry);
             }
 
             @Override
@@ -1115,20 +1278,45 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             }
         }
 
-        /**
-         * EntrySet iterator for the asMap view.
-         */
-        class AsMapEntrySetIterator extends AbstractIteratorDecorator<Map.Entry<K, Collection<V>>> {
-
-            AsMapEntrySetIterator(final Iterator<Map.Entry<K, Collection<V>>> iterator) {
-                super(iterator);
+        class AsMapValues extends AbstractCollection<Collection<V>> {
+            @Override
+            public Iterator<Collection<V>> iterator() {
+                return new TransformIterator<>(decoratedMap.keySet().iterator(), AbstractMultiValuedMap.this::wrappedCollection);
             }
 
             @Override
-            public Map.Entry<K, Collection<V>> next() {
-                final Map.Entry<K, Collection<V>> entry = super.next();
-                final K key = entry.getKey();
-                return new UnmodifiableMapEntry<>(key, wrappedCollection(key));
+            public Spliterator<Collection<V>> spliterator() {
+                return new TransformSpliterator<>(decoratedMap.keySet().spliterator(), AbstractMultiValuedMap.this::wrappedCollection);
+            }
+
+            @Override
+            public int size() {
+                return AsMap.this.size();
+            }
+
+            @Override
+            public void clear() {
+                AsMap.this.clear();
+            }
+
+            @Override
+            public boolean contains(final Object o) {
+                return decoratedMap.containsValue(o);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public boolean remove(Object obj) {
+                if (obj instanceof Collection) {
+                    final Collection<V> coll = (Collection<V>) obj;
+                    boolean changed = decoratedMap.values().remove(coll);
+                    if (changed) {
+                        updateEntryCount(-coll.size());
+                    }
+                    return changed;
+                } else {
+                    return false;
+                }
             }
         }
     }
@@ -1162,7 +1350,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         for (int i = 0; i < entrySize; i++) {
             @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
             final K key = (K) in.readObject();
-            final Collection<V> values = get(key); // nick:this is wrapped colleciton
+            final Collection<V> values = get(key);
             final int valueSize = in.readInt();
             for (int j = 0; j < valueSize; j++) {
                 @SuppressWarnings("unchecked") // see above

@@ -115,10 +115,12 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
             listIt.remove();
         }
         assertFalse(listMap.containsKey("B"));
+        assertEquals(0, listMap.size());
         listIt.add((V) "b1");
         listIt.add((V) "b2");
         assertTrue(listMap.containsKey("B"));
         assertEquals(2, listMap.get((K) "B").size());
+        assertEquals(2, listMap.size());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -202,9 +204,11 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
         listA.add(0, (V) "W");
         listA.add(1, (V) "X");
         listA.add(2, (V) "F");
+        assertEquals(3, listMap.size());
         assertEquals("{A=[W, X, F]}", listMap.toString());
         listMap.get((K) "A").set(1, (V) "Q");
         assertEquals("{A=[W, Q, F]}", listMap.toString());
+        assertEquals(3, listMap.size());
     }
 
     @Test
@@ -213,6 +217,7 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
         final List<V> listA = listMap.get((K) "A");
         final List<V> list = Arrays.asList((V) "W", (V) "X", (V) "F");
         listA.addAll(0, list);
+        assertEquals(3, listMap.size());
         assertEquals("{A=[W, X, F]}", listMap.toString());
 
         final List<V> list1 = Arrays.asList((V) "Q", (V) "Q", (V) "L");
@@ -230,6 +235,7 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
         assertEquals(3, listMap.get((K) "A").indexOf("Q"));
         assertEquals(4, listMap.get((K) "A").lastIndexOf("Q"));
         assertEquals(-1, listMap.get((K) "A").lastIndexOf("A"));
+        assertEquals(6, listMap.size());
 
         final List<V> list2 = new ArrayList<>();
         listMap.get((K) "B").addAll(0, list2);
@@ -237,6 +243,7 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
         final List<V> list3 = listMap.get((K) "A").subList(1, 4);
         assertEquals(3, list3.size());
         assertEquals("Q", list3.get(2));
+        assertEquals(6, listMap.size());
     }
 
     @Test

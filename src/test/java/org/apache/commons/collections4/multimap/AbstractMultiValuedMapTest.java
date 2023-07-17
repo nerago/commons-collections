@@ -839,9 +839,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         assertThrows(IllegalStateException.class, () -> it.getKey());
         assertThrows(IllegalStateException.class, () -> it.getValue());
-        if (isAddSupported()) {
-            assertThrows(IllegalStateException.class, () -> it.setValue((V) "V"));
-        }
+        assertThrows(UnsupportedOperationException.class, () -> it.setValue((V) "V"));
 
         if (!isHashSetValue() && isAddSupported()) {
             assertTrue(it.hasNext() );
