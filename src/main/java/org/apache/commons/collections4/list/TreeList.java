@@ -1312,6 +1312,8 @@ public class TreeList<E> extends AbstractList<E> {
 
         @Override
         public List<E> subList(final int fromRelative, final int toRelative) {
+            if (fromRelative == toRelative)
+                return Collections.emptyList();
             int fromMain = checkSubListIndex(fromRelative, 0);
             int toMain = checkSubListIndex(toRelative, 1);
             return new TreeSubList<>(parent, fromMain, toMain - 1);
