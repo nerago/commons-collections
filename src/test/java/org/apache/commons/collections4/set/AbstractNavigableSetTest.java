@@ -135,12 +135,12 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public DynamicNode subSetTests() {
         if (runSubSetTests()) {
             return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
-                    findTestsOnNestedClass(BulkTestSortedSetSubSet.class, BulkTestSortedSetSubSet::new),
-                    findTestsOnNestedClass(BulkTestSortedSetHeadSet.class, BulkTestSortedSetHeadSet::new),
-                    findTestsOnNestedClass(BulkTestSortedSetTailSet.class, BulkTestSortedSetTailSet::new),
-                    findTestsOnNestedClass(BulkTestNavigableSetSubSet.class, BulkTestNavigableSetSubSet::new),
-                    findTestsOnNestedClass(BulkTestNavigableSetHeadSet.class, BulkTestNavigableSetHeadSet::new),
-                    findTestsOnNestedClass(BulkTestNavigableSetTailSet.class, BulkTestNavigableSetTailSet::new)
+                new BulkTestSortedSetSubSet().getDynamicTests(),
+                new BulkTestSortedSetHeadSet().getDynamicTests(),
+                new BulkTestSortedSetTailSet().getDynamicTests(),
+                new BulkTestNavigableSetSubSet().getDynamicTests(),
+                new BulkTestNavigableSetHeadSet().getDynamicTests(),
+                new BulkTestNavigableSetTailSet().getDynamicTests()
             ));
         } else {
             return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());

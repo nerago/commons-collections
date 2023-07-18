@@ -187,6 +187,16 @@ public class BulkTest implements Cloneable {
     }
 
     /**
+     *  Returns the name of the simple test method of this {@code BulkTest}, or else the type name.
+     */
+    public String getNameDefaulted() {
+        if (name != null && name.length() > 0)
+            return name;
+        else
+            return verboseName;
+    }
+
+    /**
      *  Creates a clone of this {@code BulkTest}.<P>
      *
      *  @return  a clone of this {@code BulkTest}
@@ -247,29 +257,35 @@ public class BulkTest implements Cloneable {
         return getName() + "(" + verboseName + ") ";
     }
 
-    protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier) {
-        N instance = instanceSupplier.get();
-        return DynamicContainer.dynamicContainer(type.getSimpleName(),
-                URI.create("class:" + type.getName()),
-                Stream.concat(
-                    AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
-                            .stream()
-                            .map(method -> DynamicTest.dynamicTest(
-                                    method.getName(),
-                                    URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
-                                    () -> ReflectionUtils.invokeMethod(method, instance))),
-                    AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
-                            .stream()
-                            .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
-                            )
-        );
+    public DynamicNode getDynamicTests() {
+        return findTestsOnNestedClass(this);
     }
 
-    protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier, BooleanSupplier enableTests) {
+    public DynamicNode getDynamicTests(BooleanSupplier enableTests) {
         if (enableTests.getAsBoolean()) {
-            return findTestsOnNestedClass(type, instanceSupplier);
+            return getDynamicTests();
         } else {
-            return DynamicContainer.dynamicContainer(type.getName(), Stream.empty());
+            return DynamicContainer.dynamicContainer(getNameDefaulted(), Stream.empty());
         }
+    }
+
+    public static DynamicContainer findTestsOnNestedClass(BulkTest instance) {
+        Class<? extends BulkTest> type = instance.getClass();
+        String name = instance.getNameDefaulted();
+        return DynamicContainer.dynamicContainer(name,
+                URI.create("class:" + type.getName()),
+                Stream.concat(
+                        AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
+                                .stream()
+                                .filter(method -> !AnnotationSupport.isAnnotated(method, Disabled.class))
+                                .map(method -> DynamicTest.dynamicTest(
+                                        method.getName(),
+                                        URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
+                                        () -> ReflectionUtils.invokeMethod(method, instance))),
+                        AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
+                                .stream()
+                                .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
+                )
+        );
     }
 }
