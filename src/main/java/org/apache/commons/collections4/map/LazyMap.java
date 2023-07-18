@@ -22,6 +22,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.Transformer;
@@ -166,6 +168,57 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
             return value;
         }
         return map.get(key);
+    }
+
+    @Override
+    public V putIfAbsent(K key, V ignoreCallerValue) {
+        final V mapValue;
+        if (map.containsKey(key) && ((mapValue = map.get(key)) != null)) {
+            return mapValue;
+        } else {
+            final V value = factory.transform(key);
+            map.put(key, value);
+            return value;
+        }
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        final V mapValue;
+        if (map.containsKey(key) && ((mapValue = map.get(key)) != null)) {
+            return mapValue;
+        } else {
+            final V value = factory.transform(key);
+            map.put(key, value);
+            return value;
+        }
+    }
+
+    @Override
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+
+        final V mapValue;
+        if ( (mapValue = map.get(key)) != null ||  map.containsKey(key))
+
+
+        V newValue = remappingFunction.apply(key, oldValue);
+        if (newValue == null) {
+            // delete mapping
+            if (oldValue != null || containsKey(key)) {
+                // something to remove
+                remove(key);
+                return null;
+            } else {
+                // nothing to do. Leave things as they were.
+                return null;
+            }
+        } else {
+            // add or replace old mapping
+            put(key, newValue);
+            return newValue;
+        }
     }
 
     // no need to wrap keySet, entrySet or values as they are views of
