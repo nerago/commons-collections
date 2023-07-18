@@ -1251,7 +1251,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
-        final V dummy = (V) "xyz";
 
         if (!isRemoveSupported()) {
             resetFull();
@@ -1389,10 +1388,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         for (int i = 0; i < otherKeys.length; i++) {
             final K key = otherKeys[i];
             final V replaceValue = otherValues[i];
-            if (replaceValue != null) { // not null parameter
-                assertFalse(getMap().replace(key, replaceValue, dummy), "replace should do nothing for for missing");
-                assertFalse(getMap().containsKey(key));
-            }
+            assertFalse(getMap().replace(key, replaceValue, dummy), "replace should do nothing for for missing");
+            assertFalse(getMap().containsKey(key));
             verify();
         }
     }

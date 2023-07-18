@@ -19,8 +19,7 @@ package org.apache.commons.collections4.map;
 import static org.apache.commons.collections4.map.LazyMap.lazyMap;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -562,22 +561,134 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         }
     }
 
+    /** Extra check that remove(K, V) pretends that collection has the factory default value. */
     @Test
     @Override
     public void testMapRemove2() {
         super.testMapRemove2();
+
+        resetEmpty();
+        for (final K key : getSampleKeys()) {
+            assertTrue(getMap().remove(key, FACTORY),
+                    "remove should pretend to remove value matching factory");
+            assertFalse(getMap().containsKey(key));
+            verify();
+        }
     }
 
+    /** Should pretend that every element is present and ready for replacement */
     @Test
     @Override
     public void testMapReplace2() {
-        super.testMapReplace2();
+        final K[] keys = getSampleKeys();
+        final K[] otherKeys = getOtherKeys();
+        final V[] values = getSampleValues();
+        final V[] newValues = getNewSampleValues();
+        final V[] otherValues = getOtherValues();
+
+        resetEmpty();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V replaceValue = newValues[i];
+            assertEquals(FACTORY, getMap().replace(key, replaceValue),
+                    "LazyMap.replace(K,V) should set the value, while pretending old value was the factory default");
+            getConfirmed().put(key, replaceValue);
+            verify();
+        }
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
+            assertEquals(oldValue, getMap().replace(key, replaceValue), "replace should return old value");
+            getConfirmed().put(key, replaceValue);
+            verify();
+        }
+        for (int i = 0; i < otherKeys.length; i++) {
+            final K key = otherKeys[i];
+            final V replaceValue = otherValues[i];
+            assertEquals(FACTORY, getMap().replace(key, replaceValue),
+                    "LazyMap.replace(K,V) should set the value, while pretending old value was the factory default");
+            getConfirmed().put(key, replaceValue);
+            verify();
+        }
     }
 
     @Test
     @Override
     public void testMapReplace3() {
-        super.testMapReplace3();
+        final K[] keys = getSampleKeys();
+        final K[] otherKeys = getOtherKeys();
+        final V[] values = getSampleValues();
+        final V[] newValues = getNewSampleValues();
+        final V[] otherValues = getOtherValues();
+        final V dummy = (V) "xyz";
+
+        resetEmpty();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
+            if (i % 2 == 0) {
+                assertFalse(getMap().replace(key, oldValue, replaceValue),
+                        "LazyMap.replace should do nothing on empty with wrong value");
+                assertFalse(getMap().containsKey(key));
+                verify();
+            } else {
+                assertTrue(getMap().replace(key, FACTORY_V, replaceValue),
+                        "LazyMap.replace should pretend it had the factory value");
+                assertTrue(getMap().containsKey(key));
+                getConfirmed().put(key, replaceValue);
+                verify();
+            }
+        }
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
+            if (!Objects.equals(oldValue, replaceValue)) {
+                assertFalse(getMap().replace(key, replaceValue, oldValue),
+                        "replace should return false wrong value");
+                verify(); // no change expected
+
+                assertFalse(getMap().replace(key, FACTORY_V, replaceValue),
+                        "replace should return false wrong value");
+                verify(); // no change expected
+
+                assertTrue(getMap().replace(key, oldValue, replaceValue),
+                        "replace should return true");
+                assertTrue(getMap().containsKey(key));
+                getConfirmed().put(key, replaceValue);
+                verify(); // change should match
+
+                assertFalse(getMap().replace(key, oldValue, replaceValue),
+                        "replace should return false since that's no longer current");
+                verify(); // no change expected
+            } else {
+                getMap().replace(key, oldValue, oldValue);
+                verify();
+            }
+        }
+        for (int i = 0; i < otherKeys.length; i++) {
+            final K key = otherKeys[i];
+            final V oldValue = values[i];
+            final V replaceValue = otherValues[i];
+            if (i % 2 == 0) {
+                assertFalse(getMap().replace(key, oldValue, replaceValue),
+                        "LazyMap.replace should do nothing on empty with wrong value");
+                assertFalse(getMap().containsKey(key));
+                verify();
+            } else {
+                assertTrue(getMap().replace(key, FACTORY_V, replaceValue),
+                        "LazyMap.replace should pretend it had the factory value");
+                assertTrue(getMap().containsKey(key));
+                getConfirmed().put(key, replaceValue);
+                verify();
+            }
+        }
     }
 
     @Override
