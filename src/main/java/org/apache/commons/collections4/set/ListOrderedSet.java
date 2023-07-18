@@ -16,13 +16,7 @@
  */
 package org.apache.commons.collections4.set;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -180,6 +174,11 @@ public class ListOrderedSet<E>
     @Override
     public OrderedIterator<E> iterator() {
         return new OrderedSetIterator<>(setOrder.listIterator(), decorated());
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return setOrder.spliterator();
     }
 
     @Override
