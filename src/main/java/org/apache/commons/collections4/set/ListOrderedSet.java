@@ -192,11 +192,21 @@ public class ListOrderedSet<E>
 
     @Override
     public boolean addAll(final Collection<? extends E> coll) {
-        boolean result = false;
+        boolean changed = false;
+        // collect all elements to be added for performance reasons
+        final List<E> toAdd = new ArrayList<>();
         for (final E e : coll) {
-            result |= add(e);
+            if (decorated().add(e)) {
+                toAdd.add(e);
+                changed = true;
+            }
         }
-        return result;
+
+        if (changed) {
+            setOrder.addAll(toAdd);
+        }
+
+        return changed;
     }
 
     @Override
@@ -243,7 +253,7 @@ public class ListOrderedSet<E>
         } else {
             setOrder.removeIf(e -> !decorated().contains(e));
         }
-        return result;
+        return true;
     }
 
     @Override
@@ -290,8 +300,7 @@ public class ListOrderedSet<E>
      * @see List#add(int, Object)
      */
     public void add(final int index, final E object) {
-        if (!contains(object)) {
-            decorated().add(object);
+        if (decorated().add(object)) {
             setOrder.add(index, object);
         }
     }
@@ -312,12 +321,10 @@ public class ListOrderedSet<E>
         // collect all elements to be added for performance reasons
         final List<E> toAdd = new ArrayList<>();
         for (final E e : coll) {
-            if (contains(e)) {
-                continue;
+            if (decorated().add(e)) {
+                toAdd.add(e);
+                changed = true;
             }
-            decorated().add(e);
-            toAdd.add(e);
-            changed = true;
         }
 
         if (changed) {
@@ -337,7 +344,8 @@ public class ListOrderedSet<E>
      */
     public E remove(final int index) {
         final E obj = setOrder.remove(index);
-        remove(obj);
+        if (!remove(obj))
+            throw new IllegalStateException();
         return obj;
     }
 
@@ -367,32 +375,45 @@ public class ListOrderedSet<E>
         /** Last object retrieved */
         private E last;
 
+        private boolean canRemove = false;
+
         private OrderedSetIterator(final ListIterator<E> iterator, final Collection<E> set) {
             super(iterator);
             this.set = set;
         }
 
         @Override
+        protected ListIterator<E> getIterator() {
+            return (ListIterator<E>) super.getIterator();
+        }
+
+        @Override
         public E next() {
             last = getIterator().next();
+            canRemove = true;
             return last;
         }
 
         @Override
         public void remove() {
-            set.remove(last);
+            if (!canRemove)
+                throw new IllegalStateException();
+            if (!set.remove(last))
+                throw new RuntimeException("shouldn't happen");
             getIterator().remove();
             last = null;
+            canRemove = false;
         }
 
         @Override
         public boolean hasPrevious() {
-            return ((ListIterator<E>) getIterator()).hasPrevious();
+            return getIterator().hasPrevious();
         }
 
         @Override
         public E previous() {
-            last = ((ListIterator<E>) getIterator()).previous();
+            last = getIterator().previous();
+            canRemove = true;
             return last;
         }
     }
