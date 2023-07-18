@@ -1325,7 +1325,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean areEqualElementsDistinguishable() {
+        public boolean areEqualElementsIndistinguishable() {
             // work-around for a problem with the EntrySet: the entries contain
             // the wrapped collection, which will be automatically cleared
             // when the associated key is removed from the map as the collection

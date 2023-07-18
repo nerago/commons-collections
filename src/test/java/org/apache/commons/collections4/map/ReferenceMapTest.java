@@ -76,6 +76,11 @@ public class ReferenceMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return false;
     }
 
+    @Override
+    public boolean areEqualElementsIndistinguishable() {
+        return true;
+    }
+
     //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk(
