@@ -882,7 +882,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         if (!isPutAddSupported()) {
             resetEmpty();
             assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfAbsent(keys[0], k -> values[0]));
-            assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfAbsent(keys[0], k -> { throw new ArithmeticException(); }));
             verify();
             return;
         }

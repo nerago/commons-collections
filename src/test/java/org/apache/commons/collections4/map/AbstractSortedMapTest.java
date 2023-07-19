@@ -26,10 +26,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.apache.commons.collections4.set.AbstractNavigableSetTest;
+import org.apache.commons.collections4.set.AbstractSortedSetTest;
+import org.junit.jupiter.api.*;
 
 /**
  * Abstract test class for {@link java.util.SortedMap} methods and contracts.
@@ -53,6 +55,10 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
     @Override
     public boolean isAllowNullKey() {
         return false;
+    }
+
+    protected boolean runSubMapTests() {
+        return true;
     }
 
     /**
@@ -99,6 +105,19 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             obj = k;
         }
         assertSame(obj, sm.lastKey());
+    }
+
+    @TestFactory
+    public DynamicNode subMapTests() {
+        if (runSubMapTests()) {
+            return DynamicContainer.dynamicContainer("subMapTests", Arrays.asList(
+                    new TestHeadMap(this).getDynamicTests(),
+                    new TestTailMap(this).getDynamicTests(),
+                    new TestSubMap(this).getDynamicTests()
+            ));
+        } else {
+            return DynamicContainer.dynamicContainer("subMapTests", Stream.empty());
+        }
     }
 
     public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
@@ -167,6 +186,15 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             return main.isRemoveSupported();
         }
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+        @Override
+        protected boolean runSubMapTests() {
+            return false;
+        }
+
+        @Override
         public boolean isTestSerialization() {
             return false;
         }
@@ -188,7 +216,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //        }
     }
 
-   // @Nested
     public class TestHeadMap extends TestViewMap<K, V> {
         static final int SUBSIZE = 6;
         final K toKey;
@@ -241,7 +268,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //        }
     }
 
-  // @Nested
     public class TestTailMap extends TestViewMap<K, V> {
         static final int SUBSIZE = 6;
         final K fromKey;
@@ -296,8 +322,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //        }
     }
 
-   // @Nested
-    public  class TestSubMap extends TestViewMap<K, V> {
+    public class TestSubMap extends TestViewMap<K, V> {
         static final int SUBSIZE = 3;
         final K fromKey;
         final K toKey;

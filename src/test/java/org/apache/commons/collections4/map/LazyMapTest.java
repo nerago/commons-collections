@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.FactoryUtils;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.Transformer;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +50,7 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public LazyMap<K, V>  makeObject() {
+    public IterableMap<K, V> makeObject() {
         return lazyMap(new HashMap<>(), (Factory<? extends V>) defaultFactory);
     }
 
