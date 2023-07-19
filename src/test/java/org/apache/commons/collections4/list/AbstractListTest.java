@@ -818,6 +818,51 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      * Tests remove on list iterator is correct.
      */
     @Test
+    public void testListListIteratorPreviousRemovePreviousState() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+        resetFull();
+        if (getCollection().size() < 4) {
+            return;
+        }
+        final ListIterator<E> it = getCollection().listIterator();
+        final E zero = it.next();
+        final E one = it.next();
+        final E two = it.next();
+        final E three = getCollection().get(3);
+        final E two2 = it.previous();
+        assertEquals(two, two2);
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(two, getCollection().get(2));
+        assertEquals(three, getCollection().get(3));
+
+        it.remove(); // removed element at index 2 (two)
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(three, getCollection().get(2));
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(three, getCollection().get(2));
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+
+        final E three2 = it.next();  // do next after double remove
+        assertEquals(three, three2);
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+        assertEquals(getCollection().size() > 2, it.hasNext());
+    }
+
+    /**
+     * Tests remove on list iterator is correct.
+     */
+    @Test
     public void testListListIteratorNextRemoveNext() {
         if (!isRemoveSupported()) {
             return;
@@ -841,6 +886,53 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final E three2 = it.next();  // do next after remove
         assertEquals(three, three2);
         assertEquals(getCollection().size() > 3, it.hasNext());
+        assertTrue(it.hasPrevious());
+    }
+
+    @Test
+    public void testListListIteratorRemoveLastPrevious() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+        resetFull();
+        if (getCollection().size() < 4) {
+            return;
+        }
+        final int initialSize = getCollection().size();
+        final E last = getCollection().get(initialSize - 1);
+        final E beforeLast = getCollection().get(initialSize - 2);
+        final ListIterator<E> it = getCollection().listIterator(getCollection().size());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+
+        assertThrows(NoSuchElementException.class, () -> it.next());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+
+        final E last2 = it.previous();
+        assertEquals(last, last2);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(initialSize, getCollection().size());
+
+        it.remove();
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(beforeLast, getCollection().get(initialSize - 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> getCollection().get(initialSize - 1));
+        assertEquals(initialSize - 1, getCollection().size());
+
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(beforeLast, getCollection().get(initialSize - 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> getCollection().get(initialSize - 1));
+        assertEquals(initialSize - 1, getCollection().size());
+
+        E beforeLast2 = it.previous();
+        assertEquals(beforeLast, beforeLast2);
+        assertTrue(it.hasNext());
         assertTrue(it.hasPrevious());
     }
 

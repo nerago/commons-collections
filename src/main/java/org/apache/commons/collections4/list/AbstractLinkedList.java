@@ -871,19 +871,18 @@ public abstract class AbstractLinkedList<E> implements List<E> {
 
         @Override
         public void remove() {
-            throw new ArithmeticException();
-//            checkModCount();
-//            if (current == next) {
-//                // remove() following previous()
-//                next = next.next;
-//                parent.removeNode(getLastNodeReturned());
-//            } else {
-//                // remove() following next()
-//                parent.removeNode(getLastNodeReturned());
-//                nextIndex--;
-//            }
-//            current = null;
-//            expectedModCount++;
+            checkModCount();
+            if (current == next) {
+                // remove() following previous()
+                parent.removeNode(getLastNodeReturned());
+                next = next.next;
+            } else {
+                // remove() following next()
+                parent.removeNode(getLastNodeReturned());
+                nextIndex--;
+            }
+            current = null;
+            expectedModCount++;
         }
 
         @Override
