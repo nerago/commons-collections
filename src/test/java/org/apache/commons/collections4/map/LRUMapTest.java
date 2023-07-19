@@ -56,6 +56,11 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         return true;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
     /**
      * {@inheritDoc}
      */

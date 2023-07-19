@@ -47,6 +47,11 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     public DualTreeBidiMap<K, V> makeObject() {
         return new DualTreeBidiMap<>(
                 new ReverseComparator<>(ComparableComparator.<K>comparableComparator()),

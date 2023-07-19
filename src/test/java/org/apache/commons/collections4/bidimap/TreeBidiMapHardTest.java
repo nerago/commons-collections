@@ -63,6 +63,11 @@ public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

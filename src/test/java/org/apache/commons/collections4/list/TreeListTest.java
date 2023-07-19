@@ -37,6 +37,11 @@ public class TreeListTest<E> extends AbstractListTest<E> {
         super(TreeListTest.class.getSimpleName());
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
 //    public static void main(String[] args) {
 //        junit.textui.TestRunner.run(suite());
 //        System.out.println("         add; toArray; iterator; insert; get; indexOf; remove");

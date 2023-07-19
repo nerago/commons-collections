@@ -46,6 +46,11 @@ public class PatriciaTrie2Test<V> extends AbstractOrderedMapTest<String, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

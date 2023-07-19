@@ -79,6 +79,11 @@ public class CircularFifoQueueTest<E> extends AbstractQueueTest<E> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
     /**
      * Returns an empty ArrayList.
      *

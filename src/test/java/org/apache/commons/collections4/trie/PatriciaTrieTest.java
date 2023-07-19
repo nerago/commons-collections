@@ -64,6 +64,11 @@ public class PatriciaTrieTest<V> extends AbstractSortedMapTest<String, V> {
         return false;
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
     @Test
     public void testPrefixMap() {
         final PatriciaTrie<String> trie = new PatriciaTrie<>();

@@ -56,6 +56,11 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

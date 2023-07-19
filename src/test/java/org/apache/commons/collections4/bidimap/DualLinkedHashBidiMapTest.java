@@ -46,6 +46,11 @@ public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
         return new String[] { "DualLinkedHashBidiMapTest.bulkTestInverseMap.bulkTestInverseMap" };
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
 //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/DualLinkedHashBidiMap.emptyCollection.version4.obj");

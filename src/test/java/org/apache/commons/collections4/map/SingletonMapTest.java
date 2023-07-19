@@ -81,6 +81,11 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public K[] getSampleKeys() {
         return (K[]) new Object[] { ONE };

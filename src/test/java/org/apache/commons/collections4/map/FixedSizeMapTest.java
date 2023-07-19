@@ -56,6 +56,11 @@ public class FixedSizeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

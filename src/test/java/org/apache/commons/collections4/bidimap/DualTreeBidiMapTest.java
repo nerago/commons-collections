@@ -33,6 +33,11 @@ public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V
         return new DualTreeBidiMap<>();
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
     /**
      * Override to prevent infinite recursion of tests.
      */

@@ -67,6 +67,11 @@ public class FixedSizeListTest<E> extends AbstractListTest<E> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

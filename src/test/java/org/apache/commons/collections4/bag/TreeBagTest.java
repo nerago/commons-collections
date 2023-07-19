@@ -42,6 +42,11 @@ public class TreeBagTest<T> extends AbstractSortedBagTest<T> {
         return new TreeBag<>();
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
     @SuppressWarnings("unchecked")
     public SortedBag<T> setupBag() {
         final SortedBag<T> bag = makeObject();

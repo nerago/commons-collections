@@ -47,6 +47,11 @@ public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V> 
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     public K[] getOtherKeys() {
         return (K[]) new Object[] {
                 "for", "then", "despite", "space", "i", "would", "be", "brought",

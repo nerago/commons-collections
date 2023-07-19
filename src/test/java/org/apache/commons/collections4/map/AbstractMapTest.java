@@ -334,14 +334,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         return true;
     }
 
-    /**
-     * Is a constructor with parameters of (Collection obj) available and should be tested
-     * as a copy constructor.
-     * See {@link #makeObjectCopy}
-     */
-    public boolean isCopyConstructorSupported() {
-        return true;
-    }
+    public abstract boolean isCopyConstructorSupported();
 
     /**
      *  Returns the set of keys in the mappings used to test the map.  This

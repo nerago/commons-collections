@@ -257,9 +257,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * as a copy constructor.
      * See {@link #makeObjectCopy}
      */
-    public boolean isCopyConstructorSupported() {
-        return true;
-    }
+    public abstract boolean isCopyConstructorSupported();
 
     /**
      *  Verifies that {@link #collection} and {@link #confirmed} have

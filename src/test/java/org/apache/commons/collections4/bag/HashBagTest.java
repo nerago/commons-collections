@@ -40,6 +40,11 @@ public class HashBagTest<T> extends AbstractBagTest<T> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
+    @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.UNORDERED;
     }

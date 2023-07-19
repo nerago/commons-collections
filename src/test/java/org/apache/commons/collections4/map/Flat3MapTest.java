@@ -61,6 +61,11 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return new Flat3Map<>();
     }
 
+    @Override
+    public boolean isCopyConstructorSupported() {
+        return true;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testEquals1() {

@@ -74,6 +74,11 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
     }
 
     @Override
+    public boolean isCopyConstructorSupported() {
+        return false;
+    }
+
+    @Override
     public Collection<E> makeConfirmedCollection() {
         return new HashSet<>();
     }
