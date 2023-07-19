@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.list.AbstractListTest;
 import org.junit.jupiter.api.Nested;
@@ -65,8 +66,8 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
     @Test
@@ -483,10 +484,9 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
-
     }
 
     @Nested
@@ -537,8 +537,8 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
     }
 

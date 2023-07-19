@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
@@ -59,8 +60,8 @@ public class PredicatedListTest<E> extends AbstractListTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.PREDICATED;
     }
 
     protected Predicate<E> testPredicate =

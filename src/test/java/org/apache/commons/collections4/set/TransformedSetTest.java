@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
@@ -68,8 +69,8 @@ public class TransformedSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.TRANSFORM;
     }
 
     @Test

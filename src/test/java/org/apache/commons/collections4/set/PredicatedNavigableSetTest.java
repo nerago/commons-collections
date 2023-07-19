@@ -27,6 +27,7 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
@@ -64,8 +65,8 @@ public class PredicatedNavigableSetTest<E> extends AbstractNavigableSetTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.PREDICATED;
     }
 
     @Test

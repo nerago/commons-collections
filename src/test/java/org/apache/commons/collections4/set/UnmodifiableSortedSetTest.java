@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -66,8 +67,8 @@ public class UnmodifiableSortedSetTest<E> extends AbstractSortedSetTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @SuppressWarnings("unchecked")

@@ -25,6 +25,7 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
 import org.junit.jupiter.api.Test;
@@ -57,8 +58,8 @@ public class TransformedNavigableSetTest<E> extends AbstractNavigableSetTest<E> 
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.TRANSFORM;
     }
 
     @Test

@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Arrays;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -73,8 +74,8 @@ public class UnmodifiableBagTest<E> extends AbstractBagTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Override

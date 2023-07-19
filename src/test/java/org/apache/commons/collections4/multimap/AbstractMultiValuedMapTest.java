@@ -26,13 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.collections4.AbstractObjectTest;
-import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MultiSet;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.SetValuedMap;
+import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.bag.AbstractBagTest;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
@@ -130,8 +124,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * as a copy constructor.
      * See {@link #makeObjectCopy}
      */
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     /**
@@ -897,8 +891,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
     @Test
     public void testCopy() {
-        if (!isCopyConstructorSupported())
-            return;
+//        if (!isCopyConstructorCheckable())
+//            return;
 
         MultiValuedMap<K, V> original = makeConfirmedMap();
         original.put((K) "A", (V) "W");
@@ -974,8 +968,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1062,8 +1056,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1123,8 +1117,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1211,8 +1205,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1320,8 +1314,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override

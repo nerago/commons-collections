@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -38,8 +39,8 @@ public class TreeListTest<E> extends AbstractListTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
 //    public static void main(String[] args) {

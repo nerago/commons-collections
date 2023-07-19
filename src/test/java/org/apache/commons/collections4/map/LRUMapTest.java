@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.ResettableIterator;
@@ -57,8 +58,8 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     /**

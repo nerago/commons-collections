@@ -25,10 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.BulkTest;
-import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.OrderedMap;
-import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.list.AbstractListTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -56,8 +53,8 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override
@@ -275,8 +272,8 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
             return false;
         }
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
     }
 

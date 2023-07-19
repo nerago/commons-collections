@@ -23,10 +23,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.Factory;
-import org.apache.commons.collections4.FactoryUtils;
-import org.apache.commons.collections4.IterableMap;
-import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.*;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -55,8 +52,8 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
     @Override

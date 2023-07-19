@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -51,6 +52,11 @@ public class GrowthListTest<E> extends AbstractListTest<E> {
     public List<E> makeFullCollection() {
         final List<E> list = new ArrayList<>(Arrays.asList(getFullElements()));
         return GrowthList.growthList(list);
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
     @Test
@@ -191,11 +197,6 @@ public class GrowthListTest<E> extends AbstractListTest<E> {
         final E element = getOtherElements()[0];
         assertThrows(IndexOutOfBoundsException.class, () -> list.set(-1, element),
                 "List.set should throw IndexOutOfBoundsException [-1]");
-    }
-
-    @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
     }
 
     @Override

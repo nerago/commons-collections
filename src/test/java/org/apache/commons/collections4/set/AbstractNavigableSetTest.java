@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -259,8 +260,8 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
             return AbstractNavigableSetTest.this.isFailFastSupported();
         }
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
         @Override
         protected boolean runSubSetTests() {

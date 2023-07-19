@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
@@ -60,8 +61,8 @@ public class UnmodifiableMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Override

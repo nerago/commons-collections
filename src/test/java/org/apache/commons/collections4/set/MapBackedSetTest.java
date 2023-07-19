@@ -18,6 +18,7 @@ package org.apache.commons.collections4.set;
 
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.map.HashedMap;
 
 /**
@@ -42,8 +43,8 @@ public class MapBackedSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
 //    public void testCreate() throws Exception {

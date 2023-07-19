@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
@@ -50,8 +51,8 @@ public class TransformedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.TRANSFORM;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

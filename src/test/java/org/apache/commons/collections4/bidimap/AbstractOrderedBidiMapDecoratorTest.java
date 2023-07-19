@@ -19,6 +19,7 @@ package org.apache.commons.collections4.bidimap;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedBidiMap;
 
 /**
@@ -63,8 +64,8 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     /**

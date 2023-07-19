@@ -41,8 +41,8 @@ public class ArrayStackTest<E> extends AbstractArrayListTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.DEPRECATED;
     }
 
     @Test

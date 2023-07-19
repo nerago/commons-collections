@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -80,8 +81,8 @@ public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Override

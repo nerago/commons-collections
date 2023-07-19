@@ -35,6 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.AbstractSetTest;
@@ -745,8 +746,8 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override

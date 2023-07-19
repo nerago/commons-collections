@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.SortedBag;
 import org.junit.jupiter.api.Test;
 
@@ -43,8 +44,8 @@ public class TreeBagTest<T> extends AbstractSortedBagTest<T> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @SuppressWarnings("unchecked")

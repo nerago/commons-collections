@@ -19,6 +19,7 @@ package org.apache.commons.collections4.bidimap;
 import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -555,8 +556,8 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override

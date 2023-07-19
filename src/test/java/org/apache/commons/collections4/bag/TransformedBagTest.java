@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
@@ -51,8 +52,8 @@ public class TransformedBagTest<T> extends AbstractBagTest<T> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.TRANSFORM;
     }
 
     @Test

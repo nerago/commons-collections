@@ -19,6 +19,7 @@ package org.apache.commons.collections4.list;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -36,8 +37,8 @@ public class NodeCachingLinkedListTest<E> extends AbstractLinkedListTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedMap;
 import org.junit.jupiter.api.Disabled;
@@ -81,8 +82,8 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

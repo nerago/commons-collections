@@ -29,6 +29,7 @@ import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
 import org.junit.jupiter.api.Test;
@@ -106,8 +107,8 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

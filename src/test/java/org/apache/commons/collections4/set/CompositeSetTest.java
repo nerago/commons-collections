@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.CompositeSet.SetMutator;
 import org.junit.jupiter.api.Test;
@@ -218,8 +219,8 @@ public class CompositeSetTest<E> extends AbstractSetTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
 //    public void testCreate() throws Exception {

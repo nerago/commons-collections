@@ -24,10 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.apache.commons.collections4.TestUtils;
-import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.TransformerUtils;
-import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.*;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -104,8 +101,8 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
     @Override

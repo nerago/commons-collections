@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
@@ -257,7 +258,11 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * as a copy constructor.
      * See {@link #makeObjectCopy}
      */
-    public abstract boolean isCopyConstructorSupported();
+    public abstract CollectionCommonsRole collectionRole();
+
+    public boolean isCopyConstructorCheckable() {
+        return collectionRole() == CollectionCommonsRole.CONCRETE;
+    }
 
     /**
      *  Verifies that {@link #collection} and {@link #confirmed} have
@@ -1432,7 +1437,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionCopyEmpty() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         setConfirmed(makeConfirmedCollection());
@@ -1445,7 +1450,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionCopyFull() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         setConfirmed(makeConfirmedFullCollection());
@@ -1458,7 +1463,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionCopyModify() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         // check modify doesn't change original when copied from same type

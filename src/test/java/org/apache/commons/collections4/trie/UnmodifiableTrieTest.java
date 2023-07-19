@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.map.AbstractSortedMapTest;
@@ -63,8 +64,8 @@ public class UnmodifiableTrieTest<V> extends AbstractSortedMapTest<String, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Override

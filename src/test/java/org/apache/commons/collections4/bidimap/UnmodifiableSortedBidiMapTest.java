@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
@@ -91,8 +92,8 @@ public class UnmodifiableSortedBidiMapTest<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Test

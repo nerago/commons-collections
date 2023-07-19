@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
+
 /**
  * JUnit tests.
  */
@@ -47,8 +49,8 @@ public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
 //    public void testCreate() throws Exception {

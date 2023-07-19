@@ -25,6 +25,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -334,7 +335,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         return true;
     }
 
-    public abstract boolean isCopyConstructorSupported();
+    public abstract CollectionCommonsRole collectionRole();
+
+    public boolean isCopyConstructorCheckable() {
+        return collectionRole() == CollectionCommonsRole.CONCRETE;
+    }
 
     /**
      *  Returns the set of keys in the mappings used to test the map.  This
@@ -2343,7 +2348,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testCopyEmpty() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         confirmed = makeConfirmedMap();
@@ -2358,7 +2363,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testCopyFull() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         confirmed = makeConfirmedFullMap();
@@ -2466,8 +2471,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -2876,8 +2881,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -2971,8 +2976,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override

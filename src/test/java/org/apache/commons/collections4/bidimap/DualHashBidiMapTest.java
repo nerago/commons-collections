@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 
@@ -50,8 +51,8 @@ public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
 //    public void testCreate() throws Exception {

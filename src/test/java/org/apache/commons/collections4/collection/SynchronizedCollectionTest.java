@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.collection;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,8 +55,8 @@ public class SynchronizedCollectionTest<E> extends AbstractCollectionTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.SYNCHRONIZED;
     }
 
     //    public void testCreate() throws Exception {

@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.collection;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Transformer;
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +33,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since X.X
  */
 public class DualTransformedCollectionTest extends AbstractCollectionTest<Integer> {
-
-    @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
-    }
 
     private static class StringToInteger implements Transformer<String, Integer>, Serializable {
         private static final long serialVersionUID = 6210576099579022361L;
@@ -61,6 +57,11 @@ public class DualTransformedCollectionTest extends AbstractCollectionTest<Intege
 
     public DualTransformedCollectionTest() {
         super(TransformedCollectionTest.class.getSimpleName());
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.TRANSFORM;
     }
 
     @Override

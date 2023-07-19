@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
 import org.junit.jupiter.api.Test;
@@ -37,11 +38,6 @@ import org.junit.jupiter.api.Test;
  * @since 3.0
  */
 public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
-
-    @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
-    }
 
     private static class StringToInteger implements Transformer<Object, Object> {
         @Override
@@ -63,6 +59,11 @@ public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
 
     public TransformedCollectionTest() {
         super(TransformedCollectionTest.class.getSimpleName());
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.TRANSFORM;
     }
 
     @Override

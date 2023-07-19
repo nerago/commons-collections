@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.trie;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.AbstractOrderedMapTest;
 
@@ -46,8 +47,8 @@ public class PatriciaTrie2Test<V> extends AbstractOrderedMapTest<String, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

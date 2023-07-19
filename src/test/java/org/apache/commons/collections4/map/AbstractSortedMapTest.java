@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.set.AbstractNavigableSetTest;
 import org.apache.commons.collections4.set.AbstractSortedSetTest;
 import org.junit.jupiter.api.*;
@@ -186,8 +187,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             return main.isRemoveSupported();
         }
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
         @Override
         protected boolean runSubMapTests() {

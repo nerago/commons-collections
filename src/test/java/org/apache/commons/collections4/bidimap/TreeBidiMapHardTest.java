@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.CollectionCommonsRole;
 
 import java.util.TreeMap;
 
@@ -63,8 +64,8 @@ public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

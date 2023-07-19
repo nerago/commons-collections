@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -66,8 +67,8 @@ public class PredicatedMultiSetTest<T> extends AbstractMultiSetTest<T> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.PREDICATED;
     }
 
     @Test

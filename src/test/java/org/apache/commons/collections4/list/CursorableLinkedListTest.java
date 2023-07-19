@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,8 +50,8 @@ public class CursorableLinkedListTest<E> extends AbstractLinkedListTest<E> {
     private CursorableLinkedList<E> list;
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @BeforeEach

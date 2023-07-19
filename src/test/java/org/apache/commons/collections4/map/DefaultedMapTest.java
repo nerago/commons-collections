@@ -25,11 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.collections4.Factory;
-import org.apache.commons.collections4.FactoryUtils;
-import org.apache.commons.collections4.IterableMap;
-import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.TransformerUtils;
+import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.functors.ConstantFactory;
 import org.junit.jupiter.api.Test;
 
@@ -151,8 +147,8 @@ public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
 //    public void testCreate() throws Exception {
