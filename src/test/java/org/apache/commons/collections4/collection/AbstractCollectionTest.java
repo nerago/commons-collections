@@ -29,6 +29,7 @@ import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
@@ -1429,6 +1430,32 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             if (isEqualsCheckable()) {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj)) - FULL Collection");
             }
+        }
+    }
+
+    @Test
+    public void testCollectionCheckRolesBasics() {
+        Object object = makeObject();
+        String name = object.getClass().getSimpleName().toUpperCase();
+        if (collectionRole() != CollectionCommonsRole.INNER) {
+            if (name.contains("UNMODIFIABLE"))
+                assertEquals(CollectionCommonsRole.UNMODIFIABLE, collectionRole());
+            if (name.contains("TRANSFORM"))
+                assertEquals(CollectionCommonsRole.TRANSFORM, collectionRole());
+            if (name.contains("SYNCHRONIZED"))
+                assertEquals(CollectionCommonsRole.SYNCHRONIZED, collectionRole());
+            if (name.contains("PREDICATED"))
+                assertEquals(CollectionCommonsRole.PREDICATED, collectionRole());
+            if (name.contains("COMPOSITE"))
+                assertEquals(CollectionCommonsRole.COMPOSITE, collectionRole());
+        }
+
+        if (collectionRole() != CollectionCommonsRole.INNER) {
+            assertTrue(isTestSerialization());
+        }
+        assertTrue(object instanceof Serializable);
+        if (collectionRole() == CollectionCommonsRole.UNMODIFIABLE) {
+            assertTrue(object instanceof Unmodifiable);
         }
     }
 

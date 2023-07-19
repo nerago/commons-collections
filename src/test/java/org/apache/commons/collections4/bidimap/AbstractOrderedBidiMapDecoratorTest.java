@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -81,6 +82,11 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
 
         TestOrderedBidiMap(final OrderedBidiMap<K, V> map) {
             super(map);
+        }
+
+        TestOrderedBidiMap(final Map<K, V> map) {
+            super(new DualTreeBidiMap<K, V>());
+            putAll(map);
         }
 
         @Override

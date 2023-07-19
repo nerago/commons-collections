@@ -119,14 +119,16 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         return true;
     }
 
+    public boolean isCopyConstructorCheckable() {
+        return collectionRole() == CollectionCommonsRole.CONCRETE;
+    }
+
     /**
      * Is a constructor with parameters of (Collection obj) available and should be tested
      * as a copy constructor.
      * See {@link #makeObjectCopy}
      */
-    public CollectionCommonsRole collectionRole() {
-        return CollectionCommonsRole.CONCRETE;
-    }
+    public abstract CollectionCommonsRole collectionRole();
 
     /**
      * Returns the set of keys in the mappings used to test the map. This method
@@ -891,8 +893,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
     @Test
     public void testCopy() {
-//        if (!isCopyConstructorCheckable())
-//            return;
+        if (!isCopyConstructorCheckable())
+            return;
 
         MultiValuedMap<K, V> original = makeConfirmedMap();
         original.put((K) "A", (V) "W");

@@ -220,7 +220,7 @@ public class CompositeSetTest<E> extends AbstractSetTest<E> {
 
     @Override
     public CollectionCommonsRole collectionRole() {
-        return CollectionCommonsRole.OTHER_DECORATOR;
+        return CollectionCommonsRole.COMPOSITE;
     }
 
 //    public void testCreate() throws Exception {

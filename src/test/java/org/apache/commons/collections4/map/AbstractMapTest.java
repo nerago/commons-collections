@@ -27,8 +27,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
+import org.apache.commons.collections4.collection.SynchronizedCollection;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
@@ -3184,6 +3186,32 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         entrySet = null;
         values = null;
         confirmed = null;
+    }
+
+    @Test
+    public void testCollectionCheckRolesBasics() {
+        Object object = makeObject();
+        String name = object.getClass().getSimpleName().toUpperCase();
+        if (collectionRole() != CollectionCommonsRole.INNER) {
+            if (name.contains("UNMODIFIABLE"))
+                assertEquals(CollectionCommonsRole.UNMODIFIABLE, collectionRole());
+            if (name.contains("TRANSFORM"))
+                assertEquals(CollectionCommonsRole.TRANSFORM, collectionRole());
+            if (name.contains("SYNCHRONIZED"))
+                assertEquals(CollectionCommonsRole.SYNCHRONIZED, collectionRole());
+            if (name.contains("PREDICATED"))
+                assertEquals(CollectionCommonsRole.PREDICATED, collectionRole());
+            if (name.contains("COMPOSITE"))
+                assertEquals(CollectionCommonsRole.COMPOSITE, collectionRole());
+        }
+
+        if (collectionRole() != CollectionCommonsRole.INNER) {
+            assertTrue(isTestSerialization());
+        }
+        assertTrue(object instanceof Serializable);
+        if (collectionRole() == CollectionCommonsRole.UNMODIFIABLE) {
+            assertTrue(object instanceof Unmodifiable);
+        }
     }
 
     /**

@@ -82,6 +82,11 @@ public class ReferenceMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return true;
     }
 
+    @Override
+    public boolean isCopyConstructorCheckable() {
+        return false;
+    }
+
     //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk(

@@ -29,6 +29,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
@@ -54,6 +55,11 @@ public class ArrayListValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest
     @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.UNORDERED;
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Test

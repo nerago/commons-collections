@@ -138,6 +138,11 @@ public final class StaticBucketMap<K, V> extends AbstractIterableMap<K, V> {
         }
     }
 
+    public StaticBucketMap(final Map<K, V> map) {
+        this(map.size());
+        putAll(map);
+    }
+
     /**
      * Determine the exact hash entry for the key.  The hash algorithm
      * is rather simplistic, but it does the job:
