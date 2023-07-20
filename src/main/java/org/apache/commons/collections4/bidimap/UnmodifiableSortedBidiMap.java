@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -41,8 +44,11 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
 public final class UnmodifiableSortedBidiMap<K, V>
         extends AbstractSortedBidiMapDecorator<K, V> implements Unmodifiable {
 
+    /** Serialization version */
+    private static final long serialVersionUID = 3795490687011556072L;
+
     /** The inverse unmodifiable map */
-    private UnmodifiableSortedBidiMap<V, K> inverse;
+    private transient UnmodifiableSortedBidiMap<V, K> inverse;
 
     /**
      * Factory method to create an unmodifiable map.
@@ -152,4 +158,14 @@ public final class UnmodifiableSortedBidiMap<K, V>
         return UnmodifiableSortedMap.unmodifiableSortedMap(sm);
     }
 
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeObject(decorated());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        setMap((Map<K, V>) in.readObject());
+    }
 }

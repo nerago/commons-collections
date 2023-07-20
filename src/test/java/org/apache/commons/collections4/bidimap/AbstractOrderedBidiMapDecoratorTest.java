@@ -65,6 +65,11 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     }
 
     @Override
+    public boolean isTestSerialization() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
     }

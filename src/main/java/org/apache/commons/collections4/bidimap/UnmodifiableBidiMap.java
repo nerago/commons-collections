@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,8 +42,11 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
 public final class UnmodifiableBidiMap<K, V>
         extends AbstractBidiMapDecorator<K, V> implements Unmodifiable {
 
+    /** Serialization version */
+    private static final long serialVersionUID = -3563384200742281975L;
+
     /** The inverse unmodifiable map */
-    private UnmodifiableBidiMap<V, K> inverse;
+    private transient UnmodifiableBidiMap<V, K> inverse;
 
     /**
      * Factory method to create an unmodifiable map.
@@ -130,6 +136,17 @@ public final class UnmodifiableBidiMap<K, V>
             inverse.inverse = this;
         }
         return inverse;
+    }
+
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeObject(decorated());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        setMap((Map<K, V>) in.readObject());
     }
 
 }

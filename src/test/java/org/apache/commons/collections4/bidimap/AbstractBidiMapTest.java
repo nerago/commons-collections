@@ -551,6 +551,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
 
         @Override
+        public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
         protected IterationBehaviour getIterationBehaviour() {
             return main.getIterationBehaviour();
         }

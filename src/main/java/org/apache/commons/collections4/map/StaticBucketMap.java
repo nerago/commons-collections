@@ -97,6 +97,8 @@ import org.apache.commons.collections4.KeyValue;
  */
 public final class StaticBucketMap<K, V> extends AbstractIterableMap<K, V> {
 
+    /** Serialization version */
+    private static final long serialVersionUID = 5608789355633009690L;
     /** The default number of buckets to use */
     private static final int DEFAULT_BUCKETS = 255;
     /** The array of buckets, where the actual data is held */

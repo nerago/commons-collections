@@ -600,6 +600,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         return IterationBehaviour.DEFAULT;
     }
 
+    @Test
+    public void testCollectionCheckRolesBasics() throws Exception {
+        AbstractCollectionTest.checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
+    }
+
     // tests begin here.  Each test adds a little bit of tested functionality.
     // Many methods assume previous methods passed.  That is, they do not
     // exhaustively recheck things that have already been checked in a previous
@@ -3186,32 +3191,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         entrySet = null;
         values = null;
         confirmed = null;
-    }
-
-    @Test
-    public void testCollectionCheckRolesBasics() {
-        Object object = makeObject();
-        String name = object.getClass().getSimpleName().toUpperCase();
-        if (collectionRole() != CollectionCommonsRole.INNER) {
-            if (name.contains("UNMODIFIABLE"))
-                assertEquals(CollectionCommonsRole.UNMODIFIABLE, collectionRole());
-            if (name.contains("TRANSFORM"))
-                assertEquals(CollectionCommonsRole.TRANSFORM, collectionRole());
-            if (name.contains("SYNCHRONIZED"))
-                assertEquals(CollectionCommonsRole.SYNCHRONIZED, collectionRole());
-            if (name.contains("PREDICATED"))
-                assertEquals(CollectionCommonsRole.PREDICATED, collectionRole());
-            if (name.contains("COMPOSITE"))
-                assertEquals(CollectionCommonsRole.COMPOSITE, collectionRole());
-        }
-
-        if (collectionRole() != CollectionCommonsRole.INNER) {
-            assertTrue(isTestSerialization());
-        }
-        assertTrue(object instanceof Serializable);
-        if (collectionRole() == CollectionCommonsRole.UNMODIFIABLE) {
-            assertTrue(object instanceof Unmodifiable);
-        }
     }
 
     /**

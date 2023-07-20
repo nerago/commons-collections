@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.list;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
@@ -55,11 +56,14 @@ import org.apache.commons.collections4.OrderedIterator;
  *
  * @since 3.1
  */
-public class TreeList<E> extends AbstractList<E> {
+public class TreeList<E> extends AbstractList<E> implements Serializable {
 //    add; toArray; iterator; insert; get; indexOf; remove
 //    TreeList = 1260;7360;3080;  160;   170;3400;  170;
 //   ArrayList =  220;1480;1760; 6870;    50;1540; 7200;
 //  LinkedList =  270;7360;3350;55860;290720;2910;55200;
+
+    /** Serialization version */
+    private static final long serialVersionUID = 3228691446211358574L;
 
     /** The root node in the AVL tree */
     private AVLNode<E> root;
