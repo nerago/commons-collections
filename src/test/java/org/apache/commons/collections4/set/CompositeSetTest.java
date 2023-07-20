@@ -70,20 +70,36 @@ public class CompositeSetTest<E> extends AbstractSetTest<E> {
     public void testContains() {
         final CompositeSet<E> set = new CompositeSet<>(buildOne(), buildTwo());
         assertTrue(set.contains("1"));
+        assertTrue(set.contains("3"));
+        assertFalse(set.contains("5"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void testContainsAll() {
         final CompositeSet<E> set = new CompositeSet<>(buildOne(), buildTwo());
-        assertFalse(set.containsAll(null));
+        assertTrue(set.containsAll(Arrays.asList()));
+        assertTrue(set.containsAll(Arrays.asList("1")));
+        assertTrue(set.containsAll(Arrays.asList("1", "3")));
+        assertFalse(set.containsAll(Arrays.asList("1", "5")));
+        assertThrows(NullPointerException.class, () -> set.containsAll(null));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void testRemoveAll() {
         final CompositeSet<E> set = new CompositeSet<>(buildOne(), buildTwo());
-        assertFalse(set.removeAll(null));
+        assertFalse(set.removeAll(Arrays.asList()));
+        assertEquals(4, set.size());
+        assertTrue(set.removeAll(Arrays.asList("1")));
+        assertEquals(3, set.size());
+        assertTrue(set.removeAll(Arrays.asList("1", "3")));
+        assertEquals(2, set.size());
+        assertFalse(set.removeAll(Arrays.asList("3")));
+        assertEquals(2, set.size());
+        assertFalse(set.removeAll(Arrays.asList("1", "5")));
+        assertThrows(NullPointerException.class, () -> set.removeAll(null));
+        assertEquals(2, set.size());
     }
 
     @Test

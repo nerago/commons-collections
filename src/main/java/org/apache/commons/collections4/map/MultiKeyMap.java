@@ -127,7 +127,6 @@ public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K
      */
     protected MultiKeyMap(final AbstractHashedMap<MultiKey<? extends K>, V> map) {
         super(map);
-        this.map = map;
     }
 
     /**

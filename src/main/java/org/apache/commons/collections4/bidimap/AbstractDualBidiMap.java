@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
@@ -29,6 +30,8 @@ import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.map.EntrySetUtil;
 
 /**
  * Abstract {@link BidiMap} implemented using two maps.
@@ -624,16 +627,29 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
                 return false;
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
-            final Object key = entry.getKey();
-            if (parent.containsKey(key)) {
-                final V value = parent.normalMap.get(key);
-                if (value == null ? entry.getValue() == null : value.equals(entry.getValue())) {
-                    parent.normalMap.remove(key);
-                    parent.reverseMap.remove(value);
-                    return true;
-                }
-            }
-            return false;
+            return parent.remove(entry.getKey(), entry.getValue());
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+            return super.removeIf(entry -> filter.test(new UnmodifiableMapEntry<>(entry)));
+        }
+
+        @Override
+        public void forEach(Consumer<? super Entry<K, V>> action) {
+            super.forEach(entry -> action.accept(new UnmodifiableMapEntry<>(entry)));
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object[] toArray() {
+            return EntrySetUtil.toArrayUnmodifiable(decorated());
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T> T[] toArray(final T[] array) {
+            return EntrySetUtil.toArrayUnmodifiable(decorated(), array);
         }
     }
 
@@ -704,7 +720,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
         public V setValue(final V value) {
             final K key = getKey();
             if (parent.reverseMap.containsKey(value) &&
-                parent.reverseMap.get(value) != key) {
+                    !Objects.equals(parent.reverseMap.get(value), key)) {
                 throw new IllegalArgumentException(
                         "Cannot use setValue() when the object being set is already in the map");
             }
@@ -788,12 +804,13 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
                 throw new IllegalStateException(
                         "Iterator setValue() can only be called after next() and before remove()");
             }
+            final K key = last.getKey();
             if (parent.reverseMap.containsKey(value) &&
-                parent.reverseMap.get(value) != last.getKey()) {
+                    !Objects.equals(parent.reverseMap.get(value), key)) {
                 throw new IllegalArgumentException(
                         "Cannot use setValue() when the object being set is already in the map");
             }
-            return parent.put(last.getKey(), value);
+            return parent.put(key, value);
         }
 
         @Override

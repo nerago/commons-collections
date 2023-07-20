@@ -243,7 +243,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     /**
      * Returns true to indicate that the collection supports fail fast iterators.
-     * The default implementation returns true;
+     * The default implementation returns false;
      */
     public boolean isFailFastSupported() {
         return false;
@@ -596,6 +596,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         } else {
             assertEquals(size, getCollection().size(), "Size should not change if addAll returns false");
         }
+
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().addAll(null));
+        verify();
     }
 
     /**
@@ -735,6 +739,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
         // make sure calls to "containsAll" don't change anything
         verify();
+
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().containsAll(null));
+        verify();
     }
 
     /**
@@ -843,12 +851,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertTrue(getCollection().isEmpty(), "Collection should be empty after iterator purge");
 
         resetFull();
-        iter = getCollection().iterator();
-        iter.next();
-        iter.remove();
-        final Iterator<E> finalIter = iter;
-        assertThrows(IllegalStateException.class, () -> finalIter.remove(),
+        final Iterator<E> iter2 = getCollection().iterator();
+        getConfirmed().remove(iter2.next());
+        iter2.remove();
+        verify();
+        assertThrows(IllegalStateException.class, () -> iter2.remove(),
                 "Second iter.remove should raise IllegalState");
+        verify();
     }
 
     /**
@@ -940,6 +949,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         for (final E element : all) {
             assertFalse(getCollection().contains(element), "Collection shouldn't contain removed element");
         }
+
+        // can pass by either throwing exception or return false without change
+        // contract does imply that the exception is the correct behavior
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().removeAll(null));
+        verify();
     }
 
     /**
@@ -1045,6 +1060,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         verify();
         assertEquals(size, getCollection().size(),
                 "Collection size didn't change from nonduplicate " + "retainAll");
+
+        // can pass by either throwing exception or return false without change
+        // contract does imply that the exception is the correct behavior
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().retainAll(null));
+        verify();
     }
 
     /**
@@ -1054,9 +1075,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     public void testCollectionSize() {
         resetEmpty();
         assertEquals(0, getCollection().size(), "Size of new Collection is 0.");
+        assertTrue(getCollection().isEmpty(), "Size of new Collection is 0.");
 
         resetFull();
+        assertNotEquals(0, getCollection().size(), "Size of full collection should be greater than zero");
         assertFalse(getCollection().isEmpty(), "Size of full collection should be greater than zero");
+        assertEquals(getConfirmed().size(), getCollection().size(), "Size should match confirmed collection");
     }
 
     /**

@@ -143,6 +143,32 @@ public class GrowthListTest<E> extends AbstractListTest<E> {
                 "List.add should throw IndexOutOfBoundsException [-1]");
     }
 
+    @Override
+    public void testListAddAllByIndexBoundsChecking() {
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+
+        final List<E> finalList0 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList0.addAll(Integer.MIN_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MIN_VALUE]");
+
+        final List<E> finalList1 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList1.addAll(-1, elements),
+                "List.add should throw IndexOutOfBoundsException [-1]");
+    }
+
+    @Override
+    public void testListAddAllByIndexBoundsChecking2() {
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+
+        final List<E> finalList0 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList0.addAll(Integer.MIN_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MIN_VALUE]");
+
+        final List<E> finalList1 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList1.addAll(-1, elements),
+                "List.add should throw IndexOutOfBoundsException [-1]");
+    }
+
     /**
      * Override.
      */

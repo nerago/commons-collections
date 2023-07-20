@@ -37,6 +37,7 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,29 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      *  class does not support set.
      */
     public boolean isSetSupported() {
+        return true;
+    }
+
+    /**
+     *  Returns true if the collections produced by
+     *  {@link #makeObject()} and {@link #makeFullCollection()}
+     *  return iterators that support the <code>set operation.<p>
+     *  Default implementation returns true.  Override if your collection
+     *  class support set but not on iterator objects.
+     */
+    public boolean isIteratorSetSupported() {
+        return isSetSupported();
+    }
+
+    /**
+     * Returns true if the collections produced by
+     * {@link #makeObject()} and {@link #makeFullCollection()}
+     * support duplicate values.
+     * <p>
+     * Default implementation returns true.
+     * Override if your collection class does not support duplicate values.
+     */
+    public boolean isAllowDuplicateValues() {
         return true;
     }
 
@@ -233,6 +257,87 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      */
     @Test
     public void testListAddByIndex() {
+        if (!isAddSupported()) {
+            return;
+        }
+
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+        final int max = getFullElements().length;
+
+        for (int i = 0; i <= max; i++) {
+            resetFull();
+            assertTrue(getCollection().addAll(i, elements));
+            assertTrue(getConfirmed().addAll(i, elements));
+            verify();
+        }
+
+        assertFalse(getConfirmed().addAll(0, Collections.emptyList()));
+        verify();
+    }
+
+    /**
+     *  Tests bounds checking for {@link List#addAll(int, Collection)} on an
+     *  empty list.
+     */
+    @Test
+    public void testListAddAllByIndexBoundsChecking() {
+        if (!isAddSupported()) {
+            return;
+        }
+
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+
+        final List<E> finalList0 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList0.addAll(Integer.MIN_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MIN_VALUE]");
+
+        final List<E> finalList1 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList1.addAll(-1, elements),
+                "List.add should throw IndexOutOfBoundsException [-1]");
+
+        final List<E> finalList2 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList2.addAll(1, elements),
+                "List.add should throw IndexOutOfBoundsException [1]");
+
+        final List<E> finalList3 = makeObject();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList3.addAll(Integer.MAX_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MAX_VALUE]");
+    }
+
+    /**
+     *  Tests bounds checking for {@link List#addAll(int, Collection)} on a
+     *  full list.
+     */
+    @Test
+    public void testListAddAllByIndexBoundsChecking2() {
+        if (!isAddSupported()) {
+            return;
+        }
+
+        final List<E> elements = Arrays.asList(getOtherElements()[0], getOtherElements()[1]);
+
+        final List<E> finalList0 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList0.addAll(Integer.MIN_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MIN_VALUE]");
+
+        final List<E> finalList1 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList1.addAll(-1, elements),
+                "List.add should throw IndexOutOfBoundsException [-1]");
+
+        final List<E> finalList2 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList2.addAll(finalList2.size() + 1, elements),
+                "List.add should throw IndexOutOfBoundsException [size + 1]");
+
+        final List<E> finalList3 = makeFullCollection();
+        assertThrows(IndexOutOfBoundsException.class, () -> finalList3.addAll(Integer.MAX_VALUE, elements),
+                "List.add should throw IndexOutOfBoundsException [Integer.MAX_VALUE]");
+    }
+
+    /**
+     *  Tests {@link List#add(int,Object)}.
+     */
+    @Test
+    public void testListAddAllByIndex() {
         if (!isAddSupported()) {
             return;
         }
@@ -713,6 +818,51 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      * Tests remove on list iterator is correct.
      */
     @Test
+    public void testListListIteratorPreviousRemovePreviousState() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+        resetFull();
+        if (getCollection().size() < 4) {
+            return;
+        }
+        final ListIterator<E> it = getCollection().listIterator();
+        final E zero = it.next();
+        final E one = it.next();
+        final E two = it.next();
+        final E three = getCollection().get(3);
+        final E two2 = it.previous();
+        assertEquals(two, two2);
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(two, getCollection().get(2));
+        assertEquals(three, getCollection().get(3));
+
+        it.remove(); // removed element at index 2 (two)
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(three, getCollection().get(2));
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(three, getCollection().get(2));
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+
+        final E three2 = it.next();  // do next after double remove
+        assertEquals(three, three2);
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+        assertEquals(getCollection().size() > 2, it.hasNext());
+    }
+
+    /**
+     * Tests remove on list iterator is correct.
+     */
+    @Test
     public void testListListIteratorNextRemoveNext() {
         if (!isRemoveSupported()) {
             return;
@@ -736,6 +886,53 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final E three2 = it.next();  // do next after remove
         assertEquals(three, three2);
         assertEquals(getCollection().size() > 3, it.hasNext());
+        assertTrue(it.hasPrevious());
+    }
+
+    @Test
+    public void testListListIteratorRemoveLastPrevious() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+        resetFull();
+        if (getCollection().size() < 4) {
+            return;
+        }
+        final int initialSize = getCollection().size();
+        final E last = getCollection().get(initialSize - 1);
+        final E beforeLast = getCollection().get(initialSize - 2);
+        final ListIterator<E> it = getCollection().listIterator(getCollection().size());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+
+        assertThrows(NoSuchElementException.class, () -> it.next());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+
+        final E last2 = it.previous();
+        assertEquals(last, last2);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(initialSize, getCollection().size());
+
+        it.remove();
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(beforeLast, getCollection().get(initialSize - 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> getCollection().get(initialSize - 1));
+        assertEquals(initialSize - 1, getCollection().size());
+
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(beforeLast, getCollection().get(initialSize - 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> getCollection().get(initialSize - 1));
+        assertEquals(initialSize - 1, getCollection().size());
+
+        E beforeLast2 = it.previous();
+        assertEquals(beforeLast, beforeLast2);
+        assertTrue(it.hasNext());
         assertTrue(it.hasPrevious());
     }
 
@@ -882,12 +1079,25 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final ListIterator<E> iter1 = getCollection().listIterator();
         final ListIterator<E> iter2 = getConfirmed().listIterator();
         for (final E element : elements) {
-            iter1.next();
-            iter2.next();
-            iter1.set(element);
-            iter2.set(element);
+            E old = iter1.next();
+            assertEquals(old, iter2.next());
+            E replace = element instanceof String ? (E) ((String)element).toLowerCase() : null;
+            iter1.set(replace);
+            iter2.set(replace);
             verify();
         }
+    }
+
+    @Test
+    public void testListReplaceAll() {
+        if (!isSetSupported()) {
+            return;
+        }
+
+        resetFull();
+        getCollection().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        getConfirmed().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        verify();
     }
 
     @Test
@@ -903,6 +1113,9 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         assertEquals(0, list.size(), "Both lists are empty");
         assertEquals(0, list2.size(), "Both lists are empty");
+        setConfirmed(list);
+        setCollection(list2);
+        verify();
     }
 
     @Test
@@ -1217,7 +1430,12 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         @Override
         public boolean supportsSet() {
-            return AbstractListTest.this.isSetSupported();
+            return AbstractListTest.this.isIteratorSetSupported();
+        }
+
+        @Override
+        public boolean isAllowDuplicateValues() {
+            return AbstractListTest.this.isAllowDuplicateValues();
         }
 
         @Override

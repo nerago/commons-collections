@@ -266,6 +266,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public V remove(final Object key) {
+        checkKey(key);
         return doRemoveKey(key);
     }
 
@@ -313,6 +314,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public K removeValue(final Object value) {
+        checkValue(value);
         return doRemoveValue(value);
     }
 
@@ -922,13 +924,6 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
                     currentNode = getGrandParent(currentNode, dataElement);
                 } else {
-                    //dead code?
-                    if (currentNode.isRightChild(dataElement)) {
-                        currentNode = getParent(currentNode, dataElement);
-
-                        rotateLeft(currentNode, dataElement);
-                    }
-
                     makeBlack(getParent(currentNode, dataElement), dataElement);
                     makeRed(getGrandParent(currentNode, dataElement), dataElement);
 
@@ -948,13 +943,6 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
                     currentNode = getGrandParent(currentNode, dataElement);
                 } else {
-                    //dead code?
-                    if (currentNode.isLeftChild(dataElement)) {
-                        currentNode = getParent(currentNode, dataElement);
-
-                        rotateRight(currentNode, dataElement);
-                    }
-
                     makeBlack(getParent(currentNode, dataElement), dataElement);
                     makeRed(getGrandParent(currentNode, dataElement), dataElement);
 
@@ -1512,13 +1500,14 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public boolean contains(final Object obj) {
-            checkNonNullComparable(obj, KEY);
+            checkKey(obj);
             return lookupKey(obj) != null;
         }
 
         @Override
-        public boolean remove(final Object o) {
-            return doRemoveKey(o) != null;
+        public boolean remove(final Object obj) {
+            checkKey(obj);
+            return doRemoveKey(obj) != null;
         }
 
     }
@@ -1539,13 +1528,14 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public boolean contains(final Object obj) {
-            checkNonNullComparable(obj, VALUE);
+            checkValue(obj);
             return lookupValue(obj) != null;
         }
 
         @Override
-        public boolean remove(final Object o) {
-            return doRemoveValue(o) != null;
+        public boolean remove(final Object obj) {
+            checkValue(obj);
+            return doRemoveValue(obj) != null;
         }
 
     }
@@ -1565,8 +1555,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 return false;
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
+            final Object key = entry.getKey();
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupKey(entry.getKey());
+            checkKeyAndValue(key, value);
+            final Node<K, V> node = lookupKey(key);
             return node != null && node.getValue().equals(value);
         }
 
@@ -1576,8 +1568,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 return false;
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
+            final Object key = entry.getKey();
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupKey(entry.getKey());
+            checkKeyAndValue(key, value);
+            final Node<K, V> node = lookupKey(key);
             if (node != null && node.getValue().equals(value)) {
                 doRedBlackDelete(node);
                 return true;
@@ -1655,6 +1649,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         ViewIterator(final DataElement orderType) {
             this.orderType = orderType;
             expectedModifications = modifications;
+            reset();
+        }
+
+        public void reset() {
             nextNode = leastNode(rootNode[orderType.ordinal()], orderType);
             lastReturnedNode = null;
             previousNode = null;
@@ -1688,12 +1686,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             if (modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
-            nextNode = lastReturnedNode;
-            if (nextNode == null) {
-                nextNode = nextGreater(previousNode, orderType);
-            }
             lastReturnedNode = previousNode;
-            previousNode = nextSmaller(previousNode, orderType);
+            nextNode = previousNode;
+            previousNode = nextSmaller(lastReturnedNode, orderType);
             return lastReturnedNode;
         }
 
@@ -1706,12 +1701,22 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             doRedBlackDelete(lastReturnedNode);
             expectedModifications++;
-            lastReturnedNode = null;
-            if (nextNode == null) {
-                previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            if (lastReturnedNode == previousNode) {
+                // most recent was navigateNext
+                if (nextNode == null) {
+                    previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+                } else {
+                    previousNode = nextSmaller(nextNode, orderType);
+                }
             } else {
-                previousNode = nextSmaller(nextNode, orderType);
+                // most recent was navigatePrevious
+                if (previousNode == null) {
+                    nextNode = leastNode(rootNode[orderType.ordinal()], orderType);
+                } else {
+                    nextNode = nextGreater(previousNode, orderType);
+                }
             }
+            lastReturnedNode = null;
         }
     }
 
@@ -1821,12 +1826,16 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Map.Entry<K, V> next() {
-            return navigateNext();
+            return createEntry(navigateNext());
         }
 
         @Override
         public Map.Entry<K, V> previous() {
-            return navigatePrevious();
+            return createEntry(navigatePrevious());
+        }
+
+        private Map.Entry<K, V> createEntry(final Node<K, V> node) {
+            return new UnmodifiableMapEntry<>((Map.Entry<K, V>) node);
         }
     }
 
