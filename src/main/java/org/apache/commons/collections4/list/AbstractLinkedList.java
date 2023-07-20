@@ -872,13 +872,14 @@ public abstract class AbstractLinkedList<E> implements List<E> {
         @Override
         public void remove() {
             checkModCount();
+            final Node<E> lastReturned = getLastNodeReturned();
             if (current == next) {
                 // remove() following previous()
-                parent.removeNode(getLastNodeReturned());
                 next = next.next;
+                parent.removeNode(lastReturned);
             } else {
                 // remove() following next()
-                parent.removeNode(getLastNodeReturned());
+                parent.removeNode(lastReturned);
                 nextIndex--;
             }
             current = null;
