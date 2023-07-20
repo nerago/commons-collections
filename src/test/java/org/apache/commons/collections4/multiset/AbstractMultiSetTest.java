@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -125,13 +126,19 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
     }
 
     /**
-     * Returns the {@link #collection} field cast to a {@link MultiSet}.
+     * Returns the collection field cast to a {@link MultiSet}.
      *
      * @return the collection field as a MultiSet
      */
     @Override
     public MultiSet<T> getCollection() {
         return (MultiSet<T>) super.getCollection();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        assertEquals(getConfirmed(), getCollection());
     }
 
     @Test
@@ -672,8 +679,8 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -700,36 +707,4 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
             return AbstractMultiSetTest.this.getIterationBehaviour();
         }
     }
-
-
-    /**
-     * Compare the current serialized form of the MultiSet
-     * against the canonical version in SCM.
-     */
-    @Test
-    public void testEmptyMultiSetCompatibility() throws IOException, ClassNotFoundException {
-        // test to make sure the canonical form has been preserved
-        final MultiSet<T> multiset = makeObject();
-        if (multiset instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final MultiSet<?> multiset2 = (MultiSet<?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(multiset));
-            assertTrue(multiset2.isEmpty(), "MultiSet is empty");
-            assertEquals(multiset, multiset2);
-        }
-    }
-
-    /**
-     * Compare the current serialized form of the MultiSet
-     * against the canonical version in SCM.
-     */
-    @Test
-    public void testFullMultiSetCompatibility() throws IOException, ClassNotFoundException {
-        // test to make sure the canonical form has been preserved
-        final MultiSet<T> multiset = makeFullCollection();
-        if (multiset instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final MultiSet<?> multiset2 = (MultiSet<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(multiset));
-            assertEquals(multiset.size(), multiset2.size(), "MultiSet is the right size");
-            assertEquals(multiset, multiset2);
-        }
-    }
-
 }

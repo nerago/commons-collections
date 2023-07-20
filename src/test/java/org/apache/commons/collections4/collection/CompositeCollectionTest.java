@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -71,6 +72,11 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
     @Override
     public boolean isRemoveSupported() {
         return false;
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.COMPOSITE;
     }
 
     @Override

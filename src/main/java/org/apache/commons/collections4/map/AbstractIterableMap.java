@@ -19,6 +19,8 @@ package org.apache.commons.collections4.map;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 
+import java.io.Serializable;
+
 /**
  * Provide a basic {@link IterableMap} implementation.
  *
@@ -26,7 +28,7 @@ import org.apache.commons.collections4.MapIterator;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V> {
+public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V>, Serializable {
 
     /**
      * {@inheritDoc}

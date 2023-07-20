@@ -19,6 +19,7 @@ package org.apache.commons.collections4.map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,6 +34,11 @@ public class HashedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public HashedMap<K, V> makeObject() {
         return new HashedMap<>();
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

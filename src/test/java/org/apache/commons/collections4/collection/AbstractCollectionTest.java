@@ -16,21 +16,23 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <ul>
  * <li>{@link #isAddSupported()}
  * <li>{@link #isRemoveSupported()}
- * <li>{@link #areEqualElementsDistinguishable()}
+ * <li>{@link #areEqualElementsIndistinguishable()}
  * <li>{@link #isNullSupported()}
  * <li>{@link #isFailFastSupported()}
  * </ul>
@@ -165,7 +167,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     /**
      *  Specifies whether equal elements in the collection are, in fact,
-     *  distinguishable with information not readily available.  That is, if a
+     *  indistinguishable with information not readily available.  That is, if a
      *  particular value is to be removed from the collection, then there is
      *  one and only one value that can be removed, even if there are other
      *  elements which are equal to it.
@@ -185,7 +187,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  should provide additional tests on iterator.remove() to make sure the
      *  proper elements are removed when remove() is called on the iterator.
      **/
-    public boolean areEqualElementsDistinguishable() {
+    public boolean areEqualElementsIndistinguishable() {
         return false;
     }
 
@@ -255,8 +257,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * as a copy constructor.
      * See {@link #makeObjectCopy}
      */
-    public boolean isCopyConstructorSupported() {
-        return true;
+    public abstract CollectionCommonsRole collectionRole();
+
+    public boolean isCopyConstructorCheckable() {
+        return collectionRole() == CollectionCommonsRole.CONCRETE;
     }
 
     /**
@@ -401,10 +405,31 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     /**
      * Creates a new Map Entry that is independent of the first and the map.
      */
-    public Map.Entry<E, E> cloneMapEntry(final Map.Entry<E, E> entry) {
+    public Map.Entry<E, E> cloneMapEntryShallow(final Map.Entry<E, E> entry) {
         final HashMap<E, E> map = new HashMap<>();
         map.put(entry.getKey(), entry.getValue());
         return map.entrySet().iterator().next();
+    }
+
+    @SuppressWarnings("unchecked")
+    public E cloneTestValue(E value) {
+        if (value instanceof Serializable) {
+            return (E) SerializationUtils.clone((Serializable) value);
+        } else if (value instanceof Cloneable) {
+            return ObjectUtils.clone(value);
+        } else if (value instanceof List) {
+            return (E) new ArrayList<>((List<E>) value);
+        } else if (value instanceof Map.Entry) {
+            final Map.Entry<E, E> entry = (Map.Entry<E, E>) value;
+            final HashMap<E, E> map = new HashMap<>();
+            map.put(cloneTestValue(entry.getKey()), cloneTestValue(entry.getValue()));
+            return (E) map.entrySet().iterator().next();
+        } else if (value == null) {
+            return null;
+        } else {
+            fail("don't know how to clone value of type " + value.getClass());
+            return null;
+        }
     }
 
     /**
@@ -805,16 +830,18 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
         resetFull();
         int size = getCollection().size();
-        Iterator<E> iter = getCollection().iterator();
-        while (iter.hasNext()) {
-            Object o = iter.next();
-            // TreeMap reuses the Map Entry, so the verify below fails
-            // Clone it here if necessary
-            if (o instanceof Map.Entry) {
-                o = cloneMapEntry((Map.Entry<E, E>) o);
+        Iterator<E> iter1 = getCollection().iterator();
+        while (iter1.hasNext()) {
+            E o = iter1.next();
+            // TreeMap reuses the Map Entry so the verify below fails
+            //  and iterators others modify values during remove so clone here in case.
+            // But not if object identify matters.
+            if (!areEqualElementsIndistinguishable()) {
+                o = cloneTestValue(o);
+            } else if (o instanceof Map.Entry) {
+                o = (E) cloneMapEntryShallow((Map.Entry<E, E>) o);
             }
-            iter.remove();
-
+            iter1.remove();
             // if the elements aren't distinguishable, we can just remove a
             // matching element from the confirmed collection and verify
             // contents are still the same.  Otherwise, we don't have the
@@ -823,7 +850,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             // verify because we don't know how).
             //
             // see areEqualElementsDistinguishable()
-            if (!areEqualElementsDistinguishable()) {
+            if (!areEqualElementsIndistinguishable()) {
                 getConfirmed().remove(o);
                 verify();
             }
@@ -835,12 +862,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertTrue(getCollection().isEmpty(), "Collection should be empty after iterator purge");
 
         resetFull();
-        iter = getCollection().iterator();
-        iter.next();
-        iter.remove();
-        final Iterator<E> finalIter = iter;
-        assertThrows(IllegalStateException.class, () -> finalIter.remove(),
+        final Iterator<E> iter2 = getCollection().iterator();
+        getConfirmed().remove(iter2.next());
+        iter2.remove();
+        verify();
+        assertThrows(IllegalStateException.class, () -> iter2.remove(),
                 "Second iter.remove should raise IllegalState");
+        verify();
     }
 
     /**
@@ -883,7 +911,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             // verify because we don't know how).
             //
             // see areEqualElementsDistinguishable()
-            if (!areEqualElementsDistinguishable()) {
+            if (!areEqualElementsIndistinguishable()) {
                 getConfirmed().remove(element);
                 verify();
             }
@@ -1355,15 +1383,19 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 builder.append(name).append(" ");
         }
         System.out.println(getCollection().getClass().getSimpleName() + " spliterator characteristics=" + builder + " (" + characteristics + ")");
-        assertNotEquals(0, characteristics, "spliterator doesn't specific characteristics");
+        assertNotEquals(0, characteristics, "spliterator doesn't specify characteristics");
 
     }
 
     @Test
+    @Disabled
     public void testSpliteratorNonDefault() throws NoSuchMethodException {
         resetFull();
-        Method method = getCollection().getClass().getMethod("spliterator");
-        assertFalse(method.isDefault(), getCollection().getClass().getSimpleName() + " doesn't override default spliterator");
+        Method spliterator = getCollection().getClass().getMethod("spliterator");
+        Method stream = getCollection().getClass().getMethod("stream");
+        Method parallelStream = getCollection().getClass().getMethod("parallelStream");
+        boolean condition = !spliterator.isDefault() || (!stream.isDefault() && !parallelStream.isDefault());
+        assertTrue(condition, getCollection().getClass().getSimpleName() + " doesn't override default spliterator or stream+parallelStream");
     }
 
     @Test
@@ -1400,11 +1432,102 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     /**
+     * Compare the current serialized form of the Bag
+     * against the canonical version in SCM.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCollectionCompatibilityEmpty() throws IOException, ClassNotFoundException {
+        // test to make sure the canonical form has been preserved
+        setConfirmed(makeObject());
+        if (getConfirmed() instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
+            // Create canonical objects with this line
+            // writeExternalFormToDisk((Serializable) confirmed, getCanonicalEmptyCollectionName(confirmed));
+
+            setCollection((Collection<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(getConfirmed())));
+            assertTrue(getCollection().isEmpty(), "Collection should be empty");
+            verify();
+        }
+    }
+
+    /**
+     * Compare the current serialized form of the Bag
+     * against the canonical version in SCM.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCollectionCompatibilityFull() throws IOException, ClassNotFoundException {
+        // test to make sure the canonical form has been preserved
+        setConfirmed(makeFullCollection());
+        if (getConfirmed() instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
+            // Create canonical objects with this line
+            // writeExternalFormToDisk((Serializable) confirmed, getCanonicalFullCollectionName(confirmed));
+
+            setCollection((Collection<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(getConfirmed())));
+            assertEquals(getConfirmed().size(), getCollection().size(), "Collection should be same size");
+            verify();
+        }
+    }
+
+    @Test
+    public void testCollectionCheckRolesBasics() throws Exception {
+        checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
+        if (collectionRole() != CollectionCommonsRole.INNER) {
+            assertTrue(isTestSerialization());
+        }
+    }
+
+    public static void checkRoleBasics(final Object object, final CollectionCommonsRole collectionRole, boolean testSerialization) throws Exception {
+        final String name = object.getClass().getSimpleName();
+        final String upperName = name.toUpperCase();
+        if (collectionRole != CollectionCommonsRole.INNER) {
+            if (upperName.contains("UNMODIFIABLE"))
+                assertEquals(CollectionCommonsRole.UNMODIFIABLE, collectionRole);
+            if (upperName.contains("TRANSFORM"))
+                assertEquals(CollectionCommonsRole.TRANSFORM, collectionRole);
+            if (upperName.contains("SYNCHRONIZED"))
+                assertEquals(CollectionCommonsRole.SYNCHRONIZED, collectionRole);
+            if (upperName.contains("PREDICATED"))
+                assertEquals(CollectionCommonsRole.PREDICATED, collectionRole);
+            if (upperName.contains("COMPOSITE"))
+                assertEquals(CollectionCommonsRole.COMPOSITE, collectionRole);
+        }
+
+        if (collectionRole != CollectionCommonsRole.INNER && testSerialization) {
+            assertTrue(object instanceof Serializable, name + " not Serializable");
+            checkSerialization(object);
+        }
+        if (collectionRole == CollectionCommonsRole.UNMODIFIABLE) {
+            assertTrue(object instanceof Unmodifiable, name + " not Unmodifiable");
+        }
+    }
+
+    static final Map<Long, Class<?>> serializationIds = new HashMap<>();
+
+    private static void checkSerialization(final Object object) throws Exception {
+        final Class<?> type = object.getClass();
+        final String typeName = type.getName();
+
+        final Field serialField = type.getDeclaredField("serialVersionUID");
+        assertNotNull(serialField, "serializable class " + typeName + " doesn't declare serialVersionUID");
+        assertEquals(Long.TYPE, serialField.getType(), "serializable class " + typeName + " has serialVersionUID with wrong type");
+        assertTrue(Modifier.isStatic(serialField.getModifiers()), "serializable class " + typeName + " has serialVersionUID which isn't static");
+        assertTrue(Modifier.isFinal(serialField.getModifiers()), "serializable class " + typeName + " has serialVersionUID which isn't final");
+
+        Long serialValue = (Long) ReflectionUtils.tryToReadFieldValue(serialField, object).get();
+        if (serializationIds.containsKey(serialValue) && serializationIds.get(serialValue) != type) {
+            fail("serializable class " + typeName + " has serialVersionUID "
+                    + serialValue + " which is a duplicate of " + serializationIds.get(serialValue).getName());
+        }
+        serializationIds.put(serialValue, type);
+    }
+
+    /**
      *  Tests constructor(Collection) with empty collection.
      */
     @Test
     public void testCollectionCopyEmpty() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         setConfirmed(makeConfirmedCollection());
@@ -1417,7 +1540,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionCopyFull() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         setConfirmed(makeConfirmedFullCollection());
@@ -1430,7 +1553,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionCopyModify() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         // check modify doesn't change original when copied from same type

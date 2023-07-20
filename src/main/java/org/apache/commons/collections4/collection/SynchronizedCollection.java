@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Spliterator;
 import java.util.function.Predicate;
 
 /**
@@ -153,6 +154,11 @@ public class SynchronizedCollection<E> implements Collection<E>, Serializable {
     @Override
     public Iterator<E> iterator() {
         return decorated().iterator();
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return decorated().spliterator();
     }
 
     @Override

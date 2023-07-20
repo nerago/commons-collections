@@ -35,6 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.AbstractSetTest;
@@ -745,8 +746,8 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -771,36 +772,6 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         @Override
         protected IterationBehaviour getIterationBehaviour(){
             return AbstractBagTest.this.getIterationBehaviour();
-        }
-    }
-
-    /**
-     * Compare the current serialized form of the Bag
-     * against the canonical version in SCM.
-     */
-    @Test
-    public void testEmptyBagCompatibility() throws IOException, ClassNotFoundException {
-        // test to make sure the canonical form has been preserved
-        final Bag<T> bag = makeObject();
-        if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(bag));
-            assertTrue(bag2.isEmpty(), "Bag is empty");
-            assertEquals(bag, bag2);
-        }
-    }
-
-    /**
-     * Compare the current serialized form of the Bag
-     * against the canonical version in SCM.
-     */
-    @Test
-    public void testFullBagCompatibility() throws IOException, ClassNotFoundException {
-        // test to make sure the canonical form has been preserved
-        final Bag<T> bag = makeFullCollection();
-        if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
-            assertEquals(bag.size(), bag2.size(), "Bag is the right size");
-            assertEquals(bag, bag2);
         }
     }
 

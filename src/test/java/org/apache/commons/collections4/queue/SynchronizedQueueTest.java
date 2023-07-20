@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -45,8 +46,8 @@ public class SynchronizedQueueTest<T> extends AbstractQueueTest<T> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.SYNCHRONIZED;
     }
 
     @Test

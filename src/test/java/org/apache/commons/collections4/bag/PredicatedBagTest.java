@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.TruePredicate;
@@ -66,8 +67,8 @@ public class PredicatedBagTest<T> extends AbstractBagTest<T> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.PREDICATED;
     }
 
     @Test

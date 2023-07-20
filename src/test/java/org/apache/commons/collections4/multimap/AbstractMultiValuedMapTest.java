@@ -26,13 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.collections4.AbstractObjectTest;
-import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MultiSet;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.SetValuedMap;
+import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.bag.AbstractBagTest;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
@@ -125,14 +119,16 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         return true;
     }
 
+    public boolean isCopyConstructorCheckable() {
+        return collectionRole() == CollectionCommonsRole.CONCRETE;
+    }
+
     /**
      * Is a constructor with parameters of (Collection obj) available and should be tested
      * as a copy constructor.
      * See {@link #makeObjectCopy}
      */
-    public boolean isCopyConstructorSupported() {
-        return true;
-    }
+    public abstract CollectionCommonsRole collectionRole();
 
     /**
      * Returns the set of keys in the mappings used to test the map. This method
@@ -839,9 +835,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         assertThrows(IllegalStateException.class, () -> it.getKey());
         assertThrows(IllegalStateException.class, () -> it.getValue());
-        if (isAddSupported()) {
-            assertThrows(IllegalStateException.class, () -> it.setValue((V) "V"));
-        }
+        assertThrows(UnsupportedOperationException.class, () -> it.setValue((V) "V"));
 
         if (!isHashSetValue() && isAddSupported()) {
             assertTrue(it.hasNext() );
@@ -899,7 +893,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
     @Test
     public void testCopy() {
-        if (!isCopyConstructorSupported())
+        if (!isCopyConstructorCheckable())
             return;
 
         MultiValuedMap<K, V> original = makeConfirmedMap();
@@ -976,8 +970,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1064,8 +1058,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1125,8 +1119,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1213,8 +1207,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
@@ -1322,12 +1316,12 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override
-        public boolean areEqualElementsDistinguishable() {
+        public boolean areEqualElementsIndistinguishable() {
             // work-around for a problem with the EntrySet: the entries contain
             // the wrapped collection, which will be automatically cleared
             // when the associated key is removed from the map as the collection

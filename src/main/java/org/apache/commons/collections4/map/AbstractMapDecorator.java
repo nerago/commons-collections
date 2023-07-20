@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -40,7 +41,10 @@ import java.util.Set;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, V> {
+public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, V> implements Serializable {
+
+    /** Serialization version */
+    private static final long serialVersionUID = 653816313916772204L;
 
     /** The map to decorate */
     transient Map<K, V> map;
@@ -69,6 +73,17 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
      */
     protected Map<K, V> decorated() {
         return map;
+    }
+
+    /**
+     * Sets the map being decorated.
+     * <p>
+     * <b>NOTE:</b> this method should only be used during deserialization
+     *
+     * @param map  the decorated collection
+     */
+    protected void setMap(final Map<K, V> map) {
+        this.map = map;
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.apache.commons.collections4.bidimap;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.CollectionCommonsRole;
 
 /**
  * JUnit tests.
@@ -60,6 +61,11 @@ public class TreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> e
     @Override
     public boolean isSetValueSupported() {
         return false;
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

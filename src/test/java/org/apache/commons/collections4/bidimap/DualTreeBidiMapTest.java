@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
+
 /**
  * JUnit tests.
  */
@@ -31,6 +33,11 @@ public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V
     @Override
     public DualTreeBidiMap<K, V> makeObject() {
         return new DualTreeBidiMap<>();
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     /**

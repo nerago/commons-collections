@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
@@ -137,6 +138,16 @@ public class FixedSizeSortedMap<K, V>
             throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size");
         }
         map.putAll(mapToCopy);
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        throw new UnsupportedOperationException("Map is fixed size");
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        throw new UnsupportedOperationException("Map is fixed size");
     }
 
     @Override

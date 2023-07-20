@@ -19,6 +19,7 @@ package org.apache.commons.collections4.bidimap;
 import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -482,7 +483,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
     @TestFactory
     public DynamicNode inverseBidiMapTests() {
-        return findTestsOnNestedClass(TestInverseBidiMap.class, () -> new TestInverseBidiMap<>(this));
+        return new TestInverseBidiMap<>(this).getDynamicTests();
     }
 
     @Disabled
@@ -550,13 +551,18 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
 
         @Override
+        public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
         protected IterationBehaviour getIterationBehaviour() {
             return main.getIterationBehaviour();
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override

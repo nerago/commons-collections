@@ -19,6 +19,7 @@ package org.apache.commons.collections4.map;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
 
 /**
@@ -53,6 +54,11 @@ public class FixedSizeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public boolean isRemoveSupported() {
         return false;
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

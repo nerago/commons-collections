@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
+
 /**
  * JUnit tests.
  */
@@ -44,6 +46,11 @@ public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     @Override
     public String[] ignoredTests() {
         return new String[] { "DualLinkedHashBidiMapTest.bulkTestInverseMap.bulkTestInverseMap" };
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
 //    public void testCreate() throws Exception {

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.commons.collections4.BoundedCollection;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.list.FixedSizeList;
 import org.junit.jupiter.api.Test;
@@ -73,8 +74,8 @@ public class UnmodifiableBoundedCollectionTest<E> extends AbstractCollectionTest
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Override

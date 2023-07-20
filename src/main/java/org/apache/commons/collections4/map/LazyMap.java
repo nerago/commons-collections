@@ -20,8 +20,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.Transformer;
@@ -166,6 +170,85 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
             return value;
         }
         return map.get(key);
+    }
+
+    @Override
+    public V putIfAbsent(K key, V ignoreCallerValue) {
+        final V mapValue = map.get(key);
+        if (mapValue != null) {
+            return mapValue;
+        } else {
+            final V value = factory.transform(key);
+            map.put(key, value);
+            return value;
+        }
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        final V mapValue = map.get(key);
+        if (mapValue != null) {
+            return mapValue;
+        } else {
+            final V value = factory.transform(key);
+            map.put(key, value);
+            return value;
+        }
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+
+        final V oldMapValue = map.get(key);
+        if (oldMapValue != null || map.containsKey(key)) {
+            final V newValue = remappingFunction.apply(key, oldMapValue);
+            if (newValue != null) {
+                map.put(key, newValue);
+            } else {
+                map.remove(key);
+            }
+            return newValue;
+        } else {
+            final V factoryValue = factory.transform(key);
+            final V newValue = remappingFunction.apply(key, factoryValue);
+            if (newValue != null) {
+                map.put(key, newValue);
+            }
+            return newValue;
+        }
+    }
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        if (map.remove(key, value)) {
+            return true;
+        } else {
+            @SuppressWarnings("unchecked")
+            final V factoryValue = factory.transform((K) key);
+            return Objects.equals(factoryValue, value);
+        }
+    }
+
+    @Override
+    public V replace(K key, V value) {
+        final boolean wasContained = map.containsKey(key);
+        final V oldValue = map.put(key, value);
+        return wasContained ? oldValue : factory.transform(key);
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        final V mapValue = map.get(key);
+        final V currentValue = (mapValue != null || map.containsKey(key))
+                               ? mapValue
+                               : factory.transform(key);
+        if (Objects.equals(currentValue, oldValue)) {
+            map.put(key, newValue);
+            return true;
+        }
+        return false;
     }
 
     // no need to wrap keySet, entrySet or values as they are views of

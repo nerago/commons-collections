@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.collection.PredicatedCollectionTest;
 import org.apache.commons.collections4.functors.TruePredicate;
@@ -71,8 +72,8 @@ public class PredicatedQueueTest<E> extends AbstractQueueTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.PREDICATED;
     }
 
     protected Predicate<E> testPredicate = o -> o instanceof String;

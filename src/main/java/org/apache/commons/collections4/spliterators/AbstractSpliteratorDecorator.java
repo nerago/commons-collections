@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-public abstract class AbstractSpliteratorDecorator<E> implements Spliterator<E> {
+public abstract class AbstractSpliteratorDecorator<E, T extends Spliterator<E>> implements Spliterator<E> {
     private final Spliterator<E> spliterator;
 
     protected AbstractSpliteratorDecorator(Spliterator<E> spliterator) {
@@ -25,7 +25,7 @@ public abstract class AbstractSpliteratorDecorator<E> implements Spliterator<E> 
     }
 
     @Override
-    public Spliterator<E> trySplit() {
+    public T trySplit() {
         Spliterator<E> split = spliterator.trySplit();
         if (split != null)
             return decorateSplit(split);
@@ -33,7 +33,7 @@ public abstract class AbstractSpliteratorDecorator<E> implements Spliterator<E> 
             return null;
     }
 
-    protected abstract Spliterator<E> decorateSplit(Spliterator<E> split);
+    protected abstract T decorateSplit(Spliterator<E> split);
 
     @Override
     public long estimateSize() {

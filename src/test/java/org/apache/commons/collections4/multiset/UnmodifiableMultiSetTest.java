@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -72,8 +73,8 @@ public class UnmodifiableMultiSetTest<E> extends AbstractMultiSetTest<E> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.UNMODIFIABLE;
     }
 
     @Override

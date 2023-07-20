@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
+
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -60,8 +62,8 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
     @Override

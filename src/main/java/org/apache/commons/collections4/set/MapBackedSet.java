@@ -17,11 +17,7 @@
 package org.apache.commons.collections4.set;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -105,6 +101,11 @@ public final class MapBackedSet<E, V> implements Set<E>, Serializable {
     @Override
     public Iterator<E> iterator() {
         return map.keySet().iterator();
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return map.keySet().spliterator();
     }
 
     @Override

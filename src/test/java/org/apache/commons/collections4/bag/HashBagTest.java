@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bag;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
@@ -37,6 +38,11 @@ public class HashBagTest<T> extends AbstractBagTest<T> {
     @Override
     public String getCompatibilityVersion() {
         return "4";
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

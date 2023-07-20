@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.comparators.ComparableComparator;
 import org.apache.commons.collections4.comparators.ReverseComparator;
@@ -44,6 +45,11 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
 
     public DualTreeBidiMap2Test() {
         super(DualTreeBidiMap2Test.class.getSimpleName());
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     @Override

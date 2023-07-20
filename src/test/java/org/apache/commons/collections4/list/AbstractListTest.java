@@ -37,6 +37,7 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.*;
@@ -817,6 +818,51 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      * Tests remove on list iterator is correct.
      */
     @Test
+    public void testListListIteratorPreviousRemovePreviousState() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+        resetFull();
+        if (getCollection().size() < 4) {
+            return;
+        }
+        final ListIterator<E> it = getCollection().listIterator();
+        final E zero = it.next();
+        final E one = it.next();
+        final E two = it.next();
+        final E three = getCollection().get(3);
+        final E two2 = it.previous();
+        assertEquals(two, two2);
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(two, getCollection().get(2));
+        assertEquals(three, getCollection().get(3));
+
+        it.remove(); // removed element at index 2 (two)
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(three, getCollection().get(2));
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertEquals(zero, getCollection().get(0));
+        assertEquals(one, getCollection().get(1));
+        assertEquals(three, getCollection().get(2));
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+
+        final E three2 = it.next();  // do next after double remove
+        assertEquals(three, three2);
+        assertTrue(it.hasPrevious());
+        assertTrue(it.hasNext());
+        assertEquals(getCollection().size() > 2, it.hasNext());
+    }
+
+    /**
+     * Tests remove on list iterator is correct.
+     */
+    @Test
     public void testListListIteratorNextRemoveNext() {
         if (!isRemoveSupported()) {
             return;
@@ -840,6 +886,53 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final E three2 = it.next();  // do next after remove
         assertEquals(three, three2);
         assertEquals(getCollection().size() > 3, it.hasNext());
+        assertTrue(it.hasPrevious());
+    }
+
+    @Test
+    public void testListListIteratorRemoveLastPrevious() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+        resetFull();
+        if (getCollection().size() < 4) {
+            return;
+        }
+        final int initialSize = getCollection().size();
+        final E last = getCollection().get(initialSize - 1);
+        final E beforeLast = getCollection().get(initialSize - 2);
+        final ListIterator<E> it = getCollection().listIterator(getCollection().size());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+
+        assertThrows(NoSuchElementException.class, () -> it.next());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+
+        final E last2 = it.previous();
+        assertEquals(last, last2);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(initialSize, getCollection().size());
+
+        it.remove();
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(beforeLast, getCollection().get(initialSize - 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> getCollection().get(initialSize - 1));
+        assertEquals(initialSize - 1, getCollection().size());
+
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertThrows(IllegalStateException.class, () -> it.remove());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(beforeLast, getCollection().get(initialSize - 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> getCollection().get(initialSize - 1));
+        assertEquals(initialSize - 1, getCollection().size());
+
+        E beforeLast2 = it.previous();
+        assertEquals(beforeLast, beforeLast2);
+        assertTrue(it.hasNext());
         assertTrue(it.hasPrevious());
     }
 
@@ -1020,6 +1113,9 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         assertEquals(0, list.size(), "Both lists are empty");
         assertEquals(0, list2.size(), "Both lists are empty");
+        setConfirmed(list);
+        setCollection(list2);
+        verify();
     }
 
     @Test
@@ -1036,59 +1132,9 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         assertEquals(size, list.size(), "Both lists are same size");
         assertEquals(size, list2.size(), "Both lists are same size");
-    }
-
-    /**
-     * Compare the current serialized form of the List
-     * against the canonical version in SCM.
-     */
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testEmptyListCompatibility() throws IOException, ClassNotFoundException {
-        /*
-         * Create canonical objects with this code
-        List list = makeEmptyList();
-        if (!(list instanceof Serializable)) return;
-
-        writeExternalFormToDisk((Serializable) list, getCanonicalEmptyCollectionName(list));
-        */
-
-        // test to make sure the canonical form has been preserved
-        final List<E> list = makeObject();
-        if (list instanceof Serializable && !skipSerializedCanonicalTests()
-                && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(list));
-            assertEquals(0, list2.size(), "List is empty");
-            assertEquals(list, list2);
-        }
-    }
-
-    /**
-     * Compare the current serialized form of the List
-     * against the canonical version in SCM.
-     */
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testFullListCompatibility() throws IOException, ClassNotFoundException {
-        /*
-         * Create canonical objects with this code
-        List list = makeFullList();
-        if (!(list instanceof Serializable)) return;
-
-        writeExternalFormToDisk((Serializable) list, getCanonicalFullCollectionName(list));
-        */
-
-        // test to make sure the canonical form has been preserved
-        final List<E> list = makeFullCollection();
-        if (list instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(list));
-            if (list2.size() == 4) {
-                // old serialized tests
-                return;
-            }
-            assertEquals(list.size(), list2.size(), "List is the right size");
-            assertEquals(list, list2);
-        }
+        setConfirmed(list);
+        setCollection(list2);
+        verify();
     }
 
     /**
@@ -1107,7 +1153,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
     @TestFactory
     public DynamicNode bulkSubListTests() {
-        return findTestsOnNestedClass(BulkSubListTests.class, () -> new BulkSubListTests<>(this), this::runBulkSubListTests);
+        return new BulkSubListTests<>(this).getDynamicTests(this::runBulkSubListTests);
     }
 
     @Disabled
@@ -1147,8 +1193,8 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
 
         @Override

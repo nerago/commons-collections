@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.multiset;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 
@@ -47,8 +48,8 @@ public class SynchronizedMultiSetTest<T> extends AbstractMultiSetTest<T> {
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
-        return false;
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.SYNCHRONIZED;
     }
 
 //    public void testCreate() throws Exception {

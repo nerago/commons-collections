@@ -16,9 +16,11 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedBidiMap;
 
 /**
@@ -63,8 +65,13 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     }
 
     @Override
-    public boolean isCopyConstructorSupported() {
+    public boolean isTestSerialization() {
         return false;
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
     /**
@@ -80,6 +87,11 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
 
         TestOrderedBidiMap(final OrderedBidiMap<K, V> map) {
             super(map);
+        }
+
+        TestOrderedBidiMap(final Map<K, V> map) {
+            super(new DualTreeBidiMap<K, V>());
+            putAll(map);
         }
 
         @Override

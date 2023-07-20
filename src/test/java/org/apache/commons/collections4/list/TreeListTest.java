@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -35,6 +36,11 @@ public class TreeListTest<E> extends AbstractListTest<E> {
 
     public TreeListTest() {
         super(TreeListTest.class.getSimpleName());
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
     }
 
 //    public static void main(String[] args) {
@@ -245,6 +251,19 @@ public class TreeListTest<E> extends AbstractListTest<E> {
         assertEquals(Integer.valueOf(4), li.previous());
         assertEquals(Integer.valueOf(4), li.next());
         assertFalse(li.hasNext());
+    }
+
+    @Test
+    public void testRemoveRange() {
+        int elementCount = getFullElements().length;
+        for (int start = 0; start < elementCount; start++) {
+            for (int end = start + 1; end <= elementCount; end++) {
+                resetFull();
+                getCollection().subList(start, end).clear();
+                getConfirmed().subList(start, end).clear();
+                verify();
+            }
+        }
     }
 
     @Test

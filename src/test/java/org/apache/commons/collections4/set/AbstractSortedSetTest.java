@@ -24,6 +24,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicNode;
@@ -151,9 +152,9 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public DynamicNode subSetTests() {
         if (runSubSetTests()) {
             return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
-                findTestsOnNestedClass(BulkTestSortedSetSubSet.class, BulkTestSortedSetSubSet::new),
-                findTestsOnNestedClass(BulkTestSortedSetHeadSet.class, BulkTestSortedSetHeadSet::new),
-                findTestsOnNestedClass(BulkTestSortedSetTailSet.class, BulkTestSortedSetTailSet::new)
+                new BulkTestSortedSetSubSet().getDynamicTests(),
+                new BulkTestSortedSetHeadSet().getDynamicTests(),
+                new BulkTestSortedSetTailSet().getDynamicTests()
             ));
         } else {
             return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());
@@ -264,8 +265,8 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
             return AbstractSortedSetTest.this.isFailFastSupported();
         }
         @Override
-        public boolean isCopyConstructorSupported() {
-            return false;
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
         }
         @Override
         protected boolean runSubSetTests() {

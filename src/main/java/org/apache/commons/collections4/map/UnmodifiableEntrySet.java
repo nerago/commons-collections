@@ -22,10 +22,8 @@ import java.util.function.Predicate;
 
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
-import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.set.AbstractSetDecorator;
-import org.apache.commons.collections4.spliterators.UnmodifiableEntrySetSpliterator;
+import org.apache.commons.collections4.spliterators.UnmodifiableMapSpliterator;
 
 /**
  * Decorates a map entry {@code Set} to ensure it can't be altered.
@@ -39,17 +37,19 @@ import org.apache.commons.collections4.spliterators.UnmodifiableEntrySetSplitera
  * @since 3.0
  */
 public final class UnmodifiableEntrySet<K, V>
-        extends AbstractSetDecorator<Map.Entry<K, V>> implements Unmodifiable {
+        extends AbstractEntrySetDecorator<K, V> implements Unmodifiable {
 
-    /** Serialization version */
+    /**
+     * Serialization version
+     */
     private static final long serialVersionUID = 1678353579659253473L;
 
     /**
      * Factory method to create an unmodifiable set of Map Entry objects.
      *
-     * @param <K>  the key type
-     * @param <V>  the value type
-     * @param set  the set to decorate, must not be null
+     * @param <K> the key type
+     * @param <V> the value type
+     * @param set the set to decorate, must not be null
      * @return a new unmodifiable entry set
      * @throws NullPointerException if set is null
      * @since 4.0
@@ -64,11 +64,16 @@ public final class UnmodifiableEntrySet<K, V>
     /**
      * Constructor that wraps (not copies).
      *
-     * @param set  the set to decorate, must not be null
+     * @param set the set to decorate, must not be null
      * @throws NullPointerException if set is null
      */
     private UnmodifiableEntrySet(final Set<Map.Entry<K, V>> set) {
         super(set);
+    }
+
+    @Override
+    protected Map.Entry<K, V> wrapEntry(Map.Entry<K, V> entry) {
+        return new UnmodifiableMapEntry<>(entry);
     }
 
     @Override
@@ -116,7 +121,7 @@ public final class UnmodifiableEntrySet<K, V>
 
     @Override
     public Spliterator<Map.Entry<K, V>> spliterator() {
-        return new UnmodifiableEntrySetSpliterator<>(decorated().spliterator());
+        return UnmodifiableMapSpliterator.unmodifiableMapSpliterator(decorated().spliterator());
     }
 
     @Override
@@ -175,5 +180,4 @@ public final class UnmodifiableEntrySet<K, V>
             throw new UnsupportedOperationException();
         }
     }
-
 }
