@@ -87,24 +87,6 @@ public class DualTransformedCollectionTest extends AbstractCollectionTest<Intege
         return DualTransformedCollection.transformedCollection(input, list, INTEGER_TO_STRING_TRANSFORMER, STRING_TO_INTEGER_TRANSFORMER);
     }
 
-    @Override
-    protected String getCanonicalFullCollectionName(Object object) {
-        return super.getCanonicalFullCollectionName(
-                TransformedCollection.transformingCollection(
-                        new ArrayList<>(),
-                        TransformedCollectionTest.NOOP_TRANSFORMER
-                ));
-    }
-
-    @Override
-    protected String getCanonicalEmptyCollectionName(Object object) {
-        return super.getCanonicalEmptyCollectionName(
-                TransformedCollection.transformingCollection(
-                        new ArrayList<>(),
-                        TransformedCollectionTest.NOOP_TRANSFORMER
-                ));
-    }
-
     public String[] getFullElementsInternal() { return new String[]{"1", "3", "5", "7", "2", "4", "6"}; }
 
     @Override

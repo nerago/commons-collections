@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.ArrayList;
@@ -102,9 +105,9 @@ public final class StaticBucketMap<K, V> extends AbstractIterableMap<K, V> {
     /** The default number of buckets to use */
     private static final int DEFAULT_BUCKETS = 255;
     /** The array of buckets, where the actual data is held */
-    private final Node<K, V>[] buckets;
+    private transient Node<K, V>[] buckets;
     /** The matching array of locks */
-    private final Lock[] locks;
+    private transient Lock[] locks;
 
     /**
      * Initializes the map with the default number of buckets (255).
@@ -125,6 +128,10 @@ public final class StaticBucketMap<K, V> extends AbstractIterableMap<K, V> {
      */
     @SuppressWarnings("unchecked")
     public StaticBucketMap(final int numBuckets) {
+        initBuckets(numBuckets);
+    }
+
+    private void initBuckets(final int numBuckets) {
         int size = Math.max(17, numBuckets);
 
         // Ensure that bucketSize is never a power of 2 (to ensure maximal distribution)
@@ -729,6 +736,41 @@ public final class StaticBucketMap<K, V> extends AbstractIterableMap<K, V> {
         }
         synchronized (locks[bucket]) {
             atomic(r, bucket + 1);
+        }
+    }
+
+    /**
+     * Write the map out using a custom routine.
+     *
+     * @param out  the output stream
+     * @throws IOException if an error occurs while writing to the stream
+     */
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeInt(buckets.length);
+        out.writeInt(size());
+        for (final EntryIterator it = new EntryIterator(); it.hasNext();) {
+            Entry<K, V> entry = it.next();
+            out.writeObject(entry.getKey());
+            out.writeObject(entry.getValue());
+        }
+    }
+
+    /**
+     * Read the map in using a custom routine.
+     *
+     * @param in the input stream
+     * @throws IOException if an error occurs while reading from the stream
+     * @throws ClassNotFoundException if an object read from the stream can not be loaded
+     */
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        final int numBuckets = in.readInt();
+        initBuckets(numBuckets);
+        final int count = in.readInt();
+        for (int i = count; i > 0; i--) {
+            put((K) in.readObject(), (V) in.readObject());
         }
     }
 

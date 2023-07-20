@@ -1113,6 +1113,9 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         assertEquals(0, list.size(), "Both lists are empty");
         assertEquals(0, list2.size(), "Both lists are empty");
+        setConfirmed(list);
+        setCollection(list2);
+        verify();
     }
 
     @Test
@@ -1129,59 +1132,9 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
         assertEquals(size, list.size(), "Both lists are same size");
         assertEquals(size, list2.size(), "Both lists are same size");
-    }
-
-    /**
-     * Compare the current serialized form of the List
-     * against the canonical version in SCM.
-     */
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testEmptyListCompatibility() throws IOException, ClassNotFoundException {
-        /*
-         * Create canonical objects with this code
-        List list = makeEmptyList();
-        if (!(list instanceof Serializable)) return;
-
-        writeExternalFormToDisk((Serializable) list, getCanonicalEmptyCollectionName(list));
-        */
-
-        // test to make sure the canonical form has been preserved
-        final List<E> list = makeObject();
-        if (list instanceof Serializable && !skipSerializedCanonicalTests()
-                && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(list));
-            assertEquals(0, list2.size(), "List is empty");
-            assertEquals(list, list2);
-        }
-    }
-
-    /**
-     * Compare the current serialized form of the List
-     * against the canonical version in SCM.
-     */
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testFullListCompatibility() throws IOException, ClassNotFoundException {
-        /*
-         * Create canonical objects with this code
-        List list = makeFullList();
-        if (!(list instanceof Serializable)) return;
-
-        writeExternalFormToDisk((Serializable) list, getCanonicalFullCollectionName(list));
-        */
-
-        // test to make sure the canonical form has been preserved
-        final List<E> list = makeFullCollection();
-        if (list instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(list));
-            if (list2.size() == 4) {
-                // old serialized tests
-                return;
-            }
-            assertEquals(list.size(), list2.size(), "List is the right size");
-            assertEquals(list, list2);
-        }
+        setConfirmed(list);
+        setCollection(list2);
+        verify();
     }
 
     /**

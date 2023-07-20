@@ -1493,21 +1493,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Test
     public void testEmptyMapCompatibility() throws Exception {
-        /*
-         * Create canonical objects with this code
-        Map map = makeEmptyMap();
-        if (!(map instanceof Serializable)) return;
+        confirmed = makeObject();
+        if (!(confirmed instanceof Serializable) || skipSerializedCanonicalTests() || !isTestSerialization()) {
+            return;
+        }
 
-        writeExternalFormToDisk((Serializable) map, getCanonicalEmptyCollectionName(map));
-        */
+        // Create canonical objects with this line
+        // writeExternalFormToDisk((Serializable) confirmed, getCanonicalEmptyCollectionName(confirmed));
 
         // test to make sure the canonical form has been preserved
-        final Map<K, V> map = makeObject();
-        if (map instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            @SuppressWarnings("unchecked")
-            final Map<K, V> map2 = (Map<K, V>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
-            assertEquals(0, map2.size(), "Map is empty");
-        }
+        map = (Map<K, V>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(confirmed));
+        assertEquals(0, map.size(), "Map is empty");
+        assertEquals(confirmed.getClass(), map.getClass(), "serialized test data doesn't produce same type");
+        views();
+        verify();
     }
 
     /**
@@ -1516,21 +1515,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Test
     public void testFullMapCompatibility() throws Exception {
-        /*
-         * Create canonical objects with this code
-        Map map = makeFullMap();
-        if (!(map instanceof Serializable)) return;
+        confirmed = makeFullMap();
+        if (!(confirmed instanceof Serializable) || skipSerializedCanonicalTests() || !isTestSerialization()) {
+            return;
+        }
 
-        writeExternalFormToDisk((Serializable) map, getCanonicalFullCollectionName(map));
-        */
+        // Create canonical objects with this line
+        // writeExternalFormToDisk((Serializable) confirmed, getCanonicalFullCollectionName(confirmed));
 
         // test to make sure the canonical form has been preserved
-        final Map<K, V> map = makeFullMap();
-        if (map instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            @SuppressWarnings("unchecked")
-            final Map<K, V> map2 = (Map<K, V>) readExternalFormFromDisk(getCanonicalFullCollectionName(map));
-            assertEquals(getSampleKeys().length, map2.size(), "Map is the right size");
-        }
+        map = (Map<K, V>) readExternalFormFromDisk(getCanonicalFullCollectionName(confirmed));
+        assertEquals(getSampleKeys().length, map.size(), "Map is the right size");
+        assertEquals(confirmed.getClass(), map.getClass(), "serialized test data doesn't produce same type");
+        views();
+        verify();
     }
 
     /**

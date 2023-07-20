@@ -73,16 +73,6 @@ public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V
         return "4";
     }
 
-    @Override
-    protected String getCanonicalEmptyCollectionName(Object object) {
-        return super.getCanonicalEmptyCollectionName(new TreeBidiMap<>());
-    }
-
-    @Override
-    protected String getCanonicalFullCollectionName(Object object) {
-        return super.getCanonicalFullCollectionName(new TreeBidiMap<>());
-    }
-
     //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/TreeBidiMap.emptyCollection.version4.obj");

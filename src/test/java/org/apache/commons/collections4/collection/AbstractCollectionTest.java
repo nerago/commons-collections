@@ -16,11 +16,7 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -1432,6 +1428,44 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             if (isEqualsCheckable()) {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj)) - FULL Collection");
             }
+        }
+    }
+
+    /**
+     * Compare the current serialized form of the Bag
+     * against the canonical version in SCM.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCollectionCompatibilityEmpty() throws IOException, ClassNotFoundException {
+        // test to make sure the canonical form has been preserved
+        setConfirmed(makeObject());
+        if (getConfirmed() instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
+            // Create canonical objects with this line
+            // writeExternalFormToDisk((Serializable) confirmed, getCanonicalEmptyCollectionName(confirmed));
+
+            setCollection((Collection<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(getConfirmed())));
+            assertTrue(getCollection().isEmpty(), "Collection should be empty");
+            verify();
+        }
+    }
+
+    /**
+     * Compare the current serialized form of the Bag
+     * against the canonical version in SCM.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCollectionCompatibilityFull() throws IOException, ClassNotFoundException {
+        // test to make sure the canonical form has been preserved
+        setConfirmed(makeFullCollection());
+        if (getConfirmed() instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
+            // Create canonical objects with this line
+            // writeExternalFormToDisk((Serializable) confirmed, getCanonicalFullCollectionName(confirmed));
+
+            setCollection((Collection<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(getConfirmed())));
+            assertEquals(getConfirmed().size(), getCollection().size(), "Collection should be same size");
+            verify();
         }
     }
 

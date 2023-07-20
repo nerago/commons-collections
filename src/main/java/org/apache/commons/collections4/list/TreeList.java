@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.list;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -66,10 +69,10 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
     private static final long serialVersionUID = 3228691446211358574L;
 
     /** The root node in the AVL tree */
-    private AVLNode<E> root;
+    private transient AVLNode<E> root;
 
     /** The current size of the list */
-    private int size;
+    private transient int size;
 
     /**
      * Constructs a new empty list.
@@ -1621,4 +1624,42 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
             return Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED;
         }
     }
+
+    /**
+     * Write the list out using a custom routine.
+     *
+     * @param out  the output stream
+     * @throws IOException if an error occurs while writing to the stream
+     */
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        // Write the size so we know how many nodes to read back
+        out.writeInt(size());
+        for (final E e : this) {
+            out.writeObject(e);
+        }
+    }
+
+    /**
+     * Read the list in using a custom routine.
+     *
+     * @param in  the input stream
+     * @throws IOException if an error occurs while reading from the stream
+     * @throws ClassNotFoundException if an object read from the stream can not be loaded
+     */
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+
+        final int readSize = in.readInt();
+        if (readSize > 0) {
+            final ArrayList<E> temp = new ArrayList<>();
+            for (int i = 0; i < readSize; i++) {
+                temp.add((E) in.readObject());
+            }
+            root = new AVLNode<>(temp);
+        }
+        size = readSize;
+    }
+
 }

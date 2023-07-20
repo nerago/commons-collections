@@ -18,17 +18,12 @@ package org.apache.commons.collections4.bag;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.SortedBag;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
-import org.junit.jupiter.api.Test;
 
 /**
  * Test class for {@link CollectionSortedBag}.
@@ -128,36 +123,5 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionBagTest<T> {
 //        resetFull();
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/CollectionSortedBag.fullCollection.version4.obj");
 //    }
-
-
-    /**
-     * Compare the current serialized form of the Bag
-     * against the canonical version in SCM.
-     */
-    @Test
-    public void testEmptyBagCompatibility() throws IOException, ClassNotFoundException {
-        // test to make sure the canonical form has been preserved
-        final Bag<T> bag = makeObject();
-        if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(bag));
-            assertEquals(0, bag2.size(), "Bag is empty");
-            assertEquals(bag, bag2);
-        }
-    }
-
-    /**
-     * Compare the current serialized form of the Bag
-     * against the canonical version in SCM.
-     */
-    @Test
-    public void testFullBagCompatibility() throws IOException, ClassNotFoundException {
-        // test to make sure the canonical form has been preserved
-        final SortedBag<T> bag = (SortedBag<T>) makeFullCollection();
-        if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final SortedBag<?> bag2 = (SortedBag<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
-            assertEquals(bag.size(), bag2.size(), "Bag is the right size");
-            assertEquals(bag, bag2);
-        }
-    }
 
 }
