@@ -16,23 +16,19 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.lang.ref.WeakReference;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for ReferenceIdentityMap.
@@ -129,7 +125,52 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
         return new IdentityMap<>();
     }
 
-/*
+    @Override
+    public void verifyMap() {
+        final int size = getConfirmed().size();
+        final boolean empty = getConfirmed().isEmpty();
+        assertEquals(size, getMap().size(), "Map should be same size as HashMap");
+        assertEquals(empty, getMap().isEmpty(), "Map should be empty if HashMap is");
+        assertEquals(new HashMap<>(getConfirmed()), new HashMap<>(getMap()), "Map should still equal HashMap");
+    }
+
+    @Override
+    public void verifyEntrySet() {
+        final int size = getConfirmed().size();
+        final boolean empty = getConfirmed().isEmpty();
+        assertEquals(size, entrySet.size(),
+                "entrySet should be same size as HashMap's" +
+                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+        assertEquals(empty, entrySet.isEmpty(),
+                "entrySet should be empty if HashMap is" +
+                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+        assertTrue(new HashMap<>(getMap()).entrySet().containsAll(getConfirmed().entrySet()),
+                "entrySet should have same elements" +
+                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+        assertTrue(new HashMap<>(getConfirmed()).entrySet().containsAll(entrySet),
+                "HashMap should contain all entrySet's elements" +
+                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+    }
+
+    @Override
+    public void verifyKeySet() {
+        final int size = getConfirmed().size();
+        final boolean empty = getConfirmed().isEmpty();
+        assertEquals(size, keySet.size(),
+                "keySet should be same size as HashMap's" +
+                        "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
+        assertEquals(empty, keySet.isEmpty(),
+                "keySet should be empty if HashMap is" +
+                        "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
+        assertTrue(new HashMap<>(getMap()).keySet().containsAll(getConfirmed().keySet()),
+                "keySet should contain all HashMap's elements" +
+                        "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
+        assertTrue(new HashMap<>(getConfirmed()).keySet().containsAll(getMap().keySet()),
+                "keySet should contain all HashMap's elements" +
+                        "\nTest: " + keySet + "\nReal: " + getConfirmed().keySet());
+    }
+
+    /*
     // Tests often fail because gc is uncontrollable
 
     @Test
@@ -339,6 +380,15 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
             @SuppressWarnings("unused")
             final byte[] b =  new byte[bytz];
             bytz = bytz * 2;
+        }
+    }
+
+    @Nested
+    public class TestMapEntrySet extends AbstractMapTest<K, V>.TestMapEntrySet {
+        @Test
+        @Disabled("don't work for reference collection")
+        @Override
+        public void testMapEntrySetIteratorEntrySetValueMixedPutsClonedKeys() {
         }
     }
 
