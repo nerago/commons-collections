@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.list;
 
+import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.ArrayDeque;
 import java.util.Collection;

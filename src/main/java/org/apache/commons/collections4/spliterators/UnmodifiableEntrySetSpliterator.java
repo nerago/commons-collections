@@ -2,12 +2,12 @@ package org.apache.commons.collections4.spliterators;
 
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-public class UnmodifiableEntrySetSpliterator<K, V> extends AbstractSpliteratorDecorator<Map.Entry<K, V>> {
+public class UnmodifiableEntrySetSpliterator<K, V>
+        extends AbstractSpliteratorDecorator<Map.Entry<K, V>, UnmodifiableEntrySetSpliterator<K, V>> {
 
     public UnmodifiableEntrySetSpliterator(Spliterator<Map.Entry<K, V>> spliterator) {
         super(spliterator);
@@ -28,7 +28,7 @@ public class UnmodifiableEntrySetSpliterator<K, V> extends AbstractSpliteratorDe
     }
 
     @Override
-    protected Spliterator<Map.Entry<K, V>> decorateSplit(Spliterator<Map.Entry<K, V>> split) {
+    protected UnmodifiableEntrySetSpliterator<K, V> decorateSplit(Spliterator<Map.Entry<K, V>> split) {
         return new UnmodifiableEntrySetSpliterator<>(split);
     }
 
