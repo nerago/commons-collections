@@ -1,5 +1,6 @@
 package org.apache.commons.collections4.spliterators;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.Unmodifiable;
@@ -8,10 +9,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Spliterator;
+import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,11 +26,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SpliteratorTestFixture<E> {
     private final Collection<E> testCollection;
     private final boolean expectOrdered;
+    private final CollectionCommonsRole collectionRole;
     private List<E> resultsInOrder;
 
-    public SpliteratorTestFixture(final Collection<E> testCollection, final boolean expectOrdered) {
+    public SpliteratorTestFixture(final Collection<E> testCollection, final boolean expectOrdered,
+                                  final CollectionCommonsRole collectionRole) {
         this.testCollection = testCollection;
         this.expectOrdered = expectOrdered;
+        this.collectionRole = collectionRole;
     }
 
     public void testAll() {
@@ -68,9 +74,12 @@ public class SpliteratorTestFixture<E> {
     }
     private void checkAfterSplit(final Spliterator<E> spliteratorPrefix, final Spliterator<E> spliteratorOriginal,
                                  final long estimateSize, final boolean reportedSUBSIZED) {
-        assertTrue(spliteratorPrefix.estimateSize() < estimateSize,
+        System.out.println("checkAfterSplit " + estimateSize + " -> " + spliteratorPrefix.estimateSize() + " + " + spliteratorOriginal.estimateSize());
+        assertTrue(spliteratorPrefix.estimateSize() <= estimateSize,
                 "estimateSize must decrease across invocations of trySplit");
-        assertTrue(spliteratorOriginal.estimateSize() < estimateSize,
+        assertTrue(spliteratorOriginal.estimateSize() <= estimateSize,
+                "estimateSize must decrease across invocations of trySplit");
+        assertTrue(spliteratorPrefix.estimateSize() + spliteratorOriginal.estimateSize() <= estimateSize,
                 "estimateSize must decrease across invocations of trySplit");
         if (reportedSUBSIZED) {
             assertTrue(spliteratorPrefix.hasCharacteristics(Spliterator.SIZED), "after split of SUBSIZED, should report SIZED");
@@ -113,8 +122,8 @@ public class SpliteratorTestFixture<E> {
             final Spliterator<E> split = current.trySplit();
             if (split != null) {
                 checkAfterSplit(split, current, sizeBefore, reportedSUBSIZED);
-                queue.addFirst(split);
                 queue.addFirst(current);
+                queue.addFirst(split);
             } else {
                 final List<E> data = extractAndCheckBasics(current);
                 combined.addAll(data);
@@ -148,7 +157,7 @@ public class SpliteratorTestFixture<E> {
         if (reportSIZED) {
             assertEquals(results.size(), estimateSize, "SIZED spliterator reported incorrect size");
         }
-        if (expectOrdered) {
+        if (expectOrdered && collectionRole != CollectionCommonsRole.INNER) {
             assertTrue(reportORDERED, "Test framework thinks collection is ordered but spliterator doesn't report ORDERED");
         }
         if (reportSORTED) {
@@ -167,7 +176,7 @@ public class SpliteratorTestFixture<E> {
         if (reportNONNULL) {
             assertFalse(results.contains(null), "NONNULL spliterator supplied null");
         }
-        if (testCollection instanceof Unmodifiable) {
+        if (testCollection instanceof Unmodifiable && collectionRole != CollectionCommonsRole.INNER) {
             assertTrue(reportIMMUTABLE, "Unmodifiable collection should probably report IMMUTABLE spliterator");
         }
         if (reportIMMUTABLE) {

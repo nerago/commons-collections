@@ -28,6 +28,7 @@ import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.ArrayTestUtils;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.spliterators.SpliteratorTestFixture;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
@@ -1367,10 +1368,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
-    public void testSpliteratorDetails() throws NoSuchMethodException {
+    public void testSpliteratorDetails() {
         resetFull();
         final boolean expectOrdered = getIterationBehaviour() != IterationBehaviour.UNORDERED;
-        new SpliteratorTestFixture<>(getCollection(), expectOrdered).testAll();
+        new SpliteratorTestFixture<>(getCollection(), expectOrdered, collectionRole()).testAll();
     }
 
     @Test
