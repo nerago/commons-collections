@@ -867,7 +867,8 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         @Override
         public Spliterator<Entry<K, V>> spliterator() {
             // TODO could do better splits
-            return Spliterators.spliterator(parent.createEntrySetIterator(), parent.size, 0);
+            return Spliterators.spliterator(parent.createEntrySetIterator(), parent.size,
+                    Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.SUBSIZED);
         }
     }
 
@@ -1048,7 +1049,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         public Spliterator<V> spliterator() {
             // TODO could do better splits
             return Spliterators.spliterator(parent.createValuesIterator(), parent.size,
-                    Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.SUBSIZED);
+                    Spliterator.SIZED | Spliterator.SUBSIZED);
         }
     }
 

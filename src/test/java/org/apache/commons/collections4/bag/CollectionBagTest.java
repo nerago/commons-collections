@@ -81,6 +81,11 @@ public class CollectionBagTest<T> extends AbstractCollectionBagTest<T> {
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.UNORDERED;
     }

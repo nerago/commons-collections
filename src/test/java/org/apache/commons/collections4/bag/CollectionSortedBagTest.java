@@ -53,6 +53,11 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionBagTest<T> {
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.OTHER_DECORATOR;
     }

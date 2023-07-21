@@ -20,11 +20,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.iterators.UnmodifiableListIterator;
+import org.apache.commons.collections4.spliterators.AbstractSpliteratorDecorator;
+import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
 
 /**
  * Decorates another {@code List} to ensure it can't be altered.
@@ -124,6 +127,11 @@ public final class UnmodifiableList<E>
     @Override
     public ListIterator<E> listIterator(final int index) {
         return UnmodifiableListIterator.unmodifiableListIterator(decorated().listIterator(index));
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return new UnmodifiableSpliterator<>(decorated().spliterator());
     }
 
     @Override

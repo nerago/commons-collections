@@ -41,18 +41,8 @@ public abstract class AbstractSpliteratorDecorator<E, T extends Spliterator<E>> 
     }
 
     @Override
-    public long getExactSizeIfKnown() {
-        return spliterator.getExactSizeIfKnown();
-    }
-
-    @Override
     public int characteristics() {
         return spliterator.characteristics();
-    }
-
-    @Override
-    public boolean hasCharacteristics(int characteristics) {
-        return spliterator.hasCharacteristics(characteristics);
     }
 
     @Override
