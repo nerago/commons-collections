@@ -20,21 +20,18 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.ArrayTestUtils;
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.spliterators.SpliteratorTestFixture;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1446,56 +1443,11 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
-    public void testCollectionCheckRolesBasics() throws Exception {
+    public void testCollectionRolesBasics() throws Exception {
         checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
         if (collectionRole() != CollectionCommonsRole.INNER) {
             assertTrue(isTestSerialization());
         }
-    }
-
-    public static void checkRoleBasics(final Object object, final CollectionCommonsRole collectionRole, boolean testSerialization) throws Exception {
-        final String name = object.getClass().getSimpleName();
-        final String upperName = name.toUpperCase();
-        if (collectionRole != CollectionCommonsRole.INNER) {
-            if (upperName.contains("UNMODIFIABLE"))
-                assertEquals(CollectionCommonsRole.UNMODIFIABLE, collectionRole);
-            if (upperName.contains("TRANSFORM"))
-                assertEquals(CollectionCommonsRole.TRANSFORM, collectionRole);
-            if (upperName.contains("SYNCHRONIZED"))
-                assertEquals(CollectionCommonsRole.SYNCHRONIZED, collectionRole);
-            if (upperName.contains("PREDICATED"))
-                assertEquals(CollectionCommonsRole.PREDICATED, collectionRole);
-            if (upperName.contains("COMPOSITE"))
-                assertEquals(CollectionCommonsRole.COMPOSITE, collectionRole);
-        }
-
-        if (collectionRole != CollectionCommonsRole.INNER && testSerialization) {
-            assertTrue(object instanceof Serializable, name + " not Serializable");
-            checkSerialization(object);
-        }
-        if (collectionRole == CollectionCommonsRole.UNMODIFIABLE) {
-            assertTrue(object instanceof Unmodifiable, name + " not Unmodifiable");
-        }
-    }
-
-    static final Map<Long, Class<?>> serializationIds = new HashMap<>();
-
-    private static void checkSerialization(final Object object) throws Exception {
-        final Class<?> type = object.getClass();
-        final String typeName = type.getName();
-
-        final Field serialField = type.getDeclaredField("serialVersionUID");
-        assertNotNull(serialField, "serializable class " + typeName + " doesn't declare serialVersionUID");
-        assertEquals(Long.TYPE, serialField.getType(), "serializable class " + typeName + " has serialVersionUID with wrong type");
-        assertTrue(Modifier.isStatic(serialField.getModifiers()), "serializable class " + typeName + " has serialVersionUID which isn't static");
-        assertTrue(Modifier.isFinal(serialField.getModifiers()), "serializable class " + typeName + " has serialVersionUID which isn't final");
-
-        Long serialValue = (Long) ReflectionUtils.tryToReadFieldValue(serialField, object).get();
-        if (serializationIds.containsKey(serialValue) && serializationIds.get(serialValue) != type) {
-            fail("serializable class " + typeName + " has serialVersionUID "
-                    + serialValue + " which is a duplicate of " + serializationIds.get(serialValue).getName());
-        }
-        serializationIds.put(serialValue, type);
     }
 
     /**
