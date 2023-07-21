@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
@@ -866,9 +868,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
 
         @Override
         public Spliterator<Entry<K, V>> spliterator() {
-            // TODO could do better splits
-            return Spliterators.spliterator(parent.createEntrySetIterator(), parent.size,
-                    Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.SUBSIZED);
+            return new HashSpliterator<>(parent, entry -> entry, Spliterator.DISTINCT | Spliterator.SIZED);
         }
     }
 
@@ -960,9 +960,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
 
         @Override
         public Spliterator<K> spliterator() {
-            // TODO could do better splits
-            return Spliterators.spliterator(parent.createKeySetIterator(), parent.size,
-                    Spliterator.DISTINCT | Spliterator.SIZED | Spliterator.SUBSIZED);
+            return new HashSpliterator<>(parent, HashEntry::getKey, Spliterator.DISTINCT | Spliterator.SIZED);
         }
     }
 
@@ -1047,9 +1045,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
 
         @Override
         public Spliterator<V> spliterator() {
-            // TODO could do better splits
-            return Spliterators.spliterator(parent.createValuesIterator(), parent.size,
-                    Spliterator.SIZED | Spliterator.SUBSIZED);
+            return new HashSpliterator<>(parent, HashEntry::getValue, Spliterator.SIZED);
         }
     }
 
@@ -1226,6 +1222,102 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
                 return "Iterator[" + last.getKey() + "=" + last.getValue() + "]";
             }
             return "Iterator[]";
+        }
+    }
+
+    protected static class HashSpliterator<E, K, V> implements Spliterator<E> {
+
+        /** The parent map */
+        private final AbstractHashedMap<K, V> parent;
+        /** Converts entry into result */
+        private final Function<HashEntry<K,V>,E> convertResult;
+        /** The modification count expected */
+        private final int expectedModCount;
+        private int characteristics;
+        private int estimatedSize;
+        /** The current index into the array of buckets */
+        private int hashIndex;
+        /** The final index this spliterator should check */
+        private final int lastHashIndex;
+        /** The next entry */
+        private HashEntry<K, V> next;
+
+        protected HashSpliterator(final AbstractHashedMap<K, V> parent, final Function<HashEntry<K, V>, E> convertResult,
+                                  final int characteristics) {
+            this.parent = parent;
+            this.convertResult = convertResult;
+            this.hashIndex = parent.data.length - 1;
+            this.lastHashIndex = 0;
+            this.expectedModCount = parent.modCount;
+            this.estimatedSize = parent.size;
+            this.characteristics = characteristics;
+        }
+
+        protected HashSpliterator(final AbstractHashedMap<K,V> parent, final Function<HashEntry<K,V>,E> convertResult,
+                                  final int hashIndex, final int lastHashIndex,
+                                  final int estimatedSize,  final int characteristics) {
+            this.parent = parent;
+            this.convertResult = convertResult;
+            this.hashIndex = hashIndex;
+            this.lastHashIndex = lastHashIndex;
+            this.expectedModCount = parent.modCount;
+            this.estimatedSize = estimatedSize;
+            this.characteristics = characteristics;
+        }
+
+        @Override
+        public boolean tryAdvance(Consumer<? super E> action) {
+            if (parent.modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+
+            if (next != null)  {
+                action.accept(convertResult.apply(next));
+                next = next.next;
+                return true;
+            }
+
+            final HashEntry<K, V>[] data = parent.data;
+            int i = hashIndex, z = lastHashIndex;
+            if (i < z) {
+                return false;
+            }
+            
+            HashEntry<K, V> n;
+            do {
+                n = data[i--];
+            } while (n == null && i >= z);
+            hashIndex = i;
+
+            if (n != null) {
+                action.accept(convertResult.apply(n));
+                next = n.next;
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            int mid = lastHashIndex + (hashIndex - lastHashIndex) / 2;
+            if (lastHashIndex < mid && mid < hashIndex) {
+                estimatedSize >>>= 1;
+                characteristics &= ~Spliterator.SIZED;
+                HashSpliterator<E, K, V> split = new HashSpliterator<>(parent, convertResult, hashIndex, mid + 1, estimatedSize, characteristics);
+                hashIndex = mid;
+                return split;
+            }
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            return estimatedSize;
+        }
+
+        @Override
+        public int characteristics() {
+            return characteristics;
         }
     }
 
