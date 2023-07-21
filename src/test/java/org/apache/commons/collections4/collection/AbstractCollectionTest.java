@@ -1367,6 +1367,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
+    public void testSpliteratorDetails() throws NoSuchMethodException {
+        resetFull();
+        final boolean expectOrdered = getIterationBehaviour() != IterationBehaviour.UNORDERED;
+        new SpliteratorTestFixture<>(getCollection(), expectOrdered).testAll();
+    }
+
+    @Test
     @Override
     public void testSerializeDeserializeThenCompare() throws Exception {
         Object obj = makeObject();
