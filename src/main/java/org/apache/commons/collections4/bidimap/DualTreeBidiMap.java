@@ -25,6 +25,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -34,6 +36,8 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
 
 /**
@@ -112,8 +116,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     protected DualTreeBidiMap(final Map<K, V> normalMap, final Map<V, K> reverseMap,
                               final BidiMap<V, K> inverseBidiMap) {
         super(normalMap, reverseMap, inverseBidiMap);
-        this.comparator = ((SortedMap<K, V>) normalMap).comparator();
-        this.valueComparator = ((SortedMap<V, K>) reverseMap).comparator();
+        this.comparator = normalMap().comparator();
+        this.valueComparator = reverseMap().comparator();
     }
 
     /**
@@ -130,25 +134,32 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return new DualTreeBidiMap<>(normalMap, reverseMap, inverseMap);
     }
 
+    protected TreeMap<K, V> normalMap() {
+        return (TreeMap<K, V>) normalMap;
+    }
+
+    protected TreeMap<V, K> reverseMap() {
+        return (TreeMap<V, K>) reverseMap;
+    }
 
     @Override
     public Comparator<? super K> comparator() {
-        return ((SortedMap<K, V>) normalMap).comparator();
+        return normalMap().comparator();
     }
 
     @Override
     public Comparator<? super V> valueComparator() {
-        return ((SortedMap<V, K>) reverseMap).comparator();
+        return reverseMap().comparator();
     }
 
     @Override
     public K firstKey() {
-        return ((SortedMap<K, V>) normalMap).firstKey();
+        return normalMap().firstKey();
     }
 
     @Override
     public K lastKey() {
-        return ((SortedMap<K, V>) normalMap).lastKey();
+        return normalMap().lastKey();
     }
 
     @Override
@@ -156,16 +167,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         if (isEmpty()) {
             return null;
         }
-        if (normalMap instanceof OrderedMap) {
-            return ((OrderedMap<K, ?>) normalMap).nextKey(key);
-        }
-        final SortedMap<K, V> sm = (SortedMap<K, V>) normalMap;
-        final Iterator<K> it = sm.tailMap(key).keySet().iterator();
-        it.next();
-        if (it.hasNext()) {
-            return it.next();
-        }
-        return null;
+        return normalMap().higherKey(key);
     }
 
     @Override
@@ -173,15 +175,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         if (isEmpty()) {
             return null;
         }
-        if (normalMap instanceof OrderedMap) {
-            return ((OrderedMap<K, V>) normalMap).previousKey(key);
-        }
-        final SortedMap<K, V> sm = (SortedMap<K, V>) normalMap;
-        final SortedMap<K, V> hm = sm.headMap(key);
-        if (hm.isEmpty()) {
-            return null;
-        }
-        return hm.lastKey();
+        return normalMap().lowerKey(key);
     }
 
     /**
@@ -208,19 +202,19 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
 
     @Override
     public SortedMap<K, V> headMap(final K toKey) {
-        final SortedMap<K, V> sub = ((SortedMap<K, V>) normalMap).headMap(toKey);
+        final NavigableMap<K, V> sub = normalMap().headMap(toKey, false);
         return new ViewMap<>(this, sub);
     }
 
     @Override
     public SortedMap<K, V> tailMap(final K fromKey) {
-        final SortedMap<K, V> sub = ((SortedMap<K, V>) normalMap).tailMap(fromKey);
+        final NavigableMap<K, V> sub = normalMap().tailMap(fromKey, true);
         return new ViewMap<>(this, sub);
     }
 
     @Override
     public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        final SortedMap<K, V> sub = ((SortedMap<K, V>) normalMap).subMap(fromKey, toKey);
+        final NavigableMap<K, V> sub = normalMap().subMap(fromKey, true, toKey, false);
         return new ViewMap<>(this, sub);
     }
 
@@ -233,7 +227,6 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
      * Internal sorted map view.
      */
     protected static class ViewMap<K, V> extends AbstractSortedMapDecorator<K, V> {
-        transient Set<V> values;
 
         /**
          * Constructor.
@@ -251,9 +244,9 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         @Override
         public boolean containsValue(final Object value) {
             // override as default implementation uses reverseMap only
-            if (decorated().reverseMap.containsKey(value)) {
-                Object key = decorated().reverseMap.get(value);
-                return  decorated().normalMap.containsKey(key);
+            if (decorated().reverseMap().containsKey(value)) {
+                Object key = decorated().reverseMap().get(value);
+                return  decorated().normalMap().containsKey(key);
             }
             return false;
         }
@@ -273,8 +266,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
             if (!containsKey(key)) {
                 throw new IllegalArgumentException(
                         "Cannot use put on sub map unless the key is already in that map");
-            } else if (decorated().reverseMap.containsKey(value) &&
-                    !Objects.equals(decorated().reverseMap.get(value), key)) {
+            } else if (decorated().reverseMap().containsKey(value) &&
+                    !Objects.equals(decorated().reverseMap().get(value), key)) {
                 throw new IllegalArgumentException(
                         "Cannot use put on sub map when the value being set is already in the map");
             } else {
@@ -319,7 +312,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     protected static class BidiOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
 
         /** The parent map */
-        private final AbstractDualBidiMap<K, V> parent;
+        private final DualTreeBidiMap<K, V> parent;
 
         /** The iterator being decorated */
         private ListIterator<Map.Entry<K, V>> iterator;
@@ -331,7 +324,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          * Constructor.
          * @param parent  the parent map
          */
-        protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V> parent) {
+        protected BidiOrderedMapIterator(final DualTreeBidiMap<K, V> parent) {
             this.parent = parent;
             iterator = new ArrayList<>(parent.entrySet()).listIterator();
         }
@@ -390,8 +383,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
                         "Iterator setValue() can only be called after next() and before remove()");
             }
             final K key = last.getKey();
-            if (parent.reverseMap.containsKey(value) &&
-                    !Objects.equals(parent.reverseMap.get(value), key)) {
+            if (parent.reverseMap().containsKey(value) &&
+                    !Objects.equals(parent.reverseMap().get(value), key)) {
                 throw new IllegalArgumentException(
                         "Cannot use setValue() when the object being set is already in the map");
             }

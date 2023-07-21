@@ -23,7 +23,7 @@ import java.util.Spliterator;
 
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.collection.IterationBehaviour;
+import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -150,7 +150,7 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
 
     @Test
     public void testCompareMapIterators() {
-        if (getIterationBehaviour() == IterationBehaviour.UNORDERED)
+        if ((getIterationBehaviour() & AbstractCollectionTest.UNORDERED) != 0)
             return;
 
         resetEmpty();

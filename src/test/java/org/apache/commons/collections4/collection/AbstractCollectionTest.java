@@ -18,6 +18,7 @@ package org.apache.commons.collections4.collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1197,7 +1198,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * @param a2 Second array
      * @param msg Failure message prefix
      */
-    private static void assertUnorderedArrayEquals(final Object[] a1, final Object[] a2, final String msg) {
+    protected static void assertUnorderedArrayEquals(final Object[] a1, final Object[] a2, final String msg) {
         assertEquals(a1.length, a2.length, () -> msg + ": length");
         final int size = a1.length;
         // Track values that have been matched once (and only once)

@@ -35,9 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
-import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Nested;

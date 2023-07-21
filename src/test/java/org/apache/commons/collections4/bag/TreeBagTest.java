@@ -23,6 +23,10 @@ import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.SortedBag;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+
 /**
  * Extension of {@link AbstractBagTest} for exercising the {@link TreeBag}
  * implementation.

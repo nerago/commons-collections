@@ -37,7 +37,6 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.collections4.BulkTest;
-import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.Test;
