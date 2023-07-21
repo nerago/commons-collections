@@ -197,11 +197,11 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
 
         assertNull(indexed.values("zz"), "should be null for non present");
         assertNull(indexed.values("aA"), "should be null for value that is an entry but not a valid key");
-        assertUnorderedArrayEquals(new String[] { "aa", "aA" }, indexed.values("aa").toArray(),
+        ArrayTestUtils.assertUnorderedArrayEquals(new String[] { "aa", "aA" }, indexed.values("aa").toArray(),
                 "values should return all mapped entries");
-        assertUnorderedArrayEquals(new String[] { "bB", "bb" }, indexed.values("bb").toArray(),
+        ArrayTestUtils.assertUnorderedArrayEquals(new String[] { "bB", "bb" }, indexed.values("bb").toArray(),
                 "values should return all mapped entries");
-        assertUnorderedArrayEquals(new String[] { "CC" }, indexed.values("cc").toArray(), "values should return all mapped entries");
+        ArrayTestUtils.assertUnorderedArrayEquals(new String[] { "CC" }, indexed.values("cc").toArray(), "values should return all mapped entries");
         assertTrue(indexed.values("cc") instanceof Unmodifiable);
     }
 
@@ -235,7 +235,7 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         assertNotNull(indexed.get("aa"));
         assertTrue(indexed.contains("aa"));
         assertTrue(indexed.contains("aA"));
-        assertUnorderedArrayEquals(new String[] { "aa", "aA" }, indexed.values("aa").toArray(),
+        ArrayTestUtils.assertUnorderedArrayEquals(new String[] { "aa", "aA" }, indexed.values("aa").toArray(),
                 "values should return all mapped entries");
 
         // remove second
@@ -245,7 +245,7 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         assertNotNull(indexed.get("aa"));
         assertTrue(indexed.contains("aa"));
         assertFalse(indexed.contains("aA"));
-        assertUnorderedArrayEquals(new String[] { "aa" }, indexed.values("aa").toArray(),
+        ArrayTestUtils.assertUnorderedArrayEquals(new String[] { "aa" }, indexed.values("aa").toArray(),
                 "values should return all mapped entries");
 
         // try removing same again
@@ -255,7 +255,7 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         assertNotNull(indexed.get("aa"));
         assertTrue(indexed.contains("aa"));
         assertFalse(indexed.contains("aA"));
-        assertUnorderedArrayEquals(new String[] { "aa" }, indexed.values("aa").toArray(),
+        ArrayTestUtils.assertUnorderedArrayEquals(new String[] { "aa" }, indexed.values("aa").toArray(),
                 "values should return all mapped entries");
 
         // remove last

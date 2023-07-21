@@ -602,7 +602,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     @Test
     public void testCollectionCheckRolesBasics() throws Exception {
-        AbstractCollectionTest.checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
+        checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
     }
 
     // tests begin here.  Each test adds a little bit of tested functionality.

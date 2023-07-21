@@ -21,12 +21,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionUtils;
@@ -170,6 +173,11 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
         return new BagIterator<>(this);
     }
 
+    @Override
+    public Spliterator<E> spliterator() {
+        return new BagSpliterator<>(this);
+    }
+
     /**
      * Inner class iterator for the Bag.
      */
@@ -232,6 +240,81 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
             }
             parent.size--;
             canRemove = false;
+        }
+    }
+
+    /**
+     * Inner class iterator for the Bag.
+     */
+    static class BagSpliterator<E> implements Spliterator<E> {
+        private final AbstractMapBag<E> parent;
+        private final int mods;
+        private long estimateSize;
+        private final Spliterator<Map.Entry<E, MutableInteger>> entrySpliterator;
+        private E currentKey;
+        private int itemCount;
+
+        /**
+         * Constructor.
+         *
+         * @param parent the parent bag
+         */
+        BagSpliterator(final AbstractMapBag<E> parent) {
+            this.parent = parent;
+            this.entrySpliterator = parent.map.entrySet().spliterator();
+            this.mods = parent.modCount;
+            this.estimateSize = parent.size;
+        }
+
+        BagSpliterator(final AbstractMapBag<E> parent, final Spliterator<Entry<E, MutableInteger>> split, final long estimateSize) {
+            this.parent = parent;
+            this.entrySpliterator = split;
+            this.mods = parent.modCount;
+            this.estimateSize = estimateSize;
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super E> action) {
+            if (parent.modCount != mods) {
+                throw new ConcurrentModificationException();
+            }
+            if (itemCount == 0 && !entrySpliterator.tryAdvance(this::applyEntry)) {
+                return false;
+            }
+            itemCount--;
+            action.accept(currentKey);
+            return true;
+        }
+
+        private void applyEntry(final Entry<E, MutableInteger> entry) {
+            currentKey = entry.getKey();
+            itemCount = entry.getValue().value;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            if (parent.modCount != mods) {
+                throw new ConcurrentModificationException();
+            }
+            final Spliterator<Entry<E, MutableInteger>> split = entrySpliterator.trySplit();
+            if (split == null)
+                return null;
+            return new BagSpliterator<>(parent, split, estimateSize >>>= 1);
+        }
+
+        @Override
+        public long estimateSize() {
+            return estimateSize;
+        }
+
+        @Override
+        public int characteristics() {
+            return entrySpliterator.characteristics() & ~(Spliterator.DISTINCT | Spliterator.SUBSIZED);
+        }
+
+        @Override
+        public Comparator<? super E> getComparator() {
+            return null;
         }
     }
 

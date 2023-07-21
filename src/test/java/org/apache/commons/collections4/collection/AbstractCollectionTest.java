@@ -20,19 +20,18 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.ArrayTestUtils;
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.spliterators.SpliteratorTestFixture;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1167,7 +1166,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         a = getCollection().toArray();
 
         if (getIterationBehaviour() == IterationBehaviour.UNORDERED) {
-            assertUnorderedArrayEquals(array, a, "toArray(Object[]) and toArray()");
+            ArrayTestUtils.assertUnorderedArrayEquals(array, a, "toArray(Object[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array), Arrays.asList(a), "toArrays should be equal");
         }
@@ -1191,46 +1190,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 "toArray(Object[]) should return correct array type");
 
         if (getIterationBehaviour() == IterationBehaviour.UNORDERED) {
-            assertUnorderedArrayEquals(array, getCollection().toArray(), "type-specific toArray(T[]) and toArray()");
+            ArrayTestUtils.assertUnorderedArrayEquals(array, getCollection().toArray(), "type-specific toArray(T[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array),
                     Arrays.asList(getCollection().toArray()),
                     "type-specific toArrays should be equal");
         }
         verify();
-    }
-
-    /**
-     * Assert the arrays contain the same elements, ignoring the order.
-     *
-     * <p>Note this does not test the arrays are deeply equal. Array elements are compared
-     * using {@link Object#equals(Object)}.
-     *
-     * @param a1 First array
-     * @param a2 Second array
-     * @param msg Failure message prefix
-     */
-    protected static void assertUnorderedArrayEquals(final Object[] a1, final Object[] a2, final String msg) {
-        assertEquals(a1.length, a2.length, () -> msg + ": length");
-        final int size = a1.length;
-        // Track values that have been matched once (and only once)
-        final boolean[] matched = new boolean[size];
-        NEXT_OBJECT:
-        for (final Object o : a1) {
-            for (int i = 0; i < size; i++) {
-                if (matched[i]) {
-                    // skip values already matched
-                    continue;
-                }
-                if (Objects.equals(o, a2[i])) {
-                    // values matched
-                    matched[i] = true;
-                    // continue to the outer loop
-                    continue NEXT_OBJECT;
-                }
-            }
-            fail(msg + ": array 2 does not have object: " + o);
-        }
     }
 
     /**
@@ -1399,6 +1365,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
+    public void testSpliteratorDetails() {
+        resetFull();
+        final boolean expectOrdered = getIterationBehaviour() != IterationBehaviour.UNORDERED;
+        new SpliteratorTestFixture<>(getCollection(), expectOrdered, collectionRole()).testAll();
+    }
+
+    @Test
     @Override
     public void testSerializeDeserializeThenCompare() throws Exception {
         Object obj = makeObject();
@@ -1470,56 +1443,11 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
-    public void testCollectionCheckRolesBasics() throws Exception {
+    public void testCollectionRolesBasics() throws Exception {
         checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
         if (collectionRole() != CollectionCommonsRole.INNER) {
             assertTrue(isTestSerialization());
         }
-    }
-
-    public static void checkRoleBasics(final Object object, final CollectionCommonsRole collectionRole, boolean testSerialization) throws Exception {
-        final String name = object.getClass().getSimpleName();
-        final String upperName = name.toUpperCase();
-        if (collectionRole != CollectionCommonsRole.INNER) {
-            if (upperName.contains("UNMODIFIABLE"))
-                assertEquals(CollectionCommonsRole.UNMODIFIABLE, collectionRole);
-            if (upperName.contains("TRANSFORM"))
-                assertEquals(CollectionCommonsRole.TRANSFORM, collectionRole);
-            if (upperName.contains("SYNCHRONIZED"))
-                assertEquals(CollectionCommonsRole.SYNCHRONIZED, collectionRole);
-            if (upperName.contains("PREDICATED"))
-                assertEquals(CollectionCommonsRole.PREDICATED, collectionRole);
-            if (upperName.contains("COMPOSITE"))
-                assertEquals(CollectionCommonsRole.COMPOSITE, collectionRole);
-        }
-
-        if (collectionRole != CollectionCommonsRole.INNER && testSerialization) {
-            assertTrue(object instanceof Serializable, name + " not Serializable");
-            checkSerialization(object);
-        }
-        if (collectionRole == CollectionCommonsRole.UNMODIFIABLE) {
-            assertTrue(object instanceof Unmodifiable, name + " not Unmodifiable");
-        }
-    }
-
-    static final Map<Long, Class<?>> serializationIds = new HashMap<>();
-
-    private static void checkSerialization(final Object object) throws Exception {
-        final Class<?> type = object.getClass();
-        final String typeName = type.getName();
-
-        final Field serialField = type.getDeclaredField("serialVersionUID");
-        assertNotNull(serialField, "serializable class " + typeName + " doesn't declare serialVersionUID");
-        assertEquals(Long.TYPE, serialField.getType(), "serializable class " + typeName + " has serialVersionUID with wrong type");
-        assertTrue(Modifier.isStatic(serialField.getModifiers()), "serializable class " + typeName + " has serialVersionUID which isn't static");
-        assertTrue(Modifier.isFinal(serialField.getModifiers()), "serializable class " + typeName + " has serialVersionUID which isn't final");
-
-        Long serialValue = (Long) ReflectionUtils.tryToReadFieldValue(serialField, object).get();
-        if (serializationIds.containsKey(serialValue) && serializationIds.get(serialValue) != type) {
-            fail("serializable class " + typeName + " has serialVersionUID "
-                    + serialValue + " which is a duplicate of " + serializationIds.get(serialValue).getName());
-        }
-        serializationIds.put(serialValue, type);
     }
 
     /**
