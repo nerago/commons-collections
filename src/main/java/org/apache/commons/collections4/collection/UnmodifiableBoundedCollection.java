@@ -19,11 +19,13 @@ package org.apache.commons.collections4.collection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BoundedCollection;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
+import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
 
 /**
  * {@link UnmodifiableBoundedCollection} decorates another
@@ -118,6 +120,11 @@ public final class UnmodifiableBoundedCollection<E> extends AbstractCollectionDe
     @Override
     public Iterator<E> iterator() {
         return UnmodifiableIterator.unmodifiableIterator(decorated().iterator());
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return new UnmodifiableSpliterator<>(decorated().spliterator());
     }
 
     @Override

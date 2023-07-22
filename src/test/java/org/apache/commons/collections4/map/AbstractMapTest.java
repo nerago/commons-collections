@@ -3023,7 +3023,12 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         @Override
         protected IterationBehaviour getIterationBehaviour(){
-            return AbstractMapTest.this.getIterationBehaviour();
+            // other collections can be sorted by the key which matches their iteration behaviour
+            // however values collection will still be sorted by key but which doesn't match the
+            // values returned in iteration.
+            return AbstractMapTest.this.getIterationBehaviour() == IterationBehaviour.FULLY_SORTED
+                    ? IterationBehaviour.STABLE_SEQUENCE
+                    : AbstractMapTest.this.getIterationBehaviour();
         }
 
         // TODO: should test that a remove on the values collection view

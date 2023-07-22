@@ -160,9 +160,10 @@ public class SpliteratorTestFixture<E> {
             assertEquals(results.size(), estimateSize, "SIZED spliterator reported incorrect size");
         }
         if (iterationBehaviour.shouldSpliteratorBeOrdered() && collectionRole != CollectionCommonsRole.INNER) {
-            assertTrue(reportORDERED, "Test framework thinks collection is ordered but spliterator doesn't report ORDERED");
+            assertTrue(reportORDERED, "Test framework thinks collection is " + iterationBehaviour + " but spliterator doesn't report ORDERED");
         } else if (iterationBehaviour.shouldSpliteratorBeSorted()) {
-            assertTrue(reportSORTED, "Test framework thinks collection is sorted but spliterator doesn't report SORTED");
+            assertTrue(reportSORTED, "Test framework thinks collection is should be sorted (" + iterationBehaviour + ") "
+                    + " but spliterator doesn't report SORTED");
         }
         if (reportSORTED) {
             assertTrue(reportORDERED, "A Spliterator that reports SORTED must also report ORDERED");

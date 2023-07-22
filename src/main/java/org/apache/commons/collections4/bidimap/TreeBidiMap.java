@@ -1496,7 +1496,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Spliterator<K> spliterator() {
-            return new ViewMapSpliterator<>(orderType, node -> node.key);
+            return new ViewSpliteratorKey(orderType);
         }
 
         @Override
@@ -1529,7 +1529,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Spliterator<V> spliterator() {
-            return new ViewMapSpliterator<>(orderType, node -> node.value);
+            return new ViewSpliteratorValue(orderType);
         }
 
         @Override
@@ -1592,7 +1592,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Spliterator<Entry<K, V>> spliterator() {
-            return new ViewMapSpliterator<>(orderType, Node::toUnmodifiableMapEntry);
+            return new ViewSpliteratorEntry(orderType);
         }
     }
 
@@ -1638,7 +1638,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Spliterator<Entry<V, K>> spliterator() {
-            return new ViewMapSpliterator<>(orderType, Node::toInverseUnmodifiableMapEntry);
+            return new ViewSpliteratorEntryInverse(orderType);
         }
     }
 
@@ -1876,12 +1876,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
     private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL };
 
-    class ViewMapSpliterator<E> implements Spliterator<E> {
+    abstract class ViewSpliterator<E> implements Spliterator<E> {
         private final int expectedModifications;
         /** Whether to return KEY or VALUE order. */
-        private final DataElement orderType;
-        private final Function<Node<K, V>, E> convertForAction;
-        private SplitState state;
+        protected final DataElement orderType;
+        protected SplitState state;
         /** The next node to be returned by the spliterator. */
         private Node<K, V> currentNode;
         /** The final node to be returned by the spliterator (just needed when split). */
@@ -1892,36 +1891,44 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Constructor.
          * @param orderType  the KEY or VALUE int for the order
          */
-        ViewMapSpliterator(final DataElement orderType, final Function<Node<K, V>, E> convertForAction) {
+        ViewSpliterator(final DataElement orderType) {
             this.expectedModifications = modifications;
             this.orderType = orderType;
-            this.convertForAction = convertForAction;
             this.state = SplitState.INITIAL;
             this.currentNode = rootNode[orderType.ordinal()];
             this.lastNode = greatestNode(currentNode, orderType);
             this.estimatedSize = nodeCount;
         }
 
-        private ViewMapSpliterator(DataElement orderType, Function<Node<K, V>, E> convertForAction, SplitState state,
+        private ViewSpliterator(DataElement orderType, SplitState state,
                                    Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
             this.expectedModifications = modifications;
             this.orderType = orderType;
-            this.convertForAction = convertForAction;
             this.state = state;
             this.currentNode = currentNode;
             this.lastNode = lastNode;
             this.estimatedSize = estimatedSize;
         }
 
+        protected abstract E convertForAction(Node<K,V> node);
+
+        protected abstract ViewSpliterator<E> newSplit(DataElement orderType, SplitState splitState, Node<K,V> left, Node<K,V> splitLast, int i);
+
         private void checkInit() {
             if (state != SplitState.READY && state != SplitState.READY_SPLIT) {
                 if (state == SplitState.INITIAL) {
+                    // our range is full tree, last already set, last already set correctly
                     currentNode = leastNode(currentNode, orderType);
                     state = SplitState.READY;
-                } else if (state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID) {
+                } else if (state == SplitState.SPLITTING_MID) {
+                    // our range is full spread under currentNode, last already set correctly
                     currentNode = leastNode(currentNode, orderType);
                     state = SplitState.READY_SPLIT;
+                } else if (state == SplitState.SPLITTING_RIGHT) {
+                    // our range is current node plus right subtree, nodes set by trySplit are good
+                    state = SplitState.READY_SPLIT;
                 } else if (state == SplitState.SPLITTING_LEFT) {
+                    // our range is current node plus a successor subtree
                     lastNode = greatestNode(lastNode, orderType);
                     state = SplitState.READY_SPLIT;
                 }
@@ -1936,7 +1943,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             checkInit();
             Node<K, V> current = currentNode;
             if (current != null) {
-                action.accept(convertForAction.apply(current));
+                action.accept(convertForAction(current));
                 if (current != lastNode)
                     currentNode = nextGreater(current, orderType);
                 else
@@ -1952,11 +1959,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             checkInit();
             Node<K, V> current = currentNode, last = lastNode;
             while (current != null) {
-                action.accept(convertForAction.apply(current));
-                if (current != last)
-                    current = nextGreater(current, orderType);
-                else
-                    current = null;
+                action.accept(convertForAction(current));
+                if (current == last)
+                    break;
+                current = nextGreater(current, orderType);
             }
             if (modifications != expectedModifications)
                 throw new ConcurrentModificationException();
@@ -1969,35 +1975,32 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             if (left == null || right == null)
                 return null;
 
-            ViewMapSpliterator<E> split = null;
+            ViewSpliterator<E> split = null;
             if (state == SplitState.INITIAL) {
                 // our range is full tree
                 Node<K, V> splitLast = nextSmaller(currentNode, orderType);
-                if (left.isLessThan(splitLast, orderType) && currentNode.isLessThan(lastNode, orderType)) {
+                if (left.isLessThanOrEqual(splitLast, orderType) && currentNode.isLessThanOrEqual(lastNode, orderType)) {
                     // give prefix split left subtree only
-                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_MID,
-                            left, splitLast, estimatedSize >>>= 1);
+                    split = newSplit(orderType, SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     // keep current node and right subtree
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_MID) {
                 // our range is full spread under currentNode
                 Node<K, V> splitLast = nextSmaller(currentNode, orderType);
-                if (left.isLessThan(splitLast, orderType) && currentNode.isLessThan(lastNode, orderType)) {
+                if (left.isLessThanOrEqual(splitLast, orderType) && currentNode.isLessThanOrEqual(lastNode, orderType)) {
                     // give prefix split left subtree only
-                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_MID,
-                            left, splitLast, estimatedSize >>>= 1);
+                    split = newSplit(orderType, SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     // keep current node and right subtree, keep last as-is
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_RIGHT) {
                 // our range is current node plus right subtree
                 Node<K, V> rightLeft = right.getLeft(orderType);
-                if (rightLeft != null && currentNode.isLessThan(rightLeft, orderType) && right.isLessThan(lastNode, orderType)) {
+                if (rightLeft != null && currentNode.isLessThanOrEqual(rightLeft, orderType) && right.isLessThanOrEqual(lastNode, orderType)) {
                     // give prefix current node plus right.left subtree
                     // note that rightLeft isn't actually the lastNode for that case, but the ref they need
-                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_LEFT,
-                            currentNode, rightLeft, estimatedSize >>>= 1);
+                    split = newSplit(orderType, SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
                     // remain should be right plus right.right subtree
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = right;
@@ -2006,10 +2009,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 // our range is current node plus a successor subtree
                 Node<K, V> passedSubTree = lastNode;
                 Node<K, V> subTreeLeft = passedSubTree.getLeft(orderType), subTreeRight = passedSubTree.getRight(orderType);
-                if (subTreeLeft != null && currentNode.isLessThan(subTreeLeft, orderType) && subTreeRight != null) {
+                if (subTreeLeft != null && currentNode.isLessThanOrEqual(subTreeLeft, orderType) && subTreeRight != null) {
                     // make prefix another left split
-                    split = new ViewMapSpliterator<>(orderType, convertForAction, SplitState.SPLITTING_LEFT,
-                            currentNode, subTreeLeft, estimatedSize >>>= 1);
+                    split = newSplit(orderType, SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
 
                     // make this a right split
                     state = SplitState.SPLITTING_RIGHT;
@@ -2024,21 +2026,165 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public Comparator<? super E> getComparator() {
-            return null; // null == natural order. but that might not work for entries?
-        }
+        public abstract Comparator<? super E> getComparator();
 
         @Override
         public long estimateSize() {
             return estimatedSize;
         }
+    }
+
+    class ViewSpliteratorKey extends ViewSpliterator<K> {
+        public ViewSpliteratorKey(DataElement orderType) {
+            super(orderType);
+        }
+
+        public ViewSpliteratorKey(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected K convertForAction(Node<K, V> node) {
+            return node.key;
+        }
+
+        @Override
+        protected ViewSpliterator<K> newSplit(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new ViewSpliteratorKey(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        public Comparator<? super K> getComparator() {
+            if (orderType == KEY)
+                return null; // natural order
+            else
+                throw new IllegalStateException();
+        }
 
         @Override
         public int characteristics() {
-            if (state == SplitState.READY_SPLIT || state == SplitState.SPLITTING_LEFT || state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID)
-                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED;
+            int characteristics = Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED;
+            if (state == SplitState.INITIAL || state == SplitState.READY) {
+                characteristics |= Spliterator.SIZED;
+            }
+            if (orderType == KEY) {
+                characteristics |= Spliterator.SORTED;
+            }
+            return characteristics;
+        }
+    }
+
+    class ViewSpliteratorValue extends ViewSpliterator<V> {
+        public ViewSpliteratorValue(DataElement orderType) {
+            super(orderType);
+        }
+
+        public ViewSpliteratorValue(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected V convertForAction(Node<K, V> node) {
+            return node.value;
+        }
+
+        @Override
+        protected ViewSpliterator<V> newSplit(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new ViewSpliteratorValue(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        public Comparator<? super V> getComparator() {
+            if (orderType == VALUE)
+                return null; // natural order
             else
-                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED | Spliterator.SIZED;
+                throw new IllegalStateException();
+        }
+
+        @Override
+        public int characteristics() {
+            int characteristics = Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED;
+            if (state == SplitState.INITIAL || state == SplitState.READY) {
+                characteristics |= Spliterator.SIZED;
+            }
+            if (orderType == VALUE) {
+                characteristics |= Spliterator.SORTED;
+            }
+            return characteristics;
+        }
+    }
+
+    class ViewSpliteratorEntry extends ViewSpliterator<Entry<K, V>> {
+        public ViewSpliteratorEntry(DataElement orderType) {
+            super(orderType);
+        }
+
+        public ViewSpliteratorEntry(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Entry<K, V> convertForAction(Node<K, V> node) {
+            return node.toUnmodifiableMapEntry();
+        }
+
+        @Override
+        protected ViewSpliterator<Entry<K, V>> newSplit(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new ViewSpliteratorEntry(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        public Comparator<? super Entry<K, V>> getComparator() {
+            if (orderType == KEY)
+                return Map.Entry.comparingByKey();
+            else
+                return Map.Entry.comparingByValue();
+        }
+
+        @Override
+        public int characteristics() {
+            int characteristics = Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED | Spliterator.SORTED;
+            if (state == SplitState.INITIAL || state == SplitState.READY) {
+                characteristics |= Spliterator.SIZED;
+            }
+            return characteristics;
+        }
+    }
+
+    class ViewSpliteratorEntryInverse extends ViewSpliterator<Entry<V, K>> {
+        public ViewSpliteratorEntryInverse(DataElement orderType) {
+            super(orderType);
+        }
+
+        public ViewSpliteratorEntryInverse(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            super(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected Entry<V, K> convertForAction(Node<K, V> node) {
+            return node.toInverseUnmodifiableMapEntry();
+        }
+
+        @Override
+        protected ViewSpliterator<Entry<V, K>> newSplit(DataElement orderType, SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+            return new ViewSpliteratorEntryInverse(orderType, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        public Comparator<? super Entry<V, K>> getComparator() {
+            if (orderType == VALUE)
+                return Map.Entry.comparingByKey();
+            else
+                return Map.Entry.comparingByValue();
+        }
+
+        @Override
+        public int characteristics() {
+            int characteristics = Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED | Spliterator.SORTED;
+            if (state == SplitState.INITIAL || state == SplitState.READY) {
+                characteristics |= Spliterator.SIZED;
+            }
+            return characteristics;
         }
     }
     
@@ -2200,12 +2346,12 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                     && parentNode[dataElement.ordinal()].rightNode[dataElement.ordinal()] == this;
         }
 
-        public boolean isLessThan(final Node<K, V> other, final DataElement dataElement) {
+        public boolean isLessThanOrEqual(final Node<K, V> other, final DataElement dataElement) {
             switch (dataElement) {
                 case KEY:
-                    return TreeBidiMap.compare(key, other.key) < 0;
+                    return TreeBidiMap.compare(key, other.key) <= 0;
                 case VALUE:
-                    return TreeBidiMap.compare(value, other.value) < 0;
+                    return TreeBidiMap.compare(value, other.value) <= 0;
                 default:
                     throw new IllegalArgumentException();
             }

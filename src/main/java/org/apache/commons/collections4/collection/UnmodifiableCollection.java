@@ -18,10 +18,12 @@ package org.apache.commons.collections4.collection;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
+import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
 
 /**
  * Decorates another {@link Collection} to ensure it can't be altered.
@@ -76,6 +78,11 @@ public final class UnmodifiableCollection<E>
     @Override
     public Iterator<E> iterator() {
         return UnmodifiableIterator.unmodifiableIterator(decorated().iterator());
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return new UnmodifiableSpliterator<>(decorated().spliterator());
     }
 
     @Override
