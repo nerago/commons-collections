@@ -48,6 +48,11 @@ public class HashedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4";
     }

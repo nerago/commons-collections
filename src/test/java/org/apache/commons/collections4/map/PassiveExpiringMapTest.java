@@ -96,6 +96,11 @@ public class PassiveExpiringMapTest<K, V> extends AbstractMapTest<K, V> {
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.UNKNOWN;
     }

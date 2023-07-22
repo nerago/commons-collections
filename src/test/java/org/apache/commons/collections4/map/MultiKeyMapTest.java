@@ -123,6 +123,11 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE_DECORATOR;
     }

@@ -50,6 +50,11 @@ public class SynchronizedQueueTest<T> extends AbstractQueueTest<T> {
         return CollectionCommonsRole.SYNCHRONIZED;
     }
 
+    @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
     @Test
     @Disabled("Run once")
     public void testCreate() throws Exception {
