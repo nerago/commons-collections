@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.AbstractHashedMap.HashEntry;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceEntry;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
@@ -75,6 +76,11 @@ public class ReferenceMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Override

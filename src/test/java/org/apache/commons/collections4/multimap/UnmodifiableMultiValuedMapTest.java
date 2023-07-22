@@ -86,7 +86,7 @@ public class UnmodifiableMultiValuedMapTest<K, V> extends AbstractMultiValuedMap
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Test

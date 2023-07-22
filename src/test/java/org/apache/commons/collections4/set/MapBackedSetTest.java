@@ -19,6 +19,7 @@ package org.apache.commons.collections4.set;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.HashedMap;
 
 /**
@@ -47,7 +48,12 @@ public class MapBackedSetTest<E> extends AbstractSetTest<E> {
         return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
-//    public void testCreate() throws Exception {
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
+    }
+
+    //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/MapBackedSet.emptyCollection.version4.obj");
 //        resetFull();

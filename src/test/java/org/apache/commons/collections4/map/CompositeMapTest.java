@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,6 +58,11 @@ public class CompositeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.COMPOSITE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
     @BeforeEach

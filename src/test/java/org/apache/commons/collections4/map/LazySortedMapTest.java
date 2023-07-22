@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,11 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.OTHER_DECORATOR;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     @Override

@@ -48,7 +48,7 @@ public class TransformedMultiValuedMapTest<K, V> extends AbstractMultiValuedMapT
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Override

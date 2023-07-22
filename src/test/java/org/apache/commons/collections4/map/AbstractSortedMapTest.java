@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.set.AbstractNavigableSetTest;
 import org.apache.commons.collections4.set.AbstractSortedSetTest;
 import org.junit.jupiter.api.*;
@@ -60,6 +61,11 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 
     protected boolean runSubMapTests() {
         return true;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     /**
@@ -189,6 +195,10 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         @Override
         public CollectionCommonsRole collectionRole() {
             return CollectionCommonsRole.INNER;
+        }
+        @Override
+        protected IterationBehaviour getIterationBehaviour() {
+            return IterationBehaviour.FULLY_SORTED;
         }
         @Override
         protected boolean runSubMapTests() {

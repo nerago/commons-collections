@@ -87,7 +87,7 @@ public class CollectionBagTest<T> extends AbstractCollectionBagTest<T> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Override

@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
 
@@ -64,6 +65,11 @@ public class PredicatedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.PREDICATED;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Test

@@ -591,14 +591,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     /**
      * Return a flag specifying the iteration behavior of the collection.
      * This is used to change the assertions used by specific tests.
-     * The default implementation returns 0 which indicates ordered iteration behavior.
      *
      * @return the iteration behavior
      * @see IterationBehaviour
      */
-    protected IterationBehaviour getIterationBehaviour(){
-        return IterationBehaviour.DEFAULT;
-    }
+    protected abstract IterationBehaviour getIterationBehaviour();
 
     @Test
     public void testCollectionCheckRolesBasics() throws Exception {

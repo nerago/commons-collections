@@ -77,6 +77,11 @@ public class UnmodifiableCollectionTest<E> extends AbstractCollectionTest<E> {
         return CollectionCommonsRole.UNMODIFIABLE;
     }
 
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
     @Test
     public void testUnmodifiable() {
         assertTrue(makeObject() instanceof Unmodifiable);

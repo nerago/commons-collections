@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,14 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SpliteratorTestFixture<E> {
     private final Collection<E> testCollection;
-    private final boolean expectOrdered;
+    private final IterationBehaviour iterationBehaviour;
     private final CollectionCommonsRole collectionRole;
     private List<E> resultsInOrder;
 
-    public SpliteratorTestFixture(final Collection<E> testCollection, final boolean expectOrdered,
+    public SpliteratorTestFixture(final Collection<E> testCollection,
+                                  final IterationBehaviour iterationBehaviour,
                                   final CollectionCommonsRole collectionRole) {
         this.testCollection = testCollection;
-        this.expectOrdered = expectOrdered;
+        this.iterationBehaviour = iterationBehaviour;
         this.collectionRole = collectionRole;
     }
 
@@ -157,8 +159,10 @@ public class SpliteratorTestFixture<E> {
         if (reportSIZED) {
             assertEquals(results.size(), estimateSize, "SIZED spliterator reported incorrect size");
         }
-        if (expectOrdered && collectionRole != CollectionCommonsRole.INNER) {
+        if (iterationBehaviour.shouldSpliteratorBeOrdered() && collectionRole != CollectionCommonsRole.INNER) {
             assertTrue(reportORDERED, "Test framework thinks collection is ordered but spliterator doesn't report ORDERED");
+        } else if (iterationBehaviour.shouldSpliteratorBeSorted()) {
+            assertTrue(reportSORTED, "Test framework thinks collection is sorted but spliterator doesn't report SORTED");
         }
         if (reportSORTED) {
             assertTrue(reportORDERED, "A Spliterator that reports SORTED must also report ORDERED");

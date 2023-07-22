@@ -18,6 +18,7 @@ package org.apache.commons.collections4.trie;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedMap;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.AbstractOrderedMapTest;
 
 /**
@@ -49,6 +50,11 @@ public class PatriciaTrie2Test<V> extends AbstractOrderedMapTest<String, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     @Override

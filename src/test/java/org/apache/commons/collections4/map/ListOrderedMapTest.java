@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.list.AbstractListTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -68,6 +68,11 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.OTHER_DECORATOR;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     @Test

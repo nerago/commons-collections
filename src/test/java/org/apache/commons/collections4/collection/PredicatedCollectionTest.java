@@ -79,6 +79,11 @@ public class PredicatedCollectionTest<E> extends AbstractCollectionTest<E> {
         return CollectionCommonsRole.PREDICATED;
     }
 
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
     protected Predicate<E> testPredicate =
         o -> o instanceof String;
 

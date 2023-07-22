@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,11 @@ public class MapBackedSet2Test<E> extends AbstractSetTest<E> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.OTHER_DECORATOR;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     @SuppressWarnings("unchecked")

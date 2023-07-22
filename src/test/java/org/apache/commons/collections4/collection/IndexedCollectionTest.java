@@ -106,9 +106,8 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
     }
 
     @Override
-    protected boolean skipSerializedCanonicalTests() {
-        // FIXME: support canonical tests
-        return true;
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Test

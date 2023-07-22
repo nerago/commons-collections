@@ -79,6 +79,11 @@ public class UnmodifiableBoundedCollectionTest<E> extends AbstractCollectionTest
     }
 
     @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
+    @Override
     protected boolean skipSerializedCanonicalTests() {
         return true;
     }

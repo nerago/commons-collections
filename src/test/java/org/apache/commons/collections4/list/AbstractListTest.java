@@ -39,6 +39,7 @@ import java.util.NoSuchElementException;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.*;
 
@@ -96,6 +97,11 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      */
     public boolean isAllowDuplicateValues() {
         return true;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     /**

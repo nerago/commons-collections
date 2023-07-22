@@ -47,7 +47,7 @@ public class HashBagTest<T> extends AbstractBagTest<T> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
 //    public void testCreate() throws Exception {

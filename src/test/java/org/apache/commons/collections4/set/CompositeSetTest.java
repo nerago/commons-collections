@@ -215,7 +215,7 @@ public class CompositeSetTest<E> extends AbstractSetTest<E> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Override

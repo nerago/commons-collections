@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * Test class for {@link CollectionSortedBag}.
@@ -60,6 +61,11 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionBagTest<T> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.OTHER_DECORATOR;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     @Override

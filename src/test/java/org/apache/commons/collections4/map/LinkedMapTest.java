@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.list.AbstractListTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,11 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     @Override

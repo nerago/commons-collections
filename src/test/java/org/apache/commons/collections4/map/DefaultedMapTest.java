@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.ConstantFactory;
 import org.junit.jupiter.api.Test;
 
@@ -151,7 +152,12 @@ public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
-//    public void testCreate() throws Exception {
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
+    //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk(
 //            (java.io.Serializable) map,

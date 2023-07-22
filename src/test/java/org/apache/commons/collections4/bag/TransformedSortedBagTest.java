@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.SortedBag;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +47,11 @@ public class TransformedSortedBagTest<T> extends AbstractSortedBagTest<T> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.TRANSFORM;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     @Test

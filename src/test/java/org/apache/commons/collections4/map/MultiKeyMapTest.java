@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.junit.jupiter.api.Test;
 
@@ -124,6 +125,11 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE_DECORATOR;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
     @Test

@@ -65,6 +65,11 @@ public class DualTransformedCollectionTest extends AbstractCollectionTest<Intege
     }
 
     @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
+    @Override
     public Collection<Integer> makeConfirmedCollection() {
         return new ArrayList<>();
     }

@@ -20,9 +20,8 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
-import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -105,6 +104,11 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNORDERED;
     }
 
     @Override

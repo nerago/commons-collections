@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -25,6 +24,7 @@ import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedMap;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -84,6 +84,11 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     @Override

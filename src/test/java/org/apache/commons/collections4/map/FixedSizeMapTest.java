@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * Extension of {@link AbstractMapTest} for exercising the {@link FixedSizeMap}
@@ -59,6 +60,11 @@ public class FixedSizeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
     @Override

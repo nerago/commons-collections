@@ -524,9 +524,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * @return the iteration behavior
      * @see IterationBehaviour
      */
-    protected IterationBehaviour getIterationBehaviour(){
-        return IterationBehaviour.DEFAULT;
-    }
+    protected abstract IterationBehaviour getIterationBehaviour();
 
     // Tests
         /**
@@ -1165,7 +1163,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         array = getCollection().toArray(ArrayUtils.EMPTY_OBJECT_ARRAY);
         a = getCollection().toArray();
 
-        if (getIterationBehaviour() == IterationBehaviour.UNORDERED) {
+        if (getIterationBehaviour().couldToArrayOrderVary()) {
             ArrayTestUtils.assertUnorderedArrayEquals(array, a, "toArray(Object[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array), Arrays.asList(a), "toArrays should be equal");
@@ -1189,7 +1187,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertEquals(a.getClass(), array.getClass(),
                 "toArray(Object[]) should return correct array type");
 
-        if (getIterationBehaviour() == IterationBehaviour.UNORDERED) {
+        if (getIterationBehaviour().couldToArrayOrderVary()) {
             ArrayTestUtils.assertUnorderedArrayEquals(array, getCollection().toArray(), "type-specific toArray(T[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array),
@@ -1367,8 +1365,8 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     @Test
     public void testSpliteratorDetails() {
         resetFull();
-        final boolean expectOrdered = getIterationBehaviour() != IterationBehaviour.UNORDERED;
-        new SpliteratorTestFixture<>(getCollection(), expectOrdered, collectionRole()).testAll();
+        new SpliteratorTestFixture<>(getCollection(), getIterationBehaviour(),
+                collectionRole()).testAll();
     }
 
     @Test
@@ -1512,7 +1510,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     @Test
     public void testSpliterator() {
-        if (getIterationBehaviour() == IterationBehaviour.UNORDERED)
+        if (getIterationBehaviour().couldSpliteratorOrderVary())
             return;
 
         resetEmpty();

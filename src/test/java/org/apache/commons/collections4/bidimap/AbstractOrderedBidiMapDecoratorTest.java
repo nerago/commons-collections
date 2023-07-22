@@ -22,6 +22,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedBidiMap;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * Test class for AbstractOrderedBidiMapDecorator.
@@ -72,6 +73,11 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     /**

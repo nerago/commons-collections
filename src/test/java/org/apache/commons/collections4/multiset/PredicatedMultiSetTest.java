@@ -63,7 +63,7 @@ public class PredicatedMultiSetTest<T> extends AbstractMultiSetTest<T> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Override

@@ -27,6 +27,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -58,6 +59,11 @@ public class TransformedSortedSetTest<E> extends AbstractSortedSetTest<E> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.TRANSFORM;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Test

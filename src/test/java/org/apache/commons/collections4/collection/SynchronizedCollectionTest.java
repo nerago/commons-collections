@@ -59,6 +59,11 @@ public class SynchronizedCollectionTest<E> extends AbstractCollectionTest<E> {
         return CollectionCommonsRole.SYNCHRONIZED;
     }
 
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
     //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/SynchronizedCollection.emptyCollection.version4.obj");

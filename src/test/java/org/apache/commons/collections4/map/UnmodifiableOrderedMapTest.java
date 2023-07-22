@@ -25,6 +25,7 @@ import java.util.HashMap;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -62,6 +63,11 @@ public class UnmodifiableOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, 
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.UNMODIFIABLE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     @Override

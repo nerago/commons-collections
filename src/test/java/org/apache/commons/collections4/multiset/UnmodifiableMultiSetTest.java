@@ -79,7 +79,7 @@ public class UnmodifiableMultiSetTest<E> extends AbstractMultiSetTest<E> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Test

@@ -231,7 +231,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * @return the iteration behavior
      */
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.DEFAULT;
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
     @Test

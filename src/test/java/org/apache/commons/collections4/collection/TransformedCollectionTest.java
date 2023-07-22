@@ -67,6 +67,11 @@ public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
     }
 
     @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
+
+    @Override
     public Collection<Object> makeConfirmedCollection() {
         return new ArrayList<>();
     }

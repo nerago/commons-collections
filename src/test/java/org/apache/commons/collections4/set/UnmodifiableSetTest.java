@@ -88,7 +88,7 @@ public class UnmodifiableSetTest<E> extends AbstractSetTest<E> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
 //    public void testCreate() throws Exception {

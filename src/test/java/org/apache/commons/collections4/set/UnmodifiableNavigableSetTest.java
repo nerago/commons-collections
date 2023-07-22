@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -68,6 +69,11 @@ public class UnmodifiableNavigableSetTest<E> extends AbstractNavigableSetTest<E>
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.UNMODIFIABLE;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     @SuppressWarnings("unchecked")

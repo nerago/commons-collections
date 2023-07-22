@@ -325,7 +325,9 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
     @Test
     public void testBidiKeySetValuesOrder() {
         // Skip if collection is unordered
-        Assumptions.assumeFalse(getIterationBehaviour() == IterationBehaviour.UNORDERED);
+        if (getIterationBehaviour().couldIteratorOrdersVary()) {
+            return;
+        }
         resetFull();
         final Iterator<K> keys = map.keySet().iterator();
         final Iterator<V> values = map.values().iterator();

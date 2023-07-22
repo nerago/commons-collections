@@ -97,7 +97,7 @@ public class PassiveExpiringMapTest<K, V> extends AbstractMapTest<K, V> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.UNKNOWN;
     }
 
     @Override

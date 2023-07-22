@@ -80,6 +80,11 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
     }
 
     @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
+    }
+
+    @Override
     public Collection<E> makeConfirmedCollection() {
         return new HashSet<>();
     }

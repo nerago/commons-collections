@@ -29,6 +29,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +68,11 @@ public class PredicatedNavigableSetTest<E> extends AbstractNavigableSetTest<E> {
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.PREDICATED;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.FULLY_SORTED;
     }
 
     @Test

@@ -44,7 +44,7 @@ public class HashMultiSetTest<T> extends AbstractMultiSetTest<T> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.UNORDERED;
+        return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
     @Override

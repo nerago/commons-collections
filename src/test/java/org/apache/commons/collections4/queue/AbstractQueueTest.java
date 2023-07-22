@@ -32,6 +32,7 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -121,13 +122,18 @@ public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
     }
 
     /**
-     * Returns the {@link #collection} field cast to a {@link Queue}.
+     * Returns the collection field cast to a {@link Queue}.
      *
      * @return the collection field as a Queue
      */
     @Override
     public Queue<E> getCollection() {
         return (Queue<E>) super.getCollection();
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.STABLE_SEQUENCE;
     }
 
     /**

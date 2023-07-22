@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
@@ -267,6 +268,10 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         @Override
         public CollectionCommonsRole collectionRole() {
             return CollectionCommonsRole.INNER;
+        }
+        @Override
+        protected IterationBehaviour getIterationBehaviour() {
+            return IterationBehaviour.FULLY_SORTED;
         }
         @Override
         protected boolean runSubSetTests() {
