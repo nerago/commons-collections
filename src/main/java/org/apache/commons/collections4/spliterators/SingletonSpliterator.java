@@ -46,7 +46,7 @@ public class SingletonSpliterator<E> implements Spliterator<E> {
 
     @Override
     public long estimateSize() {
-        return 0;
+        return 1;
     }
 
     @Override

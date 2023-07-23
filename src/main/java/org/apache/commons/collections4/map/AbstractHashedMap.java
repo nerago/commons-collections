@@ -815,6 +815,19 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     }
 
     /**
+     * Creates an entry set spliterator.
+     * Subclasses can override this to return spliterator with different properties.
+     *
+     * @return the entrySet spliterator
+     */
+    protected Spliterator<Entry<K,V>> createEntrySetSpliterator() {
+        if (isEmpty()) {
+            return Spliterators.emptySpliterator();
+        }
+        return new HashSpliterator<>(this, entry -> entry, Spliterator.DISTINCT | Spliterator.SIZED);
+    }
+
+    /**
      * EntrySet implementation.
      *
      * @param <K> the type of the keys in the map
@@ -868,7 +881,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
 
         @Override
         public Spliterator<Entry<K, V>> spliterator() {
-            return new HashSpliterator<>(parent, entry -> entry, Spliterator.DISTINCT | Spliterator.SIZED);
+            return parent.createEntrySetSpliterator();
         }
     }
 
@@ -919,6 +932,19 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     }
 
     /**
+     * Creates a key set spliterator.
+     * Subclasses can override this to return spliterator with different properties.
+     *
+     * @return the keySet spliterator
+     */
+    protected Spliterator<K> createKeySetSpliterator() {
+        if (isEmpty()) {
+            return Spliterators.emptySpliterator();
+        }
+        return new HashSpliterator<>(this, HashEntry::getKey, Spliterator.DISTINCT | Spliterator.SIZED);
+    }
+
+    /**
      * KeySet implementation.
      *
      * @param <K> the type of elements maintained by this set
@@ -960,7 +986,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
 
         @Override
         public Spliterator<K> spliterator() {
-            return new HashSpliterator<>(parent, HashEntry::getKey, Spliterator.DISTINCT | Spliterator.SIZED);
+            return parent.createKeySetSpliterator();
         }
     }
 
@@ -1011,6 +1037,19 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
     }
 
     /**
+     * Creates a values spliterator.
+     * Subclasses can override this to return spliterator with different properties.
+     *
+     * @return the values spliterator
+     */
+    protected Spliterator<V> createValuesSpliterator() {
+        if (isEmpty()) {
+            return Spliterators.emptySpliterator();
+        }
+        return new HashSpliterator<>(this, HashEntry::getValue, Spliterator.SIZED);
+    }
+
+    /**
      * Values implementation.
      *
      * @param <V> the type of elements maintained by this collection
@@ -1045,7 +1084,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
 
         @Override
         public Spliterator<V> spliterator() {
-            return new HashSpliterator<>(parent, HashEntry::getValue, Spliterator.SIZED);
+            return parent.createValuesSpliterator();
         }
     }
 

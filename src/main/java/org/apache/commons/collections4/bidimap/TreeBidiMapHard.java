@@ -26,7 +26,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 
 /**
@@ -2345,16 +2344,15 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public int characteristics() {
-            if (state == SplitState.READY_SPLIT || state == SplitState.SPLITTING_LEFT || state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID)
-                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED;
-            else
-                return Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED | Spliterator.SIZED;
+            int characteristics = Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED;
+            if (state == SplitState.INITIAL || state == SplitState.READY) {
+                characteristics |= Spliterator.SIZED;
+            }
+            return characteristics;
         }
 
         @Override
-        public Comparator<? super E> getComparator() {
-            return null;
-        }
+        public abstract Comparator<? super E> getComparator();
     }
 
     private abstract class SpliteratorByKey<E> extends BaseSpliterator<E> {
@@ -2371,8 +2369,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 if (state == SplitState.INITIAL) {
                     currentNode = leastNodeKey(currentNode);
                     state = SplitState.READY;
-                } else if (state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID) {
+                } else if (state == SplitState.SPLITTING_MID) {
                     currentNode = leastNodeKey(currentNode);
+                    state = SplitState.READY_SPLIT;
+                } else if (state == SplitState.SPLITTING_RIGHT) {
                     state = SplitState.READY_SPLIT;
                 } else if (state == SplitState.SPLITTING_LEFT) {
                     lastNode = greatestNodeKey(lastNode);
@@ -2422,19 +2422,19 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             Spliterator<E> split = null;
             if (state == SplitState.INITIAL) {
                 Node<K, V> splitLast = nextSmallerKey(currentNode);
-                if (left.isKeyLessThan(splitLast) && currentNode.isKeyLessThan(lastNode)) {
+                if (left.isKeyLessThanOrEqual(splitLast) && currentNode.isKeyLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_MID) {
                 Node<K, V> splitLast = nextSmallerKey(currentNode);
-                if (left.isKeyLessThan(splitLast) && currentNode.isKeyLessThan(lastNode)) {
+                if (left.isKeyLessThanOrEqual(splitLast) && currentNode.isKeyLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_RIGHT) {
                 Node<K, V> rightLeft = right.keyLeftNode;
-                if (rightLeft != null && currentNode.isKeyLessThan(rightLeft) && right.isKeyLessThan(lastNode)) {
+                if (rightLeft != null && currentNode.isKeyLessThanOrEqual(rightLeft) && right.isKeyLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = right;
@@ -2442,7 +2442,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             } else if (state == SplitState.SPLITTING_LEFT) {
                 Node<K, V> passedSubTree = lastNode;
                 Node<K, V> subTreeLeft = passedSubTree.keyLeftNode, subTreeRight = passedSubTree.keyRightNode;
-                if (subTreeLeft != null && currentNode.isKeyLessThan(subTreeLeft) && subTreeRight != null) {
+                if (subTreeLeft != null && currentNode.isKeyLessThanOrEqual(subTreeLeft) && subTreeRight != null) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = passedSubTree;
@@ -2470,8 +2470,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 if (state == SplitState.INITIAL) {
                     currentNode = leastNodeValue(currentNode);
                     state = SplitState.READY;
-                } else if (state == SplitState.SPLITTING_RIGHT || state == SplitState.SPLITTING_MID) {
+                } else if (state == SplitState.SPLITTING_MID) {
                     currentNode = leastNodeValue(currentNode);
+                    state = SplitState.READY_SPLIT;
+                } else if (state == SplitState.SPLITTING_RIGHT) {
                     state = SplitState.READY_SPLIT;
                 } else if (state == SplitState.SPLITTING_LEFT) {
                     lastNode = greatestNodeValue(lastNode);
@@ -2521,19 +2523,19 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             Spliterator<E> split = null;
             if (state == SplitState.INITIAL) {
                 Node<K, V> splitLast = nextSmallerValue(currentNode);
-                if (left.isValueLessThan(splitLast) && currentNode.isValueLessThan(lastNode)) {
+                if (left.isValueLessThanOrEqual(splitLast) && currentNode.isValueLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_MID) {
                 Node<K, V> splitLast = nextSmallerValue(currentNode);
-                if (left.isValueLessThan(splitLast) && currentNode.isValueLessThan(lastNode)) {
+                if (left.isValueLessThanOrEqual(splitLast) && currentNode.isValueLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_RIGHT) {
                 Node<K, V> rightLeft = right.valueLeftNode;
-                if (rightLeft != null && currentNode.isValueLessThan(rightLeft) && right.isValueLessThan(lastNode)) {
+                if (rightLeft != null && currentNode.isValueLessThanOrEqual(rightLeft) && right.isValueLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = right;
@@ -2541,7 +2543,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             } else if (state == SplitState.SPLITTING_LEFT) {
                 Node<K, V> passedSubTree = lastNode;
                 Node<K, V> subTreeLeft = passedSubTree.valueLeftNode, subTreeRight = passedSubTree.valueRightNode;
-                if (subTreeLeft != null && currentNode.isValueLessThan(subTreeLeft) && subTreeRight != null) {
+                if (subTreeLeft != null && currentNode.isValueLessThanOrEqual(subTreeLeft) && subTreeRight != null) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = passedSubTree;
@@ -2555,7 +2557,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private class SpliteratorKeyByKey extends SpliteratorByKey<K> {
+    private final class SpliteratorKeyByKey extends SpliteratorByKey<K> {
         public SpliteratorKeyByKey() {
             super();
         }
@@ -2577,6 +2579,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public void forEachRemaining(Consumer<? super K> action) {
             forEachNode(node -> action.accept(node.key));
+        }
+
+        @Override
+        public Comparator<? super K> getComparator() {
+            return null;
+        }
+
+        @Override
+        public int characteristics() {
+            return super.characteristics() | Spliterator.SORTED;
         }
     }
 
@@ -2603,6 +2615,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public void forEachRemaining(Consumer<? super K> action) {
             forEachNode(node -> action.accept(node.key));
         }
+
+        @Override
+        public Comparator<? super K> getComparator() {
+            throw new IllegalStateException();
+        }
     }
 
     private class SpliteratorValueByKey extends SpliteratorByKey<V> {
@@ -2628,6 +2645,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public void forEachRemaining(Consumer<? super V> action) {
             forEachNode(node -> action.accept(node.value));
         }
+
+        @Override
+        public Comparator<? super V> getComparator() {
+            throw new IllegalStateException();
+        }
     }
 
     private class SpliteratorValueByValue extends SpliteratorByValue<V> {
@@ -2643,7 +2665,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         protected Spliterator<V> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
             return new SpliteratorValueByValue(state, currentNode, lastNode, estimatedSize);
         }
-        
+
         @Override
         public boolean tryAdvance(Consumer<? super V> action) {
             return tryAdvanceNode(node -> action.accept(node.value));
@@ -2652,6 +2674,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public void forEachRemaining(Consumer<? super V> action) {
             forEachNode(node -> action.accept(node.value));
+        }
+
+        @Override
+        public Comparator<? super V> getComparator() {
+            return null;
+        }
+
+        @Override
+        public int characteristics() {
+            return super.characteristics() | Spliterator.SORTED;
         }
     }
 
@@ -2683,6 +2715,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public Comparator<? super Entry<K, V>> getComparator() {
             return Entry.comparingByKey();
         }
+
+        @Override
+        public int characteristics() {
+            return super.characteristics() | Spliterator.SORTED;
+        }
     }
 
     private class SpliteratorEntryInvertedByValue extends SpliteratorByValue<Entry<V, K>> {
@@ -2712,6 +2749,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public Comparator<? super Entry<V, K>> getComparator() {
             return Entry.comparingByKey();
+        }
+
+        @Override
+        public int characteristics() {
+            return super.characteristics() | Spliterator.SORTED;
         }
     }
 
@@ -2838,12 +2880,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             throw new UnsupportedOperationException("Map.Entry.setValue is not supported");
         }
 
-        public boolean isKeyLessThan(Node<K, V> other) {
-            return compare(key, other.key) < 0;
+        public boolean isKeyLessThanOrEqual(Node<K, V> other) {
+            return compare(key, other.key) <= 0;
         }
 
-        public boolean isValueLessThan(Node<K, V> other) {
-            return compare(value, other.value) < 0;
+        public boolean isValueLessThanOrEqual(Node<K, V> other) {
+            return compare(value, other.value) <= 0;
         }
 
         /**

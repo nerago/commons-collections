@@ -20,6 +20,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
 
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMap;
@@ -613,4 +615,33 @@ public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> im
         }
     }
 
+    /**
+     * Creates an entry set spliterator.
+     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
+     */
+    @Override
+    protected Spliterator<Entry<K, V>> createEntrySetSpliterator() {
+        return Spliterators.spliterator(createEntrySetIterator(), size(),
+                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.DISTINCT);
+    }
+
+    /**
+     * Creates a key set spliterator.
+     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
+     */
+    @Override
+    protected Spliterator<K> createKeySetSpliterator() {
+        return Spliterators.spliterator(createKeySetIterator(), size(),
+                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.DISTINCT);
+    }
+
+    /**
+     * Creates a values spliterator.
+     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
+     */
+    @Override
+    protected Spliterator<V> createValuesSpliterator() {
+        return Spliterators.spliterator(createValuesIterator(), size(),
+                Spliterator.ORDERED | Spliterator.SIZED);
+    }
 }

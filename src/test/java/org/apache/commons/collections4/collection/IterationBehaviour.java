@@ -16,9 +16,7 @@ public enum IterationBehaviour {
     }
 
     public boolean shouldSpliteratorBeOrdered() {
-        return this == CONSISTENT_SEQUENCE_UNTIL_MODIFY
-                || this == STABLE_SEQUENCE
-                || this == FULLY_SORTED;
+        return this == STABLE_SEQUENCE || this == FULLY_SORTED;
     }
 
     public boolean shouldSpliteratorBeSorted() {
