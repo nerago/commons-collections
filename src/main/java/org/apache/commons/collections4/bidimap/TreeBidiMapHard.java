@@ -74,7 +74,7 @@ import java.util.function.Consumer;
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
         implements OrderedBidiMap<K, V>, Serializable {
 
-    private static final long serialVersionUID = 721969328361807L;
+    private static final long serialVersionUID = 3988147290952983358L;
 
     private transient Node<K, V> rootNodeKey;
     private transient Node<K, V> rootNodeValue;

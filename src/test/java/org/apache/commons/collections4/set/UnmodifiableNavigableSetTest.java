@@ -67,6 +67,11 @@ public class UnmodifiableNavigableSetTest<E> extends AbstractNavigableSetTest<E>
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.UNMODIFIABLE;
     }

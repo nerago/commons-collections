@@ -161,7 +161,7 @@ public class SpliteratorTestFixture<E> {
         if (iterationBehaviour.shouldSpliteratorBeOrdered() && collectionRole != CollectionCommonsRole.INNER) {
             assertTrue(reportORDERED, "Test framework thinks collection is " + iterationBehaviour + " but spliterator doesn't report ORDERED");
         } else if (iterationBehaviour.shouldSpliteratorBeSorted()) {
-            assertTrue(reportSORTED, "Test framework thinks collection is should be sorted (" + iterationBehaviour + ") "
+            assertTrue(reportSORTED, "Test framework thinks collection should be sorted (" + iterationBehaviour + ") "
                     + " but spliterator doesn't report SORTED");
         }
         if (reportSORTED) {
