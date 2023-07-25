@@ -32,6 +32,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.Spliterator;
 
 import org.apache.commons.collections4.OrderedMapIterator;
 
@@ -142,7 +143,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
-        if (compareKeys(key, found.key)) {
+        if (equalKeys(key, found.key)) {
             if (found.isEmpty()) { // <- must be the root
                 incrementSize();
             } else {
@@ -189,10 +190,12 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         TrieEntry<K, V> current = root.left;
         TrieEntry<K, V> path = root;
         while (true) {
-            if (current.bitIndex >= entry.bitIndex
-                    || current.bitIndex <= path.bitIndex) {
+            // find a point where entry goes under
+            // or a point where we've hit a loopback
+            if (current.bitIndex >= entry.bitIndex || current.bitIndex <= path.bitIndex) {
                 entry.predecessor = entry;
 
+                // current always gets pushed down "under" new entry
                 if (!isBitSet(entry.key, entry.bitIndex, lengthInBits)) {
                     entry.left = entry;
                     entry.right = current;
@@ -201,12 +204,16 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                     entry.right = entry;
                 }
 
+                // parent is set to node we navigated via
                 entry.parent = path;
+
+                // if current actually belongs deeper than new entry set its parent
                 if (current.bitIndex >= entry.bitIndex) {
                     current.parent = entry;
                 }
 
-                // if we inserted an uplink, set the predecessor on it
+                // [[if we inserted an uplink, set the predecessor on it]]
+                // if we've hit a loop
                 if (current.bitIndex <= path.bitIndex) {
                     current.predecessor = entry;
                 }
@@ -243,7 +250,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      * <p>
      * This may throw ClassCastException if the object is not of type K.
      */
-    TrieEntry<K, V> getEntry(final Object k) {
+     protected TrieEntry<K, V> getEntry(final Object k) {
         final K key = castKey(k);
         if (key == null) {
             return null;
@@ -251,7 +258,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
         final int lengthInBits = lengthInBits(key);
         final TrieEntry<K, V> entry = getNearestEntryForKey(key, lengthInBits);
-        return !entry.isEmpty() && compareKeys(key, entry.key) ? entry : null;
+        return !entry.isEmpty() && equalKeys(key, entry.key) ? entry : null;
     }
 
     /**
@@ -373,7 +380,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         final K key = castKey(k);
         final int lengthInBits = lengthInBits(key);
         final TrieEntry<K, V> entry = getNearestEntryForKey(key, lengthInBits);
-        return !entry.isEmpty() && compareKeys(key, entry.key);
+        return !entry.isEmpty() && equalKeys(key, entry.key);
     }
 
     @Override
@@ -417,7 +424,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         TrieEntry<K, V> path = root;
         while (true) {
             if (current.bitIndex <= path.bitIndex) {
-                if (!current.isEmpty() && compareKeys(key, current.key)) {
+                if (!current.isEmpty() && equalKeys(key, current.key)) {
                     return removeEntry(current);
                 }
                 return null;
@@ -891,7 +898,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
-        if (compareKeys(key, found.key)) {
+        if (equalKeys(key, found.key)) {
             return nextEntry(found);
         }
 
@@ -927,6 +934,14 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      * than or equal to the given key, or null if there is no such key.
      */
     TrieEntry<K, V> ceilingEntry(final K key) {
+        TrieEntry<K, V> a = ceilingEntry0(key);
+        TrieEntry<K, V> b = ceilingEntry2(key);
+       // assert a == b;
+        TrieEntry<K, V> c = ceilingEntry2(key);
+        return a;
+    }
+
+    TrieEntry<K, V> ceilingEntry0(final K key) {
         // Basically:
         // Follow the steps of adding an entry, but instead...
         //
@@ -955,7 +970,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
-        if (compareKeys(key, found.key)) {
+        if (equalKeys(key, found.key)) {
             return found;
         }
 
@@ -983,6 +998,104 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         throw new IllegalStateException("invalid lookup: " + key);
     }
 
+    TrieEntry<K, V> ceilingEntry2(final K key) {
+        final int lengthInBits = lengthInBits(key);
+
+        if (lengthInBits == 0) {
+            if (!root.isEmpty()) {
+                return root;
+            }
+            return firstEntry();
+        }
+
+        TrieEntry<K, V> current = root.left;
+        TrieEntry<K, V> path = root;
+        while (true) {
+            int currentBitIndex = bitIndex(key, current.key);
+            if (KeyAnalyzer.isEqualBitKey(currentBitIndex)) {
+                return current;
+            }
+
+            if (currentBitIndex == current.bitIndex) {
+                boolean keyBit = isBitSet(key, current.bitIndex, lengthInBits);
+                boolean curBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
+                assert curBit != keyBit;
+                // if the difference is at our current index then we know this bit specifically is different
+                if (!isBitSet(key, currentBitIndex, lengthInBits)) {
+                    // zero bit on key means one on current and thus current>key
+                    if (isValidUplink(current.left, current)) {
+                        // no exact match exists
+                        // our current is slightly greater than the target key
+                        return current;
+                    }
+                    path = current;
+                    current = current.left;
+                } else {
+                    if (isValidUplink(current.right, current)) {
+                        // no exact match exists
+                        // our current is slightly lower than the target
+                        return nextEntry(current);
+                    }
+                    path = current;
+                    current = current.right;
+                }
+            } else if (currentBitIndex > current.bitIndex) {
+                boolean keyXBit = isBitSet(key, current.bitIndex, lengthInBits);
+                boolean curXBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
+                assert keyXBit == curXBit;
+
+                boolean keyDBit = isBitSet(key, currentBitIndex, lengthInBits);
+                boolean curDBit = isBitSet(current.key, currentBitIndex, lengthInBits(current.key));
+                assert keyDBit != curDBit;
+
+                if (!keyDBit) {
+                    // key is lower than current
+//                    static boolean isValidUplink(final TrieEntry<?, ?> next, final TrieEntry<?, ?> from) {
+//                        return next != null && next.bitIndex <= from.bitIndex && !next.isEmpty();
+//                    }
+//                    if (isValidUplink(start.predecessor.left, start.predecessor)) {
+//                    if (isValidUplink(current.left, current)) {
+// //                        return current.left != null && current.left.bitIndex <= current.bitIndex && !current.left.isEmpty();
+                    if (isValidUplink(current.left, current)) {
+                        // no exact match exists
+                        // our current is slightly greater than the target key
+                        return current;
+                    }
+                    path = current;
+                    current = current.left;
+                } else {
+                    if (isValidUplink(current.right, current)) {
+                        // no exact match exists
+                        // our current is slightly lower than the target
+                        return nextEntry(current);
+                    }
+                    path = current;
+                    current = current.right;
+                }
+            } else { // (currentBitIndex < current.bitIndex)
+                // this key would belong in tree before here, and we've gone too far
+                assert current != path;
+                assert current == path.left || current == path.right;
+                if (!isBitSet(key, currentBitIndex, lengthInBits)) {
+                    // target key has a zero, implying current's key is a one
+                    // thus current is higher than target
+                    return current;
+                } else {
+                    // target key has a one, implying current's key is a zero
+                    // thus current is lower than target
+//                    return nextEntry(current);
+                    if (isValidUplink(current.right, current)) {
+                        // no exact match exists
+                        // our current is slightly lower than the target
+                        return nextEntry(current);
+                    }
+                    path = current;
+                    current = current.right;
+                }
+            }
+        }
+    }
+
     /**
      * Returns a key-value mapping associated with the greatest key
      * strictly less than the given key, or null if there is no such key.
@@ -1007,12 +1120,14 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         //       functions to perform the search.)
         final int lengthInBits = lengthInBits(key);
 
+//        assert false;
+
         if (lengthInBits == 0) {
             return null; // there can never be anything before root.
         }
 
         final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
-        if (compareKeys(key, found.key)) {
+        if (equalKeys(key, found.key)) {
             return previousEntry(found);
         }
 
@@ -1055,7 +1170,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
-        if (compareKeys(key, found.key)) {
+        if (equalKeys(key, found.key)) {
             return found;
         }
 
@@ -1275,13 +1390,18 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         /** The parent of this entry. */
         protected TrieEntry<K, V> parent;
 
-        /** The left child of this entry. */
+        /** The left child of this entry.
+         * Defaults to self link. */
         protected TrieEntry<K, V> left;
 
         /** The right child of this entry. */
         protected TrieEntry<K, V> right;
 
-        /** The entry who uplinks to this entry. */
+        /** The entry who uplinks to this entry.
+         * What do you mean by that.
+         * Defaults to self link.
+         * Generally points to node that this node replaced in the tree.
+         * */
         protected TrieEntry<K, V> predecessor;
 
         public TrieEntry(final K key, final V value, final int bitIndex) {
@@ -1388,6 +1508,11 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
             return new EntryIterator();
+        }
+
+        @Override
+        public Spliterator<Entry<K, V>> spliterator() {
+            return super.spliterator();
         }
 
         @Override
@@ -1979,12 +2104,16 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
             if (fromKey == null) {
                 first = firstEntry();
             } else {
+                System.out.println("range iterator ceilingEntryA " + fromKey);
                 first = ceilingEntry(fromKey);
+                System.out.println("range iterator ceilingEntryA " + fromKey + " = " + (first != null ? first.key : "NUL"));
             }
 
             TrieEntry<K, V> last = null;
             if (toKey != null) {
+                System.out.println("range iterator ceilingEntryB " + toKey);
                 last = ceilingEntry(toKey);
+                System.out.println("range iterator ceilingEntryB " + toKey + " = " + (last != null ? last.key : "NUL"));
             }
 
             return new EntryIterator(first, last);

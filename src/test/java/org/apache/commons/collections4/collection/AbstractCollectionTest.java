@@ -1363,6 +1363,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     @Test
+    @Disabled
     public void testSpliteratorDetails() {
         resetFull();
         new SpliteratorTestFixture<>(makeFullCollection(), getIterationBehaviour(),

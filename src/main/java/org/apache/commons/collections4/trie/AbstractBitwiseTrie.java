@@ -121,7 +121,7 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
     /**
      * A utility method for calling {@link KeyAnalyzer#compare(Object, Object)}
      */
-    final boolean compareKeys(final K key, final K other) {
+    final boolean equalKeys(final K key, final K other) {
         if (key == null) {
             return other == null;
         }

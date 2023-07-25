@@ -70,6 +70,17 @@ public class PatriciaTrieTest<V> extends AbstractSortedMapTest<String, V> {
         return CollectionCommonsRole.CONCRETE;
     }
 
+//    @Override
+//    public String[] getSampleKeys() {
+//        return new String[] {
+//                "blah", "foo", "bar", "baz", "tmp", "gosh", "golly", "gee",
+//                "hello", "goodbye", "we'll", "see", "you", "all", "again",
+//                "key",
+//                "key2",
+//                ""
+//        };
+//    }
+
     @Test
     public void testPrefixMap() {
         final PatriciaTrie<String> trie = new PatriciaTrie<>();
