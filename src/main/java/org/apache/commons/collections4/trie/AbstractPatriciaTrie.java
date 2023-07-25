@@ -935,9 +935,9 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      */
     TrieEntry<K, V> ceilingEntry(final K key) {
         TrieEntry<K, V> a = ceilingEntry0(key);
-        TrieEntry<K, V> b = ceilingEntry2(key);
+        TrieEntry<K, V> b = ceilingEntry3(key);
        // assert a == b;
-        TrieEntry<K, V> c = ceilingEntry2(key);
+        TrieEntry<K, V> c = ceilingEntry3(key);
         return a;
     }
 
@@ -998,10 +998,11 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         throw new IllegalStateException("invalid lookup: " + key);
     }
 
-    TrieEntry<K, V> ceilingEntry2(final K key) {
+    TrieEntry<K, V> ceilingEntry3(final K key) {
         final int lengthInBits = lengthInBits(key);
 
         if (lengthInBits == 0) {
+            System.out.println("ceilingEntry2 null");
             if (!root.isEmpty()) {
                 return root;
             }
@@ -1013,17 +1014,21 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         while (true) {
             int currentBitIndex = bitIndex(key, current.key);
             if (KeyAnalyzer.isEqualBitKey(currentBitIndex)) {
+                System.out.println("ceilingEntry2 equal");
                 return current;
             }
 
             if (currentBitIndex == current.bitIndex) {
+                System.out.println("ceilingEntry2 bitindex ==");
                 boolean keyBit = isBitSet(key, current.bitIndex, lengthInBits);
                 boolean curBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
                 assert curBit != keyBit;
                 // if the difference is at our current index then we know this bit specifically is different
                 if (!isBitSet(key, currentBitIndex, lengthInBits)) {
+                    System.out.println("ceilingEntry2 bitindex ==, current>key");
                     // zero bit on key means one on current and thus current>key
                     if (isValidUplink(current.left, current)) {
+                        System.out.println("ceilingEntry2 bitindex ==, current>key, validUplink");
                         // no exact match exists
                         // our current is slightly greater than the target key
                         return current;
@@ -1031,7 +1036,9 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                     path = current;
                     current = current.left;
                 } else {
+                    System.out.println("ceilingEntry2 bitindex ==, current<key");
                     if (isValidUplink(current.right, current)) {
+                        System.out.println("ceilingEntry2 bitindex ==, current<key, validUplink");
                         // no exact match exists
                         // our current is slightly lower than the target
                         return nextEntry(current);
@@ -1040,6 +1047,112 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                     current = current.right;
                 }
             } else if (currentBitIndex > current.bitIndex) {
+                System.out.println("ceilingEntry2 bitindex > current");
+                boolean keyXBit = isBitSet(key, current.bitIndex, lengthInBits);
+                boolean curXBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
+                assert keyXBit == curXBit;
+
+                boolean keyDBit = isBitSet(key, currentBitIndex, lengthInBits);
+                boolean curDBit = isBitSet(current.key, currentBitIndex, lengthInBits(current.key));
+                assert keyDBit != curDBit;
+
+                if (!keyDBit && isValidUplink(current.left, current)) {
+                    System.out.println("ceilingEntry2 bitindex > current, target < current, uplink");
+                    // no exact match exists
+                    // our current is slightly greater than the target key
+                    return current;
+                } else if (keyDBit && isValidUplink(current.right, current)) {
+                    System.out.println("ceilingEntry2 bitindex > current, target > current, uplink");
+                    // no exact match exists
+                    // our current is slightly lower than the target
+                    return nextEntry(current);
+                } else if (!keyXBit) {
+                    System.out.println("ceilingEntry2 bitindex > current, follow zero path");
+                    path = current;
+                    current = current.left;
+                } else {
+                    System.out.println("ceilingEntry2 bitindex > current, follow one path");
+                    path = current;
+                    current = current.right;
+                }
+            } else { // (currentBitIndex < current.bitIndex)
+                // this key would belong in tree before here, and we've gone too far
+                System.out.println("ceilingEntry2 bitindex < current");
+                assert current != path;
+                assert current == path.left || current == path.right;
+                if (!isBitSet(key, currentBitIndex, lengthInBits)) {
+                    System.out.println("ceilingEntry2 bitindex < current, zero bit");
+                    // target key has a zero, implying current's key is a one
+                    // thus current is higher than target
+                    return current;
+                } else {
+                    System.out.println("ceilingEntry2 bitindex < current, one bit");
+                    // target key has a one, implying current's key is a zero
+                    // thus current is lower than target
+//                    return nextEntry(current);
+                    if (isValidUplink(current.right, current)) {
+                        System.out.println("ceilingEntry2 bitindex < current, one bit, valid uplink");
+                        // no exact match exists
+                        // our current is slightly lower than the target
+                        return nextEntry(current);
+                    }
+                    path = current;
+                    current = current.right;
+                }
+            }
+        }
+    }
+
+    TrieEntry<K, V> ceilingEntry2(final K key) {
+        final int lengthInBits = lengthInBits(key);
+
+        if (lengthInBits == 0) {
+            System.out.println("ceilingEntry2 null");
+            if (!root.isEmpty()) {
+                return root;
+            }
+            return firstEntry();
+        }
+
+        TrieEntry<K, V> current = root.left;
+        TrieEntry<K, V> path = root;
+        while (true) {
+            int currentBitIndex = bitIndex(key, current.key);
+            if (KeyAnalyzer.isEqualBitKey(currentBitIndex)) {
+                System.out.println("ceilingEntry2 equal");
+                return current;
+            }
+
+            if (currentBitIndex == current.bitIndex) {
+                System.out.println("ceilingEntry2 bitindex ==");
+                boolean keyBit = isBitSet(key, current.bitIndex, lengthInBits);
+                boolean curBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
+                assert curBit != keyBit;
+                // if the difference is at our current index then we know this bit specifically is different
+                if (!isBitSet(key, currentBitIndex, lengthInBits)) {
+                    System.out.println("ceilingEntry2 bitindex ==, current>key");
+                    // zero bit on key means one on current and thus current>key
+                    if (isValidUplink(current.left, current)) {
+                        System.out.println("ceilingEntry2 bitindex ==, current>key, validUplink");
+                        // no exact match exists
+                        // our current is slightly greater than the target key
+                        return current;
+                    }
+                    path = current;
+                    current = current.left;
+                } else {
+                    System.out.println("ceilingEntry2 bitindex ==, current<key");
+                    if (isValidUplink(current.right, current)) {
+                        System.out.println("ceilingEntry2 bitindex ==, current<key, validUplink");
+                        // no exact match exists
+                        // our current is slightly lower than the target
+                        return nextEntry(current);
+                    }
+                    path = current;
+                    current = current.right;
+                }
+            } else if (currentBitIndex > current.bitIndex) {
+                System.out.println("ceilingEntry2 bitindex > current");
                 boolean keyXBit = isBitSet(key, current.bitIndex, lengthInBits);
                 boolean curXBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
                 assert keyXBit == curXBit;
@@ -1049,14 +1162,10 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                 assert keyDBit != curDBit;
 
                 if (!keyDBit) {
+                    System.out.println("ceilingEntry2 bitindex > current, zero bit");
                     // key is lower than current
-//                    static boolean isValidUplink(final TrieEntry<?, ?> next, final TrieEntry<?, ?> from) {
-//                        return next != null && next.bitIndex <= from.bitIndex && !next.isEmpty();
-//                    }
-//                    if (isValidUplink(start.predecessor.left, start.predecessor)) {
-//                    if (isValidUplink(current.left, current)) {
-// //                        return current.left != null && current.left.bitIndex <= current.bitIndex && !current.left.isEmpty();
                     if (isValidUplink(current.left, current)) {
+                        System.out.println("ceilingEntry2 bitindex > current, zero bit, valid uplink");
                         // no exact match exists
                         // our current is slightly greater than the target key
                         return current;
@@ -1064,7 +1173,9 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                     path = current;
                     current = current.left;
                 } else {
+                    System.out.println("ceilingEntry2 bitindex > current, one bit");
                     if (isValidUplink(current.right, current)) {
+                        System.out.println("ceilingEntry2 bitindex > current, one bit, valid uplink");
                         // no exact match exists
                         // our current is slightly lower than the target
                         return nextEntry(current);
@@ -1074,17 +1185,21 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
                 }
             } else { // (currentBitIndex < current.bitIndex)
                 // this key would belong in tree before here, and we've gone too far
+                System.out.println("ceilingEntry2 bitindex < current");
                 assert current != path;
                 assert current == path.left || current == path.right;
                 if (!isBitSet(key, currentBitIndex, lengthInBits)) {
+                    System.out.println("ceilingEntry2 bitindex < current, zero bit");
                     // target key has a zero, implying current's key is a one
                     // thus current is higher than target
                     return current;
                 } else {
+                    System.out.println("ceilingEntry2 bitindex < current, one bit");
                     // target key has a one, implying current's key is a zero
                     // thus current is lower than target
 //                    return nextEntry(current);
                     if (isValidUplink(current.right, current)) {
+                        System.out.println("ceilingEntry2 bitindex < current, one bit, valid uplink");
                         // no exact match exists
                         // our current is slightly lower than the target
                         return nextEntry(current);
