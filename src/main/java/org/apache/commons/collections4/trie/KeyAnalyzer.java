@@ -33,19 +33,19 @@ import java.util.Comparator;
  * @param <K> the type of objects that may be compared by this analyzer
  * @since 4.0
  */
-public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
+public abstract class KeyAnalyzer<K extends Comparable<K>> implements Comparator<K>, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = -20497563720380683L;
 
     /**
-     * Returned by {@link #bitIndex(Object, int, int, Object, int, int)}
+     * Returned by {@link #bitIndex(Comparable, int, int, Comparable, int, int)}
      * if key's bits are all 0.
      */
     public static final int NULL_BIT_KEY = -1;
 
     /**
-     * Returned by {@link #bitIndex(Object, int, int, Object, int, int)} if key and found key are equal.
+     * Returned by {@link #bitIndex(Comparable, int, int, Comparable, int, int)} if key and found key are equal.
      * This is a very very specific case and shouldn't happen on a regular basis.
      */
     public static final int EQUAL_BIT_KEY = -2;
@@ -62,14 +62,14 @@ public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
     /**
      * Returns true if bitIndex is a {@link KeyAnalyzer#EQUAL_BIT_KEY}.
      */
-    static boolean isEqualBitKey(final int bitIndex) {
+    public static boolean isEqualBitKey(final int bitIndex) {
         return bitIndex == EQUAL_BIT_KEY;
     }
 
     /**
      * Returns true if bitIndex is a {@link KeyAnalyzer#NULL_BIT_KEY}.
      */
-    static boolean isNullBitKey(final int bitIndex) {
+    public static boolean isNullBitKey(final int bitIndex) {
         return bitIndex == NULL_BIT_KEY;
     }
 
@@ -77,7 +77,7 @@ public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
      * Returns true if the given bitIndex is valid.
      * Indices are considered valid if they're between 0 and {@link Integer#MAX_VALUE}
      */
-    static boolean isValidBitIndex(final int bitIndex) {
+    public static boolean isValidBitIndex(final int bitIndex) {
         return bitIndex >= 0;
     }
 
@@ -98,7 +98,7 @@ public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
     public abstract int lengthInBits(K key);
 
     /**
-     * Returns whether or not a bit is set.
+     * Returns whether a bit is set.
      *
      * @param key  the key to check, may not be null
      * @param bitIndex  the bit index to check
@@ -112,6 +112,12 @@ public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
      * Returns the n-th different bit between key and other. This starts the comparison in
      * key at 'offsetInBits' and goes for 'lengthInBits' bits, and compares to the other key starting
      * at 'otherOffsetInBits' and going for 'otherLengthInBits' bits.
+     * <p>
+     * Valid indexes returned will always be in range of 0..max(lengthInBits,otherLengthInBits)-1 and
+     * should be considered relative to the offset parameters.
+     * Can be tested with {@link #isValidBitIndex}.
+     * <p>
+     * Alternately {@link #NULL_BIT_KEY} can {@link #EQUAL_BIT_KEY} will be returned if no different bits found.
      *
      * @param key  the key to use
      * @param offsetInBits  the bit offset in the key
@@ -125,18 +131,40 @@ public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
                                  K other, int otherOffsetInBits, int otherLengthInBits);
 
     /**
-     * Determines whether or not the given prefix (from offset to length) is a prefix of the given key.
+     * Determines whether the given prefix (from offset to length) is a prefix of the given key.
      *
      * @param prefix  the prefix to check
-     * @param offsetInBits  the bit offset in the key
-     * @param lengthInBits  the maximum key length in bits to use
+     * @param prefixOffsetInBits  the bit offset in the prefix
+     * @param prefixLengthInBits  the maximum prefix length in bits to use
      * @param key  the key to check
      * @return {@code true} if this is a valid prefix for the given key
      */
-    public abstract boolean isPrefix(K prefix, int offsetInBits, int lengthInBits, K key);
+    public boolean isPrefix(final K prefix, final int prefixOffsetInBits, final int prefixLengthInBits, final K key) {
+        final int checkLengthInBits = Math.min(prefixLengthInBits, lengthInBits(key));
+        final int bitIndex = bitIndex(prefix, prefixOffsetInBits, prefixLengthInBits,
+                key, 0, checkLengthInBits);
+        return !KeyAnalyzer.isValidBitIndex(bitIndex);
+    }
+
+    /**
+     * Determines whether the given range (from offset to length) is the same in prefix and key.
+     *
+     * @param key             the key to check
+     * @param keyStartIndex   the bit offset in key to start checking
+     * @param keyEndIndex     the bit offset in key to finish checking
+     * @param other           the other key to check
+     * @param otherStartIndex the bit offset in other to start checking
+     * @param otherEndIndex   the bit offset in other to start checking
+     * @return {@code true} if this is a valid prefix for the given key
+     */
+    public boolean rangeEquals(final K key, final int keyStartIndex, final int keyEndIndex,
+                               final K other, final int otherStartIndex, final int otherEndIndex) {
+        final int bitIndex = bitIndex(key, keyStartIndex, keyEndIndex - keyStartIndex + 1,
+                other, otherStartIndex, otherEndIndex - otherStartIndex + 1);
+        return !KeyAnalyzer.isValidBitIndex(bitIndex);
+    }
 
     @Override
-    @SuppressWarnings("unchecked")
     public int compare(final K o1, final K o2) {
         if (o1 == null) {
             return o2 == null ? 0 : -1;
@@ -145,7 +173,6 @@ public abstract class KeyAnalyzer<K> implements Comparator<K>, Serializable {
             return 1;
         }
 
-        return ((Comparable<K>) o1).compareTo(o2);
+        return o1.compareTo(o2);
     }
-
 }

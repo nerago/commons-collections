@@ -16,43 +16,25 @@
  */
 package org.apache.commons.collections4.trie;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.SortedMap;
-
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.Trie;
-import org.apache.commons.collections4.map.AbstractSortedMapTest;
-import org.junit.jupiter.api.Test;
+import org.apache.commons.collections4.trie.analyzer.StringKeyAnalyzer;
+
+import java.util.SortedMap;
 
 /**
  * JUnit tests for the PatriciaTrie.
  *
  * @since 4.0
  */
-public class PatriciaTrieTest<V> extends AbstractPatriciaTrieTest<V> {
+public class NickTrieTest<V> extends AbstractPatriciaTrieTest<V> {
 
-    public PatriciaTrieTest() {
-        super(PatriciaTrieTest.class.getSimpleName());
+    public NickTrieTest() {
+        super(NickTrieTest.class.getSimpleName());
     }
 
     @Override
     public SortedMap<String, V> makeObject() {
-        return new PatriciaTrie<>();
+        return new NickTrie<>(new StringKeyAnalyzer());
     }
 
     @Override
@@ -74,22 +56,6 @@ public class PatriciaTrieTest<V> extends AbstractPatriciaTrieTest<V> {
     @Override
     public String getCompatibilityVersion() {
         return "4";
-    }
-
-//    public void testCreate() throws Exception {
-//        resetEmpty();
-//        writeExternalFormToDisk(
-//            (java.io.Serializable) map,
-//            "src/test/resources/data/test/PatriciaTrie.emptyCollection.version4.obj");
-//        resetFull();
-//        writeExternalFormToDisk(
-//            (java.io.Serializable) map,
-//            "src/test/resources/data/test/PatriciaTrie.fullCollection.version4.obj");
-//    }
-
-    @Test
-    public void checkKeyRangeStuff() {
-
     }
 
 }
