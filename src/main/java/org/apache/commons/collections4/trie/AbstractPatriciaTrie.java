@@ -934,11 +934,14 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      * than or equal to the given key, or null if there is no such key.
      */
     TrieEntry<K, V> ceilingEntry(final K key) {
+        TrieEntry<K, V> b = ceilingEntry5(key);
         TrieEntry<K, V> a = ceilingEntry0(key);
-        TrieEntry<K, V> b = ceilingEntry3(key);
-       // assert a == b;
-        TrieEntry<K, V> c = ceilingEntry3(key);
-        return a;
+        System.out.println("ceilingEntry " + a.key + " " + b.key);
+        assert a == b;
+//        TrieEntry<K, V> c = ceilingEntry4(key);
+        return a == b ? a : b;
+//        return c;
+//        return ceilingEntry3(key);
     }
 
     TrieEntry<K, V> ceilingEntry0(final K key) {
@@ -998,6 +1001,161 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         throw new IllegalStateException("invalid lookup: " + key);
     }
 
+    /**
+     * Returns a key-value mapping associated with the least key greater
+     * than or equal to the given key, or null if there is no such key.
+     */
+    TrieEntry<K, V> ceilingEntry5(final K key) {
+        final int keyLengthInBits = lengthInBits(key);
+
+
+        if (keyLengthInBits == 0) {
+            System.out.println("ceilingEntry5 null");
+            if (!root.isEmpty()) {
+                return root;
+            }
+            return firstEntry();
+        }
+
+        final KeyAnalyzer<? super K> keyAnalyzer = getKeyAnalyzer();
+        final int bitsPerElement = keyAnalyzer.bitsPerElement();
+
+        TrieEntry<K, V> current = root.left;
+        TrieEntry<K, V> path = root;
+        TrieEntry<K, V> low = root;
+        TrieEntry<K, V> high = null;
+
+        // wait until key plausibly matches
+        int bitIndex = keyAnalyzer.bitIndex(key, 0, keyLengthInBits, current.key, 0, keyAnalyzer.lengthInBits(current.key));
+        while (bitIndex < current.bitIndex || current.bitIndex > path.bitIndex) {
+            System.out.println("ceilingEntry5 " + bitIndex + " " + current.bitIndex);
+            if (KeyAnalyzer.isEqualBitKey(bitIndex)) {
+                System.out.println("ceilingEntry5 equal " + current.key);
+                return current;
+            }
+            path = current;
+            if (bitIndex < current.bitIndex) {
+                // differs earlier bit position means it can't be in tree
+                // we can assume key[bitIndex] != current[bitIndex]
+                if (!isBitSet(key, bitIndex, keyLengthInBits)) {
+                    // zero bit in key means one in current, thus key < current
+                    high = current;
+                    System.out.println("ceilingEntry5 A " + current.key);
+                } else {
+                    // one bit in key means zero in current, thus key > current
+                    low = current;
+                    System.out.println("ceilingEntry5 B " + current.key);
+                }
+                break;
+            } else {
+                // lets consider bitIndex split >>> current.bitIndex
+                // assume key[current.bitIndex] == current[current.bitIndex]
+                if (!isBitSet(key, current.bitIndex, keyLengthInBits)) {
+                    System.out.println("ceilingEntry5 C " + current.key);
+                    high = current;
+                    current = current.left;
+                } else {
+                    System.out.println("ceilingEntry5 D " + current.key);
+                    low = current;
+                    current = current.right;
+                }
+            }
+            int offset = (path.bitIndex / bitsPerElement) * bitsPerElement;
+            bitIndex = keyAnalyzer.bitIndex(
+                    key, offset, keyLengthInBits - offset,
+                    current.key, offset, keyAnalyzer.lengthInBits(current.key) - offset
+            );
+        }
+
+        if (high != null)
+            return high;
+        else
+            return nextEntry(low);
+    }
+
+    /**
+     * Returns a key-value mapping associated with the least key greater
+     * than or equal to the given key, or null if there is no such key.
+     */
+    TrieEntry<K, V> ceilingEntry4(final K key) {
+        final int keyLengthInBits = lengthInBits(key);
+
+        if (keyLengthInBits == 0) {
+            System.out.println("ceilingEntry4 null");
+            if (!root.isEmpty()) {
+                return root;
+            }
+            return firstEntry();
+        }
+
+        KeyAnalyzer<? super K> keyAnalyzer = getKeyAnalyzer();
+        boolean followedLeft = true;
+        TrieEntry<K, V> current = root.left;
+        TrieEntry<K, V> path = root;
+
+        // wait until key plausibly matches
+        int bitIndex = keyAnalyzer.bitIndex(key, 0, keyLengthInBits, current.key, 0, keyAnalyzer.lengthInBits(current.key));
+        while (bitIndex < current.bitIndex) {
+            if (KeyAnalyzer.isEqualBitKey(bitIndex)) {
+                System.out.println("ceilingEntry4 equal");
+                return current;
+            }
+            path = current;
+            if (!isBitSet(key, bitIndex, keyLengthInBits)) {
+                // zero bit means key < current
+                current = current.left;
+                followedLeft = true;
+            } else {
+                // one bit means key > current
+                current = current.right;
+                followedLeft = false;
+            }
+            bitIndex = keyAnalyzer.bitIndex(key, 0, keyLengthInBits, current.key, 0, keyAnalyzer.lengthInBits(current.key));
+        }
+
+        while (true) {
+            if (KeyAnalyzer.isEqualBitKey(bitIndex)) {
+                System.out.println("ceilingEntry4 equal");
+                return current;
+            } else if (current.bitIndex <= path.bitIndex) {
+                // hit an uplink (terminal path)
+                if (followedLeft)
+                    return path;
+                else
+                    return nextEntry(current);
+            } else if (bitIndex > current.bitIndex) {
+                // differs further down the path
+                if (!isBitSet(key, bitIndex, keyLengthInBits)) {
+                    // zero bit means key < current
+                    if (followedLeft)
+                        return path;
+                }
+            }
+            path = current;
+        }
+
+//        return keyAnalyzer.bitIndex(key, 0, lengthInBits(key), foundKey, 0, lengthInBits(foundKey));
+
+//
+//        while (true) {
+//
+//            // end of the road
+//            if (current.bitIndex <= path.bitIndex) {
+//                if (followedLeft)
+//                    return current;
+//            }
+//
+//            path = current;
+//            if (!isBitSet(key, current.bitIndex, lengthInBits)) {
+//                current = current.left;
+//                followedLeft = true;
+//            } else {
+//                current = current.right;
+//                followedLeft = false;
+//            }
+//        }
+    }
+
     TrieEntry<K, V> ceilingEntry3(final K key) {
         final int lengthInBits = lengthInBits(key);
 
@@ -1020,29 +1178,35 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
 
             if (currentBitIndex == current.bitIndex) {
                 System.out.println("ceilingEntry2 bitindex ==");
-                boolean keyBit = isBitSet(key, current.bitIndex, lengthInBits);
-                boolean curBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
-                assert curBit != keyBit;
+                boolean keyXBit = isBitSet(key, current.bitIndex, lengthInBits);
+                boolean curXBit = isBitSet(current.key, current.bitIndex, lengthInBits(current.key));
+                assert keyXBit != curXBit;
+
+                boolean keyDBit = isBitSet(key, currentBitIndex, lengthInBits);
+                boolean curDBit = isBitSet(current.key, currentBitIndex, lengthInBits(current.key));
+                assert keyDBit != curDBit;
+                assert keyDBit == keyXBit;
                 // if the difference is at our current index then we know this bit specifically is different
-                if (!isBitSet(key, currentBitIndex, lengthInBits)) {
-                    System.out.println("ceilingEntry2 bitindex ==, current>key");
+                if (!keyDBit && isValidUplink(current.left, current)) {
                     // zero bit on key means one on current and thus current>key
-                    if (isValidUplink(current.left, current)) {
-                        System.out.println("ceilingEntry2 bitindex ==, current>key, validUplink");
-                        // no exact match exists
-                        // our current is slightly greater than the target key
-                        return current;
-                    }
+                    System.out.println("ceilingEntry2 bitindex ==, current>key, validUplink");
+                    // no exact match exists
+                    // our current is slightly greater than the target key
+                    return current;
+                } else if (keyDBit && isValidUplink(current.right, current)) {
+                    // one bit on key means zero on current and thus current<key
+                    System.out.println("ceilingEntry2 bitindex ==, current<key, validUplink");
+                    // no exact match exists
+                    // our current is slightly lower than the target
+                    path = current;
+                    current = current.right;
+//                    return nextEntry(current);
+                } else if (!keyXBit) {
+                    System.out.println("ceilingEntry2 bitindex ==, follow zero path");
                     path = current;
                     current = current.left;
                 } else {
-                    System.out.println("ceilingEntry2 bitindex ==, current<key");
-                    if (isValidUplink(current.right, current)) {
-                        System.out.println("ceilingEntry2 bitindex ==, current<key, validUplink");
-                        // no exact match exists
-                        // our current is slightly lower than the target
-                        return nextEntry(current);
-                    }
+                    System.out.println("ceilingEntry2 bitindex ==, follow one path");
                     path = current;
                     current = current.right;
                 }
