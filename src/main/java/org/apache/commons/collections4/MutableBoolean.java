@@ -17,7 +17,18 @@
 package org.apache.commons.collections4;
 
 public class MutableBoolean {
-    public boolean flag = false;
+    /**
+     * The value of this mutable.
+     */
+    public boolean flag;
+
+    public MutableBoolean() {
+        this.flag = false;
+    }
+
+    public MutableBoolean(boolean flag) {
+        this.flag = flag;
+    }
 
     public void set(final boolean item) {
         this.flag = item;

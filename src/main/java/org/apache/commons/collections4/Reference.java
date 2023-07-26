@@ -21,10 +21,18 @@ package org.apache.commons.collections4;
  * argument list. An alternative would be to an Array with a length of
  * one (1) but that leads to compiler warnings. Computationally and memory
  * wise there's no difference (except for the need to load the
- * {@link Reference} Class but that happens only once). aaa
+ * {@link Reference} Class but that happens only once).
  */
-public class Reference<E> {
+public final class Reference<E> {
     public E item;
+
+    public Reference() {
+        this.item = null;
+    }
+
+    public Reference(E item) {
+        this.item = item;
+    }
 
     public void set(final E item) {
         this.item = item;
