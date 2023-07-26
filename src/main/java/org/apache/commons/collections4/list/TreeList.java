@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.function.*;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MutableInteger;
+import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.OrderedIterator;
 
 /**
@@ -309,7 +311,7 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
     @SuppressWarnings("unchecked")
     public boolean remove(Object object) {
         if (root != null) {
-            AVLNode.BoolHolder isRemoved = new AVLNode.BoolHolder();
+            MutableBoolean isRemoved = new MutableBoolean();
             root = root.remove((E) object, isRemoved);
             if (isRemoved.flag) {
                 size--;
@@ -343,7 +345,7 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
 
     @Override
     protected void removeRange(int fromIndex, int toIndex) {
-        root = root.removeRange(fromIndex, toIndex, new AVLNode.IntHolder());
+        root = root.removeRange(fromIndex, toIndex, new MutableInteger());
         size -= toIndex - fromIndex + 1;
     }
 
@@ -706,16 +708,12 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
             return balance();
         }
 
-        private static class BoolHolder {
-            boolean flag = false;
-        }
-
         /**
          * Removes the first node with a given value.
          *
          * @param removeValue the value to be found and removed.
          */
-        AVLNode<E> remove(final E removeValue, BoolHolder isRemoved) {
+        AVLNode<E> remove(final E removeValue, MutableBoolean isRemoved) {
             AVLNode<E> leftNode = getLeftSubTree();
             if (leftNode != null) {
                 setLeft(leftNode.remove(removeValue, isRemoved), leftNode.left);
@@ -746,16 +744,12 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
             return this;
         }
 
-        private static class IntHolder {
-            int value = 0;
-        }
-
-        public AVLNode<E> removeRange(final int fromIndex, final  int toIndex, final IntHolder parentPositionChange) {
+        public AVLNode<E> removeRange(final int fromIndex, final  int toIndex, final MutableInteger parentPositionChange) {
             final int fromRelativeToMe = fromIndex - relativePosition;
             final int toRelativeToMe = toIndex - relativePosition;
 
             if (fromRelativeToMe < 0 && !leftIsPrevious) {
-                final IntHolder positionChange = new IntHolder();
+                final MutableInteger positionChange = new MutableInteger();
                 setLeft(left.removeRange(fromRelativeToMe, toRelativeToMe, positionChange), left.left);
                 if (relativePosition > 0) {
                     relativePosition -= positionChange.value;
@@ -764,7 +758,7 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
             }
 
             if (toRelativeToMe > 0 && !rightIsNext) {
-                final IntHolder positionChange = new IntHolder();
+                final MutableInteger positionChange = new MutableInteger();
                 setRight(right.removeRange(fromRelativeToMe, toRelativeToMe, positionChange), right.right);
                 if (relativePosition < 0) {
                     relativePosition += positionChange.value;

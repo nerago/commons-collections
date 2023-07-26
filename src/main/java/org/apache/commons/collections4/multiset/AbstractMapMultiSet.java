@@ -27,8 +27,8 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
-import org.apache.commons.collections4.spliterators.AbstractSpliteratorDecorator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 /**
@@ -325,35 +325,6 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
             }
         }
         return oldCount;
-    }
-
-    /**
-     * Mutable integer class for storing the data.
-     */
-    protected static class MutableInteger {
-        /** The value of this mutable. */
-        protected int value;
-
-        /**
-         * Constructor.
-         * @param value the initial value
-         */
-        MutableInteger(final int value) {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (!(obj instanceof MutableInteger)) {
-                return false;
-            }
-            return ((MutableInteger) obj).value == value;
-        }
-
-        @Override
-        public int hashCode() {
-            return value;
-        }
     }
 
     @Override

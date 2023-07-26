@@ -161,10 +161,6 @@ public class SpliteratorUtils {
         return new TransformSpliterator<>(spliterator, transformer);
     }
 
-    private static class Holder<X> {
-        X value;
-    }
-
     /**
      * Returns the {@code index}-th value in {@link Spliterator}, throwing
      * {@code IndexOutOfBoundsException} if there is no such element.
@@ -182,11 +178,11 @@ public class SpliteratorUtils {
     public static <E> E get(final Spliterator<E> spliterator, final int index) {
         int i = index;
         CollectionUtils.checkIndexBounds(i);
-        final Holder<E> holder = new Holder<>();
-        while (spliterator.tryAdvance(e -> holder.value = e)) {
+        final Reference<E> reference = new Reference<>();
+        while (spliterator.tryAdvance(e -> reference.item = e)) {
             i--;
             if (i == -1) {
-                return holder.value;
+                return reference.item;
             }
         }
         throw new IndexOutOfBoundsException("Entry does not exist: " + i);
@@ -229,9 +225,9 @@ public class SpliteratorUtils {
      * @since X.X
      */
     public static <E> E first(final Spliterator<E> spliterator) {
-        final Holder<E> holder = new Holder<>();
-        if (spliterator.tryAdvance(e -> holder.value = e)) {
-            return holder.value;
+        final Reference<E> reference = new Reference<>();
+        if (spliterator.tryAdvance(e -> reference.item = e)) {
+            return reference.item;
         }
         throw new IndexOutOfBoundsException("Entry does not exist: 0");
     }

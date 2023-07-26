@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -480,35 +481,6 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
             result = removeAll(excess);
         }
         return result;
-    }
-
-    /**
-     * Mutable integer class for storing the data.
-     */
-    protected static class MutableInteger {
-        /** The value of this mutable. */
-        protected int value;
-
-        /**
-         * Constructor.
-         * @param value the initial value
-         */
-        MutableInteger(final int value) {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (!(obj instanceof MutableInteger)) {
-                return false;
-            }
-            return ((MutableInteger) obj).value == value;
-        }
-
-        @Override
-        public int hashCode() {
-            return value;
-        }
     }
 
     /**

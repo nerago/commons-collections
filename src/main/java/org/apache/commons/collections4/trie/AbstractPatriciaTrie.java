@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.Spliterator;
 
+import org.apache.commons.collections4.Reference;
 import org.apache.commons.collections4.OrderedMapIterator;
 
 /**
@@ -1634,26 +1635,6 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
      */
     static boolean isValidUplink(final TrieEntry<?, ?> next, final TrieEntry<?, ?> from) {
         return next != null && next.bitIndex <= from.bitIndex && !next.isEmpty();
-    }
-
-    /**
-     * A {@link Reference} allows us to return something through a Method's
-     * argument list. An alternative would be to an Array with a length of
-     * one (1) but that leads to compiler warnings. Computationally and memory
-     * wise there's no difference (except for the need to load the
-     * {@link Reference} Class but that happens only once).
-     */
-    private static class Reference<E> {
-
-        private E item;
-
-        public void set(final E item) {
-            this.item = item;
-        }
-
-        public E get() {
-            return item;
-        }
     }
 
     /**

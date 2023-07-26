@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.SortedBag;
 
 /**
@@ -112,8 +113,8 @@ public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Seria
     }
 
     @Override
-    protected SortedMap<E, AbstractMapBag.MutableInteger> getMap() {
-        return (SortedMap<E, AbstractMapBag.MutableInteger>) super.getMap();
+    protected SortedMap<E, MutableInteger> getMap() {
+        return (SortedMap<E, MutableInteger>) super.getMap();
     }
 
     /**
