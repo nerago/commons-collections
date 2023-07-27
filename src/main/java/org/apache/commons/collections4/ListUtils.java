@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.functors.DefaultEquator;
@@ -726,6 +727,15 @@ public class ListUtils {
         result.addAll(list1);
         result.addAll(list2);
         return result;
+    }
+
+    public static void shuffle(List<String> list, Random random) {
+        for (int i = list.size() - 1; i > 0; i--) {
+            final String swap = list.get(i);
+            final int j = random.nextInt(i + 1);
+            list.set(i, list.get(j));
+            list.set(j, swap);
+        }
     }
 
     /**
