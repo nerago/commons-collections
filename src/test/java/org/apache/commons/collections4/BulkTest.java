@@ -128,12 +128,10 @@ import java.util.stream.Stream;
  *  </UL>
  *
  *  A subclass can override a superclass's bulk test by
- *  returning {@code null} from the bulk test method.  If you only
- *  want to override specific simple tests within a bulk test, use the
- *  {@link #ignoredTests} method.<P>
+ *  returning {@code null} from the bulk test method.
  *
  *  Note that if you want to use the bulk test methods, you <I>must</I>
- *  define your {@code suite()} method to use {@link #makeSuite}.
+ *  define a method annotated with {@code TestFactory} and call {@link #makeSuite}.
  *  The ordinary {@link TestSuite} constructor doesn't know how to
  *  interpret bulk test methods.
  */
@@ -154,9 +152,7 @@ public class BulkTest implements Cloneable {
     public static final String TEST_PROPERTIES_PATH = "src/test/resources/org/apache/commons/collections4/properties/";
 
     /**
-     *  The full name of this bulk test instance.  This is the full name
-     *  that is compared to {@link #ignoredTests} to see if this
-     *  test should be ignored.  It's also displayed in the text runner
+     *  The full name of this bulk test instance.  It's displayed in the text runner
      *  to ease debugging.
      */
     String verboseName;
@@ -201,43 +197,6 @@ public class BulkTest implements Cloneable {
     }
 
     /**
-     *  Returns an array of test names to ignore.<P>
-     *
-     *  If a test that's defined by this {@code BulkTest} or
-     *  by one of its bulk test methods has a name that's in the returned
-     *  array, then that simple test will not be executed.<P>
-     *
-     *  A test's name is formed by taking the class name of the
-     *  root {@code BulkTest}, eliminating the package name, then
-     *  appending the names of any bulk test methods that were invoked
-     *  to get to the simple test, and then appending the simple test
-     *  method name.  The method names are delimited by periods:
-     *
-     *  <pre>
-     *  HashMapTest.bulkTestEntrySet.testClear
-     *  </pre>
-     *
-     *  is the name of one of the simple tests defined in the sample classes
-     *  described above.  If the sample {@code HashMapTest} class
-     *  included this method:
-     *
-     *  <pre>
-     *  public String[] ignoredTests() {
-     *      return new String[] { "HashMapTest.bulkTestEntrySet.testClear" };
-     *  }
-     *  </pre>
-     *
-     *  then the entry set's clear method wouldn't be tested, but the key
-     *  set's clear method would.
-     *
-     *  @return an array of the names of tests to ignore, or null if
-     *   no tests should be ignored
-     */
-    public String[] ignoredTests() {
-        return null;
-    }
-
-    /**
      *  Returns the display name of this {@code BulkTest}.
      *
      *  @return the display name of this {@code BulkTest}
@@ -247,7 +206,7 @@ public class BulkTest implements Cloneable {
         return getName() + "(" + verboseName + ") ";
     }
 
-    protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier) {
+    protected <N> DynamicNode getDynamicTests(Class<N> type, Supplier<N> instanceSupplier) {
         N instance = instanceSupplier.get();
         return DynamicContainer.dynamicContainer(type.getSimpleName(),
                 URI.create("class:" + type.getName()),
@@ -265,9 +224,9 @@ public class BulkTest implements Cloneable {
         );
     }
 
-    protected <N> DynamicNode findTestsOnNestedClass(Class<N> type, Supplier<N> instanceSupplier, BooleanSupplier enableTests) {
+    protected <N> DynamicNode getDynamicTests(Class<N> type, Supplier<N> instanceSupplier, BooleanSupplier enableTests) {
         if (enableTests.getAsBoolean()) {
-            return findTestsOnNestedClass(type, instanceSupplier);
+            return getDynamicTests(type, instanceSupplier);
         } else {
             return DynamicContainer.dynamicContainer(type.getName(), Stream.empty());
         }

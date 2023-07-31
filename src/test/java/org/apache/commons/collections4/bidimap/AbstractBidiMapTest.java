@@ -20,7 +20,6 @@ import java.util.*;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
@@ -482,7 +481,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
     @TestFactory
     public DynamicNode inverseBidiMapTests() {
-        return findTestsOnNestedClass(TestInverseBidiMap.class, () -> new TestInverseBidiMap<>(this));
+        return getDynamicTests(TestInverseBidiMap.class, () -> new TestInverseBidiMap<>(this));
     }
 
     @Disabled

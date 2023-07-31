@@ -1107,7 +1107,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
     @TestFactory
     public DynamicNode bulkSubListTests() {
-        return findTestsOnNestedClass(BulkSubListTests.class, () -> new BulkSubListTests<>(this), this::runBulkSubListTests);
+        return getDynamicTests(BulkSubListTests.class, () -> new BulkSubListTests<>(this), this::runBulkSubListTests);
     }
 
     @Disabled

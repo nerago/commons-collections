@@ -21,10 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.*;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections4.BulkTest;
-import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
  * Abstract test class for {@link NavigableSet} methods and contracts.
@@ -135,12 +132,12 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public DynamicNode subSetTests() {
         if (runSubSetTests()) {
             return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
-                    findTestsOnNestedClass(BulkTestSortedSetSubSet.class, BulkTestSortedSetSubSet::new),
-                    findTestsOnNestedClass(BulkTestSortedSetHeadSet.class, BulkTestSortedSetHeadSet::new),
-                    findTestsOnNestedClass(BulkTestSortedSetTailSet.class, BulkTestSortedSetTailSet::new),
-                    findTestsOnNestedClass(BulkTestNavigableSetSubSet.class, BulkTestNavigableSetSubSet::new),
-                    findTestsOnNestedClass(BulkTestNavigableSetHeadSet.class, BulkTestNavigableSetHeadSet::new),
-                    findTestsOnNestedClass(BulkTestNavigableSetTailSet.class, BulkTestNavigableSetTailSet::new)
+                    getDynamicTests(BulkTestSortedSetSubSet.class, BulkTestSortedSetSubSet::new),
+                    getDynamicTests(BulkTestSortedSetHeadSet.class, BulkTestSortedSetHeadSet::new),
+                    getDynamicTests(BulkTestSortedSetTailSet.class, BulkTestSortedSetTailSet::new),
+                    getDynamicTests(BulkTestNavigableSetSubSet.class, BulkTestNavigableSetSubSet::new),
+                    getDynamicTests(BulkTestNavigableSetHeadSet.class, BulkTestNavigableSetHeadSet::new),
+                    getDynamicTests(BulkTestNavigableSetTailSet.class, BulkTestNavigableSetTailSet::new)
             ));
         } else {
             return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());

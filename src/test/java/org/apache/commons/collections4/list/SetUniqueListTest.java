@@ -712,7 +712,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Override
     @TestFactory
     public DynamicNode bulkSubListTests() {
-        return findTestsOnNestedClass(SubListIsReadOnlyTests.class, () -> new SubListIsReadOnlyTests<>(this), this::runBulkSubListTests);
+        return getDynamicTests(SubListIsReadOnlyTests.class, () -> new SubListIsReadOnlyTests<>(this), this::runBulkSubListTests);
     }
 
     @Disabled
