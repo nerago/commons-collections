@@ -2,6 +2,7 @@ package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.ResettableIterator;
 
 import java.io.IOException;
@@ -35,7 +36,7 @@ public final class LongObjectMap<V> implements Serializable {
     private transient int threshold;
 
     /** Key set */
-    private transient KeySet keySet;
+    private transient KeySet<V> keySet;
     /** Values */
     private transient Values<V> values;
     private transient MapAdapter<V> mapAdapter;
@@ -608,7 +609,7 @@ public final class LongObjectMap<V> implements Serializable {
      * @return true if equal
      */
     private boolean isEqualValue(final V value1, final V value2) {
-        return value1 == value2 || value1.equals(value2);
+        return Objects.equals(value1, value2);
     }
 
     /**
@@ -816,6 +817,32 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
+    @Override
+    public int hashCode() {
+        return MapUtils.hashCode(mapIterator());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Map)) {
+            return false;
+        }
+        final Map<?, ?> map = (Map<?, ?>) obj;
+        try {
+            return MapUtils.isEqualMap(mapIterator(), map);
+        } catch (final ClassCastException | NullPointerException ignored) {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return MapUtils.toString(mapIterator());
+    }
+
     private final static class MapAdapter<V> extends AbstractMap<Long, V> implements IterableMap<Long, V> {
         private final LongObjectMap<V> parent;
         private EntrySet<V> entrySet;
@@ -926,6 +953,7 @@ public final class LongObjectMap<V> implements Serializable {
 
         @Override
         public V computeIfAbsent(final Long key, final Function<? super Long, ? extends V> mappingFunction) {
+            Objects.requireNonNull(mappingFunction);
             final int hashCode = parent.hash(checkKey(key));
             final int index = hashIndex(hashCode, parent.data.length);
             LongHashEntry<V> entry = parent.data[index];
@@ -952,6 +980,7 @@ public final class LongObjectMap<V> implements Serializable {
 
         @Override
         public V computeIfPresent(final Long key, final BiFunction<? super Long, ? super V, ? extends V> remappingFunction) {
+            Objects.requireNonNull(remappingFunction);
             final int hashCode = parent.hash(checkKey(key));
             final int index = hashIndex(hashCode, parent.data.length);
             LongHashEntry<V> entry = parent.data[index], previous = null;
@@ -977,6 +1006,7 @@ public final class LongObjectMap<V> implements Serializable {
 
         @Override
         public V compute(final Long key, final BiFunction<? super Long, ? super V, ? extends V> remappingFunction) {
+            Objects.requireNonNull(remappingFunction);
             final int hashCode = parent.hash(checkKey(key));
             final int index = hashIndex(hashCode, parent.data.length);
             LongHashEntry<V> entry = parent.data[index], previous = null;
@@ -1005,6 +1035,8 @@ public final class LongObjectMap<V> implements Serializable {
 
         @Override
         public V merge(final Long key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+            Objects.requireNonNull(remappingFunction);
+            Objects.requireNonNull(value);
             final int hashCode = parent.hash(checkKey(key));
             final int index = hashIndex(hashCode, parent.data.length);
             LongHashEntry<V> entry = parent.data[index], previous = null;
@@ -1090,9 +1122,25 @@ public final class LongObjectMap<V> implements Serializable {
             value = newValue;
             return oldValue;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?, ?> that = (Map.Entry<?, ?>) o;
+            if (!(that.getKey() instanceof Long))
+                return false;
+            return key == (Long) that.getKey() && Objects.equals(value, that.getValue());
+        }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(key) ^ Objects.hashCode(value);
+        }
     }
 
-    private final static class KeySet<V> implements LongSet, Set<Long> {
+    private final static class KeySet<V> extends AbstractSet<Long> implements LongSet, Set<Long> {
         private final LongObjectMap<V> parent;
 
         public KeySet(LongObjectMap<V> parent) {
@@ -1205,7 +1253,7 @@ public final class LongObjectMap<V> implements Serializable {
                     entry = entry.next;
                 }
             }
-            if (index < size)
+            if (index < array.length)
                 array[index] = null;
             return array;
         }
@@ -1245,6 +1293,7 @@ public final class LongObjectMap<V> implements Serializable {
                     while (entry != null && filter.test(entry.key)) {
                         final LongHashEntry<V> next = entry.next;
                         destroyEntry(entry);
+                        parent.size--;
                         entry = next;
                         changed = true;
                     }
@@ -1258,6 +1307,7 @@ public final class LongObjectMap<V> implements Serializable {
                             if (filter.test(entry.key)) {
                                 final LongHashEntry<V> next = entry.next;
                                 destroyEntry(entry);
+                                parent.size--;
                                 previous.next = next;
                                 entry = next;
                                 changed = true;

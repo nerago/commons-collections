@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -35,6 +36,7 @@ import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.map.AbstractHashedMap;
 import org.apache.commons.collections4.map.AbstractMapDecorator;
 import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
 import org.apache.commons.collections4.map.FixedSizeMap;
@@ -1929,6 +1931,93 @@ public class MapUtils {
     }
 
     /**
+     * Prints the given map with simple json like format.
+     * Suitable for implementing Map.toString
+     *
+     * @param map The map to print, may be {@code null}. If {@code null}, the text 'null' is output.
+     */
+    public static <V, K> String toString(final IterableMap<? extends K, ? extends V> map) {
+        if (map == null) {
+            return "null";
+        }
+        if (map.isEmpty()) {
+            return "{}";
+        }
+        final StringBuilder buf = new StringBuilder(32 * map.size());
+        appendStringBuilder(map.mapIterator(), buf);
+        return buf.toString();
+    }
+
+    public static <K, V> String toString(final MapIterator<K, V> mapIterator) {
+        if (mapIterator == null) {
+            return "null";
+        }
+        final StringBuilder buf = new StringBuilder();
+        appendStringBuilder(mapIterator, buf);
+        return buf.toString();
+    }
+
+    private static <V, K> void appendStringBuilder(final MapIterator<? extends K, ? extends V> it, final StringBuilder buf) {
+        buf.append('{');
+
+        boolean hasNext = it.hasNext();
+        while (hasNext) {
+            final K key = it.next();
+            final V value = it.getValue();
+            buf.append(key).append('=').append(value);
+
+            hasNext = it.hasNext();
+            if (hasNext) {
+                buf.append(CollectionUtils.COMMA).append(' ');
+            }
+        }
+
+        buf.append('}');
+    }
+
+    public static boolean isEqualMap(final IterableMap<?, ?> map1, final Map<?, ?> map2) {
+        if (map1.size() != map2.size()) {
+            return false;
+        }
+        return isEqualMap(map1.mapIterator(), map2);
+    }
+
+    public static boolean isEqualMap(final MapIterator<?, ?> mapIterator, final Map<?,?> map2) {
+        while (mapIterator.hasNext()) {
+            final Object key = mapIterator.next();
+            final Object value = mapIterator.getValue();
+            if (value == null) {
+                if (map2.get(key) != null || !map2.containsKey(key)) {
+                    return false;
+                }
+            } else {
+                if (!value.equals(map2.get(key))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static <K, V> int hashCode(final MapIterator<? extends K, ? extends V> mapIterator) {
+        int total = 0;
+        while (mapIterator.hasNext()) {
+            Object key = mapIterator.next(), value = mapIterator.getValue();
+            total += (key == null ? 0 : key.hashCode()) ^
+                     (value == null ? 0 : value.hashCode());
+        }
+        return total;
+    }
+
+    public static <K, V> int hashCode(final Iterator<? extends Entry<? extends K, ? extends V>> entryIterator) {
+        int total = 0;
+        while (entryIterator.hasNext()) {
+            total += entryIterator.next().hashCode();
+        }
+        return total;
+    }
+
+    /**
      * Prints the given map with nice line breaks.
      * <p>
      * This method prints a nicely formatted String describing the Map. Each map entry will be printed with key and
@@ -2027,5 +2116,4 @@ public class MapUtils {
      */
     private MapUtils() {
     }
-
 }

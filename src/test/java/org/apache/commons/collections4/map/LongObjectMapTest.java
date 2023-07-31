@@ -4,6 +4,7 @@ import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
@@ -17,6 +18,8 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
         return new LongObjectMap<>();
     }
 
+
+
     @Nested
     public class CheckMapAdapter extends AbstractMapTest<Long, V> {
         public CheckMapAdapter() {
@@ -25,6 +28,16 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
 
         @Override
         public boolean isCopyConstructorCheckable() {
+            return false;
+        }
+
+        @Override
+        public boolean isFailFastExpected() {
+            return false;
+        }
+
+        @Override
+        public boolean isAllowNullKey() {
             return false;
         }
 
@@ -46,6 +59,14 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
                     Long.MAX_VALUE,
                     Long.MIN_VALUE,
                     0L
+            };
+        }
+
+        @Override
+        public Long[] getOtherKeys() {
+            return new Long[] {
+                    123L, 456L, 789L, 111L, 222L, 333L, 444L, 555L,
+                    -123L, -456L, -789L, -111L, -222L, -333L, -444L, -555L
             };
         }
 

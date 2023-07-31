@@ -23,10 +23,10 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
 
@@ -1468,28 +1468,11 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
             return false;
         }
         final Map<?, ?> map = (Map<?, ?>) obj;
-        if (map.size() != size()) {
-            return false;
-        }
-        final MapIterator<?, ?> it = mapIterator();
         try {
-            while (it.hasNext()) {
-                final Object key = it.next();
-                final Object value = it.getValue();
-                if (value == null) {
-                    if (map.get(key) != null || !map.containsKey(key)) {
-                        return false;
-                    }
-                } else {
-                    if (!value.equals(map.get(key))) {
-                        return false;
-                    }
-                }
-            }
+            return MapUtils.isEqualMap(this, map);
         } catch (final ClassCastException | NullPointerException ignored) {
             return false;
         }
-        return true;
     }
 
     /**
@@ -1499,12 +1482,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      */
     @Override
     public int hashCode() {
-        int total = 0;
-        final Iterator<Map.Entry<K, V>> it = createEntrySetIterator();
-        while (it.hasNext()) {
-            total += it.next().hashCode();
-        }
-        return total;
+        return MapUtils.hashCode(createEntrySetIterator());
     }
 
     /**
@@ -1514,28 +1492,6 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
      */
     @Override
     public String toString() {
-        if (isEmpty()) {
-            return "{}";
-        }
-        final StringBuilder buf = new StringBuilder(32 * size());
-        buf.append('{');
-
-        final MapIterator<K, V> it = mapIterator();
-        boolean hasNext = it.hasNext();
-        while (hasNext) {
-            final K key = it.next();
-            final V value = it.getValue();
-            buf.append(key == this ? "(this Map)" : key)
-                .append('=')
-                .append(value == this ? "(this Map)" : value);
-
-            hasNext = it.hasNext();
-            if (hasNext) {
-                buf.append(CollectionUtils.COMMA).append(' ');
-            }
-        }
-
-        buf.append('}');
-        return buf.toString();
+        return MapUtils.toString(this);
     }
 }

@@ -2953,6 +2953,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
+        public K[] getFullNonNullElements() {
+            return getSampleKeys();
+        }
+
+        @Override
         public K[] getOtherElements() {
             return getOtherKeys();
         }
