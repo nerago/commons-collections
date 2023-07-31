@@ -24,6 +24,11 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
         }
 
         @Override
+        public boolean isCopyConstructorSupported() {
+            return false;
+        }
+
+        @Override
         public Long[] getSampleKeys() {
             return new Long[] {
                     1L, 7L, 11L, 12L, 13L, 17L, 21L, 22L,

@@ -816,7 +816,7 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
-    private final static class MapAdapter<V> implements IterableMap<Long, V> {
+    private final static class MapAdapter<V> extends AbstractMap<Long, V> implements IterableMap<Long, V> {
         private final LongObjectMap<V> parent;
         private EntrySet<V> entrySet;
 
