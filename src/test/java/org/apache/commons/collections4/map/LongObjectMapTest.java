@@ -1,6 +1,8 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Nested;
 
 import java.util.Map;
@@ -15,8 +17,6 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
         return new LongObjectMap<>();
     }
 
-    //        if (supportsFullCollections() && isTestSerialization() && !skipSerializedCanonicalTests()) {
-
     @Nested
     public class CheckMapAdapter extends AbstractMapTest<Long, V> {
         public CheckMapAdapter() {
@@ -24,8 +24,18 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
         }
 
         @Override
-        public boolean isCopyConstructorSupported() {
+        public boolean isCopyConstructorCheckable() {
             return false;
+        }
+
+        @Override
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.INNER;
+        }
+
+        @Override
+        protected IterationBehaviour getIterationBehaviour() {
+            return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
         }
 
         @Override

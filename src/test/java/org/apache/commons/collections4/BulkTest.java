@@ -216,9 +216,10 @@ public class BulkTest implements Cloneable {
         return getName() + "(" + verboseName + ") ";
     }
 
-    protected <N> DynamicNode getDynamicTests(Class<N> type, Supplier<N> instanceSupplier) {
-        N instance = instanceSupplier.get();
-        return DynamicContainer.dynamicContainer(type.getSimpleName(),
+    public <N> DynamicNode getDynamicTests() {
+        final Class<? extends BulkTest> type = getClass();
+        final BulkTest instance = this;
+        return DynamicContainer.dynamicContainer(getNameDefaulted(),
                 URI.create("class:" + type.getName()),
                 Stream.concat(
                     AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
@@ -240,25 +241,5 @@ public class BulkTest implements Cloneable {
         } else {
             return DynamicContainer.dynamicContainer(getNameDefaulted(), Stream.empty());
         }
-    }
-
-    public static DynamicContainer findTestsOnNestedClass(BulkTest instance) {
-        Class<? extends BulkTest> type = instance.getClass();
-        String name = instance.getNameDefaulted();
-        return DynamicContainer.dynamicContainer(name,
-                URI.create("class:" + type.getName()),
-                Stream.concat(
-                        AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
-                                .stream()
-                                .filter(method -> !AnnotationSupport.isAnnotated(method, Disabled.class))
-                                .map(method -> DynamicTest.dynamicTest(
-                                        method.getName(),
-                                        URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
-                                        () -> ReflectionUtils.invokeMethod(method, instance))),
-                        AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
-                                .stream()
-                                .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
-                )
-        );
     }
 }

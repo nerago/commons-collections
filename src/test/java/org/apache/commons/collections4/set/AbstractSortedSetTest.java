@@ -152,11 +152,10 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     @TestFactory
     public DynamicNode subSetTests() {
         if (runSubSetTests()) {
-            ));
             return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
                 new BulkTestSortedSetSubSet().getDynamicTests(),
                 new BulkTestSortedSetHeadSet().getDynamicTests(),
-                new BulkTestSortedSetTailSet().getDynamicTests()
+                new BulkTestSortedSetTailSet().getDynamicTests()));
         } else {
             return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());
         }

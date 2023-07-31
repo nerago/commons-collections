@@ -7,8 +7,6 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
 import org.apache.commons.collections4.map.EntrySetUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.AbstractCollection;
@@ -487,7 +485,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
         return super.toString();
     }
 
-    private @Nullable TEntry<K, V> getEntry(K key) {
+    private TEntry<K, V> getEntry(K key) {
         final int keyLengthInBits = keyAnalyzer.lengthInBits(key);
         if (keyLengthInBits == 0) {
             return root.isEmptyRoot() ? null : root;
@@ -805,7 +803,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public boolean contains(@Nullable Object obj) {
+        public boolean contains(final Object obj) {
             final TEntry<K, V> candidate = findCandidateEntry(obj);
             return Objects.equals(candidate, obj);
         }
