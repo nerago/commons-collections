@@ -1011,6 +1011,31 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertFalse(getCollection().contains(target), "Collection shouldn't contain removed element");
     }
 
+    @Test
+    public void testCollectionRemoveIfErrors() {
+        if (!isRemoveSupported()) {
+            return;
+        }
+
+        final E other = getOtherElements()[0];
+
+        resetFull();
+        assertThrows(ArithmeticException.class,
+                () -> getCollection().removeIf(e -> { throw new ArithmeticException(); }));
+        assertThrows(NullPointerException.class,
+                () -> getCollection().removeIf(null));
+        verify();
+
+        if (isFailFastSupported()) {
+            assertThrows(ConcurrentModificationException.class,
+                    () -> getCollection().removeIf(e -> { getCollection().add(other); return true; }));
+            assertThrows(ConcurrentModificationException.class,
+                    () -> getCollection().removeIf(e -> { getCollection().remove(getFullElements()[0]); return true; }));
+            assertThrows(ConcurrentModificationException.class,
+                    () -> getCollection().removeIf(e -> { getCollection().clear(); return true; }));
+        }
+    }
+
     /**
      *  Tests {@link Collection#retainAll(Collection)}.
      */

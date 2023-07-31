@@ -1107,6 +1107,32 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
     }
 
     @Test
+    public void testListReplaceAllErrors() {
+        if (!isSetSupported()) {
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().replaceAll(v -> v));
+            return;
+        }
+
+        final E other = getOtherElements()[0];
+
+        resetFull();
+        assertThrows(ArithmeticException.class,
+                () -> getCollection().replaceAll(e -> { throw new ArithmeticException(); }));
+        assertThrows(NullPointerException.class,
+                () -> getCollection().replaceAll(null));
+        verify();
+
+        if (isFailFastSupported()) {
+            assertThrows(ConcurrentModificationException.class,
+                    () -> getCollection().replaceAll(e -> { getCollection().add(other); return e; }));
+            assertThrows(ConcurrentModificationException.class,
+                    () -> getCollection().replaceAll(e -> { getCollection().remove(getFullElements()[0]); return e; }));
+            assertThrows(ConcurrentModificationException.class,
+                    () -> getCollection().replaceAll(e -> { getCollection().clear(); return e; }));
+        }
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testEmptyListSerialization() throws IOException, ClassNotFoundException {
         final List<E> list = makeObject();
