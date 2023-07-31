@@ -1,13 +1,21 @@
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.ResettableIterator;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
+import java.util.stream.LongStream;
+import java.util.stream.StreamSupport;
 
 @SuppressWarnings("unused")
-public final class LongMap<V> {
+public final class LongObjectMap<V> implements Serializable {
     /** The default capacity to use */
     private static final int DEFAULT_CAPACITY = 16;
     /** The default threshold to use */
@@ -33,9 +41,10 @@ public final class LongMap<V> {
     private transient MapAdapter<V> mapAdapter;
 
     /**
-     * Constructor only used in deserialization, do not use otherwise.
+     * Constructs a new empty map with default size and load factor.
      */
-    private LongMap() {
+    public LongObjectMap() {
+        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_THRESHOLD);
     }
 
     /**
@@ -46,7 +55,7 @@ public final class LongMap<V> {
      * @param threshold  the threshold, must be sensible
      */
     @SuppressWarnings("unchecked")
-    public LongMap(final int initialCapacity, final float loadFactor, final int threshold) {
+    public LongObjectMap(final int initialCapacity, final float loadFactor, final int threshold) {
         this.loadFactor = loadFactor;
         this.data = new LongHashEntry[initialCapacity];
         this.threshold = threshold;
@@ -59,7 +68,7 @@ public final class LongMap<V> {
      * @param initialCapacity  the initial capacity
      * @throws IllegalArgumentException if the initial capacity is negative
      */
-    public LongMap(final int initialCapacity) {
+    public LongObjectMap(final int initialCapacity) {
         this(initialCapacity, DEFAULT_LOAD_FACTOR);
     }
 
@@ -73,7 +82,7 @@ public final class LongMap<V> {
      * @throws IllegalArgumentException if the load factor is less than or equal to zero
      */
     @SuppressWarnings("unchecked")
-    public LongMap(int initialCapacity, final float loadFactor) {
+    public LongObjectMap(int initialCapacity, final float loadFactor) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException("Initial capacity must be a non negative number");
         }
@@ -92,7 +101,7 @@ public final class LongMap<V> {
      * @param map  the map to copy
      * @throws NullPointerException if the map is null
      */
-    public LongMap(final Map<? extends Long, ? extends V> map) {
+    public LongObjectMap(final Map<? extends Long, ? extends V> map) {
         this(Math.max(2 * map.size(), DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
         putAll(map);
     }
@@ -103,7 +112,7 @@ public final class LongMap<V> {
      * @param map  the map to copy
      * @throws NullPointerException if the map is null
      */
-    public LongMap(final LongMap<? extends V> map) {
+    public LongObjectMap(final LongObjectMap<? extends V> map) {
         this(Math.max(2 * map.size(), DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
         putAll(map);
     }
@@ -134,7 +143,7 @@ public final class LongMap<V> {
      * @param key  the key
      * @return the mapped value, null if no match
      */
-    public V get(long key) {
+    public V get(final long key) {
         return getOrDefault(key, null);
     }
 
@@ -147,7 +156,7 @@ public final class LongMap<V> {
      * @return the value to which the specified key is mapped, or
      * {@code defaultValue} if this map contains no mapping for the key
      */
-    public V getOrDefault(long key, V defaultValue) {
+    public V getOrDefault(final long key, final V defaultValue) {
         final int hashCode = hash(key);
         LongHashEntry<V> entry = data[hashIndex(hashCode, data.length)];
         while (entry != null) {
@@ -165,7 +174,7 @@ public final class LongMap<V> {
      * @param key  the key to search for
      * @return true if the map contains the key
      */
-    public boolean containsKey(long key) {
+    public boolean containsKey(final long key) {
         final int hashCode = hash(key);
         LongHashEntry<V> entry = data[hashIndex(hashCode, data.length)];
         while (entry != null) {
@@ -245,7 +254,7 @@ public final class LongMap<V> {
      *         previously associated {@code null} with the key,
      *         if the implementation supports null values.)
      */
-    public V putIfAbsent(long key, V value) {
+    public V putIfAbsent(final long key, final V value) {
         final int hashCode = hash(key);
         final int index = hashIndex(hashCode, data.length);
         LongHashEntry<V> entry = data[index];
@@ -275,7 +284,7 @@ public final class LongMap<V> {
      * @param newValue value to be associated with the specified key
      * @return {@code true} if the value was replaced
      */
-    public boolean replace(long key, V oldValue, V newValue) {
+    public boolean replace(final long key, final V oldValue, final V newValue) {
         final int hashCode = hash(key);
         final int index = hashIndex(hashCode, data.length);
         LongHashEntry<V> entry = data[index];
@@ -317,7 +326,7 @@ public final class LongMap<V> {
      *         or value prevents it from being stored in this map
      * @since 1.8
      */
-    public V replace(long key, V value) {
+    public V replace(final long key, final V value) {
         final int hashCode = hash(key);
         final int index = hashIndex(hashCode, data.length);
         LongHashEntry<V> entry = data[index];
@@ -369,7 +378,7 @@ public final class LongMap<V> {
      *      *         this map does not permit null keys or values, and the
      *      *         specified map contains null keys or values
      */
-    public void putAll(LongMap<? extends V> map) {
+    public void putAll(final LongObjectMap<? extends V> map) {
         if (checkPutAll(map.size())) {
             for (final LongHashEntry<? extends V> element : map.data) {
                 LongHashEntry<? extends V> entry = element;
@@ -381,7 +390,7 @@ public final class LongMap<V> {
         }
     }
 
-    private boolean checkPutAll(int mapSize) {
+    private boolean checkPutAll(final int mapSize) {
         if (mapSize == 0) {
             return false;
         }
@@ -396,7 +405,7 @@ public final class LongMap<V> {
      * @param key  the mapping to remove
      * @return {@code true} if the value was removed
      */
-    public boolean removeKey(long key) {
+    public boolean removeKey(final long key) {
         final int hashCode = hash(key);
         final int index = hashIndex(hashCode, data.length);
         LongHashEntry<V> entry = data[index];
@@ -418,7 +427,7 @@ public final class LongMap<V> {
      * @param key  the mapping to remove
      * @return the value mapped to the removed key, null if key not in map
      */
-    public V remove(long key) {
+    public V remove(final long key) {
         final int hashCode = hash(key);
         final int index = hashIndex(hashCode, data.length);
         LongHashEntry<V> entry = data[index];
@@ -443,7 +452,7 @@ public final class LongMap<V> {
      * @param value value expected to be associated with the specified key
      * @return {@code true} if the value was removed
      */
-    public boolean remove(long key, V value) {
+    public boolean remove(final long key, final V value) {
         final int hashCode = hash(key);
         final int index = hashIndex(hashCode, data.length);
         LongHashEntry<V> entry = data[index];
@@ -464,25 +473,6 @@ public final class LongMap<V> {
         return false;
     }
 
-    private boolean removeIf(Predicate<LongHashEntry<V>> predicate) {
-        Objects.requireNonNull(predicate);
-        boolean modified = false;
-        for (int bucketIndex = 0; bucketIndex < data.length; ++bucketIndex) {
-            LongHashEntry<V> entry = data[bucketIndex];
-            LongHashEntry<V> previous = null;
-            while (entry != null) {
-                if (predicate.test(entry)) {
-                    removeMapping(entry, bucketIndex, previous);
-                    modified = true;
-                } else {
-                    previous = entry;
-                }
-                entry = entry.next;
-            }
-        }
-        return modified;
-    }
-
     /**
      * Clears the map, resetting the size to zero and nullifying references
      * to avoid garbage collection issues.
@@ -500,6 +490,19 @@ public final class LongMap<V> {
             mapAdapter = new MapAdapter<>(this);
         }
         return mapAdapter;
+    }
+
+    public long[] toKeyArray() {
+        final long[] array = new long[size];
+        int index = 0;
+        for (final LongHashEntry<V> element : data) {
+            LongHashEntry<V> entry = element;
+            while (entry != null) {
+                array[index++] = entry.key;
+                entry = entry.next;
+            }
+        }
+        return array;
     }
 
     /**
@@ -635,7 +638,7 @@ public final class LongMap<V> {
      * @param value  the value to add
      */
     private void addMapping(final int hashIndex, final int hashCode, final long key, final V value) {
-        final LongHashEntry<V> entry = new LongHashEntry<>(data[hashIndex], hashCode, value);
+        final LongHashEntry<V> entry = new LongHashEntry<>(data[hashIndex], key, value);
         data[hashIndex] = entry;
         size++;
         checkCapacity();
@@ -685,7 +688,7 @@ public final class LongMap<V> {
      *
      * @param entry  the entry to destroy
      */
-    private void destroyEntry(final LongHashEntry<V> entry) {
+    private static void destroyEntry(final LongHashEntry<?> entry) {
         entry.next = null;
         entry.value = null;
     }
@@ -774,15 +777,54 @@ public final class LongMap<V> {
         return (int) (newCapacity * factor);
     }
 
-    private final static class MapAdapter<V> implements Map<Long, V> {
-        private final LongMap<V> parent;
+    /**
+     * Write the map out using a custom routine.
+     *
+     * @param out  the output stream
+     * @throws IOException if an error occurs while writing to the stream
+     */
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeFloat(loadFactor);
+        out.writeInt(data.length);
+        out.writeInt(size);
+        for (final MapIterator.LongKeys<V> it = mapIterator(); it.hasNext();) {
+            out.writeLong(it.nextLong());
+            out.writeObject(it.getValue());
+        }
+    }
+
+    /**
+     * Read the map in using a custom routine.
+     *
+     * @param in the input stream
+     * @throws IOException if an error occurs while reading from the stream
+     * @throws ClassNotFoundException if an object read from the stream can not be loaded
+     */
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        loadFactor = in.readFloat();
+        final int capacity = in.readInt();
+        final int size = in.readInt();
+        threshold = calculateThreshold(capacity, loadFactor);
+        data = new LongHashEntry[capacity];
+        for (int i = 0; i < size; i++) {
+            final long key = in.readLong();
+            final V value = (V) in.readObject();
+            put(key, value);
+        }
+    }
+
+    private final static class MapAdapter<V> extends AbstractMap<Long, V> implements IterableMap<Long, V> {
+        private final LongObjectMap<V> parent;
         private EntrySet<V> entrySet;
 
-        public MapAdapter(LongMap<V> parent) {
+        public MapAdapter(LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
-        private long checkKey(Object key) {
+        private long checkKey(final Object key) {
             Objects.requireNonNull(key, "null key not supported");
             if (!(key instanceof Long)) {
                 throw new ClassCastException("key must be a Long");
@@ -791,7 +833,7 @@ public final class LongMap<V> {
         }
 
         @SuppressWarnings("unchecked")
-        private V checkValue(Object value) {
+        private V checkValue(final Object value) {
             return (V) value;
         }
 
@@ -806,61 +848,57 @@ public final class LongMap<V> {
         }
 
         @Override
-        public boolean containsKey(Object key) {
+        public boolean containsKey(final Object key) {
             return parent.containsKey(checkKey(key));
         }
 
         @Override
-        public boolean containsValue(Object value) {
+        public boolean containsValue(final Object value) {
             return parent.containsValue(checkValue(value));
         }
 
         @Override
-        public V get(Object key) {
+        public V get(final Object key) {
             return parent.getOrDefault(checkKey(key), null);
         }
 
         @Override
-        public V getOrDefault(Object key, V defaultValue) {
+        public V getOrDefault(final Object key, final V defaultValue) {
             return parent.getOrDefault(checkKey(key), defaultValue);
         }
 
         @Override
-        public V put(Long key, V value) {
-            Objects.requireNonNull(key);
-            return parent.put(key, value);
+        public V put(final Long key, final V value) {
+            return parent.put(checkKey(key), value);
         }
 
         @Override
-        public V putIfAbsent(Long key, V value) {
-            Objects.requireNonNull(key);
-            return parent.putIfAbsent(key, value);
+        public V putIfAbsent(final Long key, final V value) {
+            return parent.putIfAbsent(checkKey(key), value);
         }
 
         @Override
-        public boolean replace(Long key, V oldValue, V newValue) {
-            Objects.requireNonNull(key);
-            return parent.replace(key, oldValue, newValue);
+        public boolean replace(final Long key, final V oldValue, final V newValue) {
+            return parent.replace(checkKey(key), oldValue, newValue);
         }
 
         @Override
-        public V replace(Long key, V value) {
-            Objects.requireNonNull(key);
-            return parent.replace(key, value);
+        public V replace(final Long key, final V value) {
+            return parent.replace(checkKey(key), value);
         }
 
         @Override
-        public V remove(Object key) {
+        public V remove(final Object key) {
             return parent.remove(checkKey(key));
         }
 
         @Override
-        public boolean remove(Object key, Object value) {
+        public boolean remove(final Object key, final Object value) {
             return parent.remove(checkKey(key), checkValue(value));
         }
 
         @Override
-        public void putAll(Map<? extends Long, ? extends V> m) {
+        public void putAll(final Map<? extends Long, ? extends V> m) {
             parent.putAll(m);
         }
 
@@ -870,33 +908,134 @@ public final class LongMap<V> {
         }
 
         @Override
-        public void forEach(BiConsumer<? super Long, ? super V> action) {
+        public void forEach(final BiConsumer<? super Long, ? super V> action) {
             parent.forEach(action::accept);
         }
 
         @Override
-        public void replaceAll(BiFunction<? super Long, ? super V, ? extends V> function) {
-            Map.super.replaceAll(function);
+        public void replaceAll(final BiFunction<? super Long, ? super V, ? extends V> function) {
+            Objects.requireNonNull(function);
+            for (final LongHashEntry<V> element : parent.data) {
+                LongHashEntry<V> entry = element;
+                while (entry != null) {
+                    entry.value = function.apply(entry.key, entry.value);
+                    entry = entry.next;
+                }
+            }
         }
 
         @Override
-        public V computeIfAbsent(Long key, Function<? super Long, ? extends V> mappingFunction) {
-            return Map.super.computeIfAbsent(key, mappingFunction);
+        public V computeIfAbsent(final Long key, final Function<? super Long, ? extends V> mappingFunction) {
+            final int hashCode = parent.hash(checkKey(key));
+            final int index = hashIndex(hashCode, parent.data.length);
+            LongHashEntry<V> entry = parent.data[index];
+            while (entry != null) {
+                if (entry.key == key) {
+                    final V oldValue = entry.value;
+                    if (oldValue == null) {
+                        final V newValue = mappingFunction.apply(key);
+                        entry.value = newValue;
+                        return newValue;
+                    } else {
+                        return oldValue;
+                    }
+                }
+                entry = entry.next;
+            }
+
+            final V newValue = mappingFunction.apply(key);
+            if (newValue != null) {
+                parent.addMapping(index, hashCode, key, newValue);
+            }
+            return newValue;
         }
 
         @Override
-        public V computeIfPresent(Long key, BiFunction<? super Long, ? super V, ? extends V> remappingFunction) {
-            return Map.super.computeIfPresent(key, remappingFunction);
+        public V computeIfPresent(final Long key, final BiFunction<? super Long, ? super V, ? extends V> remappingFunction) {
+            final int hashCode = parent.hash(checkKey(key));
+            final int index = hashIndex(hashCode, parent.data.length);
+            LongHashEntry<V> entry = parent.data[index], previous = null;
+            while (entry != null) {
+                if (entry.key == key) {
+                    final V oldValue = entry.value;
+                    if (oldValue != null) {
+                        final V newValue = remappingFunction.apply(key, oldValue);
+                        if (newValue != null) {
+                            entry.value = newValue;
+                            return newValue;
+                        } else {
+                            parent.removeMapping(entry, index, previous);
+                        }
+                    }
+                    return null;
+                }
+                previous = entry;
+                entry = entry.next;
+            }
+            return null;
         }
 
         @Override
-        public V compute(Long key, BiFunction<? super Long, ? super V, ? extends V> remappingFunction) {
-            return Map.super.compute(key, remappingFunction);
+        public V compute(final Long key, final BiFunction<? super Long, ? super V, ? extends V> remappingFunction) {
+            final int hashCode = parent.hash(checkKey(key));
+            final int index = hashIndex(hashCode, parent.data.length);
+            LongHashEntry<V> entry = parent.data[index], previous = null;
+            while (entry != null) {
+                if (entry.key == key) {
+                    final V oldValue = entry.value;
+                    final V newValue = remappingFunction.apply(key, oldValue);
+                    if (newValue != null) {
+                        entry.value = newValue;
+                        return newValue;
+                    } else {
+                        parent.removeMapping(entry, index, previous);
+                        return null;
+                    }
+                }
+                previous = entry;
+                entry = entry.next;
+            }
+
+            final V newValue = remappingFunction.apply(key, null);
+            if (newValue != null) {
+                parent.addMapping(index, hashCode, key, newValue);
+            }
+            return newValue;
         }
 
         @Override
-        public V merge(Long key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-            return Map.super.merge(key, value, remappingFunction);
+        public V merge(final Long key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+            final int hashCode = parent.hash(checkKey(key));
+            final int index = hashIndex(hashCode, parent.data.length);
+            LongHashEntry<V> entry = parent.data[index], previous = null;
+            while (entry != null) {
+                if (entry.key == key) {
+                    final V oldValue = entry.value;
+                    if (oldValue != null) {
+                        final V newValue = remappingFunction.apply(oldValue, value);
+                        if (newValue != null) {
+                            entry.value = newValue;
+                            return newValue;
+                        } else {
+                            parent.removeMapping(entry, index, previous);
+                            return null;
+                        }
+                    } else {
+                        entry.value = value;
+                        return value;
+                    }
+                }
+                previous = entry;
+                entry = entry.next;
+            }
+
+            parent.addMapping(index, hashCode, key, value);
+            return value;
+        }
+
+        @Override
+        public MapIterator.LongKeys<V> mapIterator() {
+            return parent.mapIterator();
         }
 
         @Override
@@ -921,7 +1060,7 @@ public final class LongMap<V> {
         }
     }
 
-    private final static class LongHashEntry<V> {
+    private final static class LongHashEntry<V> implements Map.Entry<Long, V> {
         /** The next entry in the hash chain */
         LongHashEntry<V> next;
         /** The key */
@@ -934,12 +1073,29 @@ public final class LongMap<V> {
             this.key = key;
             this.value = value;
         }
+
+        @Override
+        public Long getKey() {
+            return key;
+        }
+
+        @Override
+        public V getValue() {
+            return value;
+        }
+
+        @Override
+        public V setValue(final V newValue) {
+            V oldValue = value;
+            value = newValue;
+            return oldValue;
+        }
     }
 
-    private final static class KeySet implements LongSet, Set<Long> {
-        private final LongMap<?> parent;
+    private final static class KeySet<V> implements LongSet, Set<Long> {
+        private final LongObjectMap<V> parent;
 
-        public KeySet(LongMap<?> parent) {
+        public KeySet(LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -959,65 +1115,99 @@ public final class LongMap<V> {
         }
 
         @Override
-        public boolean contains(Object key) {
-            return parent.containsKey((long) key);
-        }
-
-        public boolean contains(long key) {
-            return parent.containsKey(key);
+        public boolean contains(final Object k) {
+            if (!(k instanceof Long))
+                return false;
+            return parent.containsKey((long) k);
         }
 
         @Override
-        public boolean containsAll(Collection<?> coll) {
-            for (Object key : coll) {
-                if (!parent.containsKey((Long) key))
+        public boolean contains(final long k) {
+            return parent.containsKey(k);
+        }
+
+        @Override
+        public boolean remove(final long k) {
+            return parent.removeKey(k);
+        }
+
+        @Override
+        public boolean remove(final Object o) {
+            if (!(o instanceof Long))
+                return false;
+            return parent.removeKey((long) o);
+        }
+
+        @Override
+        public boolean containsAll(final Collection<?> coll) {
+            for (final Object item : coll) {
+                if (!contains(item))
                     return false;
             }
             return true;
         }
 
         @Override
-        public boolean remove(long key) {
-            return parent.removeKey(key);
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            return parent.removeKey((long) o);
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> coll) {
-            boolean modified = false;
-            for (Object key : coll) {
-                modified |= parent.removeKey((Long) key);
+        public void forEach(final Consumer<? super Long> action) {
+            Objects.requireNonNull(action);
+            for (final LongHashEntry<?> element : parent.data) {
+                LongHashEntry<?> entry = element;
+                while (entry != null) {
+                    action.accept(entry.key);
+                    entry = entry.next;
+                }
             }
-            return modified;
         }
 
         @Override
-        public boolean retainAll(Collection<?> c) {
-            return false;
+        public void forEach(final LongConsumer action) {
+            Objects.requireNonNull(action);
+            for (final LongHashEntry<?> element : parent.data) {
+                LongHashEntry<?> entry = element;
+                while (entry != null) {
+                    action.accept(entry.key);
+                    entry = entry.next;
+                }
+            }
         }
 
         @Override
-        public boolean removeIf(Predicate<? super Long> filter) {
-            return parent.removeIf(e -> filter.test(e.key));
-        }
-
-        @Override
-        public Iterator<Long> iterator() {
-            return parent.keyIterator();
+        public long[] toLongArray() {
+            return parent.toKeyArray();
         }
 
         @Override
         public Object[] toArray() {
-            return new Object[0];
+            Object[] array = new Object[parent.size];
+            int index = 0;
+            for (final LongHashEntry<?> element : parent.data) {
+                LongHashEntry<?> entry = element;
+                while (entry != null) {
+                    array[index++] = entry.key;
+                    entry = entry.next;
+                }
+            }
+            return array;
         }
 
         @Override
-        public <T> T[] toArray(T[] a) {
-            return null;
+        @SuppressWarnings("unchecked")
+        public <T> T[] toArray(final T[] suppliedArray) {
+            final int size = parent.size;
+            final T[] array = suppliedArray.length >= size
+                              ? suppliedArray
+                              : (T[]) Array.newInstance(suppliedArray.getClass().getComponentType(), size);
+            int index = 0;
+            for (final LongHashEntry<?> element : parent.data) {
+                LongHashEntry<?> entry = element;
+                while (entry != null) {
+                    array[index++] = (T) (Long) entry.key;
+                    entry = entry.next;
+                }
+            }
+            if (index < size)
+                array[index] = null;
+            return array;
         }
 
         @Override
@@ -1029,34 +1219,95 @@ public final class LongMap<V> {
         public boolean addAll(Collection<? extends Long> c) {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public boolean removeAll(final Collection<?> coll) {
+            boolean changed = false;
+            for (final Object item : coll) {
+                changed |= remove(item);
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean retainAll(final Collection<?> coll) {
+           return removeIf(key -> !coll.contains(key));
+        }
+
+        @Override
+        public boolean removeIf(final Predicate<? super Long> filter) {
+            Objects.requireNonNull(filter);
+            boolean changed = false;
+            LongHashEntry<V>[] data = parent.data;
+            for (int index = data.length - 1; index >= 0; index--) {
+                LongHashEntry<V> entry = data[index];
+                if (entry != null) {
+                    while (entry != null && filter.test(entry.key)) {
+                        final LongHashEntry<V> next = entry.next;
+                        destroyEntry(entry);
+                        entry = next;
+                        changed = true;
+                    }
+                    if (changed) {
+                        data[index] = entry;
+                    }
+                    if (entry != null) {
+                        LongHashEntry<V> previous = entry;
+                        entry = entry.next;
+                        while (entry != null) {
+                            if (filter.test(entry.key)) {
+                                final LongHashEntry<V> next = entry.next;
+                                destroyEntry(entry);
+                                previous.next = next;
+                                entry = next;
+                                changed = true;
+                            } else {
+                                previous = entry;
+                                entry = entry.next;
+                            }
+                        }
+                    }
+                }
+            }
+            return changed;
+        }
+
+        @Override
+        public PrimitiveIterator.OfLong iterator() {
+            return parent.keyIterator();
+        }
+
+        @Override
+        public Spliterator.OfLong spliterator() {
+            return parent.keySpliterator();
+        }
     }
 
-    private Iterator<Long> keyIterator() {
-        return null; // TODO
-    }
-
-    private Iterator<Map.Entry<Long, V>> createEntrySetIterator() {
-        return null; // TODO
-    }
-
-    private Iterator<V> createValuesIterator() {
-        return null; // TODO
-    }
-
-    interface LongSet {
-        int size() ;
-        boolean isEmpty() ;
+    public interface LongSet {
+        int size();
+        boolean isEmpty();
         boolean contains(long k);
         boolean remove(long k);
 
-        // TODO iterator
+        void forEach(LongConsumer action);
+        long[] toLongArray();
+        PrimitiveIterator.OfLong iterator();
+        Spliterator.OfLong spliterator();
+
+        default LongStream longStream() {
+            return StreamSupport.longStream(spliterator(), false);
+        }
+
+        default LongStream longParallelStream() {
+            return StreamSupport.longStream(spliterator(), true);
+        }
     }
 
     private final static class EntrySet<V> extends AbstractSet<Map.Entry<Long, V>> {
         /** The parent map */
-        private final LongMap<V> parent;
+        private final LongObjectMap<V> parent;
 
-        private EntrySet(final LongMap<V> parent) {
+        public EntrySet(final LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1082,15 +1333,20 @@ public final class LongMap<V> {
 
         @Override
         public Iterator<Map.Entry<Long, V>> iterator() {
-            return parent.createEntrySetIterator();
+            return parent.entrySetIterator();
+        }
+
+        @Override
+        public Spliterator<Map.Entry<Long, V>> spliterator() {
+            return parent.entrySetSpliterator();
         }
     }
 
     private final static class Values<V> extends AbstractCollection<V> {
         /** The parent map */
-        private final LongMap<V> parent;
+        private final LongObjectMap<V> parent;
 
-        private Values(final LongMap<V> parent) {
+        private Values(final LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1112,8 +1368,295 @@ public final class LongMap<V> {
 
         @Override
         public Iterator<V> iterator() {
-            return parent.createValuesIterator();
+            return parent.valuesIterator();
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return parent.valuesSpliterator();
         }
     }
 
+    public MapIterator.LongKeys<V> mapIterator() {
+        return new LongMapIterator();
+    }
+
+    public PrimitiveIterator.OfLong keyIterator() {
+        return new LongKeyIterator();
+    }
+
+    public Spliterator.OfLong keySpliterator() {
+        return new LongKeySpliterator();
+    }
+
+    public Iterator<V> valuesIterator() {
+        return new LongValuesIterator();
+    }
+
+    public Spliterator<V> valuesSpliterator() {
+        return new LongValuesSpliterator();
+    }
+
+    public Iterator<Map.Entry<Long,V>> entrySetIterator() {
+        return new EntrySetIterator();
+    }
+
+    public Spliterator<Map.Entry<Long,V>> entrySetSpliterator() {
+        return new EntrySetSpliterator();
+    }
+
+    private abstract class LongBaseIterator {
+        private LongHashEntry<V> next;
+        protected LongHashEntry<V> current;
+        private LongHashEntry<V> previous;
+        private int currentIndex;
+        private int nextIndex;
+
+        LongBaseIterator() {
+            reset();
+        }
+
+        public void reset() {
+            currentIndex = -1;
+            current = null;
+            previous = null;
+            for (int i = data.length - 1; i >= 0; i--) {
+                final LongHashEntry<V> e = data[i];
+                if (e != null) {
+                    next = e;
+                    nextIndex = i;
+                    return;
+                }
+            }
+            next = null;
+            nextIndex = -1;
+        }
+
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        protected LongHashEntry<V> nextEntry() {
+            if (next == null) {
+                throw new NoSuchElementException();
+            }
+
+            if (current != null) {
+                previous = current;
+            }
+            current = next;
+            if (currentIndex != nextIndex) {
+                currentIndex = nextIndex;
+                previous = null;
+            }
+
+            if (next.next != null) {
+                next = next.next;
+            } else {
+                for (int i = nextIndex - 1; i >= 0; i--) {
+                    final LongHashEntry<V> e = data[i];
+                    if (e != null) {
+                        next = e;
+                        nextIndex = i;
+                        return current;
+                    }
+                }
+                next = null;
+                nextIndex = -1;
+            }
+            return current;
+        }
+
+        public void remove() {
+            if (current == null)
+                throw new IllegalStateException();
+            removeMapping(current, currentIndex, previous);
+            current = null;
+        }
+    }
+
+    private final class LongKeyIterator extends LongBaseIterator implements PrimitiveIterator.OfLong, ResettableIterator<Long> {
+        @Override
+        public long nextLong() {
+            return nextEntry().key;
+        }
+    }
+
+    private final class LongValuesIterator extends LongBaseIterator implements Iterator<V> {
+        @Override
+        public V next() {
+            return nextEntry().value;
+        }
+    }
+
+    private final class EntrySetIterator extends LongBaseIterator implements Iterator<Map.Entry<Long,V>> {
+        @Override
+        public Map.Entry<Long, V> next() {
+            return nextEntry();
+        }
+    }
+
+    private class LongMapIterator extends LongBaseIterator implements MapIterator.LongKeys<V> {
+        @Override
+        public long nextLong() {
+            return nextEntry().key;
+        }
+
+        @Override
+        public V getValue() {
+            if (current == null)
+                throw new IllegalStateException();
+            return current.value;
+        }
+
+        @Override
+        public long getKeyLong() {
+            if (current == null)
+                throw new IllegalStateException();
+            return current.key;
+        }
+
+        @Override
+        public V setValue(final V value) {
+            if (current == null)
+                throw new IllegalStateException();
+            return current.setValue(value);
+        }
+    }
+
+    private abstract class LongBaseSpliterator<T extends LongBaseSpliterator<T>> {
+        private LongHashEntry<V> next;
+        private int nextIndex;
+        private final int lastIndex;
+        private long estimateSize;
+        protected boolean isSplit;
+
+        LongBaseSpliterator() {
+            nextIndex = data.length - 1;
+            lastIndex = 0;
+            estimateSize = size;
+        }
+
+        LongBaseSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+            this.nextIndex = nextIndex;
+            this.lastIndex = lastIndex;
+            this.estimateSize = estimateSize;
+        }
+
+        protected abstract T newSplit(int nextIndex, int lastIndex, long estimateSize);
+
+        public boolean tryAdvanceEntry(final Consumer<LongHashEntry<V>> action) {
+            if (next != null) {
+                action.accept(next);
+                next = next.next;
+                return true;
+            }
+            for (int i = nextIndex; i >= lastIndex; i--) {
+                final LongHashEntry<V> entry = data[i];
+                if (entry != null) {
+                    action.accept(entry);
+                    next = entry.next;
+                    nextIndex = i - 1;
+                    return true;
+                }
+            }
+            nextIndex = -1;
+            return false;
+        }
+
+        public T trySplit() {
+            final int mid = lastIndex + (nextIndex - lastIndex) / 2;
+            if (lastIndex < mid && mid < nextIndex) {
+                T split = newSplit(nextIndex, mid + 1, estimateSize >>>= 1);
+                nextIndex = mid;
+                return split;
+            }
+            return null;
+        }
+
+        public long estimateSize() {
+            return estimateSize;
+        }
+    }
+
+    private final class LongKeySpliterator extends LongBaseSpliterator<LongKeySpliterator> implements Spliterator.OfLong {
+        public LongKeySpliterator() {
+        }
+
+        public LongKeySpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+            super(nextIndex, lastIndex, estimateSize);
+        }
+
+        @Override
+        protected LongKeySpliterator newSplit(final int nextIndex, final int lastIndex, final long estimateSize) {
+            return new LongKeySpliterator(nextIndex, lastIndex, estimateSize);
+        }
+
+        @Override
+        public boolean tryAdvance(final LongConsumer action) {
+            return tryAdvanceEntry(entry -> action.accept(entry.key));
+        }
+
+        @Override
+        public int characteristics() {
+            int characteristics = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.DISTINCT;
+            if (!isSplit)
+                characteristics |= Spliterator.SIZED;
+            return characteristics;
+        }
+    }
+
+    private final class LongValuesSpliterator extends LongBaseSpliterator<LongValuesSpliterator> implements Spliterator<V> {
+        public LongValuesSpliterator() {
+        }
+
+        public LongValuesSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+            super(nextIndex, lastIndex, estimateSize);
+        }
+
+        @Override
+        protected LongValuesSpliterator newSplit(final int nextIndex, final int lastIndex, final long estimateSize) {
+            return new LongValuesSpliterator(nextIndex, lastIndex, estimateSize);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super V> action) {
+            return tryAdvanceEntry(entry -> action.accept(entry.value));
+        }
+
+        @Override
+        public int characteristics() {
+            int characteristics = Spliterator.ORDERED;
+            if (!isSplit)
+                characteristics |= Spliterator.SIZED;
+            return characteristics;
+        }
+    }
+
+    private final class EntrySetSpliterator extends LongBaseSpliterator<EntrySetSpliterator> implements Spliterator<Map.Entry<Long,V>> {
+        public EntrySetSpliterator() {
+        }
+
+        public EntrySetSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+            super(nextIndex, lastIndex, estimateSize);
+        }
+
+        @Override
+        protected EntrySetSpliterator newSplit(final int nextIndex, final int lastIndex, final long estimateSize) {
+            return new EntrySetSpliterator(nextIndex, lastIndex, estimateSize);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super Map.Entry<Long, V>> action) {
+            return tryAdvanceEntry(action::accept);
+        }
+
+        @Override
+        public int characteristics() {
+            int characteristics = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.DISTINCT;
+            if (!isSplit)
+                characteristics |= Spliterator.SIZED;
+            return characteristics;
+        }
+    }
 }

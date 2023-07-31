@@ -90,14 +90,6 @@ public class UnmodifiableTrieTest<V> extends AbstractSortedMapTest<String, V> {
         assertThrows(NullPointerException.class, () -> UnmodifiableTrie.unmodifiableTrie(null));
     }
 
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return null;
-    }
-
     @Override
     public String getCompatibilityVersion() {
         return "4";

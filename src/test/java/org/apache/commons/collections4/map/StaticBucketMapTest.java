@@ -64,17 +64,6 @@ public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
     }
 
-    @Override
-    public String[] ignoredTests() {
-        final String pre = "StaticBucketMapTest.bulkTestMap";
-        final String post = ".testCollectionIteratorFailFast";
-        return new String[] {
-            pre + "EntrySet" + post,
-            pre + "KeySet" + post,
-            pre + "Values" + post
-        };
-    }
-
     // Bugzilla 37567
     @Test
     @SuppressWarnings("unchecked")

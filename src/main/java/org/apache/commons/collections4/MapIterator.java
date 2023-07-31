@@ -109,4 +109,19 @@ public interface MapIterator<K, V> extends Iterator<K> {
      */
     V setValue(V value);
 
+    interface LongKeys<V> extends MapIterator<Long, V> {
+        long nextLong();
+
+        long getKeyLong();
+
+        @Override
+        default Long next() {
+            return nextLong();
+        }
+
+        @Override
+        default Long getKey() {
+            return getKeyLong();
+        }
+    }
 }

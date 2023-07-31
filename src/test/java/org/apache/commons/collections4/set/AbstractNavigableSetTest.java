@@ -26,7 +26,6 @@ import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
  * Abstract test class for {@link NavigableSet} methods and contracts.

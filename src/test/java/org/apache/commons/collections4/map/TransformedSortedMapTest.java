@@ -45,11 +45,6 @@ public class TransformedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> 
     }
 
     @Override
-    public String[] ignoredTests() {
-        return null;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public SortedMap<K, V> makeObject() {
         return TransformedSortedMap.transformingSortedMap(new TreeMap<K, V>(),

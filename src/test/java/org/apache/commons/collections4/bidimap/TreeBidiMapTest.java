@@ -40,14 +40,6 @@ public class TreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> e
         return new TreeMap<>();
     }
 
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return new String[] {"TreeBidiMapTest.bulkTestInverseMap.bulkTestInverseMap"};
-    }
-
     @Override
     public boolean isAllowNullKey() {
         return false;

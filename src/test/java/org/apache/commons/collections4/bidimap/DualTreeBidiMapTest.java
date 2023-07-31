@@ -40,15 +40,6 @@ public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V
         return CollectionCommonsRole.CONCRETE;
     }
 
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        final String recursiveTest = "DualTreeBidiMapTest.bulkTestInverseMap.bulkTestInverseMap";
-        return new String[] { recursiveTest };
-    }
-
 //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/DualTreeBidiMap.emptyCollection.version4.obj");

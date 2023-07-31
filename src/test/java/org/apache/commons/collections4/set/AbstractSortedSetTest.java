@@ -28,10 +28,10 @@ import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.bidimap.AbstractBidiMapTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.DynamicContainer;
-import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link SortedSet} methods and contracts.
@@ -152,11 +152,11 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     @TestFactory
     public DynamicNode subSetTests() {
         if (runSubSetTests()) {
+            ));
             return DynamicContainer.dynamicContainer("subSetTests", Arrays.asList(
                 new BulkTestSortedSetSubSet().getDynamicTests(),
                 new BulkTestSortedSetHeadSet().getDynamicTests(),
                 new BulkTestSortedSetTailSet().getDynamicTests()
-            ));
         } else {
             return DynamicContainer.dynamicContainer("subSetTests", Stream.empty());
         }
