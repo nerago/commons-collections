@@ -53,14 +53,6 @@ public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends C
         return new TreeMap<>();
     }
 
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return new String[] {"UnmodifiableOrderedBidiMapTest.bulkTestInverseMap.bulkTestInverseMap"};
-    }
-
     @Override
     public boolean isAllowNullKey() {
         return false;

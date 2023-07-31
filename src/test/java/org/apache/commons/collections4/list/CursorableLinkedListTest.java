@@ -1489,33 +1489,6 @@ public class CursorableLinkedListTest<E> extends AbstractLinkedListTest<E> {
         assertEquals(list, list2);
     }
 
-    /**
-     *  Ignore the serialization tests for sublists and sub-sublists.
-     *
-     *  @return an array of sublist serialization test names
-     */
-    @Override
-    public String[] ignoredTests() {
-        final ArrayList<String> list = new ArrayList<>();
-        final String prefix = "CursorableLinkedListTest";
-        final String bulk = ".bulkTestSubList";
-        final String[] ignored = {
-            ".testEmptyListSerialization",
-            ".testFullListSerialization",
-            ".testEmptyListCompatibility",
-            ".testFullListCompatibility",
-            ".testSimpleSerialization",
-            ".testCanonicalEmptyCollectionExists",
-            ".testCanonicalFullCollectionExists",
-            ".testSerializeDeserializeThenCompare"
-        };
-        for (final String element : ignored) {
-            list.add(prefix + bulk + element);
-            list.add(prefix + bulk + bulk + element);
-        }
-        return list.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
-    }
-
     @Override
     public String getCompatibilityVersion() {
         return "4";

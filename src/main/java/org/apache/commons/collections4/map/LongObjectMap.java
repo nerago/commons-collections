@@ -4,6 +4,9 @@ import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
@@ -37,9 +40,10 @@ public final class LongObjectMap<V> {
     private transient MapAdapter<V> mapAdapter;
 
     /**
-     * Constructor only used in deserialization, do not use otherwise.
+     * Constructs a new empty map with default size and load factor.
      */
-    private LongObjectMap() {
+    public LongObjectMap() {
+        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_THRESHOLD);
     }
 
     /**
@@ -770,6 +774,45 @@ public final class LongObjectMap<V> {
      */
     private int calculateThreshold(final int newCapacity, final float factor) {
         return (int) (newCapacity * factor);
+    }
+
+    /**
+     * Write the map out using a custom routine.
+     *
+     * @param out  the output stream
+     * @throws IOException if an error occurs while writing to the stream
+     */
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeFloat(loadFactor);
+        out.writeInt(data.length);
+        out.writeInt(size);
+        for (final MapIterator.LongKeys<V> it = mapIterator(); it.hasNext();) {
+            out.writeLong(it.nextLong());
+            out.writeObject(it.getValue());
+        }
+    }
+
+    /**
+     * Read the map in using a custom routine.
+     *
+     * @param in the input stream
+     * @throws IOException if an error occurs while reading from the stream
+     * @throws ClassNotFoundException if an object read from the stream can not be loaded
+     */
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        loadFactor = in.readFloat();
+        final int capacity = in.readInt();
+        final int size = in.readInt();
+        threshold = calculateThreshold(capacity, loadFactor);
+        data = new LongHashEntry[capacity];
+        for (int i = 0; i < size; i++) {
+            final long key = in.readLong();
+            final V value = (V) in.readObject();
+            put(key, value);
+        }
     }
 
     private final static class MapAdapter<V> implements IterableMap<Long, V> {
