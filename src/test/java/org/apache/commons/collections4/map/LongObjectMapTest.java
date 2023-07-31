@@ -15,6 +15,8 @@ public class LongObjectMapTest<V> extends AbstractObjectTest {
         return new LongObjectMap<>();
     }
 
+    //        if (supportsFullCollections() && isTestSerialization() && !skipSerializedCanonicalTests()) {
+
     @Nested
     public class CheckMapAdapter extends AbstractMapTest<Long, V> {
         public CheckMapAdapter() {

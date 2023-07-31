@@ -7,6 +7,7 @@ import org.apache.commons.collections4.ResettableIterator;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
@@ -14,7 +15,7 @@ import java.util.stream.LongStream;
 import java.util.stream.StreamSupport;
 
 @SuppressWarnings("unused")
-public final class LongObjectMap<V> {
+public final class LongObjectMap<V> implements Serializable {
     /** The default capacity to use */
     private static final int DEFAULT_CAPACITY = 16;
     /** The default threshold to use */
@@ -637,7 +638,7 @@ public final class LongObjectMap<V> {
      * @param value  the value to add
      */
     private void addMapping(final int hashIndex, final int hashCode, final long key, final V value) {
-        final LongHashEntry<V> entry = new LongHashEntry<>(data[hashIndex], hashCode, value);
+        final LongHashEntry<V> entry = new LongHashEntry<>(data[hashIndex], key, value);
         data[hashIndex] = entry;
         size++;
         checkCapacity();
@@ -1408,6 +1409,7 @@ public final class LongObjectMap<V> {
         private LongHashEntry<V> next;
         protected LongHashEntry<V> current;
         private LongHashEntry<V> previous;
+        private int currentIndex;
         private int nextIndex;
 
         LongBaseIterator() {
@@ -1415,20 +1417,19 @@ public final class LongObjectMap<V> {
         }
 
         public void reset() {
-            findFirst: {
-                for (int i = data.length - 1; i >= 0; i--) {
-                    final LongHashEntry<V> e = data[i];
-                    if (e != null) {
-                        next = e;
-                        nextIndex = i - 1;
-                        break findFirst;
-                    }
-                }
-                next = null;
-                nextIndex = -1;
-            }
+            currentIndex = -1;
             current = null;
             previous = null;
+            for (int i = data.length - 1; i >= 0; i--) {
+                final LongHashEntry<V> e = data[i];
+                if (e != null) {
+                    next = e;
+                    nextIndex = i;
+                    return;
+                }
+            }
+            next = null;
+            nextIndex = -1;
         }
 
         public boolean hasNext() {
@@ -1436,33 +1437,40 @@ public final class LongObjectMap<V> {
         }
 
         protected LongHashEntry<V> nextEntry() {
-            final LongHashEntry<V> result = next;
-            if (result == null)
+            if (next == null) {
                 throw new NoSuchElementException();
+            }
 
-            if (result.next != null) {
-                previous = result;
-                next = result.next;
+            if (current != null) {
+                previous = current;
+            }
+            current = next;
+            if (currentIndex != nextIndex) {
+                currentIndex = nextIndex;
+                previous = null;
+            }
+
+            if (next.next != null) {
+                next = next.next;
             } else {
-                for (int i = nextIndex; i >= 0; i--) {
+                for (int i = nextIndex - 1; i >= 0; i--) {
                     final LongHashEntry<V> e = data[i];
                     if (e != null) {
                         next = e;
-                        nextIndex = i - 1;
-                        previous = null;
-                        break;
+                        nextIndex = i;
+                        return current;
                     }
                 }
+                next = null;
+                nextIndex = -1;
             }
-
-            current = result;
-            return result;
+            return current;
         }
 
         public void remove() {
             if (current == null)
                 throw new IllegalStateException();
-            removeMapping(current, nextIndex + 1, previous);
+            removeMapping(current, currentIndex, previous);
             current = null;
         }
     }
