@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.trie;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.analyzer.StringKeyAnalyzer;
 
 import java.util.SortedMap;
@@ -26,14 +27,14 @@ import java.util.SortedMap;
  *
  * @since 4.0
  */
-public class NickTrieTest<V> extends AbstractPatriciaTrieTest<V> {
+public class NickTrieTest<V extends Comparable<V>> extends AbstractPatriciaTrieTest<V> {
 
     public NickTrieTest() {
         super(NickTrieTest.class.getSimpleName());
     }
 
     @Override
-    public SortedMap<String, V> makeObject() {
+    public Trie<String, V> makeObject() {
         return new NickTrie<>(new StringKeyAnalyzer());
     }
 

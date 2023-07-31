@@ -51,7 +51,7 @@ public class PatriciaTrieTest<V> extends AbstractPatriciaTrieTest<V> {
     }
 
     @Override
-    public SortedMap<String, V> makeObject() {
+    public Trie<String, V> makeObject() {
         return new PatriciaTrie<>();
     }
 

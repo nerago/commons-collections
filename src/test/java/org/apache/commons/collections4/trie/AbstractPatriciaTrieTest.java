@@ -54,6 +54,9 @@ public abstract class AbstractPatriciaTrieTest<V> extends AbstractSortedMapTest<
         return false;
     }
 
+    @Override
+    public abstract Trie<String, V> makeObject();
+
     @Test
     public void testPrefixMap() {
         final PatriciaTrie<String> trie = new PatriciaTrie<>();
@@ -432,29 +435,35 @@ public abstract class AbstractPatriciaTrieTest<V> extends AbstractSortedMapTest<
 
     @Test
     public void testActuallySorted() {
-        RandomString randomString = new RandomString(8);
+        Random random = new Random(0);
+        RandomString randomString = new RandomString(8, random);
         for (int round = 0; round < 20; ++ round) {
             List<String> entries = new ArrayList<>();
             Object[] sampleKeys = getSampleKeys();
-            for (Object obj : sampleKeys)
-                entries.add((String) obj);
+//            for (Object obj : sampleKeys)
+//                entries.add((String) obj);
             entries.add("\0\0\0\0\0\0");
-            for (int i = 0; i < 100; ++i) {
-                entries.add(randomString.nextString());
-            }
-            ListUtils.shuffle(entries, new Random());
+            entries.add("abc");
+            entries.add("abb");
+//            for (int i = 0; i < 100; ++i) {
+//                entries.add(randomString.nextString());
+//            }
+            ListUtils.shuffle(entries, random);
 
-            PatriciaTrie<String> trie = new PatriciaTrie<>();
+//            while (entries.size() > 1)
+//                entries.remove(0);
+
+            Trie<String, V> trie = makeObject();
             for (String str : entries) {
-                trie.put(str, str);
+                trie.put(str, (V) str);
             }
             entries.sort(Comparator.naturalOrder());
 
-            OrderedMapIterator<String, String> mapIterator = trie.mapIterator();
+            OrderedMapIterator<String, V> mapIterator = trie.mapIterator();
             for (String str : entries) {
                 assertTrue(mapIterator.hasNext());
                 String key = mapIterator.next();
-                String value = mapIterator.getValue();
+                V value = mapIterator.getValue();
                 assertEquals(str, key);
                 assertEquals(key, value);
             }

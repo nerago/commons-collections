@@ -18,6 +18,8 @@ package org.apache.commons.collections4.trie.analyzer;
 
 import org.apache.commons.collections4.trie.KeyAnalyzer;
 
+import static java.lang.StrictMath.floorDiv;
+
 /**
  * An {@link KeyAnalyzer} for {@link String}s.
  *
@@ -37,8 +39,18 @@ public class StringKeyAnalyzer extends KeyAnalyzer<String> {
     private static final int MSB = 0x8000;
 
     /** Returns a bit mask where the given bit is set. */
-    private static int mask(final int bit) {
+    private static int maskOne(final int bit) {
         return MSB >>> bit;
+    }
+
+    private static final int ALL_BITS = 0xFFFF;
+
+    private static int maskEndBits(final int bit) {
+        return ALL_BITS >>> (LENGTH - bit);
+    }
+
+    private static int charLeadingZeros(final int x) {
+        return Integer.numberOfLeadingZeros(x) - LENGTH;
     }
 
     @Override
@@ -57,47 +69,75 @@ public class StringKeyAnalyzer extends KeyAnalyzer<String> {
 
         boolean allNull = true;
 
-        final int beginIndex1 = keyOffsetInBits / LENGTH;
-        final int beginIndex2 = otherOffsetInBits / LENGTH;
+        if (keyLengthInBits == 0 && otherLengthInBits == 0) {
+            return KeyAnalyzer.NULL_BIT_KEY;
+        }
 
-        final int endIndex1 = (keyOffsetInBits + keyLengthInBits + LENGTH - 1) / LENGTH;
-        final int endIndex2 = (otherOffsetInBits + otherLengthInBits + LENGTH - 1) / LENGTH;
+        final int beginCharIndexKey = keyOffsetInBits / LENGTH;
+        final int beginCharIndexOther = otherOffsetInBits / LENGTH;
 
-        final int length = Math.max(endIndex1, endIndex2);
-        final int lengthInBits = Math.max(keyLengthInBits, otherLengthInBits);
+        final int endBitIndexKey = keyOffsetInBits + keyLengthInBits;
+        final int endBitIndexOther = otherOffsetInBits + otherLengthInBits;
+        final int endCharIndexKey = (endBitIndexKey + LENGTH - 1) / LENGTH - 1;
+        final int endCharIndexOther = (endBitIndexOther + LENGTH - 1) / LENGTH - 1;
+
+
+        int indexKey = beginCharIndexKey, indexOther = beginCharIndexOther;
+
+        // Before loop check relevant bits if offset is mid character
+        if (indexKey <= endCharIndexKey && indexOther <= endCharIndexOther) {
+            if (keyOffsetInBits % LENGTH != otherOffsetInBits % LENGTH)
+                throw new IllegalArgumentException("The offsets must be at whole elements or the same mid element index");
+
+            final int numEndBits = LENGTH - (otherOffsetInBits % LENGTH);
+            if (numEndBits != LENGTH) {
+                final int mask = maskEndBits(numEndBits);
+                final int k = key.charAt(indexKey) & mask;
+                final int f = (other != null) ? (other.charAt(indexOther) & mask) : 0;
+
+                if (k != f) {
+                    final int x = k ^ f;
+                    final int keyBitIndex = indexKey * LENGTH + charLeadingZeros(x);
+                    if (keyBitIndex <= endBitIndexKey)
+                        return keyBitIndex;
+                }
+
+                if (k != 0) {
+                    allNull = false;
+                }
+
+                indexKey++;
+                indexOther++;
+            }
+        }
 
         // Look at each character, and if they're different
         // then figure out which bit makes the difference
         // and return it.
-        for (int i = 0; i < length; i++) {
-            final int index1 = beginIndex1 + i;
-            final int index2 = beginIndex2 + i;
+        while (indexKey <= endCharIndexKey || indexOther <= endCharIndexOther) {
+            final char k = indexKey <= endCharIndexKey
+                           ? key.charAt(indexKey)
+                           : 0;
 
-            final char k;
-            if (index1 >= endIndex1) {
-                k = 0;
-            } else {
-                k = key.charAt(index1);
-            }
-
-            final char f;
-            if (other == null || index2 >= endIndex2) {
-                f = 0;
-            } else {
-                f = other.charAt(index2);
-            }
+            final char f = other != null && indexOther <= endCharIndexOther
+                           ? other.charAt(indexOther)
+                           : 0;
 
             if (k != f) {
                 final int x = k ^ f;
-                final int bitNumber = i * LENGTH + Integer.numberOfLeadingZeros(x) - LENGTH;
-                if (bitNumber < lengthInBits) {
-                    return bitNumber;
-                }
+                final int keyBitIndex = indexKey * LENGTH + charLeadingZeros(x);
+                if (keyBitIndex <= endBitIndexKey)
+                    return keyBitIndex;
+                else
+                    break;
             }
 
             if (k != 0) {
                 allNull = false;
             }
+
+            indexKey++;
+            indexOther++;
         }
 
         // All bits are 0
@@ -118,7 +158,7 @@ public class StringKeyAnalyzer extends KeyAnalyzer<String> {
         final int index = bitIndex / LENGTH;
         final int bit = bitIndex % LENGTH;
 
-        return (key.charAt(index) & mask(bit)) != 0;
+        return (key.charAt(index) & maskOne(bit)) != 0;
     }
 
 }
