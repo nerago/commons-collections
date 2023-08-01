@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -353,6 +354,146 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
         final HashEntry<K, V>[] data = this.data;
         Arrays.fill(data, null);
         size = 0;
+    }
+    
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        final Object convertedKey = convertKey(key);
+        final int expectedModCount = modCount;
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue == null) {
+                    final V newValue = mappingFunction.apply(key);
+                    if (modCount != expectedModCount) {
+                        throw new ConcurrentModificationException();
+                    }
+                    entry.value = newValue;
+                    return newValue;
+                } else {
+                    return oldValue;
+                }
+            }
+            entry = entry.next;
+        }
+
+        final V newValue = mappingFunction.apply(key);
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        if (newValue != null) {
+            addMapping(index, hashCode, key, newValue);
+        }
+        return newValue;
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        final Object convertedKey = convertKey(key);
+        final int expectedModCount = modCount;
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index], previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue != null) {
+                    final V newValue = remappingFunction.apply(key, oldValue);
+                    if (modCount != expectedModCount) {
+                        throw new ConcurrentModificationException();
+                    }
+                    if (newValue != null) {
+                        entry.value = newValue;
+                        return newValue;
+                    } else {
+                        removeMapping(entry, index, previous);
+                    }
+                }
+                return null;
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+        return null;
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        final Object convertedKey = convertKey(key);
+        final int expectedModCount = modCount;
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index], previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                final V newValue = remappingFunction.apply(key, oldValue);
+                if (modCount != expectedModCount) {
+                    throw new ConcurrentModificationException();
+                }
+                if (newValue != null) {
+                    entry.value = newValue;
+                    return newValue;
+                } else {
+                    removeMapping(entry, index, previous);
+                    return null;
+                }
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+
+        final V newValue = remappingFunction.apply(key, null);
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        if (newValue != null) {
+            addMapping(index, hashCode, key, newValue);
+        }
+        return newValue;
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(value);
+        final Object convertedKey = convertKey(key);
+        final int expectedModCount = modCount;
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index], previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                if (oldValue != null) {
+                    final V newValue = remappingFunction.apply(oldValue, value);
+                    if (modCount != expectedModCount) {
+                        throw new ConcurrentModificationException();
+                    }
+                    if (newValue != null) {
+                        entry.value = newValue;
+                        return newValue;
+                    } else {
+                        removeMapping(entry, index, previous);
+                        return null;
+                    }
+                } else {
+                    entry.value = value;
+                    return value;
+                }
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+
+        addMapping(index, hashCode, key, value);
+        return value;
     }
 
     /**

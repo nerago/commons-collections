@@ -16,7 +16,14 @@
  */
 package org.apache.commons.collections4;
 
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Defines a map that can be iterated directly without needing to create an entry set.
@@ -41,4 +48,53 @@ import java.util.Map;
  */
 public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, V> {
     // empty
+
+    /***
+     * {@inheritDoc}
+     * <p>
+     * Overridden in IterableMap to use mapIterator and avoid creating entrySet unnecessarily.
+     */
+    @Override
+    default void forEach(final BiConsumer<? super K, ? super V> action) {
+        Objects.requireNonNull(action);
+        final MapIterator<K, V> iterator = mapIterator();
+        while (iterator.hasNext()) {
+            final K key;
+            final V value;
+            try {
+                key = iterator.next();
+                value = iterator.getValue();
+            } catch (IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+            action.accept(key, value);
+        }
+    }
+
+    @Override
+    default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        Objects.requireNonNull(function);
+        final MapIterator<K, V> iterator = mapIterator();
+        while (iterator.hasNext()) {
+            final K key;
+            final V value;
+            try {
+                key = iterator.next();
+                value = iterator.getValue();
+            } catch (IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+
+            final V newValue = function.apply(key, value);
+
+            try {
+                iterator.setValue(newValue);
+            } catch (IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+        }
+    }
 }

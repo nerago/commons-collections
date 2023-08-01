@@ -223,9 +223,7 @@ public class ListOrderedSet<E>
      */
     @Override
     public boolean removeIf(final Predicate<? super E> filter) {
-        if (Objects.isNull(filter)) {
-            return false;
-        }
+        Objects.requireNonNull(filter);
         final boolean result = decorated().removeIf(filter);
         if (result) {
             setOrder.removeIf(filter);

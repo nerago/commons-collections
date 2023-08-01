@@ -284,9 +284,7 @@ public class CompositeSet<E> implements Set<E>, Serializable {
      */
     @Override
     public boolean removeIf(final Predicate<? super E> filter) {
-        if (Objects.isNull(filter)) {
-            return false;
-        }
+        Objects.requireNonNull(filter);
         boolean changed = false;
         for (final Collection<E> item : all) {
             changed |= item.removeIf(filter);
