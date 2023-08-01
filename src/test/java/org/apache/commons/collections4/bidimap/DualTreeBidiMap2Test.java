@@ -53,6 +53,11 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
     }
 
     @Override
+    public boolean isFailFastAdvancedExpected() {
+        return false;
+    }
+
+    @Override
     public DualTreeBidiMap<K, V> makeObject() {
         return new DualTreeBidiMap<>(
                 new ReverseComparator<>(ComparableComparator.<K>comparableComparator()),

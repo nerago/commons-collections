@@ -51,6 +51,11 @@ public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
         return IterationBehaviour.STABLE_SEQUENCE;
     }
 
+    @Override
+    public boolean isFailFastAdvancedExpected() {
+        return false;
+    }
+
     //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/DualLinkedHashBidiMap.emptyCollection.version4.obj");

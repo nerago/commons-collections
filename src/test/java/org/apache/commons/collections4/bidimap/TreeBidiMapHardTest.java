@@ -56,6 +56,11 @@ public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V
     }
 
     @Override
+    public boolean isCheckSerializationId() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
     }

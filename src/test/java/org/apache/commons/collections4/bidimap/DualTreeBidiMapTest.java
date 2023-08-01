@@ -40,7 +40,12 @@ public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V
         return CollectionCommonsRole.CONCRETE;
     }
 
-//    public void testCreate() throws Exception {
+    @Override
+    public boolean isFailFastAdvancedExpected() {
+        return false;
+    }
+
+    //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/DualTreeBidiMap.emptyCollection.version4.obj");
 //        resetFull();

@@ -37,10 +37,6 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         super(testName);
     }
 
-    public AbstractBidiMapTest() {
-        super("Inverse");
-    }
-
     /**
      * Override to create a full {@code BidiMap} other than the default.
      *
@@ -493,6 +489,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         final AbstractBidiMapTest<K, V> main;
 
         public TestInverseBidiMap(final AbstractBidiMapTest<K, V> main) {
+            super("TestInverseBidiMap");
             this.main = main;
         }
 
@@ -549,6 +546,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         @Override
         public boolean isRemoveSupported() {
             return main.isRemoveSupported();
+        }
+
+        @Override
+        public boolean isFailFastAdvancedExpected() {
+            return main.isFailFastAdvancedExpected();
         }
 
         @Override

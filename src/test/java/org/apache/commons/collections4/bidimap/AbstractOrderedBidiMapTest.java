@@ -43,9 +43,6 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         super(testName);
     }
 
-    public AbstractOrderedBidiMapTest() {
-    }
-
     @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.FULLY_SORTED;

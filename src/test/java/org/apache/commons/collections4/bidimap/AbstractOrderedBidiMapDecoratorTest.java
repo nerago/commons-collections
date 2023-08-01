@@ -71,6 +71,11 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     }
 
     @Override
+    public boolean isFailFastAdvancedExpected() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
     }

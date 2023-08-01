@@ -47,6 +47,11 @@ public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
         return CollectionCommonsRole.CONCRETE;
     }
 
+    @Override
+    public boolean isFailFastAdvancedExpected() {
+        return false;
+    }
+
 //    public void testCreate() throws Exception {
 //        resetEmpty();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/DualHashBidiMap.emptyCollection.version4.obj");

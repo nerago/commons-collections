@@ -1109,6 +1109,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
     @Test
     public void testListReplaceAllErrors() {
         if (!isSetSupported()) {
+            resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getCollection().replaceAll(v -> v));
             return;
         }
