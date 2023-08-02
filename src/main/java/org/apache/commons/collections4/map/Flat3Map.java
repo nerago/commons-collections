@@ -815,6 +815,7 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
         public V setValue(final V value) {
             if (!parent.containsKey(getKey()))
                 throw new ConcurrentModificationException();
+            super.setValue(value);
             return parent.put(getKey(), value);
         }
     }
