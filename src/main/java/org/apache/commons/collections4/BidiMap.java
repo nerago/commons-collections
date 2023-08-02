@@ -98,6 +98,25 @@ public interface BidiMap<K, V> extends IterableMap<K, V> {
     K getKey(Object value);
 
     /**
+     * Returns the key to which this map maps the specified value.
+     * Returns {@code defaultKey} if the map contains no mapping for this value.
+     * <p>
+     * Implementations should seek to make this method perform equally as well
+     * as {@code getOrDefault(Object)}.
+     * </p>
+     *
+     * @param value  value whose associated key is to be returned.
+     * @param defaultKey the default mapping of the value
+     * @return the key to which this map maps the specified value,
+     *  or {@code defaultKey} if the map contains no mapping for this value.
+     * @throws ClassCastException (optional) if the map limits the type of the
+     *  value and the specified value is inappropriate
+     * @throws NullPointerException (optional) if the map limits the values to
+     *  non-null and null was specified
+     */
+    K getKeyOrDefault(Object value, K defaultKey);
+
+    /**
      * Removes the key-value pair that is currently mapped to the specified
      * value (optional operation).
      * <p>

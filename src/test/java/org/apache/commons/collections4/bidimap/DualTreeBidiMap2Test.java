@@ -53,7 +53,7 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
     }
 
     @Override
-    public boolean isFailFastAdvancedExpected() {
+    public boolean isFailFastFunctionalExpected() {
         return false;
     }
 

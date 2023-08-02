@@ -48,7 +48,7 @@ public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     }
 
     @Override
-    public boolean isFailFastAdvancedExpected() {
+    public boolean isFailFastFunctionalExpected() {
         return false;
     }
 

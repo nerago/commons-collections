@@ -141,6 +141,11 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     }
 
     @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        return normalMap.getOrDefault(key, defaultValue);
+    }
+
+    @Override
     public int size() {
         return normalMap.size();
     }
@@ -211,11 +216,6 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public boolean containsValue(final Object value) {
         return reverseMap.containsKey(value);
-    }
-
-    @Override
-    public V getOrDefault(final Object key, final V defaultValue) {
-        return normalMap.getOrDefault(key, defaultValue);
     }
 
     @Override
@@ -408,6 +408,11 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     @Override
     public K getKey(final Object value) {
         return reverseMap.get(value);
+    }
+
+    @Override
+    public K getKeyOrDefault(Object value, K defaultKey) {
+        return reverseMap.getOrDefault(value, defaultKey);
     }
 
     @Override

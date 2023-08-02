@@ -74,6 +74,11 @@ public abstract class AbstractBidiMapDecorator<K, V>
     }
 
     @Override
+    public K getKeyOrDefault(Object value, K defaultKey) {
+        return decorated().getKeyOrDefault(value, defaultKey);
+    }
+
+    @Override
     public K removeValue(final Object value) {
         return decorated().removeValue(value);
     }

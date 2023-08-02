@@ -173,6 +173,17 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * The key must implement {@code Comparable}.
+     */
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        final Node<K, V> node = lookupKey(checkKey(key));
+        return node == null ? defaultValue : node.getValue();
+    }
+
+    /**
      * Puts the key-value pair into the map, replacing any previous pair.
      * <p>
      * When adding a key-value pair, the value may already exist in the map
@@ -259,6 +270,17 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     public K getKey(final Object value) {
         final Node<K, V> node = lookupValue(checkValue(value));
         return node == null ? null : node.getKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The key must implement {@code Comparable}.
+     */
+    @Override
+    public K getKeyOrDefault(final Object value, final K defaultKey) {
+        final Node<K, V> node = lookupValue(checkValue(value));
+        return node == null ? defaultKey : node.getKey();
     }
 
     /**
@@ -2955,8 +2977,18 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public K getOrDefault(final Object value, final K defaultKey) {
+            return TreeBidiMapHard.this.getKeyOrDefault(value, defaultKey);
+        }
+
+        @Override
         public V getKey(final Object value) {
             return TreeBidiMapHard.this.get(value);
+        }
+
+        @Override
+        public V getKeyOrDefault(final Object value, final V defaultKey) {
+            return TreeBidiMapHard.this.getOrDefault(value, defaultKey);
         }
 
         @Override

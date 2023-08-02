@@ -71,7 +71,7 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     }
 
     @Override
-    public boolean isFailFastAdvancedExpected() {
+    public boolean isFailFastFunctionalExpected() {
         return false;
     }
 

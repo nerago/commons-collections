@@ -549,8 +549,8 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
 
         @Override
-        public boolean isFailFastAdvancedExpected() {
-            return main.isFailFastAdvancedExpected();
+        public boolean isFailFastFunctionalExpected() {
+            return main.isFailFastFunctionalExpected();
         }
 
         @Override

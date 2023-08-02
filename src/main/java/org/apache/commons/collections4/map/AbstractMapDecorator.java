@@ -111,6 +111,8 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
         return decorated().get(key);
     }
 
+    // TODO overrides for newer api methods
+
     @Override
     public boolean isEmpty() {
         return decorated().isEmpty();
