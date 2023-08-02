@@ -224,6 +224,7 @@ public class BulkTest implements Cloneable {
                 Stream.concat(
                     AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
                             .stream()
+                            .filter(method -> !AnnotationSupport.isAnnotated(method, Disabled.class))
                             .map(method -> DynamicTest.dynamicTest(
                                     method.getName(),
                                     URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),

@@ -30,14 +30,21 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.iterators.AbstractUntypedIteratorDecorator;
+import org.apache.commons.collections4.iterators.TransformListIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
 import org.apache.commons.collections4.list.UnmodifiableList;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 /**
  * Decorates a {@code Map} to ensure that the order of addition is retained
@@ -349,7 +356,7 @@ public class ListOrderedMap<K, V>
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return new EntrySetView<>(this, this.insertOrder);
+        return new EntrySetView<>(this);
     }
 
     /**
@@ -480,6 +487,105 @@ public class ListOrderedMap<K, V>
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * Override to iterate in list order
+     */
+    @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        insertOrder.forEach(key -> action.accept(key, map.get(key)));
+    }
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        if (map.remove(key, value)) {
+            insertOrder.remove(key);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        final V oldValue = map.get(key);
+        if (oldValue != null) {
+            return oldValue;
+        } else if (!map.containsKey(key)) {
+            insertOrder.add(key);
+        }
+        map.put(key, value);
+        return null;
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        return map.computeIfAbsent(key,
+            k -> {
+                final boolean wasContained = map.containsKey(key);
+                final V newValue = mappingFunction.apply(key);
+                if (!wasContained && newValue != null)
+                    insertOrder.add(key);
+                else if (wasContained && newValue == null)
+                    insertOrder.remove(key);
+                return newValue;
+            }
+        );
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return map.computeIfPresent(key,
+            (k, oldValue) -> {
+                final V newValue = remappingFunction.apply(k, oldValue);
+                if (newValue == null)
+                    insertOrder.remove(key);
+                return newValue;
+            }
+        );
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        return map.compute(key,
+            (k, oldValue) -> {
+                final V newValue = remappingFunction.apply(k, oldValue);
+                final boolean wasContained = oldValue != null || map.containsKey(k);
+                if (!wasContained && newValue != null)
+                    insertOrder.add(key);
+                else if (wasContained && newValue == null)
+                    insertOrder.remove(key);
+                return newValue;
+            }
+        );
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(value);
+        final V oldValue = map.get(key);
+        if (oldValue != null) {
+            final V newValue = remappingFunction.apply(oldValue, value);
+            if (newValue != null) {
+                map.put(key, newValue);
+            } else {
+                map.remove(key);
+                insertOrder.remove(key);
+            }
+            return newValue;
+        } else if (map.containsKey(key)) {
+            map.put(key, value);
+            return value;
+        } else {
+            map.put(key, value);
+            insertOrder.add(key);
+            return value;
+        }
+    }
+
+    /**
      * Gets an unmodifiable List view of the keys which changes as the map changes.
      * <p>
      * The returned list is unmodifiable because changes to the values of
@@ -525,12 +631,22 @@ public class ListOrderedMap<K, V>
 
         @Override
         public Iterator<V> iterator() {
-            return new AbstractUntypedIteratorDecorator<Map.Entry<Object, V>, V>(parent.entrySet().iterator()) {
-                @Override
-                public V next() {
-                    return getIterator().next().getValue();
-                }
-            };
+            return new ListOrderedValueIterator<>(parent);
+        }
+
+        @Override
+        public ListIterator<V> listIterator() {
+            return new ValueListIterator<>(parent, parent.insertOrder.listIterator());
+        }
+
+        @Override
+        public ListIterator<V> listIterator(int index) {
+            return new ValueListIterator<>(parent, parent.insertOrder.listIterator(index));
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return new TransformSpliterator<>(parent.insertOrder.spliterator(), key -> parent.decorated().get(key));
         }
 
         @Override
@@ -559,38 +675,46 @@ public class ListOrderedMap<K, V>
 
         @Override
         public int size() {
-            return this.parent.size();
+            return parent.size();
         }
 
         @Override
-        public boolean contains(final Object value) {
-            return this.parent.containsKey(value);
+        public boolean contains(final Object key) {
+            return parent.containsKey(key);
+        }
+
+        @Override
+        public boolean remove(final Object key) {
+            if (parent.map.containsKey(key)) {
+                parent.map.remove(key);
+                parent.insertOrder.remove(key);
+                return true;
+            }
+            return false;
         }
 
         @Override
         public void clear() {
-            this.parent.clear();
+            parent.clear();
         }
 
         @Override
         public Iterator<K> iterator() {
-            return new AbstractUntypedIteratorDecorator<Map.Entry<K, Object>, K>(parent.entrySet().iterator()) {
-                @Override
-                public K next() {
-                    return getIterator().next().getKey();
-                }
-            };
+            return new ListOrderedKeyIterator<>(parent);
+        }
+
+        @Override
+        public Spliterator<K> spliterator() {
+            return parent.insertOrder.spliterator();
         }
     }
 
     static class EntrySetView<K, V> extends AbstractSet<Map.Entry<K, V>> {
         private final ListOrderedMap<K, V> parent;
-        private final List<K> insertOrder;
         private Set<Map.Entry<K, V>> entrySet;
 
-        EntrySetView(final ListOrderedMap<K, V> parent, final List<K> insertOrder) {
+        EntrySetView(final ListOrderedMap<K, V> parent) {
             this.parent = parent;
-            this.insertOrder = insertOrder;
         }
 
         private Set<Map.Entry<K, V>> getEntrySet() {
@@ -658,29 +782,64 @@ public class ListOrderedMap<K, V>
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            return new ListOrderedIterator<>(parent, insertOrder);
-        }
-    }
-
-    static class ListOrderedIterator<K, V> extends AbstractUntypedIteratorDecorator<K, Map.Entry<K, V>> {
-        private final ListOrderedMap<K, V> parent;
-        private K last;
-
-        ListOrderedIterator(final ListOrderedMap<K, V> parent, final List<K> insertOrder) {
-            super(insertOrder.iterator());
-            this.parent = parent;
+            return new ListOrderedEntryIterator<>(parent);
         }
 
         @Override
-        public Map.Entry<K, V> next() {
-            last = getIterator().next();
-            return new ListOrderedMapEntry<>(parent, last);
+        public Spliterator<Map.Entry<K, V>> spliterator() {
+            return new TransformSpliterator<>(parent.insertOrder.spliterator(), key -> new ListOrderedMapEntry<>(parent, key));
+        }
+    }
+
+    static abstract class ListOrderedIterator<K, V, E> extends AbstractUntypedIteratorDecorator<K, E> {
+        protected final ListOrderedMap<K, V> parent;
+        protected K lastKey;
+
+        ListOrderedIterator(final ListOrderedMap<K, V> parent) {
+            super(parent.insertOrder.iterator());
+            this.parent = parent;
         }
 
         @Override
         public void remove() {
             super.remove();
-            parent.decorated().remove(last);
+            parent.decorated().remove(lastKey);
+        }
+    }
+
+    static class ListOrderedEntryIterator<K, V> extends ListOrderedIterator<K, V, Map.Entry<K, V>> {
+        ListOrderedEntryIterator(final ListOrderedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public Map.Entry<K, V> next() {
+            lastKey = getIterator().next();
+            return new ListOrderedMapEntry<>(parent, lastKey);
+        }
+    }
+
+    static class ListOrderedKeyIterator<K, V> extends ListOrderedIterator<K, V, K> {
+        ListOrderedKeyIterator(final ListOrderedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public K next() {
+            lastKey = getIterator().next();
+            return lastKey;
+        }
+    }
+
+    static class ListOrderedValueIterator<K, V> extends ListOrderedIterator<K, V, V> {
+        ListOrderedValueIterator(final ListOrderedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public V next() {
+            lastKey = getIterator().next();
+            return parent.get(lastKey);
         }
     }
 
@@ -788,4 +947,54 @@ public class ListOrderedMap<K, V>
         }
     }
 
+    private static class ValueListIterator<K, V> extends TransformListIterator<K, V> {
+        private final ListOrderedMap<K, V> parent;
+        private boolean hasLast;
+        private K lastKey;
+
+        public ValueListIterator(final ListOrderedMap<K, V> parent, final ListIterator<K> listIterator) {
+            super(listIterator);
+            this.parent = parent;
+        }
+
+        @Override
+        protected V transform(K source) {
+            return parent.map.get(source);
+        }
+
+        @Override
+        public V next() {
+            lastKey = getIterator().next();
+            hasLast = true;
+            return transform(lastKey);
+        }
+
+        @Override
+        public V previous() {
+            lastKey = getIterator().previous();
+            hasLast = true;
+            return transform(lastKey);
+        }
+
+        @Override
+        public void remove() {
+            if (!hasLast)
+                throw new IllegalStateException();
+            super.remove();
+            parent.remove(lastKey);
+            hasLast = false;
+        }
+
+        @Override
+        public void set(final V newValue) {
+            if (!hasLast)
+                throw new IllegalStateException();
+            parent.map.put(lastKey, newValue);
+        }
+
+        @Override
+        public void add(V o) {
+            throw new UnsupportedOperationException();
+        }
+    }
 }
