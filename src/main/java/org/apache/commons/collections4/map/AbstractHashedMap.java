@@ -372,7 +372,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
                     if (modCount != expectedModCount) {
                         throw new ConcurrentModificationException();
                     }
-                    entry.value = newValue;
+                    entry.setValue(newValue);
                     return newValue;
                 } else {
                     return oldValue;
@@ -408,7 +408,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
                         throw new ConcurrentModificationException();
                     }
                     if (newValue != null) {
-                        entry.value = newValue;
+                        entry.setValue(newValue);
                         return newValue;
                     } else {
                         removeMapping(entry, index, previous);
@@ -438,7 +438,7 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
                     throw new ConcurrentModificationException();
                 }
                 if (newValue != null) {
-                    entry.value = newValue;
+                    entry.setValue(newValue);
                     return newValue;
                 } else {
                     removeMapping(entry, index, previous);
@@ -477,14 +477,14 @@ public class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements Iterab
                         throw new ConcurrentModificationException();
                     }
                     if (newValue != null) {
-                        entry.value = newValue;
+                        entry.setValue(newValue);
                         return newValue;
                     } else {
                         removeMapping(entry, index, previous);
                         return null;
                     }
                 } else {
-                    entry.value = value;
+                    entry.setValue(value);
                     return value;
                 }
             }

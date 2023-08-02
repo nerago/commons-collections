@@ -18,6 +18,8 @@ package org.apache.commons.collections4.map;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.KeyValue;
@@ -295,6 +297,22 @@ public class SingletonMap<K, V>
      */
     @Override
     public void clear() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Unsupported operation.
+     */
+    @Override
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Unsupported operation.
+     */
+    @Override
+    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
