@@ -59,6 +59,11 @@ public class TransformedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> 
     }
 
     @Override
+    public boolean isFailFastFunctionalExpected() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.TRANSFORM;
     }

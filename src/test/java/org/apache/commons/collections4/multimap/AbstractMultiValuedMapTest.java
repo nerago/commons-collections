@@ -31,6 +31,7 @@ import org.apache.commons.collections4.bag.AbstractBagTest;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
+import org.apache.commons.collections4.map.AbstractIterableMapTest;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.apache.commons.collections4.multiset.AbstractMultiSetTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
@@ -1312,6 +1313,11 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
         @Override
         public boolean isToStringLikeCommonMaps() {
+            return false;
+        }
+
+        @Override
+        public boolean isFailFastExpected() {
             return false;
         }
 

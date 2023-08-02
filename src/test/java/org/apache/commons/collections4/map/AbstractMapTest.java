@@ -957,12 +957,14 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertThrows(NullPointerException.class,
                 () -> getMap().computeIfAbsent(getOtherKeys()[0], null));
         verify();
-        if (isFailFastFunctionalExpected()) {
+        if (isFailFastFunctionalExpected() && isPutAddSupported()) {
             resetFull();
             assertThrows(ConcurrentModificationException.class,
                     () -> getMap().computeIfAbsent(getOtherKeys()[0], e -> getMap().put(getOtherKeys()[1], getOtherValues()[1])));
             assertThrows(ConcurrentModificationException.class,
                     () -> getMap().computeIfAbsent(getOtherKeys()[2], e -> getMap().remove(getSampleKeys()[0])));
+        }
+        if (isFailFastFunctionalExpected() && isRemoveSupported()) {
             assertThrows(ConcurrentModificationException.class,
                     () -> getMap().computeIfAbsent(getOtherKeys()[3], e -> { getMap().clear(); return getOtherValues()[0];} ));
         }
@@ -1056,12 +1058,14 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertThrows(NullPointerException.class,
                 () -> getMap().computeIfPresent(getSampleKeys()[0], null));
         verify();
-        if (isFailFastFunctionalExpected()) {
+        if (isFailFastFunctionalExpected() && isPutAddSupported()) {
             resetFull();
             assertThrows(ConcurrentModificationException.class,
                     () -> getMap().computeIfPresent(getSampleKeys()[0], (k, v) -> getMap().put(getOtherKeys()[0], getOtherValues()[0])));
             assertThrows(ConcurrentModificationException.class,
                     () -> getMap().computeIfPresent(getSampleKeys()[1], (k, v) -> getMap().remove(getSampleKeys()[3])));
+        }
+        if (isFailFastFunctionalExpected() && isRemoveSupported()) {
             assertThrows(ConcurrentModificationException.class,
                     () -> getMap().computeIfPresent(getSampleKeys()[2], (k, v) -> { getMap().clear(); return getOtherValues()[0];} ));
         }
@@ -1075,9 +1079,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
 
-        if (!isPutAddSupported() && !isPutChangeSupported()) {
+        if (!isPutAddSupported() || !isPutChangeSupported() || !isRemoveSupported()) {
             resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getMap().compute(keys[0], (k, v) -> newValues[0]));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().compute(keys[0], (k, v) -> null));
             assertThrows(UnsupportedOperationException.class, () -> getMap().compute(otherKeys[0], (k, v) -> otherValues[0]));
             verify();
             return;
@@ -1186,15 +1191,23 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertThrows(NullPointerException.class,
                 () -> getMap().compute(getSampleKeys()[0], null));
         verify();
-        if (isFailFastFunctionalExpected()) {
+        if (isFailFastFunctionalExpected() && isPutAddSupported()) {
             resetEmpty();
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().compute(getSampleKeys()[0], (k, v) -> { getMap().put(getOtherKeys()[0], getOtherValues()[0]); return getSampleValues()[0]; }));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().compute(getSampleKeys()[0], (k, v) -> {
+                getMap().put(getOtherKeys()[0], getOtherValues()[0]);
+                return getSampleValues()[0];
+            }));
+        }
+        if (isFailFastFunctionalExpected() && isRemoveSupported()) {
             resetFull();
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().compute(getOtherKeys()[0], (k, v) -> { getMap().remove(getSampleKeys()[0]); return getOtherValues()[0]; }));
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().compute(getSampleKeys()[0], (k, v) -> { getMap().clear(); return getOtherValues()[0];} ));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().compute(getOtherKeys()[0], (k, v) -> {
+                getMap().remove(getSampleKeys()[0]);
+                return getOtherValues()[0];
+            }));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().compute(getSampleKeys()[0], (k, v) -> {
+                getMap().clear();
+                return getOtherValues()[0];
+            }));
         }
     }
 
@@ -1205,13 +1218,13 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
-        final V dummy = (V) "xyz";
+        final V dummy = otherValues[0];
 
-        if (!isPutAddSupported() && !isPutChangeSupported() && !isRemoveSupported()) {
+        if (!isPutAddSupported() || !isPutChangeSupported() || !isRemoveSupported()) {
             resetFull();
-            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], dummy, (k, v) -> newValues[0]));
-            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], dummy, (k, v) -> null));
-            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(otherKeys[0], otherValues[0], (k, v) -> fail()));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], newValues[0], (k, v) -> newValues[1]));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], newValues[0], (k, v) -> null));
+            assertThrows(UnsupportedOperationException.class, () -> getMap().merge(otherKeys[0], newValues[0], (k, v) -> fail()));
             verify();
             return;
         }
@@ -1305,16 +1318,24 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertThrows(NullPointerException.class,
                 () -> getMap().merge(getOtherKeys()[0], null, (k, v) -> v));
         verify();
-        if (isFailFastFunctionalExpected()) {
+        if (isFailFastFunctionalExpected() && isPutAddSupported()) {
             resetFull();
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().merge(getSampleKeys()[0], dummy, (k, v) -> { getMap().put(getOtherKeys()[0], getOtherValues()[0]); return getNewSampleValues()[0]; }));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().merge(getSampleKeys()[0], dummy, (k, v) -> {
+                getMap().put(getOtherKeys()[0], getOtherValues()[0]);
+                return getNewSampleValues()[0];
+            }));
+        }
+        if (isFailFastFunctionalExpected() && isRemoveSupported()) {
             resetFull();
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().merge(getSampleKeys()[0], dummy, (k, v) -> { getMap().remove(getSampleKeys()[0]); return getNewSampleValues()[0]; }));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().merge(getSampleKeys()[0], dummy, (k, v) -> {
+                getMap().remove(getSampleKeys()[0]);
+                return null;
+            }));
             resetFull();
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().merge(getSampleKeys()[0], dummy, (k, v) -> { getMap().clear(); return getNewSampleValues()[0];} ));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().merge(getSampleKeys()[0], dummy, (k, v) -> {
+                getMap().clear();
+                return null;
+            }));
         }
     }
     
@@ -1540,13 +1561,21 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 () -> getMap().replaceAll(null));
         verify();
 
-        if (isFailFastFunctionalExpected()) {
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().replaceAll((k, v) -> { getMap().put(getOtherKeys()[0], getOtherValues()[0]); return v; }));
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().replaceAll((k, v) -> { getMap().remove(getSampleKeys()[0]); return v; }));
-            assertThrows(ConcurrentModificationException.class,
-                    () -> getMap().replaceAll((k, v) -> { getMap().clear(); return v; }));
+        if (isFailFastFunctionalExpected() && isPutAddSupported()) {
+            assertThrows(ConcurrentModificationException.class, () -> getMap().replaceAll((k, v) -> {
+                getMap().put(getOtherKeys()[0], getOtherValues()[0]);
+                return v;
+            }));
+        }
+        if (isFailFastFunctionalExpected() && isRemoveSupported()) {
+            assertThrows(ConcurrentModificationException.class, () -> getMap().replaceAll((k, v) -> {
+                getMap().remove(getSampleKeys()[0]);
+                return v;
+            }));
+            assertThrows(ConcurrentModificationException.class, () -> getMap().replaceAll((k, v) -> {
+                getMap().clear();
+                return v;
+            }));
         }
     }
 

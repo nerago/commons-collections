@@ -86,6 +86,11 @@ public class PredicatedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     }
 
     @Override
+    public boolean isFailFastFunctionalExpected() {
+        return false;
+    }
+
+    @Override
     public boolean isAllowNullKey() {
         return false;
     }

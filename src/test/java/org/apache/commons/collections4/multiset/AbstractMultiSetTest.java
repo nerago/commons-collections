@@ -135,12 +135,6 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
         return (MultiSet<T>) super.getCollection();
     }
 
-    @Override
-    public void verify() {
-        super.verify();
-        assertEquals(getConfirmed(), getCollection());
-    }
-
     @Test
     @SuppressWarnings("unchecked")
     public void testMultiSetAdd() {

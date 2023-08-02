@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections4.*;
@@ -1229,6 +1230,16 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         @Override
         public void clear() {
             AbstractMultiValuedMap.this.clear();
+        }
+
+        @Override
+        public Collection<V> compute(K key, BiFunction<? super K, ? super Collection<V>, ? extends Collection<V>> remappingFunction) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Collection<V> merge(K key, Collection<V> value, BiFunction<? super Collection<V>, ? super Collection<V>, ? extends Collection<V>> remappingFunction) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
