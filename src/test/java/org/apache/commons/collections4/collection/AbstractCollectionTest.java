@@ -1001,7 +1001,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         final int size = getCollection().size();
         final int targetCount = Collections.frequency(elements, target);
 
-        final Predicate<E> filter = target::equals;
+        final Predicate<E> filter = x -> Objects.equals(target, x);
 
         assertTrue(getCollection().removeIf(filter), "Full collection removeIf should work");
         getConfirmed().removeIf(filter);

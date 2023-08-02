@@ -195,6 +195,10 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             return main.isRemoveSupported();
         }
         @Override
+        public boolean isFailFastFunctionalExpected() {
+            return main.isFailFastFunctionalExpected();
+        }
+        @Override
         public CollectionCommonsRole collectionRole() {
             return CollectionCommonsRole.INNER;
         }

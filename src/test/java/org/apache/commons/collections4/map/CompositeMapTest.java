@@ -56,6 +56,11 @@ public class CompositeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
+    public boolean isFailFastFunctionalExpected() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.COMPOSITE;
     }

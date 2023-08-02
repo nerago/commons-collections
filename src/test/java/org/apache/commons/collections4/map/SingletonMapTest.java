@@ -72,6 +72,11 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
+    public boolean isFailFastExpected() {
+        return false;
+    }
+
+    @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
     }

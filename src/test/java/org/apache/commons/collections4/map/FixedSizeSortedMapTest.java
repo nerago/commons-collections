@@ -52,6 +52,11 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     }
 
     @Override
+    public boolean isFailFastFunctionalExpected() {
+        return false;
+    }
+
+    @Override
     public boolean isPutAddSupported() {
         return false;
     }
