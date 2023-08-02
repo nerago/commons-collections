@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -35,6 +36,7 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
+import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
 
 /**
  * A {@code Map} implementation that stores data in simple fields until
@@ -781,9 +783,12 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
             final Object key = entry.getKey();
-            final boolean result = parent.containsKey(key);
-            parent.remove(key);
-            return result;
+            final Object value = entry.getValue();
+            if (parent.containsKey(key) && Objects.equals(parent.get(key), value)) {
+                parent.remove(key);
+                return true;
+            }
+            return false;
         }
 
         @Override
@@ -798,124 +803,26 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
         }
     }
 
-    static class FlatMapEntry<K, V> implements Map.Entry<K, V> {
+    static class FlatMapEntry<K, V> extends AbstractMapEntry<K, V> {
         private final Flat3Map<K, V> parent;
-        private final int index;
-        private volatile boolean removed;
 
-        FlatMapEntry(final Flat3Map<K, V> parent, final int index) {
+        FlatMapEntry(final Flat3Map<K, V> parent, final K key, final V value) {
+            super(key, value);
             this.parent = parent;
-            this.index = index;
-            this.removed = false;
-        }
-
-        /**
-         * Used by the iterator that created this entry to indicate that
-         * {@link java.util.Iterator#remove()} has been called.
-         * <p>
-         * As a consequence, all subsequent call to {@link #getKey()},
-         * {@link #setValue(Object)} and {@link #getValue()} will fail.
-         *
-         * @param flag the new value of the removed flag
-         */
-        void setRemoved(final boolean flag) {
-            this.removed = flag;
-        }
-
-        @Override
-        public K getKey() {
-            if (removed) {
-                throw new IllegalStateException(AbstractHashedMap.GETKEY_INVALID);
-            }
-            switch (index) {
-            case 3:
-                return parent.key3;
-            case 2:
-                return parent.key2;
-            case 1:
-                return parent.key1;
-            }
-            throw new IllegalStateException("Invalid map index: " + index);
-        }
-
-        @Override
-        public V getValue() {
-            if (removed) {
-                throw new IllegalStateException(AbstractHashedMap.GETVALUE_INVALID);
-            }
-            switch (index) {
-            case 3:
-                return parent.value3;
-            case 2:
-                return parent.value2;
-            case 1:
-                return parent.value1;
-            }
-            throw new IllegalStateException("Invalid map index: " + index);
         }
 
         @Override
         public V setValue(final V value) {
-            if (removed) {
-                throw new IllegalStateException(AbstractHashedMap.SETVALUE_INVALID);
-            }
-            final V old = getValue();
-            switch (index) {
-            case 3:
-                parent.value3 = value;
-                break;
-            case 2:
-                parent.value2 = value;
-                break;
-            case 1:
-                parent.value1 = value;
-                break;
-            default:
-                throw new IllegalStateException("Invalid map index: " + index);
-            }
-            return old;
+            if (!parent.containsKey(getKey()))
+                throw new ConcurrentModificationException();
+            return parent.put(getKey(), value);
         }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (removed) {
-                return false;
-            }
-            if (!(obj instanceof Map.Entry)) {
-                return false;
-            }
-            final Map.Entry<?, ?> other = (Map.Entry<?, ?>) obj;
-            final Object key = getKey();
-            final Object value = getValue();
-            return (key == null ? other.getKey() == null : key.equals(other.getKey())) &&
-                   (value == null ? other.getValue() == null : value.equals(other.getValue()));
-        }
-
-        @Override
-        public int hashCode() {
-            if (removed) {
-                return 0;
-            }
-            final Object key = getKey();
-            final Object value = getValue();
-            return (key == null ? 0 : key.hashCode()) ^
-                   (value == null ? 0 : value.hashCode());
-        }
-
-        @Override
-        public String toString() {
-            if (!removed) {
-                return getKey() + "=" + getValue();
-            }
-            return "";
-        }
-
     }
 
     abstract static class EntryIterator<K, V> {
-        private final Flat3Map<K, V> parent;
+        protected final Flat3Map<K, V> parent;
         private int nextIndex;
-        private FlatMapEntry<K, V> currentEntry;
+        private boolean canRemove;
 
         /**
          * Create a new Flat3Map.EntryIterator.
@@ -928,24 +835,52 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
             return nextIndex < parent.size;
         }
 
-        public Map.Entry<K, V> nextEntry() {
+        public void moveNext() {
             if (!hasNext()) {
                 throw new NoSuchElementException(AbstractHashedMap.NO_NEXT_ENTRY);
             }
-            currentEntry = new FlatMapEntry<>(parent, ++nextIndex);
-            return currentEntry;
+            canRemove = true;
+            nextIndex++;
+        }
+
+        public K getKey() {
+            if (!canRemove) {
+                throw new IllegalStateException(AbstractHashedMap.GETKEY_INVALID);
+            }
+            switch (nextIndex) {
+                case 3:
+                    return parent.key3;
+                case 2:
+                    return parent.key2;
+                case 1:
+                    return parent.key1;
+            }
+            throw new IllegalStateException("Invalid map index: " + nextIndex);
+        }
+
+        public V getValue() {
+            if (!canRemove) {
+                throw new IllegalStateException(AbstractHashedMap.GETVALUE_INVALID);
+            }
+            switch (nextIndex) {
+                case 3:
+                    return parent.value3;
+                case 2:
+                    return parent.value2;
+                case 1:
+                    return parent.value1;
+            }
+            throw new IllegalStateException("Invalid map index: " + nextIndex);
         }
 
         public void remove() {
-            if (currentEntry == null) {
+            if (!canRemove) {
                 throw new IllegalStateException(AbstractHashedMap.REMOVE_INVALID);
             }
-            parent.remove(currentEntry.getKey());
-            currentEntry.setRemoved(true);
+            parent.remove(getKey());
             nextIndex--;
-            currentEntry = null;
+            canRemove = false;
         }
-
     }
 
     /**
@@ -958,7 +893,8 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
 
         @Override
         public Map.Entry<K, V> next() {
-            return nextEntry();
+            moveNext();
+            return new FlatMapEntry<>(parent, getKey(), getValue());
         }
     }
 
@@ -1033,7 +969,8 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
 
         @Override
         public K next() {
-            return nextEntry().getKey();
+            moveNext();
+            return getKey();
         }
     }
 
@@ -1101,7 +1038,8 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
 
         @Override
         public V next() {
-            return nextEntry().getValue();
+            moveNext();
+            return getValue();
         }
     }
 

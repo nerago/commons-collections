@@ -18,6 +18,7 @@ package org.apache.commons.collections4.map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,6 +42,8 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.function.Try;
+import org.junit.platform.commons.util.ReflectionUtils;
 
 /**
  * JUnit tests.
@@ -71,6 +74,11 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
+    }
+
+    @Override
+    public boolean isFailFastExpected() {
+        return false;
     }
 
     @Test
@@ -880,5 +888,66 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
         final Object old = m.put(ONE, ONE);
         assertEquals(THREE, old);
         assertEquals(ONE, m.get(ONE));
+    }
+
+    @Nested
+    public class TestSmallMap extends AbstractIterableMapTest<K, V> {
+        public TestSmallMap() {
+            super("TestSmallMap");
+        }
+
+        @Override
+        public Flat3Map<K, V> makeObject() {
+            return new Flat3Map<>();
+        }
+
+        @Override
+        public CollectionCommonsRole collectionRole() {
+            return CollectionCommonsRole.CONCRETE;
+        }
+
+        @Override
+        protected IterationBehaviour getIterationBehaviour() {
+            return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
+        }
+
+        @Override
+        public boolean isFailFastExpected() {
+            return false;
+        }
+
+        @Override
+        protected boolean skipSerializedCanonicalTests() {
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public K[] getSampleKeys() {
+            return (K[]) new Object[] { ONE, TWO, THREE };
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getSampleValues() {
+            return (V[]) new Object[] { TEN, null, TWENTY };
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getNewSampleValues() {
+            return (V[]) new Object[] { THIRTY, TEN, null };
+        }
+
+        @Test
+        public void confirmUsingInternalRepresentation() throws Exception {
+            resetFull();
+            Flat3Map<K, V> flatMap = (Flat3Map<K, V>) getMap();
+            Object delegateMap = ReflectionUtils.tryToReadFieldValue(Flat3Map.class, "delegateMap", flatMap).get();
+            assertNull(delegateMap);
+            assertEquals("org.apache.commons.collections4.map.Flat3Map$EntrySet", entrySet.getClass().getName());
+            assertEquals("org.apache.commons.collections4.map.Flat3Map$KeySet", keySet.getClass().getName());
+            assertEquals("org.apache.commons.collections4.map.Flat3Map$Values", flatMap.values().getClass().getName());
+        }
     }
 }
