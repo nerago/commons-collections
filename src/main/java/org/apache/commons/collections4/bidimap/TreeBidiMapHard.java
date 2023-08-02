@@ -25,7 +25,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 /**
@@ -209,7 +211,71 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @Override
     public V put(final K key, final V value) {
-        return doPut(key, value);
+        checkKeyAndValue(key, value);
+        return doPutKeyFirst(key, value, true, true);
+    }
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        checkKeyAndValue(key, value);
+        return doPutKeyFirst(key, value, true, false);
+    }
+
+    @Override
+    public V replace(final K key, final V value) {
+        checkKeyAndValue(key, value);
+        return doPutKeyFirst(key, value, false, true);
+    }
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        checkKey(key);
+        checkValue(oldValue);
+        checkValue(newValue);
+
+        final MutableBoolean didUpdate = new MutableBoolean();
+        doPutKeyFirst(key, null,
+                (k, currentValue) -> {
+                    if (Objects.equals(oldValue, currentValue)) {
+                        didUpdate.flag = true;
+                        return newValue;
+                    } else {
+                        return currentValue;
+                    }
+                });
+        return didUpdate.flag;
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        checkKey(key);
+        Objects.requireNonNull(mappingFunction);
+        return doPutKeyFirst(key, mappingFunction, null);
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        checkKey(key);
+        Objects.requireNonNull(remappingFunction);
+        return doPutKeyFirst(key, null, remappingFunction);
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        checkKey(key);
+        Objects.requireNonNull(remappingFunction);
+        return doPutKeyFirst(key,
+                k -> remappingFunction.apply(k, null),
+                remappingFunction);
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        checkKeyAndValue(key, value);
+        Objects.requireNonNull(remappingFunction);
+        return doPutKeyFirst(key,
+                k -> value,
+                (k, v) -> remappingFunction.apply(v, value));
     }
 
     /**
@@ -226,6 +292,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
+    @Override
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        throw new UnsupportedOperationException();
+    }
+
+
     /**
      * Removes the mapping for this key from this map if present.
      * <p>
@@ -239,7 +311,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @Override
     public V remove(final Object key) {
-        return doRemoveKey(checkKey(key));
+        final Node<K, V> node = lookupKey(checkKey(key));
+        if (node == null) {
+            return null;
+        }
+        doRedBlackDelete(node);
+        return node.getValue();
+    }
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        final Node<K, V> node = lookupKey(checkKey(key));
+        if (node == null || !Objects.equals(node.value, value)) {
+            return false;
+        }
+        doRedBlackDelete(node);
+        return true;
     }
 
     /**
@@ -296,7 +383,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     @Override
     public K removeValue(final Object value) {
-        return doRemoveValue(checkValue(value));
+        final Node<K, V> node = lookupValue(checkValue(value));
+        if (node == null) {
+            return null;
+        }
+        doRedBlackDelete(node);
+        return node.getKey();
     }
 
     /**
@@ -528,72 +620,141 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @param key   the key, always the main map key
      * @param value the value, always the main map value
      */
-    private V doPut(final K key, final V value) {
-        checkKeyAndValue(key, value);
-
-        Node<K, V> node = rootNodeKey, keyNode;
+    private V doPutKeyFirst(final K key, final V value, boolean addIfAbsent, boolean updateIfPresent) {
+        Node<K, V> node = rootNodeKey;
         if (node == null) {
-            // map is empty
-            final Node<K, V> root = new Node<>(key, value);
-            rootNodeKey = root;
-            rootNodeValue = root;
-            grow();
+            if (addIfAbsent) {
+                addAsRoot(key, value);
+            }
             return null;
         }
 
         // find key position
+        final Node<K, V> keyNode;
         V oldValue = null;
         while (true) {
             final int cmp = compare(key, node.getKey());
-
             if (cmp == 0) {
-                // check if value needs change, important so later value updates can assume different
                 oldValue = node.value;
-                if (Objects.equals(oldValue, value))
+                if (!updateIfPresent || Objects.equals(oldValue, value))
                     return oldValue;
-
-                // remove from value tree
-                doRedBlackDeleteValue(node);
-
-                // update value
-                node.value = value;
-                node.calculatedHashCode = false;
+                updateValue(node, value);
                 keyNode = node;
-                modify();
                 break;
             } else if (cmp < 0) {
                 if (node.keyLeftNode == null) {
-                    // add new node on left key tree
-                    final Node<K, V> newNode = new Node<>(key, value);
-                    node.keyLeftNode = newNode;
-                    newNode.keyParentNode = node;
-                    doRedBlackInsertKey(newNode);
-                    keyNode = newNode;
-                    grow();
+                    if (!addIfAbsent)
+                        return null;
+                    keyNode = addOnLeftKey(key, value, node);
                     break;
                 }
                 node = node.keyLeftNode;
             } else { // cmp > 0
                 if (node.keyRightNode == null) {
-                    // add new node on right key tree
-                    final Node<K, V> newNode = new Node<>(key, value);
-                    node.keyRightNode = newNode;
-                    newNode.keyParentNode = node;
-                    doRedBlackInsertKey(newNode);
-                    keyNode = newNode;
-                    grow();
+                    if (!addIfAbsent)
+                        return null;
+                    keyNode = addOnRightKey(key, value, node);
                     break;
                 }
                 node = node.keyRightNode;
             }
         }
 
-        node = rootNodeValue;
+        finishPutKeyFirst(key, value, keyNode);
+
+        return oldValue;
+    }
+
+    private V doPutKeyFirst(final K key,
+                            final Function<? super K, ? extends V> absentFunc,
+                            final BiFunction<? super K, ? super V, ? extends V> presentFunc) {
+        final int expectedModifications = modifications;
+
+        Node<K, V> node = rootNodeKey;
         if (node == null) {
             // map is empty
+            if (absentFunc != null) {
+                final V value = absentFunc.apply(key);
+                if (expectedModifications != modifications) {
+                    throw new ConcurrentModificationException();
+                }
+                if (value != null) {
+                    checkValue(value);
+                    addAsRoot(key, value);
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        // find key position
+        final Node<K, V> keyNode;
+        final V newValue;
+        while (true) {
+            final int cmp = compare(key, node.getKey());
+            if (cmp == 0) {
+                final V oldValue = node.getValue();
+                if (presentFunc != null) {
+                    newValue = presentFunc.apply(key, oldValue);
+                    if (expectedModifications != modifications) {
+                        throw new ConcurrentModificationException();
+                    } else if (newValue == null) {
+                        doRedBlackDelete(node);
+                        return null;
+                    } else if (Objects.equals(oldValue, newValue)) {
+                        return oldValue;
+                    } else {
+                        checkValue(newValue);
+                        updateValue(node, newValue);
+                        keyNode = node;
+                        break;
+                    }
+                }
+                return oldValue;
+            } else if (cmp < 0) {
+                if (node.keyLeftNode == null) {
+                    if (absentFunc != null) {
+                        newValue = absentFunc.apply(key);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newValue != null) {
+                            checkValue(newValue);
+                            keyNode = addOnLeftKey(key, newValue, node);
+                            break;
+                        }
+                    }
+                    return null;
+                }
+                node = node.keyLeftNode;
+            } else { // cmp > 0
+                if (node.keyRightNode == null) {
+                    if (absentFunc != null) {
+                        newValue = absentFunc.apply(key);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newValue != null) {
+                            checkValue(newValue);
+                            keyNode = addOnRightKey(key, newValue, node);
+                            break;
+                        }
+                    }
+                    return null;
+                }
+                node = node.keyRightNode;
+            }
+        }
+
+        finishPutKeyFirst(key, newValue, keyNode);
+
+        return newValue;
+    }
+
+    private void finishPutKeyFirst(final K key, final V value, final Node<K, V> keyNode) {
+        Node<K, V> node = rootNodeValue;
+        if (node == null) {
             rootNodeValue = keyNode;
             keyNode.valueParentNode = null;
-            return oldValue;
+            return;
         }
 
         while (true) {
@@ -609,24 +770,65 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 break;
             } else if (cmp < 0) {
                 if (node.valueLeftNode == null) {
-                    node.valueLeftNode = keyNode;
-                    keyNode.valueParentNode = node;
-                    doRedBlackInsertValue(keyNode);
+                    insertOnLeftValue(node, keyNode);
                     break;
                 }
                 node = node.valueLeftNode;
             } else { // cmp > 0
                 if (node.valueRightNode == null) {
-                    node.valueRightNode = keyNode;
-                    keyNode.valueParentNode = node;
-                    doRedBlackInsertValue(keyNode);
+                    insertOnRightValue(node, keyNode);
                     break;
                 }
                 node = node.valueRightNode;
             }
         }
+    }
 
-        return oldValue;
+    private void insertOnLeftValue(final Node<K, V> parent, final Node<K, V> node) {
+        parent.valueLeftNode = node;
+        node.valueParentNode = parent;
+        doRedBlackInsertValue(node);
+    }
+
+    private void insertOnRightValue(final Node<K, V> parent, final Node<K, V> node) {
+        parent.valueRightNode = node;
+        node.valueParentNode = parent;
+        doRedBlackInsertValue(node);
+    }
+
+    private void addAsRoot(final K key, final V value) {
+        final Node<K, V> root = new Node<>(key, value);
+        rootNodeKey = root;
+        rootNodeValue = root;
+        grow();
+    }
+
+    private Node<K, V> addOnLeftKey(final K key, final V value, final Node<K, V> parent) {
+        final Node<K, V> node = new Node<>(key, value);
+        parent.keyLeftNode = node;
+        node.keyParentNode = parent;
+        doRedBlackInsertKey(node);
+        grow();
+        return node;
+    }
+
+    private Node<K, V> addOnRightKey(final K key, final V value, final Node<K, V> parent) {
+        final Node<K, V> node = new Node<>(key, value);
+        parent.keyRightNode = node;
+        node.keyParentNode = parent;
+        doRedBlackInsertKey(node);
+        grow();
+        return node;
+    }
+
+    private void updateValue(final Node<K, V> node, final V value) {
+        // remove from value tree
+        doRedBlackDeleteValue(node);
+
+        // update value
+        node.value = value;
+        node.calculatedHashCode = false;
+        modify();
     }
 
     private V doRemoveKey(final K key) {
@@ -1141,7 +1343,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         if (replacement != null) {
-            replaceNodeKey(deletedNode, replacement);
+            replaceNodeKey(deletedNode, replacement, false);
         } else {
             // replacement is null
             if (deletedNode.keyParentNode == null) {
@@ -1434,8 +1636,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private void replaceNodeKey(Node<K, V> previous, Node<K, V> replacement) {
-        Node<K, V> parentNode = previous.keyParentNode;
+    private void replaceNodeKey(final Node<K, V> previous, final Node<K, V> replacement, final boolean keepChildren) {
+        final Node<K, V> parentNode = previous.keyParentNode;
         replacement.keyParentNode = parentNode;
 
         if (parentNode == null) {
@@ -1448,6 +1650,18 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
+        if (keepChildren) {
+            if (previous.keyLeftNode != null) {
+                replacement.keyLeftNode = previous.keyLeftNode;
+                replacement.keyLeftNode.keyParentNode = replacement;
+            }
+
+            if (previous.keyRightNode != null) {
+                replacement.keyRightNode = previous.keyRightNode;
+                replacement.keyRightNode.keyParentNode = replacement;
+            }
+        }
+        
         previous.keyLeftNode = null;
         previous.keyRightNode = null;
         previous.keyParentNode = null;
@@ -1457,8 +1671,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private void replaceNodeValue(Node<K, V> previous, Node<K, V> replacement, boolean keepChildren) {
-        Node<K, V> parentNode = previous.valueParentNode;
+    private void replaceNodeValue(final Node<K, V> previous, final Node<K, V> replacement, final boolean keepChildren) {
+        final Node<K, V> parentNode = previous.valueParentNode;
         replacement.valueParentNode = parentNode;
 
         if (parentNode == null) {
@@ -1474,12 +1688,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         if (keepChildren) {
             if (previous.valueLeftNode != null) {
                 replacement.valueLeftNode = previous.valueLeftNode;
-                previous.valueLeftNode.valueParentNode = replacement;
+                replacement.valueLeftNode.valueParentNode = replacement;
             }
 
             if (previous.valueRightNode != null) {
                 replacement.valueRightNode = previous.valueRightNode;
-                previous.valueRightNode.valueParentNode = replacement;
+                replacement.valueRightNode.valueParentNode = replacement;
             }
         }
 
@@ -1848,7 +2062,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public final boolean remove(final Object o) {
-            return doRemoveKey(checkKey(o)) != null;
+            V result = null;
+            final Node<K, V> node = lookupKey(checkKey(o));
+            if (node != null) {
+                doRedBlackDelete(node);
+                result = node.getValue();
+            }
+            return result != null;
         }
     }
 
@@ -1884,7 +2104,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public final boolean remove(final Object obj) {
-            return doRemoveValue(checkValue(obj)) != null;
+            K result = null;
+            final Node<K, V> node = lookupValue(checkValue(obj));
+            if (node != null) {
+                doRedBlackDelete(node);
+                result = node.getKey();
+            }
+            return result != null;
         }
 
     }
@@ -2784,7 +3010,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      */
     private final static class Node<K extends Comparable<K>, V extends Comparable<V>> implements Entry<K, V>, KeyValue<K, V> {
 
-        private final K key;
+        private K key;
         private V value;
         private Node<K, V> keyLeftNode;
         private Node<K, V> keyRightNode;
@@ -3030,10 +3256,72 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public K put(final V key, final K value) {
-            final K result = get(key);
-            TreeBidiMapHard.this.doPut(value, key);
-            return result;
+        public K put(final V value, final K key) {
+            checkKeyAndValue(key, value);
+            return doPutValueFirst(value, key, true,  true);
+        }
+
+        @Override
+        public K putIfAbsent(final V value, final K key) {
+            checkKeyAndValue(key, value);
+            return doPutValueFirst(value, key, true, false);
+        }
+
+        @Override
+        public K replace(final V value, final K key) {
+            checkKeyAndValue(key, value);
+            return doPutValueFirst(value, key, false, true);
+        }
+
+        @Override
+        public boolean replace(final V value, final K oldKey, final K newKey) {
+            checkValue(value);
+            checkKey(oldKey);
+            checkKey(newKey);
+
+            final MutableBoolean didUpdate = new MutableBoolean();
+            doPutValueFirst(value, null,
+                    (v, currentKey) -> {
+                        if (Objects.equals(oldKey, currentKey)) {
+                            didUpdate.flag = true;
+                            return newKey;
+                        } else {
+                            return currentKey;
+                        }
+                    });
+            return didUpdate.flag;
+        }
+
+        @Override
+        public K computeIfAbsent(final V value, final Function<? super V, ? extends K> mappingFunction) {
+            checkValue(value);
+            Objects.requireNonNull(mappingFunction);
+            return doPutValueFirst(value, mappingFunction, null);
+        }
+
+        @Override
+        public K computeIfPresent(final V value, final BiFunction<? super V, ? super K, ? extends K> remappingFunction) {
+            checkValue(value);
+            Objects.requireNonNull(remappingFunction);
+            return doPutValueFirst(value, null, remappingFunction);
+        }
+
+        @Override
+        public K compute(final V value, final BiFunction<? super V, ? super K, ? extends K> remappingFunction) {
+            checkValue(value);
+            Objects.requireNonNull(remappingFunction);
+            return doPutValueFirst(value,
+                    v -> remappingFunction.apply(v, null),
+                    remappingFunction);
+        }
+
+        @Override
+        public K merge(final V value, final K key, final BiFunction<? super K, ? super K, ? extends K> remappingFunction) {
+            checkKeyAndValue(key, value);
+            Objects.requireNonNull(remappingFunction);
+            return doPutValueFirst(value,
+                    v -> key,
+                    (v, k) -> remappingFunction.apply(k, key));
         }
 
         @Override
@@ -3152,7 +3440,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             buf.append(node.getValue()).append('=').append(node.getKey());
             node = nextGreaterValue(node);
             while (node != null) {
-                buf.append(", ").append(node.getKey()).append('=').append(node.getValue());
+                buf.append(", ").append(node.getValue()).append('=').append(node.getKey());
                 node = nextGreaterValue(node);
             }
 
@@ -3190,6 +3478,219 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
 
             return lower;
+        }
+
+        private K doPutValueFirst(final V value, final K key, boolean addIfAbsent, boolean updateIfPresent) {
+            checkKeyAndValue(key, value);
+
+            Node<K, V> node = rootNodeValue;
+            if (node == null) {
+                if (addIfAbsent) {
+                    addAsRoot(key, value);
+                }
+                return null;
+            }
+
+            // find key position
+            final Node<K, V> valueNode;
+            K oldKey = null;
+            while (true) {
+                final int cmp = compare(value, node.getValue());
+                if (cmp == 0) {
+                    oldKey = node.key;
+                    if (!updateIfPresent || Objects.equals(oldKey, key))
+                        return oldKey;
+                    updateKey(node, key);
+                    valueNode = node;
+                    break;
+                } else if (cmp < 0) {
+                    if (node.valueLeftNode == null) {
+                        if (!addIfAbsent)
+                            return null;
+                        valueNode = addOnLeftValue(key, value, node);
+                        break;
+                    }
+                    node = node.valueLeftNode;
+                } else { // cmp > 0
+                    if (node.valueRightNode == null) {
+                        if (!addIfAbsent)
+                            return null;
+                        valueNode = addOnRightValue(key, value, node);
+                        break;
+                    }
+                    node = node.valueRightNode;
+                }
+            }
+
+            finishPutValueFirst(key, value, valueNode);
+
+            return oldKey;
+        }
+
+        private K doPutValueFirst(final V value,
+                                final Function<? super V, ? extends K> absentFunc,
+                                final BiFunction<? super V, ? super K, ? extends K> presentFunc) {
+            final int expectedModifications = modifications;
+
+            Node<K, V> node = rootNodeValue;
+            if (node == null) {
+                // map is empty
+                if (absentFunc != null) {
+                    final K key = absentFunc.apply(value);
+                    if (expectedModifications != modifications) {
+                        throw new ConcurrentModificationException();
+                    }
+                    if (key != null) {
+                        checkKey(key);
+                        addAsRoot(key, value);
+                        return key;
+                    }
+                }
+                return null;
+            }
+
+            // find value position
+            final Node<K, V> valueNode;
+            final K newKey;
+            while (true) {
+                final int cmp = compare(value, node.getValue());
+                if (cmp == 0) {
+                    final K oldKey = node.getKey();
+                    if (presentFunc != null) {
+                        newKey = presentFunc.apply(value, oldKey);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newKey == null) {
+                            doRedBlackDelete(node);
+                            return null;
+                        } else if (Objects.equals(oldKey, newKey)) {
+                            return oldKey;
+                        } else {
+                            checkKey(newKey);
+                            updateKey(node, newKey);
+                            valueNode = node;
+                            break;
+                        }
+                    }
+                    return oldKey;
+                } else if (cmp < 0) {
+                    if (node.valueLeftNode == null) {
+                        if (absentFunc != null) {
+                            newKey = absentFunc.apply(value);
+                            if (expectedModifications != modifications) {
+                                throw new ConcurrentModificationException();
+                            } else if (newKey != null) {
+                                checkKey(newKey);
+                                valueNode = addOnLeftValue(newKey, value, node);
+                                break;
+                            }
+                        }
+                        return null;
+                    }
+                    node = node.valueLeftNode;
+                } else { // cmp > 0
+                    if (node.valueRightNode == null) {
+                        if (absentFunc != null) {
+                            newKey = absentFunc.apply(value);
+                            if (expectedModifications != modifications) {
+                                throw new ConcurrentModificationException();
+                            } else if (newKey != null) {
+                                checkKey(newKey);
+                                valueNode = addOnRightValue(newKey, value, node);
+                                break;
+                            }
+                        }
+                        return null;
+                    }
+                    node = node.valueRightNode;
+                }
+            }
+
+            finishPutValueFirst(newKey, value, valueNode);
+
+            return newKey;
+        }
+
+        private void finishPutValueFirst(final K key, final V value, final Node<K, V> valueNode) {
+            Node<K, V> node = rootNodeKey;
+            if (node == null) {
+                rootNodeKey = valueNode;
+                valueNode.keyParentNode = null;
+                return;
+            }
+
+            while (true) {
+                final int cmp = compare(key, node.getKey());
+
+                if (cmp == 0) {
+                    // replace existing key node (assume different value)
+                    assert !Objects.equals(node.value, value);
+                    valueNode.copyColorKey(node);
+                    replaceNodeKey(node, valueNode, true);
+                    doRedBlackDeleteValue(node);
+                    shrink();
+                    break;
+                } else if (cmp < 0) {
+                    if (node.keyLeftNode == null) {
+                        insertOnLeftKey(node, valueNode);
+                        break;
+                    }
+                    node = node.keyLeftNode;
+                } else { // cmp > 0
+                    if (node.keyRightNode == null) {
+                        insertOnRightKey(node, valueNode);
+                        break;
+                    }
+                    node = node.keyRightNode;
+                }
+            }
+        }
+
+        private void insertOnLeftKey(final Node<K, V> parent, final Node<K, V> node) {
+            parent.keyLeftNode = node;
+            node.keyParentNode = parent;
+            doRedBlackInsertKey(node);
+        }
+
+        private void insertOnRightKey(final Node<K, V> parent, final Node<K, V> node) {
+            parent.keyRightNode = node;
+            node.keyParentNode = parent;
+            doRedBlackInsertKey(node);
+        }
+
+        private void addAsRoot(final K key, final V value) {
+            final Node<K, V> root = new Node<>(key, value);
+            rootNodeKey = root;
+            rootNodeValue = root;
+            grow();
+        }
+
+        private Node<K, V> addOnLeftValue(final K key, final V value, final Node<K, V> parent) {
+            final Node<K, V> node = new Node<>(key, value);
+            parent.valueLeftNode = node;
+            node.valueParentNode = parent;
+            doRedBlackInsertValue(node);
+            grow();
+            return node;
+        }
+
+        private Node<K, V> addOnRightValue(final K key, final V value, final Node<K, V> parent) {
+            final Node<K, V> node = new Node<>(key, value);
+            parent.valueRightNode = node;
+            node.valueParentNode = parent;
+            doRedBlackInsertValue(node);
+            grow();
+            return node;
+        }
+
+        private void updateKey(final Node<K, V> node, final K key) {
+            // remove from value tree
+            doRedBlackDeleteKey(node);
+
+            // update value
+            node.key = key;
+            node.calculatedHashCode = false;
+            modify();
         }
     }
 }

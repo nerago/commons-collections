@@ -1446,6 +1446,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         if (node == null) {
             rootNode[dataElement.ordinal()] = newNode;
+            newNode.setParent(null, dataElement);
             return;
         }
 
