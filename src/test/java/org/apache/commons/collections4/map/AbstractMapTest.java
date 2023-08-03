@@ -332,6 +332,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         return isFailFastExpected();
     }
 
+    public boolean isTestFunctionalMethods() {
+        return true;
+    }
+
     public boolean areEqualElementsIndistinguishable() {
         return false;
     }
@@ -843,6 +847,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
 
+        if (!isTestFunctionalMethods()) {
+            return;
+        }
         if (!isPutAddSupported()) {
             resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getMap().putIfAbsent(otherKeys[0], otherValues[0]));
@@ -891,6 +898,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
 
+        if (!isTestFunctionalMethods()) {
+            return;
+        }
         if (!isPutAddSupported()) {
             resetEmpty();
             assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfAbsent(keys[0], k -> values[0]));
@@ -977,6 +987,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] values = getSampleValues();
         final V[] newValues = getNewSampleValues();
 
+        if (!isTestFunctionalMethods()) {
+            return;
+        }
         if (!isPutChangeSupported()) {
             resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfPresent(keys[0], (k, v) -> newValues[0]));
@@ -1079,6 +1092,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] newValues = getNewSampleValues();
         final V[] otherValues = getOtherValues();
 
+        if (!isTestFunctionalMethods()) {
+            return;
+        }
         if (!isPutAddSupported() || !isPutChangeSupported() || !isRemoveSupported()) {
             resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getMap().compute(keys[0], (k, v) -> newValues[0]));
@@ -1220,6 +1236,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final V[] otherValues = getOtherValues();
         final V dummy = otherValues[0];
 
+        if (!isTestFunctionalMethods()) {
+            return;
+        }
         if (!isPutAddSupported() || !isPutChangeSupported() || !isRemoveSupported()) {
             resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], newValues[0], (k, v) -> newValues[1]));
