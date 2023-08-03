@@ -17,9 +17,10 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Comparator;
-import java.util.SortedMap;
 
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.SortedBoundMap;
+import org.apache.commons.collections4.SortedMapRange;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -78,18 +79,27 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
         return decorated().subMap(fromKey, toKey);
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
+    public SortedBoundMap<K, V> headMap(final K toKey) {
         return decorated().headMap(toKey);
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
+    public SortedBoundMap<K, V> tailMap(final K fromKey) {
         return decorated().tailMap(fromKey);
     }
 
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return decorated().getKeyRange();
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return decorated().getValueRange();
+    }
 }

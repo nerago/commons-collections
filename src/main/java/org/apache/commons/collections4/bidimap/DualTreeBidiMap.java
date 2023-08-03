@@ -182,21 +182,24 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
 
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
+    public SortedBoundMap<K, V> headMap(final K toKey) {
         final NavigableMap<K, V> sub = normalMap().headMap(toKey, false);
-        return new ViewMap<>(this, sub);
+        final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).head(toKey, false);
+        return new ViewMap<>(this, sub, range);
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
+    public SortedBoundMap<K, V> tailMap(final K fromKey) {
         final NavigableMap<K, V> sub = normalMap().tailMap(fromKey, true);
-        return new ViewMap<>(this, sub);
+        final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).tail(fromKey, true);
+        return new ViewMap<>(this, sub, range);
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
         final NavigableMap<K, V> sub = normalMap().subMap(fromKey, true, toKey, false);
-        return new ViewMap<>(this, sub);
+        final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).sub(fromKey, true, toKey, false);
+        return new ViewMap<>(this, sub, range);
     }
 
     @Override
@@ -207,7 +210,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     /**
      * Internal sorted map view.
      */
-    protected static class ViewMap<K, V> extends AbstractSortedMapDecorator<K, V> {
+    protected static class ViewMap<K, V> extends AbstractSortedBoundMapDecorator<K, V> implements SortedBoundMap<K, V> {
+        private final SortedMapRange<K> range;
         transient Set<V> values;
 
         /**
@@ -216,11 +220,17 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          * @param bidi the parent bidi map
          * @param sm   the subMap sorted map
          */
-        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm) {
+        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm, final SortedMapRange<K> range) {
             // the implementation is not great here...
             // use the normalMap as the filtered map, but reverseMap as the full map
             // this forces containsValue, clear, values.contains, values.remove, put to be overridden
             super(new DualTreeBidiMap<>(sm, bidi.reverseMap(), null));
+            this.range = range;
+        }
+
+        @Override
+        public SortedMapRange<K> getKeyRange() {
+            return range;
         }
 
         @Override
@@ -351,7 +361,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          */
         protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V> parent) {
             this.parent = parent;
-            iterator = new ArrayList<>(parent.entrySet()).listIterator();
+            iterator = new ArrayList<>(parent.normalMap().entrySet()).listIterator();
         }
 
         @Override
@@ -454,4 +464,13 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         putAll(map);
     }
 
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return null;
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return null;
+    }
 }
