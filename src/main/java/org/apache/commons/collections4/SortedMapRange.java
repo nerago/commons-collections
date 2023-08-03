@@ -4,22 +4,26 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 public final class SortedMapRange<K> implements Serializable {
+    private static final long serialVersionUID = 5904683499000042719L;
+
     /** The key to start from, null if the beginning. */
     private final K fromKey;
 
     /** The key to end at, null if till the end. */
     private final K toKey;
 
-    /** Whether or not the 'from' is inclusive. */
+    /** Whether the 'from' is inclusive. */
     private final boolean fromInclusive;
 
-    /** Whether or not the 'to' is inclusive. */
+    /** Whether the 'to' is inclusive. */
     private final boolean toInclusive;
 
     /** Comparator which defines key order. */
     private final Comparator<? super K> comparator;
 
-    private SortedMapRange(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive, Comparator<? super K> comparator) {
+    private SortedMapRange(final K fromKey, final boolean fromInclusive,
+                           final K toKey, final boolean toInclusive,
+                           final Comparator<? super K> comparator) {
         if (fromKey != null && toKey != null && comparator.compare(fromKey, toKey) > 0) {
             throw new IllegalArgumentException("fromKey > toKey");
         }
@@ -59,48 +63,50 @@ public final class SortedMapRange<K> implements Serializable {
         return toInclusive;
     }
 
-    public static <K> SortedMapRange<K> full(Comparator<? super K> comparator) {
-        return new SortedMapRange<>(null, false, null, false, comparator);
+    @SuppressWarnings("unchecked")
+    public static <K> SortedMapRange<K> full(final Comparator<? super K> comparator) {
+        return new SortedMapRange<>(null, false, null, false,
+                comparator != null ? comparator : (Comparator<? super K>) Comparator.naturalOrder());
     }
 
     public boolean isFull() {
         return fromKey == null && toKey == null;
     }
 
-    public SortedMapRange<K> sub(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+    public SortedMapRange<K> sub(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
         if (fromKey == null && toKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a from or to!");
         }
         return makeSubRange(fromKey, fromInclusive, toKey, toInclusive);
     }
 
-    public SortedMapRange<K> tail(K fromKey, boolean fromInclusive) {
+    public SortedMapRange<K> tail(final K fromKey, final boolean fromInclusive) {
         if (fromKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a from!");
         }
         return makeSubRange(fromKey, fromInclusive, null, false);
     }
 
-    public SortedMapRange<K> head(K toKey, boolean toInclusive) {
+    public SortedMapRange<K> head(final K toKey, final boolean toInclusive) {
         if (toKey == null) {
             throw new IllegalArgumentException("SortedMapRange must have a to!");
         }
         return makeSubRange(null, false, toKey, toInclusive);
     }
 
-    public SortedMapRange<K> sub(K fromKey, K toKey) {
+    public SortedMapRange<K> sub(final K fromKey, final K toKey) {
         return sub(fromKey, true, toKey, false);
     }
 
-    public SortedMapRange<K> tail(K fromKey) {
+    public SortedMapRange<K> tail(final K fromKey) {
         return tail(fromKey, true);
     }
 
-    public SortedMapRange<K> head(K toKey) {
+    public SortedMapRange<K> head(final K toKey) {
         return head(toKey, false);
     }
 
-    private SortedMapRange<K> makeSubRange(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+    private SortedMapRange<K> makeSubRange(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
         if (fromKey != null) {
             if (!inToRange(fromKey) || !rangeInFromRange(fromKey, fromInclusive)) {
                 throw new IllegalArgumentException("FromKey is out of range: " + fromKey);

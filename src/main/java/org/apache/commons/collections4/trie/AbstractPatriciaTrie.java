@@ -34,8 +34,10 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.Spliterator;
 
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.Reference;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedMapRange;
 
 /**
  * This class implements the base PATRICIA algorithm and everything that
@@ -861,17 +863,17 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
+    public IterableSortedMap<K, V> headMap(final K toKey) {
         return new RangeEntryMap(null, toKey);
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
         return new RangeEntryMap(fromKey, toKey);
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
+    public IterableSortedMap<K, V> tailMap(final K fromKey) {
         return new RangeEntryMap(fromKey, null);
     }
 
@@ -2137,7 +2139,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
             if (!inRange2(fromKey)) {
                 throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
             }
@@ -2150,7 +2152,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public SortedMap<K, V> headMap(final K toKey) {
+        public IterableSortedMap<K, V> headMap(final K toKey) {
             if (!inRange2(toKey)) {
                 throw new IllegalArgumentException("ToKey is out of range: " + toKey);
             }
@@ -2158,7 +2160,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        public SortedMap<K, V> tailMap(final K fromKey) {
+        public IterableSortedMap<K, V> tailMap(final K fromKey) {
             if (!inRange2(fromKey)) {
                 throw new IllegalArgumentException("FromKey is out of range: " + fromKey);
             }
@@ -2216,14 +2218,14 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         /**
          * Creates and returns a sub-range view of the current {@link RangeMap}.
          */
-        protected abstract SortedMap<K, V> createRangeMap(K fromKey, boolean fromInclusive,
-                                                          K toKey, boolean toInclusive);
+        protected abstract IterableSortedMap<K, V> createRangeMap(K fromKey, boolean fromInclusive,
+                                                                  K toKey, boolean toInclusive);
     }
 
     /**
      * A {@link RangeMap} that deals with {@link Entry}s.
      */
-    private class RangeEntryMap extends RangeMap {
+    private class RangeEntryMap extends RangeMap implements IterableSortedMap<K, V> {
 
         /** The key to start from, null if the beginning. */
         private final K fromKey;
@@ -2331,8 +2333,8 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        protected SortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
-                                                 final K toKey, final boolean toInclusive) {
+        protected IterableSortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
+                                                         final K toKey, final boolean toInclusive) {
             return new RangeEntryMap(fromKey, fromInclusive, toKey, toInclusive);
         }
     }
@@ -2469,7 +2471,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
     /**
      * A submap used for prefix views over the {@link org.apache.commons.collections4.Trie}.
      */
-    private class PrefixRangeMap extends RangeMap {
+    private final class PrefixRangeMap extends RangeMap {
 
         private final K prefix;
 
@@ -2634,8 +2636,8 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
         }
 
         @Override
-        protected SortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
-                                                 final K toKey, final boolean toInclusive) {
+        protected IterableSortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
+                                                         final K toKey, final boolean toInclusive) {
             return new RangeEntryMap(fromKey, fromInclusive, toKey, toInclusive);
         }
 

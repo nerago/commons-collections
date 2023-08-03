@@ -28,6 +28,8 @@ import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.set.UnmodifiableSet;
@@ -68,18 +70,28 @@ public final class UnmodifiableSortedMap<K, V>
             final SortedMap<K, V> tmpMap = (SortedMap<K, V>) map;
             return tmpMap;
         }
-        return new UnmodifiableSortedMap<>(map);
+        return new UnmodifiableSortedMap<>(map, SortedMapRange.full(map.comparator()));
+    }
+
+    public static <K, V> IterableSortedMap<K, V> unmodifiableSortedMap(final IterableSortedMap<K, ? extends V> map) {
+        if (map instanceof Unmodifiable) {
+            @SuppressWarnings("unchecked") // safe to upcast
+            final IterableSortedMap<K, V> tmpMap = (IterableSortedMap<K, V>) map;
+            return tmpMap;
+        }
+        return new UnmodifiableSortedMap<>(map, SortedMapRange.full(map.comparator()));
     }
 
     /**
      * Constructor that wraps (not copies).
      *
-     * @param map  the map to decorate, must not be null
+     * @param map      the map to decorate, must not be null
+     * @param keyRange
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
-        super((SortedMap<K, V>) map);
+    private UnmodifiableSortedMap(final SortedMap<K, ? extends V> map, final SortedMapRange<? super K> keyRange) {
+        super((SortedMap<K, V>) map, keyRange);
     }
 
     /**
@@ -204,18 +216,8 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return new UnmodifiableSortedMap<>(decorated().subMap(fromKey, toKey));
-    }
-
-    @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return new UnmodifiableSortedMap<>(decorated().headMap(toKey));
-    }
-
-    @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return new UnmodifiableSortedMap<>(decorated().tailMap(fromKey));
+    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+        return new UnmodifiableSortedMap<>(subMap, keyRange);
     }
 
 }

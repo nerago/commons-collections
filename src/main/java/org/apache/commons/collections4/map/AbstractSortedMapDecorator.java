@@ -20,11 +20,13 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.ListIteratorWrapper;
 
 /**
@@ -45,8 +47,14 @@ import org.apache.commons.collections4.iterators.ListIteratorWrapper;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecorator<K, V> implements
-        IterableSortedMap<K, V> {
+public abstract class AbstractSortedMapDecorator<K, V>
+        extends AbstractMapDecorator<K, V>
+        implements IterableSortedMap<K, V> {
+
+    private static final long serialVersionUID = 4710068155190191469L;
+
+    /** The map to decorate */
+    transient SortedMapRange<? super K> keyRange;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -63,6 +71,19 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
      */
     public AbstractSortedMapDecorator(final SortedMap<K, V> map) {
         super(map);
+        this.keyRange = SortedMapRange.full(map.comparator());
+    }
+
+    /**
+     * Constructor that wraps (not copies).
+     *
+     * @param map      the map to decorate, must not be null
+     * @param keyRange the range of keys accepted by the map
+     * @throws NullPointerException if the map is null
+     */
+    public AbstractSortedMapDecorator(final SortedMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+        super(map);
+        this.keyRange = Objects.requireNonNull(keyRange);
     }
 
     /**
@@ -73,6 +94,15 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
     @Override
     protected SortedMap<K, V> decorated() {
         return (SortedMap<K, V>) super.decorated();
+    }
+
+    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+        return new BasicSortedMapDecorator<>(subMap, keyRange);
+    }
+
+    @Override
+    public SortedMapRange<? super K> getKeyRange() {
+        return keyRange;
     }
 
     @Override
@@ -91,18 +121,18 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return decorated().subMap(fromKey, toKey);
+    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return decorateDerived(decorated().subMap(fromKey, toKey), getKeyRange().sub(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return decorated().headMap(toKey);
+    public IterableSortedMap<K, V> headMap(final K toKey) {
+        return decorateDerived(decorated().headMap(toKey), getKeyRange().head(toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return decorated().tailMap(fromKey);
+    public IterableSortedMap<K, V> tailMap(final K fromKey) {
+        return decorateDerived(decorated().tailMap(fromKey), getKeyRange().tail(fromKey));
     }
 
     @Override
@@ -173,6 +203,14 @@ public abstract class AbstractSortedMapDecorator<K, V> extends AbstractMapDecora
         public K previous() {
             entry = ((ListIterator<Map.Entry<K, V>>) iterator).previous();
             return getKey();
+        }
+    }
+
+    static class BasicSortedMapDecorator<K, V> extends AbstractSortedMapDecorator<K, V> {
+        private static final long serialVersionUID = -6584599215482864814L;
+
+        public BasicSortedMapDecorator(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+            super(subMap, keyRange);
         }
     }
 }

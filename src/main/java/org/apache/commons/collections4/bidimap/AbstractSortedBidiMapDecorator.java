@@ -19,7 +19,6 @@ package org.apache.commons.collections4.bidimap;
 import java.util.Comparator;
 
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.SortedBoundMap;
 import org.apache.commons.collections4.SortedMapRange;
 
 /**
@@ -43,6 +42,8 @@ import org.apache.commons.collections4.SortedMapRange;
 public abstract class AbstractSortedBidiMapDecorator<K, V>
         extends AbstractOrderedBidiMapDecorator<K, V> implements SortedBidiMap<K, V> {
 
+    private static final long serialVersionUID = -2025553015999206418L;
+
     /**
      * Constructor that wraps (not copies).
      *
@@ -63,6 +64,10 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
         return (SortedBidiMap<K, V>) super.decorated();
     }
 
+    protected SortedBidiMap<K, V> decorateDerived(final SortedBidiMap<K, V> map) {
+        return map;
+    }
+
     @Override
     public SortedBidiMap<V, K> inverseBidiMap() {
         return decorated().inverseBidiMap();
@@ -79,27 +84,27 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
     }
 
     @Override
-    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
-        return decorated().subMap(fromKey, toKey);
+    public SortedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
+        return decorateDerived(decorated().subMap(fromKey, toKey));
     }
 
     @Override
-    public SortedBoundMap<K, V> headMap(final K toKey) {
-        return decorated().headMap(toKey);
+    public SortedBidiMap<K, V> headMap(final K toKey) {
+        return decorateDerived(decorated().headMap(toKey));
     }
 
     @Override
-    public SortedBoundMap<K, V> tailMap(final K fromKey) {
-        return decorated().tailMap(fromKey);
+    public SortedBidiMap<K, V> tailMap(final K fromKey) {
+        return decorateDerived(decorated().tailMap(fromKey));
     }
 
     @Override
-    public SortedMapRange<K> getKeyRange() {
+    public SortedMapRange<? super K> getKeyRange() {
         return decorated().getKeyRange();
     }
 
     @Override
-    public SortedMapRange<V> getValueRange() {
+    public SortedMapRange<? super V> getValueRange() {
         return decorated().getValueRange();
     }
 }

@@ -81,15 +81,14 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
                 new TreeMap<>(valueComparator), SortedMapRange.full(valueComparator));
     }
 
-    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
-                               final NavigableMap<V, K> valueMap, final SortedMapRange<V> valueRange) {
+    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final SortedMapRange<? super K> keyRange,
+                               final NavigableMap<V, K> valueMap, final SortedMapRange<? super V> valueRange) {
         super(keyMap, keyRange, valueMap, valueRange);
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(keyComparator);
-
         out.writeObject(valueComparator);
         out.writeObject(keyMap);
     }
@@ -99,7 +98,7 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         keyComparator = (Comparator<? super K>) in.readObject();
         valueComparator = (Comparator<? super V>) in.readObject();
-        TreeMap<K, V> storedMap = (TreeMap<K, V>) in.readObject();
+        final TreeMap<K, V> storedMap = (TreeMap<K, V>) in.readObject();
         putAll(storedMap);
     }
 
@@ -120,16 +119,16 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
 
     @Override
     protected DualTreeBidi2Map<V, K> createInverse() {
-        return new DualTreeBidi2Map<>(valueMap, valueRange, keyMap, keyRange);
+        return new DualTreeBidi2Map<>(valueMap, valueRange, keyMap, getKeyRange());
     }
 
     @Override
-    protected NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range) {
-        return new DualTreeBidi2MapSubMap<>((NavigableMap<K, V>) map, range, this);
+    protected NavigableBoundMap<K, V> decorateDerived(final NavigableMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+        return new DualTreeBidi2MapSubMap<>((NavigableMap<K, V>) map, keyRange, this);
     }
 
     @Override
-    protected NavigableSet<K> createKeySet(boolean descending) {
+    protected NavigableSet<K> createKeySet(final boolean descending) {
         return new KeySetUsingKeyMap<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), this);
     }
 

@@ -21,7 +21,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.Predicate;
 
 import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
@@ -48,7 +47,7 @@ import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
  * @since 3.0
  */
 public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
-        implements SortedBidiMap<K, V>, Serializable {
+        implements SortedBidiMapCompat<K, V>, Serializable {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361809L;
@@ -180,7 +179,6 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return inverseBidiMap();
     }
 
-
     @Override
     public SortedBoundMap<K, V> headMap(final K toKey) {
         final NavigableMap<K, V> sub = normalMap().headMap(toKey, false);
@@ -210,8 +208,9 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     /**
      * Internal sorted map view.
      */
-    protected static class ViewMap<K, V> extends AbstractSortedBoundMapDecorator<K, V> implements SortedBoundMap<K, V> {
-        private final SortedMapRange<K> range;
+    protected static class ViewMap<K, V> extends AbstractSortedMapDecorator<K, V> implements SortedBoundMap<K, V> {
+        private static final long serialVersionUID = -3145985885836970321L;
+
         transient Set<V> values;
 
         /**
@@ -220,17 +219,11 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          * @param bidi the parent bidi map
          * @param sm   the subMap sorted map
          */
-        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm, final SortedMapRange<K> range) {
+        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm, final SortedMapRange<? super K> range) {
             // the implementation is not great here...
             // use the normalMap as the filtered map, but reverseMap as the full map
             // this forces containsValue, clear, values.contains, values.remove, put to be overridden
-            super(new DualTreeBidiMap<>(sm, bidi.reverseMap(), null));
-            this.range = range;
-        }
-
-        @Override
-        public SortedMapRange<K> getKeyRange() {
-            return range;
+            super(new DualTreeBidiMap<>(sm, bidi.reverseMap(), null), range);
         }
 
         @Override
@@ -268,18 +261,8 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
 
         @Override
-        public SortedMap<K, V> headMap(final K toKey) {
-            return new ViewMap<>(decorated(), decorated().normalMap().headMap(toKey, false));
-        }
-
-        @Override
-        public SortedMap<K, V> tailMap(final K fromKey) {
-            return new ViewMap<>(decorated(), decorated().normalMap().tailMap(fromKey, true));
-        }
-
-        @Override
-        public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-            return new ViewMap<>(decorated(), decorated().normalMap().subMap(fromKey, true, toKey, false));
+        protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+            return new ViewMap<>(decorated(), (NavigableMap<K, V>) subMap, keyRange);
         }
 
         @Override
@@ -361,7 +344,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          */
         protected BidiOrderedMapIterator(final AbstractDualBidiMap<K, V> parent) {
             this.parent = parent;
-            iterator = new ArrayList<>(parent.normalMap().entrySet()).listIterator();
+            iterator = new ArrayList<>(parent.normalMap.entrySet()).listIterator();
         }
 
         @Override
@@ -462,15 +445,5 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         @SuppressWarnings("unchecked") // will fail at runtime if the stream is incorrect
         final Map<K, V> map = (Map<K, V>) in.readObject();
         putAll(map);
-    }
-
-    @Override
-    public SortedMapRange<K> getKeyRange() {
-        return null;
-    }
-
-    @Override
-    public SortedMapRange<V> getValueRange() {
-        return null;
     }
 }

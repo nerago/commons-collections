@@ -28,6 +28,8 @@ import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
@@ -78,7 +80,7 @@ public class FixedSizeSortedMap<K, V>
      * @since 4.0
      */
     public static <K, V> FixedSizeSortedMap<K, V> fixedSizeSortedMap(final SortedMap<K, V> map) {
-        return new FixedSizeSortedMap<>(map);
+        return new FixedSizeSortedMap<>(map, SortedMapRange.full(map.comparator()));
     }
 
     /**
@@ -87,8 +89,8 @@ public class FixedSizeSortedMap<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if map is null
      */
-    protected FixedSizeSortedMap(final SortedMap<K, V> map) {
-        super(map);
+    protected FixedSizeSortedMap(final SortedMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+        super(map, keyRange);
     }
 
     /**
@@ -98,6 +100,11 @@ public class FixedSizeSortedMap<K, V>
      */
     protected SortedMap<K, V> getSortedMap() {
         return (SortedMap<K, V>) map;
+    }
+
+    @Override
+    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+        return new FixedSizeSortedMap<>(subMap, keyRange);
     }
 
     /**
@@ -173,21 +180,6 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public Collection<V> values() {
         return UnmodifiableCollection.unmodifiableCollection(map.values());
-    }
-
-    @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return new FixedSizeSortedMap<>(getSortedMap().subMap(fromKey, toKey));
-    }
-
-    @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return new FixedSizeSortedMap<>(getSortedMap().headMap(toKey));
-    }
-
-    @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return new FixedSizeSortedMap<>(getSortedMap().tailMap(fromKey));
     }
 
     @Override

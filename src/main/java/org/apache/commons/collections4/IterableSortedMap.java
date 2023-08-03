@@ -26,5 +26,13 @@ import java.util.SortedMap;
  *
  * @since 4.0
  */
-public interface IterableSortedMap<K, V> extends SortedMap<K, V>, OrderedMap<K, V> {
+public interface IterableSortedMap<K, V> extends SortedBoundMap<K, V>, OrderedMap<K, V> {
+    @Override
+    IterableSortedMap<K, V> subMap(K fromKey, K toKey);
+
+    @Override
+    IterableSortedMap<K, V> headMap(K toKey);
+
+    @Override
+    IterableSortedMap<K, V> tailMap(K fromKey);
 }

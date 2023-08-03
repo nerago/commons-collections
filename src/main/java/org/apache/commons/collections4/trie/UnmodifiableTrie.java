@@ -27,11 +27,14 @@ import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
+import org.apache.commons.collections4.map.UnmodifiableSortedMap;
 
 /**
  * An unmodifiable {@link Trie}.
@@ -188,8 +191,8 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
-        return Collections.unmodifiableSortedMap(delegate.headMap(toKey));
+    public IterableSortedMap<K, V> headMap(final K toKey) {
+        return UnmodifiableSortedMap.unmodifiableSortedMap(delegate.headMap(toKey));
     }
 
     @Override
@@ -198,13 +201,13 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return Collections.unmodifiableSortedMap(delegate.subMap(fromKey, toKey));
+    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return UnmodifiableSortedMap.unmodifiableSortedMap(delegate.subMap(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
-        return Collections.unmodifiableSortedMap(delegate.tailMap(fromKey));
+    public IterableSortedMap<K, V> tailMap(final K fromKey) {
+        return UnmodifiableSortedMap.unmodifiableSortedMap(delegate.tailMap(fromKey));
     }
 
     @Override
@@ -231,6 +234,11 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     @Override
     public K previousKey(final K key) {
         return delegate.previousKey(key);
+    }
+
+    @Override
+    public SortedMapRange<? super K> getKeyRange() {
+        return delegate.getKeyRange();
     }
 
     @Override

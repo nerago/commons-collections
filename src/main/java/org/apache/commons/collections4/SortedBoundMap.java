@@ -12,5 +12,5 @@ public interface SortedBoundMap<K, V> extends SortedMap<K, V> {
     @Override
     SortedBoundMap<K, V> tailMap(K fromKey);
 
-    SortedMapRange<K> getKeyRange();
+    SortedMapRange<? super K> getKeyRange();
 }

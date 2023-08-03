@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.NavigableBoundMap;
 import org.apache.commons.collections4.SortedMapRange;
 
@@ -39,8 +40,11 @@ import java.util.*;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSortedMapDecorator<K, V> implements
-        NavigableBoundMap<K, V> {
+public abstract class AbstractNavigableMapDecorator<K, V>
+        extends AbstractSortedMapDecorator<K, V>
+        implements NavigableBoundMap<K, V> {
+
+    private static final long serialVersionUID = 7643981107509930313L;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -55,8 +59,8 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    public AbstractNavigableMapDecorator(final NavigableMap<K, V> map) {
-        super(map);
+    public AbstractNavigableMapDecorator(final NavigableMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+        super(map, keyRange);
     }
 
     /**
@@ -69,61 +73,60 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
         return (NavigableMap<K, V>) super.decorated();
     }
 
-
     @Override
-    protected SortedMap<K, V> wrapMap(SortedMap<K, V> map) {
-        throw new IllegalArgumentException();
+    protected final IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+        return decorateDerived((NavigableMap<K, V>) subMap, keyRange);
     }
 
-    protected abstract NavigableBoundMap<K, V> wrapMap(SortedMap<K, V> map, SortedMapRange<K> range);
+    protected abstract NavigableBoundMap<K, V> decorateDerived(NavigableMap<K, V> subMap, SortedMapRange<? super K> keyRange);
 
     @Override
-    public K nextKey(K key) {
+    public K nextKey(final K key) {
         return decorated().higherKey(key);
     }
 
     @Override
-    public K previousKey(K key) {
+    public K previousKey(final K key) {
         return decorated().lowerKey(key);
     }
 
     @Override
-    public Entry<K, V> lowerEntry(K key) {
+    public Entry<K, V> lowerEntry(final K key) {
         return decorated().lowerEntry(key);
     }
 
     @Override
-    public K lowerKey(K key) {
+    public K lowerKey(final K key) {
         return decorated().lowerKey(key);
     }
 
     @Override
-    public Entry<K, V> floorEntry(K key) {
+    public Entry<K, V> floorEntry(final K key) {
         return decorated().floorEntry(key);
     }
 
     @Override
-    public K floorKey(K key) {
+    public K floorKey(final K key) {
         return decorated().floorKey(key);
     }
 
     @Override
-    public Entry<K, V> ceilingEntry(K key) {
+    public Entry<K, V> ceilingEntry(final K key) {
         return decorated().ceilingEntry(key);
     }
 
     @Override
-    public K ceilingKey(K key) {
+    public K ceilingKey(final K key) {
         return decorated().ceilingKey(key);
     }
 
     @Override
-    public Entry<K, V> higherEntry(K key) {
+    public Entry<K, V> higherEntry(final K key) {
         return decorated().higherEntry(key);
     }
 
     @Override
-    public K higherKey(K key) {
+    public K higherKey(final K key) {
         return decorated().higherKey(key);
     }
 
@@ -159,38 +162,37 @@ public abstract class AbstractNavigableMapDecorator<K, V> extends AbstractSorted
     
     @Override
     public NavigableMap<K, V> descendingMap() {
-        return wrapMap(decorated().descendingMap(), getKeyRange().reversed());
+        return decorateDerived(decorated().descendingMap(), getKeyRange().reversed());
     }
     
     @Override
-    public NavigableBoundMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-        return wrapMap(decorated().subMap(fromKey, fromInclusive, toKey, toInclusive),
+    public NavigableBoundMap<K, V> subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
+        return decorateDerived(decorated().subMap(fromKey, fromInclusive, toKey, toInclusive),
                 getKeyRange().sub(fromKey, fromInclusive, toKey, toInclusive));
     }
 
     @Override
-    public NavigableBoundMap<K, V> headMap(K toKey, boolean inclusive) {
-        return wrapMap(decorated().headMap(toKey, inclusive), getKeyRange().head(toKey, inclusive));
+    public NavigableBoundMap<K, V> headMap(final K toKey, final boolean inclusive) {
+        return decorateDerived(decorated().headMap(toKey, inclusive), getKeyRange().head(toKey, inclusive));
     }
 
     @Override
-    public NavigableBoundMap<K, V> tailMap(K fromKey, boolean inclusive) {
-        return wrapMap(decorated().tailMap(fromKey, inclusive), getKeyRange().tail(fromKey, inclusive));
+    public NavigableBoundMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
+        return decorateDerived(decorated().tailMap(fromKey, inclusive), getKeyRange().tail(fromKey, inclusive));
     }
 
     @Override
-    public NavigableBoundMap<K, V> subMap(K fromKey, K toKey) {
-        return wrapMap(decorated().subMap(fromKey, true, toKey, false),
-                getKeyRange().sub(fromKey, true, toKey, false));
+    public NavigableBoundMap<K, V> subMap(final K fromKey, final K toKey) {
+        return subMap(fromKey, true, toKey, false);
     }
 
     @Override
-    public NavigableBoundMap<K, V> headMap(K toKey) {
-        return wrapMap(decorated().headMap(toKey, false), getKeyRange().head(toKey, false));
+    public NavigableBoundMap<K, V> headMap(final K toKey) {
+        return headMap(toKey, false);
     }
 
     @Override
-    public NavigableBoundMap<K, V> tailMap(K fromKey) {
-        return wrapMap(decorated().tailMap(fromKey, true), getKeyRange().tail(fromKey, true));
+    public NavigableBoundMap<K, V> tailMap(final K fromKey) {
+        return tailMap(fromKey, true);
     }
 }

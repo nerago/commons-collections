@@ -21,6 +21,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
 
 /**
@@ -41,12 +42,14 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
      */
     private final KeyAnalyzer<? super K> keyAnalyzer;
 
+    private SortedMapRange<K> keyRange;
+
     /**
      * Constructs a new {@link Trie} using the given {@link KeyAnalyzer}.
      *
      * @param keyAnalyzer  the {@link KeyAnalyzer} to use
      */
-    protected AbstractBitwiseTrie(final KeyAnalyzer<? super K> keyAnalyzer) {
+    protected AbstractBitwiseTrie(final KeyAnalyzer<? super K> keyAnalyzer, final SortedMapRange<? super K> keyRange) {
         this.keyAnalyzer = Objects.requireNonNull(keyAnalyzer, "keyAnalyzer");
     }
 
@@ -56,6 +59,11 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
      */
     protected KeyAnalyzer<? super K> getKeyAnalyzer() {
         return keyAnalyzer;
+    }
+
+    @Override
+    public SortedMapRange<? super K> getKeyRange() {
+        return keyRange;
     }
 
     @Override

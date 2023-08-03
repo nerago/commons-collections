@@ -20,6 +20,8 @@ import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Provide a basic {@link IterableMap} implementation.
