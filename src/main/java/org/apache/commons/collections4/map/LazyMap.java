@@ -173,6 +173,12 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
     }
 
     @Override
+    public V getOrDefault(Object key, V defaultValue) {
+        // pretend every key is contained so never use the default
+        return get(key);
+    }
+
+    @Override
     public V putIfAbsent(K key, V ignoreCallerValue) {
         final V mapValue = map.get(key);
         if (mapValue != null) {
@@ -198,11 +204,13 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
     }
 
     @Override
-    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         final V oldMapValue = map.get(key);
-        if (oldMapValue != null || map.containsKey(key)) {
+        if (oldMapValue == null && map.containsKey(key)) {
+            return null;
+        } else if (oldMapValue != null) {
             final V newValue = remappingFunction.apply(key, oldMapValue);
             if (newValue != null) {
                 map.put(key, newValue);
@@ -213,6 +221,54 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
         } else {
             final V factoryValue = factory.transform(key);
             final V newValue = remappingFunction.apply(key, factoryValue);
+            if (newValue != null) {
+                map.put(key, newValue);
+            }
+            return newValue;
+        }
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+
+        final V oldMapValue = map.get(key);
+        if (oldMapValue != null) {
+            final V newValue = remappingFunction.apply(key, oldMapValue);
+            if (newValue != null) {
+                map.put(key, newValue);
+            } else {
+                map.remove(key);
+            }
+            return newValue;
+        } else {
+            final V factoryValue = factory.transform(key);
+            final V newValue = remappingFunction.apply(key, factoryValue);
+            if (newValue != null) {
+                map.put(key, newValue);
+            }
+            return newValue;
+        }
+    }
+
+    @Override
+    public V merge(final K key, final V paramValue, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(paramValue);
+
+        final V oldMapValue = map.get(key);
+        if (oldMapValue != null || map.containsKey(key)) {
+            final V initialValue = oldMapValue != null ? oldMapValue : factory.transform(key);
+            final V newValue = remappingFunction.apply(initialValue, paramValue);
+            if (newValue != null) {
+                map.put(key, newValue);
+            } else {
+                map.remove(key);
+            }
+            return newValue;
+        } else {
+            final V factoryValue = factory.transform(key);
+            final V newValue = remappingFunction.apply(factoryValue, paramValue);
             if (newValue != null) {
                 map.put(key, newValue);
             }

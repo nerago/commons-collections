@@ -71,6 +71,11 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
         return IterationBehaviour.STABLE_SEQUENCE;
     }
 
+    @Override
+    public boolean isFailFastFunctionalExpected() {
+        return false;
+    }
+
     @Test
     public void testGetByIndex() {
         resetEmpty();

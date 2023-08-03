@@ -382,7 +382,7 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
                 // delete every second
                 final BiFunction<? super K, ? super V, ? extends V> mappingFunction = (k, v) -> {
                     assertEquals(key, k);
-                    assertEquals(originalValue, v);
+                    assertEquals(originalValue != null ? originalValue : FACTORY, v);
                     return null;
                 };
                 assertTrue(getMap().containsKey(key));
@@ -394,7 +394,7 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
                 // change value
                 final BiFunction<? super K, ? super V, ? extends V> mappingFunction = (k, v) -> {
                     assertEquals(key, k);
-                    assertEquals(originalValue, v);
+                    assertEquals(originalValue != null ? originalValue : FACTORY, v);
                     return replaceValue;
                 };
                 assertEquals(replaceValue, getMap().compute(key, mappingFunction),
@@ -502,12 +502,13 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
             } else if (originalValue == null) {
                 // change value
                 final BiFunction<? super V, ? super V, ? extends V> mappingFunction = (v, p) -> {
-                    fail("shouldn't call func");
-                    return null;
+                    assertEquals(FACTORY, v);
+                    assertEquals(dummy, p);
+                    return replaceValue;
                 };
                 assertTrue(getMap().containsKey(key));
                 assertNull(getMap().get(key));
-                assertEquals(replaceValue, getMap().merge(key, replaceValue, mappingFunction),
+                assertEquals(replaceValue, getMap().merge(key, dummy, mappingFunction),
                         "merge should return new value from param");
                 assertTrue(getMap().containsKey(key));
                 assertEquals(replaceValue, getMap().get(key));
