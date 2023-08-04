@@ -81,8 +81,8 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
                 new TreeMap<>(valueComparator), SortedMapRange.full(valueComparator));
     }
 
-    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final SortedMapRange<? super K> keyRange,
-                               final NavigableMap<V, K> valueMap, final SortedMapRange<? super V> valueRange) {
+    protected DualTreeBidi2Map(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
+                               final NavigableMap<V, K> valueMap, final SortedMapRange<V> valueRange) {
         super(keyMap, keyRange, valueMap, valueRange);
     }
 
@@ -123,7 +123,7 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableBoundMap<K, V> decorateDerived(final NavigableMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+    protected NavigableBoundMap<K, V> decorateDerived(final NavigableMap<K, V> map, final SortedMapRange<K> keyRange) {
         return new DualTreeBidi2MapSubMap<>((NavigableMap<K, V>) map, keyRange, this);
     }
 

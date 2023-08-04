@@ -59,7 +59,7 @@ public abstract class AbstractNavigableMapDecorator<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    public AbstractNavigableMapDecorator(final NavigableMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+    public AbstractNavigableMapDecorator(final NavigableMap<K, V> map, final SortedMapRange<K> keyRange) {
         super(map, keyRange);
     }
 
@@ -74,11 +74,11 @@ public abstract class AbstractNavigableMapDecorator<K, V>
     }
 
     @Override
-    protected final IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+    protected final IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return decorateDerived((NavigableMap<K, V>) subMap, keyRange);
     }
 
-    protected abstract NavigableBoundMap<K, V> decorateDerived(NavigableMap<K, V> subMap, SortedMapRange<? super K> keyRange);
+    protected abstract NavigableBoundMap<K, V> decorateDerived(NavigableMap<K, V> subMap, SortedMapRange<K> keyRange);
 
     @Override
     public K nextKey(final K key) {
@@ -168,7 +168,7 @@ public abstract class AbstractNavigableMapDecorator<K, V>
     @Override
     public NavigableBoundMap<K, V> subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
         return decorateDerived(decorated().subMap(fromKey, fromInclusive, toKey, toInclusive),
-                getKeyRange().sub(fromKey, fromInclusive, toKey, toInclusive));
+                getKeyRange().subRange(fromKey, fromInclusive, toKey, toInclusive));
     }
 
     @Override

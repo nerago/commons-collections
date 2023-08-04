@@ -90,7 +90,7 @@ public final class UnmodifiableSortedMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableSortedMap(final SortedMap<K, ? extends V> map, final SortedMapRange<? super K> keyRange) {
+    private UnmodifiableSortedMap(final SortedMap<K, ? extends V> map, final SortedMapRange<K> keyRange) {
         super((SortedMap<K, V>) map, keyRange);
     }
 
@@ -216,7 +216,7 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return new UnmodifiableSortedMap<>(subMap, keyRange);
     }
 

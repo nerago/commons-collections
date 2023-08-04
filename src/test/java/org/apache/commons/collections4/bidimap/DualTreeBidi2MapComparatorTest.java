@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.comparators.ComparableComparator;
 import org.apache.commons.collections4.comparators.ReverseComparator;
@@ -134,19 +135,14 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
     }
 
     @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.CONCRETE;
+    }
+
+    @Override
     public String getCompatibilityVersion() {
         return "4.Test2";
     }
-
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        final String recursiveTest = "DualTreeBidiMap2Test.bulkTestInverseMap.bulkTestInverseMap";
-        return new String[] { recursiveTest };
-    }
-
 
 //    public void testCreate() throws Exception {
 //        resetEmpty();

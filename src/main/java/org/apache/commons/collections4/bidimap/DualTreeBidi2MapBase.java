@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractNavigableMapDecorator<K, V>
-        implements SortedBidiMap<K, V>, NavigableBoundMap<K, V> {
+        implements SortedBidi2Map<K, V>, NavigableBoundMap<K, V> {
     protected static final boolean treeMapImplementsRemove2 = checkNotDefault("remove", Object.class, Object.class);
     protected static final boolean treeMapImplementsReplace3 = checkNotDefault("replace", Object.class, Object.class, Object.class);
     protected static final boolean treeMapImplementsPutIfAbsent = checkNotDefault("putIfAbsent", Object.class, Object.class);
@@ -26,7 +26,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     protected NavigableMap<V, K> valueMap;
     protected Comparator<? super K> keyComparator;
     protected Comparator<? super V> valueComparator;
-    protected final SortedMapRange<? super V> valueRange;
+    protected final SortedMapRange<V> valueRange;
 
     private DualTreeBidi2MapBase<V, K> inverseBidiMap;
     private DualTreeBidi2MapBase<K,V> descendingBidiMap;
@@ -35,8 +35,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     private NavigableSet<V> valueSet;
     private Set<Entry<K, V>> entrySet;
 
-    protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final SortedMapRange<? super K> keyRange,
-                                   final NavigableMap<V, K> valueMap, final SortedMapRange<? super V> valueRange) {
+    protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
+                                   final NavigableMap<V, K> valueMap, final SortedMapRange<V> valueRange) {
         super(keyMap, keyRange);
         this.keyMap = keyMap;
         this.keyComparator = Objects.requireNonNull(keyMap.comparator());

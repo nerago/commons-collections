@@ -14,30 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.collections4.bidimap;
-
-import org.apache.commons.collections4.CollectionCommonsRole;
+package org.apache.commons.collections4;
 
 /**
- * JUnit tests.
+ * Defines a map that allows bidirectional lookup between key and values
+ * and retains both keys and values in sorted order.
+ * <p>
+ * Implementations should allow a value to be looked up from a key and
+ * a key to be looked up from a value with equal performance.
+ * </p>
+ *
+ * @param <K> the type of the keys in the map
+ * @param <V> the type of the values in the map
+ * @since 3.0
  */
-public class DualTreeBidi2MapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
-
-    public DualTreeBidi2MapTest() {
-        super(DualTreeBidi2MapTest.class.getSimpleName());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DualTreeBidi2Map<K, V> makeObject() {
-        return new DualTreeBidi2Map<>();
-    }
+public interface SortedBidi2Map<K, V> extends SortedBidiMap<K, V>, SortedBoundMap<K, V> {
+    SortedMapRange<? super V> getValueRange();
 
     @Override
-    public CollectionCommonsRole collectionRole() {
-        return CollectionCommonsRole.CONCRETE;
-    }
+    SortedBidi2Map<K, V> subMap(K fromKey, K toKey);
 
+    @Override
+    SortedBidi2Map<K, V> headMap(K toKey);
+
+    @Override
+    SortedBidi2Map<K, V> tailMap(K fromKey);
 }

@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.trie;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.analyzer.StringKeyAnalyzer;
 

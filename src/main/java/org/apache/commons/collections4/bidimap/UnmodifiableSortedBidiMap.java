@@ -26,6 +26,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidi2Map;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
@@ -81,12 +82,12 @@ public final class UnmodifiableSortedBidiMap<K, V>
      */
     @SuppressWarnings("unchecked") // safe to upcast
     private UnmodifiableSortedBidiMap(final SortedBidiMap<K, ? extends V> map) {
-        super((SortedBidiMap<K, V>) map);
+        super((SortedBidi2Map<K, V>) map);
     }
 
     @Override
-    protected SortedBidiMap<K, V> decorateDerived(final SortedBidiMap<K, V> map) {
-        return new UnmodifiableSortedBidiMap(map);
+    protected SortedBidi2Map<K, V> decorateDerived(final SortedBidi2Map<K, V> map) {
+        return new UnmodifiableSortedBidiMap<>(map);
     }
 
     @Override

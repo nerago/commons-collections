@@ -47,7 +47,7 @@ import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
  * @since 3.0
  */
 public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
-        implements SortedBidiMapCompat<K, V>, Serializable {
+        implements SortedBidiMap<K, V>, Serializable {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361809L;
@@ -196,7 +196,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     @Override
     public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
         final NavigableMap<K, V> sub = normalMap().subMap(fromKey, true, toKey, false);
-        final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).sub(fromKey, true, toKey, false);
+        final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).subRange(fromKey, true, toKey, false);
         return new ViewMap<>(this, sub, range);
     }
 
@@ -219,7 +219,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
          * @param bidi the parent bidi map
          * @param sm   the subMap sorted map
          */
-        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm, final SortedMapRange<? super K> range) {
+        protected ViewMap(final DualTreeBidiMap<K, V> bidi, final NavigableMap<K, V> sm, final SortedMapRange<K> range) {
             // the implementation is not great here...
             // use the normalMap as the filtered map, but reverseMap as the full map
             // this forces containsValue, clear, values.contains, values.remove, put to be overridden
@@ -261,7 +261,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         }
 
         @Override
-        protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+        protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
             return new ViewMap<>(decorated(), (NavigableMap<K, V>) subMap, keyRange);
         }
 

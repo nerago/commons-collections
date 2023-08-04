@@ -62,7 +62,7 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
     }
 
     @Override
-    public SortedMapRange<? super K> getKeyRange() {
+    public SortedMapRange<K> getKeyRange() {
         return keyRange;
     }
 
@@ -88,7 +88,7 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
     /**
      * Returns the length of the given key in bits
      *
-     * @see KeyAnalyzer#lengthInBits(Object)
+     * @see KeyAnalyzer#lengthInBits(Comparable)
      */
     final int lengthInBits(final K key) {
         if (key == null) {
@@ -110,7 +110,7 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
     /**
      * Returns whether or not the given bit on the key is set or false if the key is null.
      *
-     * @see KeyAnalyzer#isBitSet(Object, int, int)
+     * @see KeyAnalyzer#isBitSet(Comparable, int, int)
      */
     final boolean isBitSet(final K key, final int bitIndex, final int lengthInBits) {
         if (key == null) { // root's might be null!
@@ -120,14 +120,14 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Utility method for calling {@link KeyAnalyzer#bitIndex(Object, int, int, Object, int, int)}.
+     * Utility method for calling {@link KeyAnalyzer#bitIndex(Comparable, int, int, Comparable, int, int)}.
      */
     final int bitIndex(final K key, final K foundKey) {
         return keyAnalyzer.bitIndex(key, 0, lengthInBits(key), foundKey, 0, lengthInBits(foundKey));
     }
 
     /**
-     * A utility method for calling {@link KeyAnalyzer#compare(Object, Object)}
+     * A utility method for calling {@link KeyAnalyzer#compare(Comparable, Comparable)}
      */
     final boolean equalKeys(final K key, final K other) {
         if (key == null) {
@@ -138,13 +138,6 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
         }
 
         return keyAnalyzer.compare(key, other) == 0;
-    }
-
-    /**
-     * Delegates to {@link Objects#equals(Object, Object)}.
-     */
-    static boolean compare(final Object a, final Object b) {
-        return Objects.equals(a, b);
     }
 
     /**
@@ -208,11 +201,7 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
             }
 
             final Map.Entry<?, ?> other = (Map.Entry<?, ?>) o;
-            if (compare(key, other.getKey())
-                    && compare(value, other.getValue())) {
-                return true;
-            }
-            return false;
+            return Objects.equals(key, other.getKey()) && Objects.equals(value, other.getValue());
         }
 
         @Override

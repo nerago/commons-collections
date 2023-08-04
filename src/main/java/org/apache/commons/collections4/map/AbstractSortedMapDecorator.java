@@ -54,7 +54,7 @@ public abstract class AbstractSortedMapDecorator<K, V>
     private static final long serialVersionUID = 4710068155190191469L;
 
     /** The map to decorate */
-    transient SortedMapRange<? super K> keyRange;
+    transient SortedMapRange<K> keyRange;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -81,7 +81,7 @@ public abstract class AbstractSortedMapDecorator<K, V>
      * @param keyRange the range of keys accepted by the map
      * @throws NullPointerException if the map is null
      */
-    public AbstractSortedMapDecorator(final SortedMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+    public AbstractSortedMapDecorator(final SortedMap<K, V> map, final SortedMapRange<K> keyRange) {
         super(map);
         this.keyRange = Objects.requireNonNull(keyRange);
     }
@@ -96,12 +96,12 @@ public abstract class AbstractSortedMapDecorator<K, V>
         return (SortedMap<K, V>) super.decorated();
     }
 
-    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return new BasicSortedMapDecorator<>(subMap, keyRange);
     }
 
     @Override
-    public SortedMapRange<? super K> getKeyRange() {
+    public SortedMapRange<K> getKeyRange() {
         return keyRange;
     }
 
@@ -122,7 +122,7 @@ public abstract class AbstractSortedMapDecorator<K, V>
 
     @Override
     public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return decorateDerived(decorated().subMap(fromKey, toKey), getKeyRange().sub(fromKey, toKey));
+        return decorateDerived(decorated().subMap(fromKey, toKey), getKeyRange().subRange(fromKey, toKey));
     }
 
     @Override
@@ -209,7 +209,7 @@ public abstract class AbstractSortedMapDecorator<K, V>
     static class BasicSortedMapDecorator<K, V> extends AbstractSortedMapDecorator<K, V> {
         private static final long serialVersionUID = -6584599215482864814L;
 
-        public BasicSortedMapDecorator(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+        public BasicSortedMapDecorator(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
             super(subMap, keyRange);
         }
     }

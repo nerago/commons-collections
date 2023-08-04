@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.SortedBidiMap;
 
 /**
  * JUnit tests.
@@ -31,7 +32,7 @@ public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V
      * {@inheritDoc}
      */
     @Override
-    public DualTreeBidiMap<K, V> makeObject() {
+    public SortedBidiMap<K, V> makeObject() {
         return new DualTreeBidiMap<>();
     }
 

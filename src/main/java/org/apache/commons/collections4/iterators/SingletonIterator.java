@@ -121,4 +121,7 @@ public class SingletonIterator<E>
         beforeFirst = true;
     }
 
+    protected E getObject() {
+        return object;
+    }
 }

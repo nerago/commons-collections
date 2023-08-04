@@ -237,7 +237,7 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     }
 
     @Override
-    public SortedMapRange<? super K> getKeyRange() {
+    public SortedMapRange<K> getKeyRange() {
         return delegate.getKeyRange();
     }
 

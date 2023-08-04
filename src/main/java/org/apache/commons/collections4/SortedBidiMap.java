@@ -19,27 +19,28 @@ package org.apache.commons.collections4;
 import java.util.Comparator;
 import java.util.SortedMap;
 
-/**
- * Defines a map that allows bidirectional lookup between key and values
- * and retains both keys and values in sorted order.
- * <p>
- * Implementations should allow a value to be looked up from a key and
- * a key to be looked up from a value with equal performance.
- * </p>
- *
- * @param <K> the type of the keys in the map
- * @param <V> the type of the values in the map
- * @since 3.0
- */
-public interface SortedBidiMap<K, V> extends SortedBidiMapCompat<K, V>, SortedBoundMap<K, V> {
-    SortedMapRange<? super V> getValueRange();
+public interface SortedBidiMap<K, V> extends OrderedBidiMap<K, V>, SortedMap<K, V> {
+    /**
+     * Get the comparator used for the values in the value-to-key map aspect.
+     * @return Comparator&lt;? super V&gt;
+     */
+    Comparator<? super V> valueComparator();
 
+    /**
+     * Gets a view of this map where the keys and values are reversed.
+     * <p>
+     * Changes to one map will be visible in the other and vice versa.
+     * This enables both directions of the map to be accessed equally.
+     * <p>
+     * Implementations should seek to avoid creating a new object every time this
+     * method is called. See {@code AbstractMap.values()} etc. Calling this
+     * method on the inverse map should return the original.
+     * <p>
+     * Implementations must return a {@code SortedBidiMap} instance,
+     * usually by forwarding to {@code inverseSortedBidiMap()}.
+     *
+     * @return an inverted bidirectional map
+     */
     @Override
-    SortedBidiMap<K, V> subMap(K fromKey, K toKey);
-
-    @Override
-    SortedBidiMap<K, V> headMap(K toKey);
-
-    @Override
-    SortedBidiMap<K, V> tailMap(K fromKey);
+    SortedBidiMap<V, K> inverseBidiMap();
 }

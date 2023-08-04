@@ -89,7 +89,7 @@ public class FixedSizeSortedMap<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if map is null
      */
-    protected FixedSizeSortedMap(final SortedMap<K, V> map, final SortedMapRange<? super K> keyRange) {
+    protected FixedSizeSortedMap(final SortedMap<K, V> map, final SortedMapRange<K> keyRange) {
         super(map, keyRange);
     }
 
@@ -103,7 +103,7 @@ public class FixedSizeSortedMap<K, V>
     }
 
     @Override
-    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<? super K> keyRange) {
+    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return new FixedSizeSortedMap<>(subMap, keyRange);
     }
 

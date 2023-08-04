@@ -32,7 +32,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
         implements Trie<K, V>, Serializable {
     private static final long serialVersionUID = -1993317552691676845L;
 
-    private transient final SortedMapRange<? super K> keyRange;
+    private transient final SortedMapRange<K> keyRange;
     private transient final KeyAnalyzer<K> keyAnalyzer;
     private transient final TEntry<K, V> root;
     private transient int size;
@@ -42,9 +42,9 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
     private transient Collection<V> values;
     private transient Set<Map.Entry<K, V>> entrySet;
 
-    public NickTrie(final KeyAnalyzer<K> keyAnalyzer, final SortedMapRange<? super K> keyRange) {
+    public NickTrie(final KeyAnalyzer<K> keyAnalyzer) {
         this.keyAnalyzer = keyAnalyzer;
-        this.keyRange = keyRange;
+        this.keyRange = SortedMapRange.full(keyAnalyzer);
         this.root = TEntry.makeRoot();
         this.size = 0;
         this.modCount = 0;
@@ -419,7 +419,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public SortedMapRange<? super K> getKeyRange() {
+    public SortedMapRange<K> getKeyRange() {
         return keyRange;
     }
 
