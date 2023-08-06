@@ -13,7 +13,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.*;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
@@ -48,45 +47,31 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         this.valueComparator = Objects.requireNonNull(valueMap.comparator());
     }
 
-    private static final Comparable<?> NULL = o -> {
-        throw new UnsupportedOperationException();
-    };
-
     @SuppressWarnings("unchecked")
-    protected K NO_KEY() {
-        return (K) NULL;
+    protected final K castKey(final Object keyObject) {
+        return (K) Objects.requireNonNull(keyObject);
     }
 
     @SuppressWarnings("unchecked")
-    protected V NO_VALUE() {
-        return (V) NULL;
+    protected final V castValue(final Object valueObject) {
+        return (V) Objects.requireNonNull(valueObject);
     }
 
-    @SuppressWarnings("unchecked")
-    protected K castKey(final Object keyObject) {
-        return (K) keyObject;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected V castValue(final Object valueObject) {
-        return (V) valueObject;
-    }
-
-    protected boolean keyEquals(final K a, final K b) {
+    protected final boolean keyEquals(final K a, final K b) {
         return (a != null && b != null && keyComparator.compare(a, b) == 0) || (a == b);
     }
 
-    protected boolean valueEquals(final V a, final V b) {
+    protected final boolean valueEquals(final V a, final V b) {
         return (a != null && b != null && valueComparator.compare(a, b) == 0) || (a == b);
     }
 
     @Override
-    public SortedMapRange<? super V> getValueRange() {
+    public final SortedMapRange<? super V> getValueRange() {
         return valueRange;
     }
 
     @Override
-    public SortedBidiMap<V, K> inverseBidiMap() {
+    public final SortedBidiMap<V, K> inverseBidiMap() {
         if (inverseBidiMap == null) {
             inverseBidiMap = createInverse();
             inverseBidiMap.inverseBidiMap = this;
@@ -95,7 +80,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public NavigableMap<K, V> descendingMap() {
+    public final NavigableMap<K, V> descendingMap() {
         if (descendingBidiMap == null)
             descendingBidiMap = createDescending();
         return descendingBidiMap;
@@ -116,6 +101,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected abstract void modified();
+
+    protected abstract int modificationCount();
 
     @Override
     public boolean containsValue(final Object valueObject) {
@@ -138,8 +125,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     @Override
     public K removeValue(final Object valueObject) {
         final V value = castValue(valueObject);
-        final K key = valueMap.getOrDefault(value, NO_KEY());
-        if (key == NO_KEY())
+        final K key = valueMap.get(value);
+        if (key == null)
             return null;
         keyMapRemoveChecked(key, value);
         valueMapRemoveChecked(value, key);
@@ -149,8 +136,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     protected boolean removeValueViaCollection(final Object valueObject) {
         final V value = castValue(valueObject);
-        final K key = valueMap.getOrDefault(value, NO_KEY());
-        if (key == NO_KEY())
+        final K key = valueMap.get(value);
+        if (key == null)
             return false;
         keyMapRemoveChecked(key, value);
         valueMapRemoveChecked(value, key);
@@ -192,9 +179,9 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public V put(final K key, final V newValue) {
-        final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+        final V currentValue = keyMap.get(key);
 
-        if (currentValue == NO_VALUE()) {
+        if (currentValue == null) {
             keyMapAddChecked(key, newValue);
             updateValueMapForNewValue(key, newValue);
             modified();
@@ -286,8 +273,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             }
             return false;
         } else {
-            final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
-            if (currentValue == NO_VALUE() || !valueEquals(currentValue, value))
+            final V currentValue = keyMap.get(key);
+            if (currentValue == null || !valueEquals(currentValue, value))
                 return false;
             keyMapRemoveChecked(key, value);
             valueMapRemoveChecked(value, key);
@@ -316,8 +303,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public V replace(final K key, final V newValue) {
-        final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
-        if (currentValue == NO_VALUE())
+        final V currentValue = keyMap.get(key);
+        if (currentValue == null)
             return null;
         else if (valueEquals(newValue, currentValue))
             return currentValue;
@@ -358,8 +345,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public V putIfAbsent(final K key, final V newValue) {
-        final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
-        if (currentValue == NO_VALUE()) {
+        final V currentValue = keyMap.get(key);
+        if (currentValue == null) {
             keyMapAddChecked(key, newValue);
             updateValueMapForNewValue(key, newValue);
             modified();
@@ -373,8 +360,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
 
-        final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
-        if (currentValue == NO_VALUE()) {
+        final V currentValue = keyMap.get(key);
+        if (currentValue == null) {
             final V newValue = mappingFunction.apply(key);
             if (newValue != null) {
                 keyMapAddChecked(key, newValue);
@@ -391,19 +378,17 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
-        final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
-        final V currentValueNormal = currentValue != NO_VALUE() ? currentValue : null;
+        final V currentValue = keyMap.get(key);
+        final V newValue = remappingFunction.apply(key, currentValue);
 
-        final V newValue = remappingFunction.apply(key, currentValueNormal);
-
-        if (newValue == null) {
-            if (currentValue != NO_VALUE()) {
-                keyMapRemoveChecked(key, currentValue);
-                valueMapRemoveChecked(currentValue, key);
-                modified();
-            }
+        if (newValue == null && currentValue == null) {
             return null;
-        } else if (currentValue == NO_VALUE()) {
+        } else if (newValue == null) {
+            keyMapRemoveChecked(key, currentValue);
+            valueMapRemoveChecked(currentValue, key);
+            modified();
+            return null;
+        } else if (currentValue == null) {
             keyMapAddChecked(key, newValue);
             updateValueMapForNewValue(key, newValue);
             modified();
@@ -421,24 +406,23 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        final int expectedModifications = modificationCount();
         Objects.requireNonNull(remappingFunction);
 
-        final V currentValue = keyMap.getOrDefault(key, NO_VALUE());
+        final V currentValue = keyMap.get(key);
 
-        if (currentValue == NO_VALUE()) {
+        if (currentValue == null) {
             keyMapAddChecked(key, value);
-            updateValueMapForNewValue(key, value);
-            modified();
-            return value;
-        } else if (currentValue == null) {
-            keyMapReplaceChecked(key, null, value);
-            valueMapRemoveChecked(null, key);
             updateValueMapForNewValue(key, value);
             modified();
             return value;
         }
 
         final V newValue = remappingFunction.apply(currentValue, value);
+
+        if (expectedModifications != modificationCount()) {
+            throw new ConcurrentModificationException();
+        }
 
         if (newValue == null) {
             keyMapRemoveChecked(key, currentValue);
@@ -484,33 +468,33 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public NavigableSet<K> navigableKeySet() {
+    public final NavigableSet<K> navigableKeySet() {
         if (keySet == null)
             keySet = createKeySet(false);
         return keySet;
     }
 
     @Override
-    public NavigableSet<K> descendingKeySet() {
+    public final NavigableSet<K> descendingKeySet() {
         if (keySetDescending == null)
             keySetDescending = createKeySet(true);
         return keySetDescending;
     }
 
     @Override
-    public Set<K> keySet() {
+    public final Set<K> keySet() {
         return navigableKeySet();
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
+    public final Set<Entry<K, V>> entrySet() {
         if (entrySet == null)
             entrySet = createEntrySet();
         return entrySet;
     }
 
     @Override
-    public Set<V> values() {
+    public final Set<V> values() {
         if (valueSet == null)
             valueSet = createValueSet();
         return valueSet;
@@ -555,8 +539,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected void updateValueMapForNewValue(final K key, final V newValue) {
-        final K newValueOldKey = valueMap.getOrDefault(newValue, NO_KEY());
-        if (newValueOldKey != NO_KEY()) {
+        final K newValueOldKey = valueMap.get(newValue);
+        if (newValueOldKey != null) {
             valueMapReplaceChecked(newValue, newValueOldKey, key);
             keyMapRemoveChecked(newValueOldKey, newValue);
         } else {
@@ -633,6 +617,14 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
+    protected static <K extends Comparable<K>, V extends Comparable<V>> K getKeyNullSafe(final Entry<K, V> entry) {
+        if (entry != null) {
+            return entry.getKey();
+        } else {
+            return null;
+        }
+    }
+
     protected static class ValueChangeNotAllowedException extends IllegalArgumentException {
         private static final long serialVersionUID = 5803288170895632334L;
 
@@ -642,15 +634,15 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     // don't really make full use of DualTransformedCollection, other options exist
-    protected abstract static class BaseVanillaSet<E, K extends Comparable<K>, V extends Comparable<V>>
+    protected abstract static class BaseTransformedEntrySet<E, K extends Comparable<K>, V extends Comparable<V>>
             extends DualTransformedCollection<E, Entry<K, V>> implements Set<E> {
         private static final long serialVersionUID = -1225190739881897633L;
 
         protected final DualTreeBidi2MapBase<K, V> parent;
 
-        public BaseVanillaSet(final Set<Entry<K, V>> entrySet,
-                              final Transformer<? super Entry<K, V>, ? extends E> entryToElement,
-                              final DualTreeBidi2MapBase<K, V> parent) {
+        public BaseTransformedEntrySet(final Set<Entry<K, V>> entrySet,
+                                       final Transformer<? super Entry<K, V>, ? extends E> entryToElement,
+                                       final DualTreeBidi2MapBase<K, V> parent) {
             super(entrySet, null, entryToElement);
             this.parent = parent;
         }
@@ -766,12 +758,12 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected static class KeySetUsingKeyMapFullRange<K extends Comparable<K>, V extends Comparable<V>>
+    protected static final class KeySetUsingKeyMapFullRange<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<K, K, V> {
         private static final long serialVersionUID = 2724700086572295708L;
 
-        protected KeySetUsingKeyMapFullRange(final DualTreeBidi2MapBase<K,V> parent, final boolean descending, final SortedMapRange<K> range) {
-            super(descending ? parent.keyMap.descendingKeySet() : parent.keyMap.navigableKeySet(), range, parent);
+        KeySetUsingKeyMapFullRange(final DualTreeBidi2Map<K, V> parent, final boolean descending) {
+            super(descending ? parent.keyMap.descendingKeySet() : parent.keyMap.navigableKeySet(), parent.getKeyRange(), parent);
         }
 
         @Override
@@ -803,40 +795,25 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public K pollFirst() {
-            if (!decorated().isEmpty()) {
-                // could be improved if we knew parent map aligned
-                // really only needed for sub set
-                // but not quite right for that either?
-                final K key = decorated().first();
-                final V value = parent.keyMap.remove(key);
-                parent.valueMapRemoveChecked(value, key);
-                parent.modified();
-                return key;
-            } else {
-                return null;
-            }
+            return getKeyNullSafe(parent.pollFirstEntry());
         }
 
         @Override
         public K pollLast() {
-            if (!decorated().isEmpty()) {
-                // could be improved if we knew parent map aligned
-                final K key = decorated().last();
-                final V value = parent.keyMap.remove(key);
-                parent.valueMapRemoveChecked(value, key);
-                parent.modified();
-                return key;
-            } else {
-                return null;
-            }
+            return getKeyNullSafe(parent.pollLastEntry());
         }
     }
 
-    protected static class KeySetUsingKeyMapSubSet<K extends Comparable<K>, V extends Comparable<V>>
+    // QUERY TODO called when valuerange doesn't need checking?
+    protected static final class KeySetUsingKeyMapSubSet<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<K, K, V> {
         private static final long serialVersionUID = 2724700086572295708L;
 
-        protected KeySetUsingKeyMapSubSet(final NavigableSet<K> subSet, final SortedMapRange<K> range, final DualTreeBidi2MapBase<K,V> parent) {
+        KeySetUsingKeyMapSubSet(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
+            super(descending ? parent.keyMap.descendingKeySet() : parent.keyMap.navigableKeySet(), parent.getKeyRange(), parent);
+        }
+
+        private KeySetUsingKeyMapSubSet(final NavigableSet<K> subSet, final SortedMapRange<K> range, final DualTreeBidi2MapBase<K, V> parent) {
             super(subSet, range, parent);
         }
 
@@ -847,6 +824,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public Iterator<K> iterator() {
+            // TODO should this use entryset so can filter?
             return new KeyIterator<>(() -> decorated().iterator(), parent.primaryMap());
         }
 
@@ -857,10 +835,9 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public boolean remove(final Object object) {
-            if (decorated().contains(object)) {
-                final V value = primaryMap.keyMap.get(key);
-                primaryMap.valueMapRemoveChecked(value, key);
-                return parent.removeViaCollection(object);
+            final K key = parent.castKey(object);
+            if (decorated().contains(key)) {
+                return parent.removeViaCollection(key);
             } else {
                 return false;
             }
@@ -868,24 +845,13 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public boolean removeIf(final Predicate<? super K> filter) {
-            Objects.requireNonNull(filter);
-            Iterator<K> iterator = decorated().iterator();
-            while (iterator.hasNext()) {
-                final K key = iterator.next();
-                if (filter.test(key)) {
-                    parent.valueMapRemoveChecked();
-                    iterator.remove();
-                }
-            }
             return parent.collectionRemoveIf(e -> filter.test(e.getKey()));
         }
 
         @Override
         public K pollFirst() {
             if (!decorated().isEmpty()) {
-                // could be improved if we knew parent map aligned
-                // really only needed for sub set
-                // but not quite right for that either?
+                // TODO not confirming value in range
                 final K key = decorated().first();
                 final V value = parent.keyMap.remove(key);
                 parent.valueMapRemoveChecked(value, key);
@@ -899,7 +865,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         @Override
         public K pollLast() {
             if (!decorated().isEmpty()) {
-                // could be improved if we knew parent map aligned
+                // TODO not confirming value in range
                 final K key = decorated().last();
                 final V value = parent.keyMap.remove(key);
                 parent.valueMapRemoveChecked(value, key);
@@ -977,14 +943,14 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected static class ValueSetUsingKeyEntrySet<K extends Comparable<K>, V extends Comparable<V>>
-            extends BaseVanillaSet<V, K, V> {
+    protected static class ValueSetUsingKeyEntrySetFullRange<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseTransformedEntrySet<V, K, V> {
         private static final long serialVersionUID = 5296117687879550829L;
 
-        private final DualTreeBidi2Map<K, V> parent;
+        private final DualTreeBidi2MapBase<K, V> parent;
 
-        public ValueSetUsingKeyEntrySet(final Set<Entry<K, V>> entrySet, final DualTreeBidi2Map<K,V> parent) {
-            super(entrySet, Entry::getValue, parent);
+        public ValueSetUsingKeyEntrySetFullRange(final DualTreeBidi2Map<K,V> parent) {
+            super(parent.keyMap.entrySet(), Entry::getValue, parent);
             this.parent = parent;
         }
 
@@ -996,6 +962,11 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         @Override
         public boolean remove(final Object object) {
             return parent.removeValueViaCollection(object);
+        }
+
+        @Override
+        public boolean contains(final Object object) {
+            return parent.containsValue(object);
         }
     }
 
@@ -1103,7 +1074,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         protected BaseIterator(final Supplier<Iterator<E>> makeIterator, final DualTreeBidi2Map<K, V> primaryMap) {
             this.primaryMap = primaryMap;
             this.makeIterator = makeIterator;
-            this.expectedModCount = primaryMap.modificationCount;
+            this.expectedModCount = primaryMap.modificationCount();
             reset();
         }
 
@@ -1131,12 +1102,12 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         public void remove() {
             if (!canRemove)
                 throw new IllegalStateException();
-            if (primaryMap.modificationCount != expectedModCount)
+            if (primaryMap.modificationCount() != expectedModCount)
                 throw new ConcurrentModificationException();
             removeExtras(lastResult);
             iterator.remove(); // removes from the iterators map
             primaryMap.modified();
-            expectedModCount = primaryMap.modificationCount;
+            expectedModCount = primaryMap.modificationCount();
             lastResult = null;
             canRemove = false;
         }
@@ -1200,7 +1171,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public Entry<K, V> next() {
-            return new EntryWithSetValue(super.next(), primaryMap);
+            return new EntryWithSetValue<>(super.next(), primaryMap);
         }
 
         @Override
@@ -1214,7 +1185,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             primaryMap.valueMapRemoveChecked(entry.getValue(), entry.getKey());
         }
 
-        protected class EntryWithSetValue extends AbstractMapEntryDecorator<K, V> {
+        protected static class EntryWithSetValue<K extends Comparable<K>, V extends Comparable<V>>
+                extends AbstractMapEntryDecorator<K, V> {
             protected final DualTreeBidi2Map<K, V> parent;
 
             protected EntryWithSetValue(final Entry<K, V> entry, final DualTreeBidi2Map<K, V> parent) {

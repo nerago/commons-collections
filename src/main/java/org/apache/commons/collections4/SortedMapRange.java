@@ -162,7 +162,7 @@ public final class SortedMapRange<K> implements Serializable {
      * Returns true if the provided key is greater than TO and less than FROM.
      */
     public boolean inRange(final K key) {
-        if (isEmpty()) {
+        if (isEmpty() || key == null) {
             return false;
         } else {
             return inFromRange(key) && inToRange(key);

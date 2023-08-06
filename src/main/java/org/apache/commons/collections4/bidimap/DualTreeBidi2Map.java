@@ -50,7 +50,7 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
 
     private static final long serialVersionUID = 721969328361809L;
 
-    int modificationCount = 0;
+    private int modificationCount = 0;
 
     /**
      * Creates an empty {@link DualTreeBidi2Map}.
@@ -108,6 +108,11 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
+    protected int modificationCount() {
+        return modificationCount;
+    }
+
+    @Override
     protected DualTreeBidi2Map<K, V> primaryMap() {
         return this;
     }
@@ -129,12 +134,12 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
 
     @Override
     protected NavigableSet<K> createKeySet(final boolean descending) {
-        return new KeySetUsingKeyMap<>(this, descending, getKeyRange(), this);
+        return new KeySetUsingKeyMapFullRange<>(this, descending, getKeyRange());
     }
 
     @Override
     protected Set<V> createValueSet() {
-        return new ValueSetUsingKeyEntrySet<>(keyMap.entrySet(), this);
+        return new ValueSetUsingKeyEntrySetFullRange<>(this);
     }
 
     @Override
