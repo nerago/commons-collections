@@ -184,6 +184,9 @@ public final class SortedMapRange<K> implements Serializable {
     }
 
     private boolean rangeInFromRange(final K key, final boolean inclusive) {
+        if (fromKey == null) {
+            return true;
+        }
         final int ret = compare(key, fromKey);
         if (ret == 0) {
             // matching keys is fine if we're inclusive, or they don't need inclusive
@@ -207,6 +210,9 @@ public final class SortedMapRange<K> implements Serializable {
     }
 
     private boolean rangeInToRange(final K key, final boolean inclusive) {
+        if (toKey == null) {
+            return true;
+        }
         final int ret = compare(key, toKey);
         if (ret == 0) {
             // matching keys is fine if we're inclusive, or they don't need inclusive

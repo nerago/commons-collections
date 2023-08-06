@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4;
 
+import java.util.Set;
+
 /**
  * Defines a map that allows bidirectional lookup between key and values
  * and retains both keys and values in sorted order.

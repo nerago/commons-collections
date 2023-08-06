@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.junit.jupiter.api.Test;
 
 /**
  * JUnit tests.

@@ -52,8 +52,8 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     protected K castKey(final Object keyObject) {
         final K key = super.castKey(keyObject);
-        if (!getKeyRange().inRange(key))
-            throw new IllegalArgumentException();
+//        if (!getKeyRange().inRange(key))
+//            throw new IllegalArgumentException();
         return key;
     }
 
@@ -243,8 +243,8 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         while (iterator.hasNext()) {
             final Entry<K, V> entry = iterator.next();
             if (valueMap.containsKey(entry.getValue()) && filter.test(entry)) {
-                iterator.remove();
                 valueMapRemoveChecked(entry.getValue(), entry.getKey());
+                iterator.remove();
                 changed = true;
             }
         }
@@ -489,10 +489,11 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
             while (iterator.hasNext()) {
                 final Entry<K, V> entry = iterator.next();
                 if (valueMap.containsKey(entry.getValue())) {
-                    iterator.remove();
                     valueMapRemoveChecked(entry.getValue(), entry.getKey());
+                    iterator.remove();
                 }
             }
+            // TODO counts?
             modified();
         }
     }
@@ -553,41 +554,44 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     protected NavigableSet<K> createKeySet(final boolean descending) {
         if (valueRange.isFull())
-            return new KeySetUsingKeyMap<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), this);
+            return new KeySetUsingKeyMap<>(descending ? keyMap.descendingKeySet() : keyMap.navigableKeySet(), getKeyRange(), this);
         else if (getKeyRange().isFull())
-            return new KeySetUsingValueMap<>(valueMap.values(), this);
+            // could use valueMap.entries but order is wrong
+            return new KeySetUsingValueMap<>(valueMap.values(), getKeyRange(), this);
         else
             return new KeySetUsingBoth<>(this, descending);
     }
 
     @Override
     protected NavigableSet<V> createValueSet() {
-        return new ValueSetUsingValueMap<>(valueMap.navigableKeySet(), this);
+        // TODO doesn't this need boths too
+        return new ValueSetUsingValueMap<>(valueMap.navigableKeySet(), , this);
     }
 
     @Override
     protected Set<Entry<K, V>> createEntrySet() {
+        // boths
         return new EntrySetUsingKeyMap<>(keyMap.entrySet(), this);
     }
+
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
+        // TODO doesn't look very bounded
         return new DualTreeMapIterator<>(keyMap, this);
     }
 
     private static class KeySetUsingValueMap<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<K, K, V> {
-        protected KeySetUsingValueMap(final NavigableSet<K> set, final DualTreeBidi2MapBase<K, V> parent) {
-            // but the order will be wrong...
-            super(set, parent);
-        }
+        private static final long serialVersionUID = 3575453794269732960L;
 
-        public KeySetUsingValueMap(final Collection<K> values, final DualTreeBidi2MapSubMap<K,V> parent) {
-            super(null, parent);
+        protected KeySetUsingValueMap(final NavigableSet<K> set, final SortedMapRange<K> keyRange,  final DualTreeBidi2MapBase<K, V> parent) {
+            // but the order will be wrong...
+            super(set, keyRange, parent);
         }
 
         @Override
-        protected BaseNavigableSet<K, K, V> wrapSet(final NavigableSet<K> set) {
-            return null;
+        protected NavigableBoundSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+            return new KeySetUsingValueMap<>(subSet, range, parent);
         }
     }
 

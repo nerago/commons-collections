@@ -41,10 +41,10 @@ import org.junit.jupiter.api.Test;
  * JUnit tests.
  */
 @SuppressWarnings("boxing")
-public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
+public class DualTreeBidiMapComparatorTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
 
-    public DualTreeBidiMap2Test() {
-        super(DualTreeBidiMap2Test.class.getSimpleName());
+    public DualTreeBidiMapComparatorTest() {
+        super(DualTreeBidiMapComparatorTest.class.getSimpleName());
     }
 
     @Override
@@ -58,8 +58,8 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
     }
 
     @Override
-    public DualTreeBidi2Map<K, V> makeObject() {
-        return new DualTreeBidi2Map<>(
+    public DualTreeBidiMap<K, V> makeObject() {
+        return new DualTreeBidiMap<>(
                 new ReverseComparator<>(ComparableComparator.<K>comparableComparator()),
                 new ReverseComparator<>(ComparableComparator.<V>comparableComparator()));
     }

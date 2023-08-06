@@ -1,6 +1,8 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.collection.DualTransformedCollection;
+import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
@@ -11,6 +13,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
@@ -32,7 +35,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     private DualTreeBidi2MapBase<K,V> descendingBidiMap;
     private NavigableSet<K> keySet;
     private NavigableSet<K> keySetDescending;
-    private NavigableSet<V> valueSet;
+    private Set<V> valueSet;
     private Set<Entry<K, V>> entrySet;
 
     protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
@@ -177,8 +180,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         while (iterator.hasNext()) {
             final Entry<K, V> entry = iterator.next();
             if (filter.test(entry)) {
-                iterator.remove();
                 valueMapRemoveChecked(entry.getValue(), entry.getKey());
+                iterator.remove();
                 changed = true;
             }
         }
@@ -506,7 +509,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         return entrySet;
     }
 
-
     @Override
     public Set<V> values() {
         if (valueSet == null)
@@ -516,7 +518,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     protected abstract NavigableSet<K> createKeySet(boolean descending);
 
-    protected abstract NavigableSet<V> createValueSet();
+    protected abstract Set<V> createValueSet();
 
     protected abstract Set<Entry<K, V>> createEntrySet();
 
@@ -639,25 +641,24 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    protected abstract static class BaseNavigableSet<E, K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractNavigableSetDecorator<E> {
-        private static final long serialVersionUID = -1231087977922107905L;
+    // don't really make full use of DualTransformedCollection, other options exist
+    protected abstract static class BaseVanillaSet<E, K extends Comparable<K>, V extends Comparable<V>>
+            extends DualTransformedCollection<E, Entry<K, V>> implements Set<E> {
+        private static final long serialVersionUID = -1225190739881897633L;
 
         protected final DualTreeBidi2MapBase<K, V> parent;
 
-        protected BaseNavigableSet(final NavigableSet<E> set, final DualTreeBidi2MapBase<K, V> parent) {
-            super(set);
+        public BaseVanillaSet(final Set<Entry<K, V>> entrySet,
+                              final Transformer<? super Entry<K, V>, ? extends E> entryToElement,
+                              final DualTreeBidi2MapBase<K, V> parent) {
+            super(entrySet, null, entryToElement);
             this.parent = parent;
         }
 
-        protected abstract BaseNavigableSet<E, K, V> wrapSet(NavigableSet<E> set);
-
-        @Override
         public boolean add(final E object) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public boolean addAll(final Collection<? extends E> coll) {
             throw new UnsupportedOperationException();
         }
@@ -702,54 +703,80 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
                 parent.modified();
             return modified;
         }
+    }
 
-        @Override
-        public NavigableSet<E> descendingSet() {
-            return wrapSet(decorated().descendingSet());
+    protected abstract static class BaseNavigableSet<E, K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractNavigableSetDecorator<E> {
+        private static final long serialVersionUID = -1231087977922107905L;
+
+        protected final DualTreeBidi2MapBase<K, V> parent;
+
+        protected BaseNavigableSet(final NavigableSet<E> set, final SortedMapRange<E> range, final DualTreeBidi2MapBase<K, V> parent) {
+            super(set, range);
+            this.parent = parent;
+        }
+
+        public boolean add(final E object) {
+            throw new UnsupportedOperationException();
+        }
+
+        public boolean addAll(final Collection<? extends E> coll) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
-        public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement, final boolean toInclusive) {
-            return wrapSet(decorated().subSet(fromElement, fromInclusive, toElement, toInclusive));
+        public void clear() {
+            parent.clear();
         }
 
         @Override
-        public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
-            return wrapSet(decorated().headSet(toElement, inclusive));
+        public boolean removeAll(final Collection<?> coll) {
+            // from abstractdualbidimap
+            if (parent.isEmpty() || coll.isEmpty()) {
+                return false;
+            }
+            boolean modified = false;
+            for (final Object current : coll) {
+                modified |= remove(current);
+            }
+            return modified;
         }
 
         @Override
-        public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
-            return wrapSet(decorated().tailSet(fromElement, inclusive));
-        }
-
-        @Override
-        public NavigableSet<E> subSet(final E fromElement, final E toElement) {
-            return wrapSet(decorated().subSet(fromElement, true, toElement, false));
-        }
-
-        @Override
-        public NavigableSet<E> headSet(final E toElement) {
-            return wrapSet(decorated().headSet(toElement, false));
-        }
-
-        @Override
-        public NavigableSet<E> tailSet(final E fromElement) {
-            return wrapSet(decorated().tailSet(fromElement, true));
+        public boolean retainAll(final Collection<?> coll) {
+            // from abstractdualbidimap
+            if (parent.isEmpty()) {
+                return false;
+            }
+            if (coll.isEmpty()) {
+                parent.clear();
+                return true;
+            }
+            boolean modified = false;
+            final Iterator<E> it = iterator();
+            while (it.hasNext()) {
+                if (!coll.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            if (modified)
+                parent.modified();
+            return modified;
         }
     }
 
-    protected static class KeySetUsingKeyMap<K extends Comparable<K>, V extends Comparable<V>>
+    protected static class KeySetUsingKeyMapFullRange<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<K, K, V> {
         private static final long serialVersionUID = 2724700086572295708L;
 
-        protected KeySetUsingKeyMap(final NavigableSet<K> keySet, final DualTreeBidi2MapBase<K, V> parent) {
-            super(keySet, parent);
+        protected KeySetUsingKeyMapFullRange(final DualTreeBidi2MapBase<K,V> parent, final boolean descending, final SortedMapRange<K> range) {
+            super(descending ? parent.keyMap.descendingKeySet() : parent.keyMap.navigableKeySet(), range, parent);
         }
 
         @Override
-        protected KeySetUsingKeyMap<K, V> wrapSet(final NavigableSet<K> set) {
-            return new KeySetUsingKeyMap<>(set, parent);
+        protected NavigableBoundSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+            return new KeySetUsingKeyMapSubSet<>(subSet, range, parent);
         }
 
         @Override
@@ -764,7 +791,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public boolean remove(final Object object) {
-            // TODO shouldn't allow once we're in a subset
             return parent.removeViaCollection(object);
         }
 
@@ -806,18 +832,98 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
+    protected static class KeySetUsingKeyMapSubSet<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseNavigableSet<K, K, V> {
+        private static final long serialVersionUID = 2724700086572295708L;
+
+        protected KeySetUsingKeyMapSubSet(final NavigableSet<K> subSet, final SortedMapRange<K> range, final DualTreeBidi2MapBase<K,V> parent) {
+            super(subSet, range, parent);
+        }
+
+        @Override
+        protected NavigableBoundSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+            return new KeySetUsingKeyMapSubSet<>(subSet, range, parent);
+        }
+
+        @Override
+        public Iterator<K> iterator() {
+            return new KeyIterator<>(() -> decorated().iterator(), parent.primaryMap());
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return new KeyIterator<>(() -> decorated().descendingIterator(), parent.primaryMap());
+        }
+
+        @Override
+        public boolean remove(final Object object) {
+            if (decorated().contains(object)) {
+                final V value = primaryMap.keyMap.get(key);
+                primaryMap.valueMapRemoveChecked(value, key);
+                return parent.removeViaCollection(object);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean removeIf(final Predicate<? super K> filter) {
+            Objects.requireNonNull(filter);
+            Iterator<K> iterator = decorated().iterator();
+            while (iterator.hasNext()) {
+                final K key = iterator.next();
+                if (filter.test(key)) {
+                    parent.valueMapRemoveChecked();
+                    iterator.remove();
+                }
+            }
+            return parent.collectionRemoveIf(e -> filter.test(e.getKey()));
+        }
+
+        @Override
+        public K pollFirst() {
+            if (!decorated().isEmpty()) {
+                // could be improved if we knew parent map aligned
+                // really only needed for sub set
+                // but not quite right for that either?
+                final K key = decorated().first();
+                final V value = parent.keyMap.remove(key);
+                parent.valueMapRemoveChecked(value, key);
+                parent.modified();
+                return key;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public K pollLast() {
+            if (!decorated().isEmpty()) {
+                // could be improved if we knew parent map aligned
+                final K key = decorated().last();
+                final V value = parent.keyMap.remove(key);
+                parent.valueMapRemoveChecked(value, key);
+                parent.modified();
+                return key;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    @Deprecated
     protected static class ValueSetUsingValueMap<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<V, K, V> {
         private static final long serialVersionUID = -2146539350971883074L;
 
-        public ValueSetUsingValueMap(final NavigableSet<V> valueMapKeySet, final DualTreeBidi2MapBase<K, V> parent) {
+        public ValueSetUsingValueMap(final NavigableSet<V> valueMapKeySet, final SortedMapRange<V> range, final DualTreeBidi2MapBase<K, V> parent) {
             // normally valueMap.navigableKeySet()
-            super(valueMapKeySet, parent);
+            super(valueMapKeySet, range, parent);
         }
 
         @Override
-        protected ValueSetUsingValueMap<K, V> wrapSet(final NavigableSet<V> set) {
-            return new ValueSetUsingValueMap<>(set, parent);
+        protected NavigableBoundSet<V> decorateDerived(final NavigableSet<V> subSet, final SortedMapRange<V> range) {
+            return new ValueSetUsingValueMap<>(subSet, range, parent);
         }
 
         @Override
@@ -868,6 +974,28 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             } else {
                 return null;
             }
+        }
+    }
+
+    protected static class ValueSetUsingKeyEntrySet<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseVanillaSet<V, K, V> {
+        private static final long serialVersionUID = 5296117687879550829L;
+
+        private final DualTreeBidi2Map<K, V> parent;
+
+        public ValueSetUsingKeyEntrySet(final Set<Entry<K, V>> entrySet, final DualTreeBidi2Map<K,V> parent) {
+            super(entrySet, Entry::getValue, parent);
+            this.parent = parent;
+        }
+
+        @Override
+        public Iterator<V> iterator() {
+            return new ValueIterator<>(() -> new TransformIterator<>(decorated().iterator(), Entry::getValue), parent.primaryMap());
+        }
+
+        @Override
+        public boolean remove(final Object object) {
+            return parent.removeValueViaCollection(object);
         }
     }
 
@@ -1039,6 +1167,20 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             extends BaseIterator<K, V, V> {
         public ValueIterator(final Supplier<Iterator<V>> makeIterator, final DualTreeBidi2Map<K, V> primaryMap) {
             // normally receives valueMap.navigableKeySet().iterator()
+            super(makeIterator, primaryMap);
+        }
+
+        @Override
+        protected void removeExtras(final V value) {
+            final K key = primaryMap.valueMap.get(value);
+            primaryMap.keyMapRemoveChecked(key, value);
+        }
+    }
+
+    protected static class ValueFilteredIterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseIterator<K, V, V> {
+        public ValueFilteredIterator(final Supplier<Iterator<V>> makeIterator, final DualTreeBidi2Map<K, V> primaryMap) {
+            // normally receives valueMap.navigableKeySet().iterator() - nope
             super(makeIterator, primaryMap);
         }
 

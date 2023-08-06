@@ -32,6 +32,8 @@ import java.util.Map;
  */
 public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V>, Serializable {
 
+    private static final long serialVersionUID = -1765018229420704832L;
+
     /**
      * {@inheritDoc}
      */

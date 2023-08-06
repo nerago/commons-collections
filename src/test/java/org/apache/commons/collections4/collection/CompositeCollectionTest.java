@@ -385,7 +385,7 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
         assertFalse(c.contains("1"));
         assertFalse(one.contains("1"));
         assertFalse(two.contains("1"));
-        c.removeIf(null);
+        assertThrows(NullPointerException.class, () -> c.removeIf(null));
         assertFalse(c.contains("1"));
         assertFalse(one.contains("1"));
         assertFalse(two.contains("1"));
