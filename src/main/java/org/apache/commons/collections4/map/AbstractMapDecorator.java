@@ -16,10 +16,15 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.MapIterator;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -149,4 +154,41 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
         return decorated().toString();
     }
 
+    // TODO remove these later
+
+    @Override
+    public abstract MapIterator<K, V> mapIterator();
+
+    @Override
+    public abstract V getOrDefault(Object key, V defaultValue);
+
+    @Override
+    public abstract void forEach(BiConsumer<? super K, ? super V> action);
+
+    @Override
+    public abstract void replaceAll(BiFunction<? super K, ? super V, ? extends V> function);
+
+    @Override
+    public abstract V putIfAbsent(K key, V value);
+
+    @Override
+    public abstract boolean remove(Object key, Object value);
+
+    @Override
+    public abstract boolean replace(K key, V oldValue, V newValue);
+
+    @Override
+    public abstract V replace(K key, V value);
+
+    @Override
+    public abstract V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction);
+
+    @Override
+    public abstract V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction);
+
+    @Override
+    public abstract V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction);
+
+    @Override
+    public abstract V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction);
 }
