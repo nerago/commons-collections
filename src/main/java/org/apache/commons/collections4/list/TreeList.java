@@ -252,7 +252,7 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
     }
 
     /**
-     * Appends all of the elements in the specified collection to the end of this list,
+     * Appends all the elements in the specified collection to the end of this list,
      * in the order that they are returned by the specified collection's Iterator.
      * <p>
      * This method runs in O(n + log m) time, where m is
