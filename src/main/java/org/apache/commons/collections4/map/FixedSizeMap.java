@@ -22,12 +22,20 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
+import org.apache.commons.collections4.iterators.EntrySetMapIterator;
+import org.apache.commons.collections4.iterators.UnmodifiableMapIterator;
 import org.apache.commons.collections4.set.UnmodifiableSet;
+
+import javax.management.openmbean.OpenDataException;
 
 /**
  * Decorates another {@code Map} to fix the size, preventing add/remove.
@@ -118,7 +126,7 @@ public class FixedSizeMap<K, V>
     @Override
     public V put(final K key, final V value) {
         if (!map.containsKey(key)) {
-            throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size");
+            throwFixedSizeNewKey();
         }
         return map.put(key, value);
     }
@@ -127,30 +135,20 @@ public class FixedSizeMap<K, V>
     public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
         for (final K key : mapToCopy.keySet()) {
             if (!containsKey(key)) {
-                throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size");
+                throwFixedSizeNewKey();
             }
         }
         map.putAll(mapToCopy);
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        throw new UnsupportedOperationException("Map is fixed size");
-    }
-
-    @Override
-    public V putIfAbsent(K key, V value) {
-        throw new UnsupportedOperationException("Map is fixed size");
-    }
-
-    @Override
     public void clear() {
-        throw new UnsupportedOperationException("Map is fixed size");
+        throwFixedSize();
     }
 
     @Override
     public V remove(final Object key) {
-        throw new UnsupportedOperationException("Map is fixed size");
+        return throwFixedSize();
     }
 
     @Override
@@ -173,6 +171,127 @@ public class FixedSizeMap<K, V>
     }
 
     @Override
+    public MapIterator<K, V> mapIterator() {
+        // TODO add to fixes branch
+        return UnmodifiableMapIterator.unmodifiableMapIterator(new EntrySetToMapIteratorAdapter<>(entrySet()));
+    }
+
+    @Override
+    public V getOrDefault(Object key, V defaultValue) {
+        return map.getOrDefault(key, defaultValue);
+    }
+
+    @Override
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        map.forEach(action);
+    }
+
+    @Override
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        map.replaceAll(function);
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        return throwFixedSize();
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+        return throwFixedSize();
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        return map.replace(key, oldValue, newValue);
+    }
+
+    @Override
+    public V replace(K key, V value) {
+        return map.replace(key, value);
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            if (oldValue != null) {
+                return oldValue;
+            }
+
+            final V newValue = mappingFunction.apply(key);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                return throwFixedSizeComputeRemove();
+            }
+        } else {
+            return throwFixedSizeNewKey();
+        }
+    }
+
+    @Override
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            if (oldValue == null) {
+                return null;
+            }
+
+            final V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                return throwFixedSizeComputeRemove();
+            }
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            final V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                return throwFixedSizeComputeRemove();
+            }
+        } else {
+            final V newValue = remappingFunction.apply(key, null);
+            if (newValue != null) {
+                throwFixedSizeNewKey();
+            }
+            return null;
+        }
+    }
+
+    @Override
+    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            final V newValue = remappingFunction.apply(oldValue, value);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                return throwFixedSizeComputeRemove();
+            }
+        } else {
+            return throwFixedSizeNewKey();
+        }
+    }
+
+    @Override
     public boolean isFull() {
         return true;
     }
@@ -182,4 +301,15 @@ public class FixedSizeMap<K, V>
         return size();
     }
 
+    private static <R> R throwFixedSize() {
+        throw new UnsupportedOperationException("Map is fixed size");
+    }
+
+    private static <R> R throwFixedSizeNewKey() {
+        throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size");
+    }
+
+    private static <R> R throwFixedSizeComputeRemove() {
+        throw new IllegalArgumentException("Cannot action compute removal - Map is fixed size");
+    }
 }

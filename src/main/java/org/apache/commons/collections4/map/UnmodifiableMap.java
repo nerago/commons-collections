@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -130,6 +131,25 @@ public final class UnmodifiableMap<K, V>
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public MapIterator<K, V> mapIterator() {
+        if (map instanceof IterableMap) {
+            final MapIterator<K, V> it = ((IterableMap<K, V>) map).mapIterator();
+            return UnmodifiableMapIterator.unmodifiableMapIterator(it);
+        }
+        final MapIterator<K, V> it = new EntrySetMapIterator<>(map);
+        return UnmodifiableMapIterator.unmodifiableMapIterator(it);
+    }
+
+    @Override
+    public V getOrDefault(Object key, V defaultValue) {
+        return map.getOrDefault(key, defaultValue);
+    }
+
+    @Override
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        map.forEach(action);
+    }
 
     @Override
     public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
@@ -174,16 +194,6 @@ public final class UnmodifiableMap<K, V>
     @Override
     public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public MapIterator<K, V> mapIterator() {
-        if (map instanceof IterableMap) {
-            final MapIterator<K, V> it = ((IterableMap<K, V>) map).mapIterator();
-            return UnmodifiableMapIterator.unmodifiableMapIterator(it);
-        }
-        final MapIterator<K, V> it = new EntrySetMapIterator<>(map);
-        return UnmodifiableMapIterator.unmodifiableMapIterator(it);
     }
 
     @Override
