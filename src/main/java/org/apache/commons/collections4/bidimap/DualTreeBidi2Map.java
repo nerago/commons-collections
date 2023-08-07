@@ -128,13 +128,13 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableBoundMap<K, V> decorateDerived(final NavigableMap<K, V> map, final SortedMapRange<K> keyRange) {
+    protected DualTreeBidi2MapBase<K, V> decorateDerived(final NavigableMap<K, V> map, final SortedMapRange<K> keyRange) {
         return new DualTreeBidi2MapSubMap<>(map, keyRange, this);
     }
 
     @Override
     protected NavigableSet<K> createKeySet(final boolean descending) {
-        return new KeySetUsingKeyMapFullRange<>(this, descending, getKeyRange());
+        return new KeySetUsingKeyMapFullRange<>(this, descending);
     }
 
     @Override
@@ -144,6 +144,6 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
 
     @Override
     protected Set<Entry<K, V>> createEntrySet() {
-        return new EntrySetUsingKeyMap<>(keyMap.entrySet(), this);
+        return new EntrySetUsingKeyMap<>(this);
     }
 }

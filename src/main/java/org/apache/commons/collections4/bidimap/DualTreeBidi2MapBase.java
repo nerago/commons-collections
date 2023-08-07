@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
@@ -64,6 +65,9 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     protected final boolean valueEquals(final V a, final V b) {
         return (a != null && b != null && valueComparator.compare(a, b) == 0) || (a == b);
     }
+
+    @Override
+    protected abstract DualTreeBidi2MapBase<K, V> decorateDerived(final NavigableMap<K, V> subMap, final SortedMapRange<K> keyRange);
 
     @Override
     public final SortedMapRange<? super V> getValueRange() {
@@ -656,6 +660,16 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
 
         @Override
+        public boolean isEmpty() {
+            return parent.isEmpty();
+        }
+
+        @Override
+        public int size() {
+            return parent.size();
+        }
+
+        @Override
         public void clear() {
             parent.clear();
         }
@@ -694,6 +708,59 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             if (modified)
                 parent.modified();
             return modified;
+        }
+    }
+
+    private abstract static class BaseFilteredEntrySet<E, K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseTransformedEntrySet<E, K, V>{
+
+        public BaseFilteredEntrySet(final Set<Entry<K, V>> entrySet, final Transformer<? super Entry<K, V>, ? extends E> entryToElement, final DualTreeBidi2MapBase<K, V> parent) {
+            super(entrySet, entryToElement, parent);
+        }
+
+//        @Override
+//        public boolean contains(Object o) {
+//            return super.contains(o);
+//        }
+
+//        @Override
+//        public boolean remove(Object o) {
+//            return super.remove(o);
+//        }
+
+        @Override
+        public boolean containsAll(Collection<?> c) {
+            return super.containsAll(c);
+        }
+
+        @Override
+        public void forEach(Consumer<? super E> action) {
+            super.forEach(action);
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super E> filter) {
+            return super.removeIf(filter);
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return super.iterator();
+        }
+
+        @Override
+        public Spliterator<E> spliterator() {
+            return super.spliterator();
+        }
+
+        @Override
+        public Object[] toArray() {
+            return super.toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] array) {
+            return super.toArray(array);
         }
     }
 
@@ -804,7 +871,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    // QUERY TODO called when valuerange doesn't need checking?
+    // TODO QUERY if (valueRange.isFull())
     protected static final class KeySetUsingKeyMapSubSet<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseNavigableSet<K, K, V> {
         private static final long serialVersionUID = 2724700086572295708L;
@@ -877,77 +944,11 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
-    @Deprecated
-    protected static class ValueSetUsingValueMap<K extends Comparable<K>, V extends Comparable<V>>
-            extends BaseNavigableSet<V, K, V> {
-        private static final long serialVersionUID = -2146539350971883074L;
-
-        public ValueSetUsingValueMap(final NavigableSet<V> valueMapKeySet, final SortedMapRange<V> range, final DualTreeBidi2MapBase<K, V> parent) {
-            // normally valueMap.navigableKeySet()
-            super(valueMapKeySet, range, parent);
-        }
-
-        @Override
-        protected NavigableBoundSet<V> decorateDerived(final NavigableSet<V> subSet, final SortedMapRange<V> range) {
-            return new ValueSetUsingValueMap<>(subSet, range, parent);
-        }
-
-        @Override
-        public Iterator<V> iterator() {
-            return new ValueIterator<>(() -> decorated().iterator(), parent.primaryMap());
-        }
-
-        @Override
-        public Iterator<V> descendingIterator() {
-            return new ValueIterator<>(() -> decorated().descendingIterator(), parent.primaryMap());
-        }
-
-        @Override
-        public boolean remove(final Object object) {
-            return parent.removeValueViaCollection(object);
-        }
-
-        @Override
-        public boolean removeIf(final Predicate<? super V> filter) {
-            // ignores set order
-            Objects.requireNonNull(filter);
-            return parent.collectionRemoveIf(e -> filter.test(e.getValue()));
-        }
-
-        @Override
-        public V pollFirst() {
-            if (!decorated().isEmpty()) {
-                // could be improved if we knew parent map aligned
-                final V value = decorated().first(); // from valueMap
-                final K key = parent.valueMap.remove(value);
-                parent.keyMapRemoveChecked(key, value);
-                parent.modified();
-                return value;
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public V pollLast() {
-            if (!decorated().isEmpty()) {
-                // could be improved if we knew parent map aligned
-                final V value = decorated().last(); // from valueMap
-                final K key = parent.valueMap.remove(value);
-                parent.keyMapRemoveChecked(key, value);
-                parent.modified();
-                return value;
-            } else {
-                return null;
-            }
-        }
-    }
-
     protected static class ValueSetUsingKeyEntrySetFullRange<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseTransformedEntrySet<V, K, V> {
         private static final long serialVersionUID = 5296117687879550829L;
 
-        private final DualTreeBidi2MapBase<K, V> parent;
+        private final DualTreeBidi2Map<K, V> parent;
 
         public ValueSetUsingKeyEntrySetFullRange(final DualTreeBidi2Map<K,V> parent) {
             super(parent.keyMap.entrySet(), Entry::getValue, parent);
@@ -970,14 +971,48 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
     }
 
+    protected static class ValueSetUsingKeyEntrySetSubSet<K extends Comparable<K>, V extends Comparable<V>>
+            extends BaseTransformedEntrySet<V, K, V> {
+        private static final long serialVersionUID = 5296117687879550829L;
+
+        private final DualTreeBidi2MapSubMap<K, V> parent;
+
+        public ValueSetUsingKeyEntrySetSubSet(final DualTreeBidi2MapSubMap<K,V> parent) {
+            super(parent.keyMap.entrySet(), Entry::getValue, parent);
+            this.parent = parent;
+        }
+
+        @Override
+        public Iterator<V> iterator() {
+            return new ValueIterator<>(() -> new TransformIterator<>(decorated().iterator(), Entry::getValue), parent.primaryMap());
+        }
+
+        @Override
+        public boolean remove(final Object object) {
+            return parent.removeValueViaCollection(object);
+        }
+
+        @Override
+        public boolean contains(final Object object) {
+            return parent.containsValue(object);
+        }
+    }
+
+    static final class ValueSetUsingKeyEntrySetFiltered<K extends Comparable<K>, V extends Comparable<V>>
+        extends BaseFilteredEntrySet<V, K, V> {
+        public ValueSetUsingKeyEntrySetFiltered(DualTreeBidi2MapSubMap<K, V> parent) {
+            super(parent.keyMap.entrySet(), Entry::getValue, parent);
+        }
+    }
+
     protected static class EntrySetUsingKeyMap<K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractSetDecorator<Entry<K, V>> {
         private static final long serialVersionUID = -1069719982246820666L;
 
         protected final DualTreeBidi2MapBase<K, V> parent;
 
-        protected EntrySetUsingKeyMap(final Set<Entry<K, V>> entrySet, final DualTreeBidi2MapBase<K, V> parent) {
-            super(entrySet);
+        protected EntrySetUsingKeyMap(final DualTreeBidi2MapBase<K, V> parent) {
+            super(parent.keyMap.entrySet());
             this.parent = parent;
         }
 

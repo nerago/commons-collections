@@ -22,11 +22,11 @@ import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NavigableSet;
-import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.NavigableBoundSet;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
@@ -69,7 +69,16 @@ public final class UnmodifiableNavigableSet<E>
      * @throws NullPointerException if set is null
      */
     private UnmodifiableNavigableSet(final NavigableSet<E> set) {
-        super(set);
+        super(set, SortedMapRange.full(set.comparator()));
+    }
+
+    private UnmodifiableNavigableSet(final NavigableSet<E> set, final SortedMapRange<E> range) {
+        super(set, range);
+    }
+
+    @Override
+    protected NavigableBoundSet<E> decorateDerived(final NavigableSet<E> subSet, final SortedMapRange<E> range) {
+        return null;
     }
 
     @Override
@@ -136,53 +145,9 @@ public final class UnmodifiableNavigableSet<E>
         throw new UnsupportedOperationException();
     }
 
-    // SortedSet
-    @Override
-    public NavigableBoundSet<E> subSet(final E fromElement, final E toElement) {
-        final SortedSet<E> sub = decorated().subSet(fromElement, toElement);
-        return UnmodifiableSortedSet.unmodifiableSortedSet(sub);
-    }
-
-    @Override
-    public NavigableBoundSet<E> headSet(final E toElement) {
-        final SortedSet<E> head = decorated().headSet(toElement);
-        return UnmodifiableSortedSet.unmodifiableSortedSet(head);
-    }
-
-    @Override
-    public NavigableBoundSet<E> tailSet(final E fromElement) {
-        final SortedSet<E> tail = decorated().tailSet(fromElement);
-        return UnmodifiableSortedSet.unmodifiableSortedSet(tail);
-    }
-
-    // NavigableSet
-    @Override
-    public NavigableBoundSet<E> descendingSet() {
-        return unmodifiableNavigableSet(decorated().descendingSet());
-    }
-
     @Override
     public Iterator<E> descendingIterator() {
         return UnmodifiableIterator.unmodifiableIterator(decorated().descendingIterator());
-    }
-
-    @Override
-    public NavigableBoundSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement,
-                                       final boolean toInclusive) {
-        final NavigableSet<E> sub = decorated().subSet(fromElement, fromInclusive, toElement, toInclusive);
-        return unmodifiableNavigableSet(sub);
-    }
-
-    @Override
-    public NavigableBoundSet<E> headSet(final E toElement, final boolean inclusive) {
-        final NavigableSet<E> head = decorated().headSet(toElement, inclusive);
-        return unmodifiableNavigableSet(head);
-    }
-
-    @Override
-    public NavigableBoundSet<E> tailSet(final E fromElement, final boolean inclusive) {
-        final NavigableSet<E> tail = decorated().tailSet(fromElement, inclusive);
-        return unmodifiableNavigableSet(tail);
     }
 
     /**
