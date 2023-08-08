@@ -19,11 +19,13 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
@@ -64,7 +66,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  */
 public class FixedSizeSortedMap<K, V>
         extends AbstractSortedMapDecorator<K, V>
-        implements BoundedMap<K, V>, Serializable {
+        implements BoundedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 3126019624511683653L;
@@ -134,7 +136,7 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public V put(final K key, final V value) {
         if (!map.containsKey(key)) {
-            throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size");
+            throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
         }
         return map.put(key, value);
     }
@@ -142,29 +144,50 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
         if (!CollectionUtils.isSubCollection(mapToCopy.keySet(), keySet())) {
-            throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size");
+            throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
         }
         map.putAll(mapToCopy);
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        throw new UnsupportedOperationException("Map is fixed size");
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            if (oldValue != null) {
+                return oldValue;
+            }
+
+            final V newValue = mappingFunction.apply(key);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_REMOVE_COMPUTE);
+            }
+        } else {
+            throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
+        }
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
-        throw new UnsupportedOperationException("Map is fixed size");
+    public V putIfAbsent(final K key, final V value) {
+        throw new UnsupportedOperationException(FixedSizeMap.EXCEPTION_FIXED);
     }
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("Map is fixed size");
+        throw new UnsupportedOperationException(FixedSizeMap.EXCEPTION_FIXED);
     }
 
     @Override
     public V remove(final Object key) {
-        throw new UnsupportedOperationException("Map is fixed size");
+        throw new UnsupportedOperationException(FixedSizeMap.EXCEPTION_FIXED);
+    }
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        throw new UnsupportedOperationException(FixedSizeMap.EXCEPTION_FIXED);
     }
 
     @Override
@@ -192,4 +215,62 @@ public class FixedSizeSortedMap<K, V>
         return size();
     }
 
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            if (oldValue == null) {
+                return null;
+            }
+
+            final V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_REMOVE_COMPUTE);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            final V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_REMOVE_COMPUTE);
+            }
+        } else {
+            final V newValue = remappingFunction.apply(key, null);
+            if (newValue != null) {
+                throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
+            }
+            return null;
+        }
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        if (map.containsKey(key)) {
+            final V oldValue = get(key);
+            final V newValue = remappingFunction.apply(oldValue, value);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_REMOVE_COMPUTE);
+            }
+        } else {
+            throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
+        }
+    }
 }

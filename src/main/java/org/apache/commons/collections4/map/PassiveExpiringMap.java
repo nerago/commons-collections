@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.MapIterator;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,6 +29,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Decorates a {@code Map} to evict expired entries once their expiration
@@ -61,8 +66,7 @@ import java.util.concurrent.TimeUnit;
  * @since 4.0
  */
 public class PassiveExpiringMap<K, V>
-    extends AbstractMapDecorator<K, V>
-    implements Serializable {
+    extends AbstractMapDecorator<K, V> {
 
     /**
      * A {@link org.apache.commons.collections4.map.PassiveExpiringMap.ExpirationPolicy ExpirationPolicy}
@@ -140,7 +144,7 @@ public class PassiveExpiringMap<K, V>
                 if (nowMillis > Long.MAX_VALUE - timeToLiveMillis) {
                     // expiration would be greater than Long.MAX_VALUE
                     // never expire
-                    return -1;
+                    return -1L;
                 }
 
                 // timeToLiveMillis in the future
@@ -196,7 +200,7 @@ public class PassiveExpiringMap<K, V>
     }
 
     /** map used to manage expiration times for the actual map entries. */
-    private final Map<Object, Long> expirationMap = new HashMap<>();
+    private final Map<K, Long> expirationMap = new HashMap<>();
 
     /** the policy used to determine time-to-live values for map entries. */
     private final ExpirationPolicy<K, V> expiringPolicy;
@@ -337,8 +341,7 @@ public class PassiveExpiringMap<K, V>
      */
     @Override
     public boolean containsKey(final Object key) {
-        removeIfExpired(key, now());
-        return super.containsKey(key);
+        return containsKeyAndCheckExpired(key, now());
     }
 
     /**
@@ -368,8 +371,22 @@ public class PassiveExpiringMap<K, V>
      */
     @Override
     public V get(final Object key) {
-        removeIfExpired(key, now());
-        return super.get(key);
+        if (containsKeyAndCheckExpired(key, now()))
+            return super.get(key);
+        else
+            return null;
+    }
+
+    /**
+     * All expired entries are removed from the map prior to returning the entry value.
+     * {@inheritDoc}
+     */
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        if (containsKeyAndCheckExpired(key, now()))
+            return super.get(key);
+        else
+            return defaultValue;
     }
 
     /**
@@ -393,10 +410,10 @@ public class PassiveExpiringMap<K, V>
      *         and {@code expirationTimeObject} &lt; {@code now}.
      *         {@code false} otherwise.
      */
-    private boolean isExpired(final long now, final Long expirationTimeObject) {
+    private static boolean isExpired(final long now, final Long expirationTimeObject) {
         if (expirationTimeObject != null) {
-            final long expirationTime = expirationTimeObject.longValue();
-            return expirationTime >= 0 && now >= expirationTime;
+            final long expirationTime = expirationTimeObject;
+            return expirationTime >= 0L && now >= expirationTime;
         }
         return false;
     }
@@ -414,7 +431,7 @@ public class PassiveExpiringMap<K, V>
     /**
      * The current time in milliseconds.
      */
-    private long now() {
+    private static long now() {
         return System.currentTimeMillis();
     }
 
@@ -431,7 +448,7 @@ public class PassiveExpiringMap<K, V>
 
         // record expiration time of new entry
         final long expirationTime = expiringPolicy.expirationTime(key, value);
-        expirationMap.put(key, Long.valueOf(expirationTime));
+        expirationMap.put(key, expirationTime);
 
         return super.put(key, value);
     }
@@ -462,9 +479,9 @@ public class PassiveExpiringMap<K, V>
      * @see #isExpired(long, Long)
      */
     private void removeAllExpired(final long nowMillis) {
-        final Iterator<Map.Entry<Object, Long>> iter = expirationMap.entrySet().iterator();
+        final Iterator<Map.Entry<K, Long>> iter = expirationMap.entrySet().iterator();
         while (iter.hasNext()) {
-            final Map.Entry<Object, Long> expirationEntry = iter.next();
+            final Map.Entry<K, Long> expirationEntry = iter.next();
             if (isExpired(nowMillis, expirationEntry.getValue())) {
                 // remove entry from collection
                 super.remove(expirationEntry.getKey());
@@ -483,6 +500,18 @@ public class PassiveExpiringMap<K, V>
         final Long expirationTimeObject = expirationMap.get(key);
         if (isExpired(nowMillis, expirationTimeObject)) {
             remove(key);
+        }
+    }
+
+    private boolean containsKeyAndCheckExpired(final Object key, final long nowMillis) {
+        final Long expirationTimeObject = expirationMap.get(key);
+        if (expirationTimeObject == null) {
+            return false;
+        } else if (isExpired(nowMillis, expirationTimeObject)) {
+            remove(key);
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -532,4 +561,129 @@ public class PassiveExpiringMap<K, V>
         removeAllExpired(now());
         return super.values();
     }
+
+    @Override
+    public MapIterator<K, V> mapIterator() {
+        removeAllExpired(now());
+        return super.mapIterator();
+    }
+
+    @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        final long nowMillis = now();
+        final Iterator<Map.Entry<K, Long>> iter = expirationMap.entrySet().iterator();
+        while (iter.hasNext()) {
+            final Map.Entry<K, Long> expirationEntry = iter.next();
+            if (isExpired(nowMillis, expirationEntry.getValue())) {
+                super.remove(expirationEntry.getKey());
+                iter.remove();
+            } else {
+                final K key = expirationEntry.getKey();
+                action.accept(key, decorated().get(key));
+            }
+        }
+    }
+
+    @Override
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
+        final long nowMillis = now();
+        final Iterator<Map.Entry<K, Long>> iter = expirationMap.entrySet().iterator();
+        while (iter.hasNext()) {
+            final Map.Entry<K, Long> expirationEntry = iter.next();
+            if (isExpired(nowMillis, expirationEntry.getValue())) {
+                super.remove(expirationEntry.getKey());
+                iter.remove();
+            } else {
+                final K key = expirationEntry.getKey();
+                map.compute(key, (k, v) -> {
+                    final V newValue = function.apply(k, v);
+                    final long expirationTime = expiringPolicy.expirationTime(k, newValue);
+                    expirationEntry.setValue(expirationTime);
+                    return newValue;
+                });
+            }
+        }
+    }
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        if (containsKeyAndCheckExpired(key, now())) {
+            return null;
+        } else {
+            final long expirationTime = expiringPolicy.expirationTime(key, value);
+            expirationMap.put(key, expirationTime);
+            return super.put(key, value);
+        }
+    }
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        if (containsKeyAndCheckExpired(key, now())) {
+            return super.remove(key, value);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public V replace(final K key, final V value) {
+        if (containsKeyAndCheckExpired(key, now())) {
+            return super.replace(key, value);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        if (containsKeyAndCheckExpired(key, now())) {
+            return super.replace(key, oldValue, newValue);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        removeIfExpired(key, now());
+        return decorated().computeIfAbsent(key, mappingFunction);
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        if (containsKeyAndCheckExpired(key, now())) {
+            return super.computeIfPresent(key, (k, v) -> {
+                final V newValue = remappingFunction.apply(k, v);
+                if (newValue == null)
+                    expirationMap.remove(k);
+                return newValue;
+            });
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        removeIfExpired(key, now());
+        return super.compute(key, (k, v) -> {
+            final V newValue = remappingFunction.apply(k, v);
+            if (newValue == null)
+                expirationMap.remove(k);
+            return newValue;
+        });
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        removeIfExpired(key, now());
+        return super.merge(key, value, (a, b) -> {
+            final V newValue = remappingFunction.apply(a, b);
+            if (newValue == null)
+                expirationMap.remove(key);
+            return newValue;
+        });
+    }
+
+
 }

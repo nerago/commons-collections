@@ -1140,7 +1140,7 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
-    private final static class KeySet<V> extends AbstractSet<Long> implements LongSet, Set<Long> {
+    private final static class KeySet<V> extends AbstractSet<Long> implements LongSet {
         private final LongObjectMap<V> parent;
 
         public KeySet(LongObjectMap<V> parent) {

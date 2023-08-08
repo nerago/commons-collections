@@ -21,7 +21,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.Transformer;
 
 /**
@@ -231,16 +235,47 @@ public class TransformedMap<K, V>
     }
 
     @Override
-    public V put(K key, V value) {
-        key = transformKey(key);
-        value = transformValue(value);
-        return decorated().put(key, value);
+    public V put(final K key, final V value) {
+        return decorated().put(transformKey(key), transformValue(value));
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> mapToCopy) {
-        mapToCopy = transformMap(mapToCopy);
-        decorated().putAll(mapToCopy);
+    public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
+        decorated().putAll(transformMap(mapToCopy));
     }
 
+    @Override
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
+        decorated().replaceAll((k, v) -> transformValue(function.apply(k, v)));
+    }
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        return decorated().putIfAbsent(transformKey(key), transformValue(value));
+    }
+
+    @Override
+    public V replace(final K key, final V value) {
+        return decorated().replace(transformKey(key), transformValue(value));
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        return decorated().computeIfAbsent(transformKey(key), k -> transformValue(mappingFunction.apply(k)));
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return decorated().computeIfPresent(transformKey(key), (k, v) -> transformValue(remappingFunction.apply(k, v)));
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return decorated().compute(transformKey(key), (k, v) -> transformValue(remappingFunction.apply(k, v)));
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        return decorated().merge(transformKey(key), transformValue(value), (a, b) -> transformValue(remappingFunction.apply(a, b)));
+    }
 }

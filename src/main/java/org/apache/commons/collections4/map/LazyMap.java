@@ -71,7 +71,7 @@ import org.apache.commons.collections4.functors.FactoryTransformer;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Serializable {
+public class LazyMap<K, V> extends AbstractMapDecorator<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 7990956402564206740L;
@@ -173,13 +173,13 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
     }
 
     @Override
-    public V getOrDefault(Object key, V defaultValue) {
+    public V getOrDefault(final Object key, final V defaultValue) {
         // pretend every key is contained so never use the default
         return get(key);
     }
 
     @Override
-    public V putIfAbsent(K key, V ignoreCallerValue) {
+    public V putIfAbsent(final K key, final V ignoreCallerValue) {
         final V mapValue = map.get(key);
         if (mapValue != null) {
             return mapValue;
@@ -204,7 +204,7 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         final V oldMapValue = map.get(key);
@@ -288,14 +288,14 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V> implements Seriali
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         final boolean wasContained = map.containsKey(key);
         final V oldValue = map.put(key, value);
         return wasContained ? oldValue : factory.transform(key);
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         final V mapValue = map.get(key);
         final V currentValue = (mapValue != null || map.containsKey(key))
                                ? mapValue

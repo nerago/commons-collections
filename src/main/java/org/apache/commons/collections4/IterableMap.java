@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Map;
@@ -46,9 +47,7 @@ import java.util.function.Function;
  *
  * @since 3.0
  */
-public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, V> {
-    // empty
-
+public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, V>, Serializable {
     /***
      * {@inheritDoc}
      * <p>
@@ -72,6 +71,11 @@ public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, 
         }
     }
 
+    /***
+     * {@inheritDoc}
+     * <p>
+     * Overridden in IterableMap to use mapIterator and avoid creating entrySet unnecessarily.
+     */
     @Override
     default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function);

@@ -16,10 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -30,7 +30,7 @@ import java.util.Map;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V>, Serializable {
+public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V> {
 
     private static final long serialVersionUID = -1765018229420704832L;
 
@@ -43,19 +43,19 @@ public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V>, Se
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> mapToCopy) {
-        if (mapToCopy instanceof IterableMap) {
-            IterableMap<? extends K, ? extends V> iterableMap = (IterableMap<? extends K, ? extends V>) mapToCopy;
-            MapIterator<? extends K, ? extends V> mapIterator = iterableMap.mapIterator();
+    public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
+        if (mapToCopy instanceof IterableGet) {
+            final IterableGet<? extends K, ? extends V> iterableMap = (IterableGet<? extends K, ? extends V>) mapToCopy;
+            final MapIterator<? extends K, ? extends V> mapIterator = iterableMap.mapIterator();
             while (mapIterator.hasNext()) {
-                K key = mapIterator.next();
-                V value = mapIterator.getValue();
+                final K key = mapIterator.next();
+                final V value = mapIterator.getValue();
                 put(key, value);
             }
         } else {
-            Iterator<? extends Entry<? extends K, ? extends V>> iterator = mapToCopy.entrySet().iterator();
+            final Iterator<? extends Entry<? extends K, ? extends V>> iterator = mapToCopy.entrySet().iterator();
             while (iterator.hasNext()) {
-                Entry<? extends K, ? extends V> entry = iterator.next();
+                final Entry<? extends K, ? extends V> entry = iterator.next();
                 put(entry.getKey(), entry.getValue());
             }
         }

@@ -21,7 +21,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.Predicate;
 
 /**
@@ -143,6 +147,20 @@ public class PredicatedMap<K, V>
         }
     }
 
+
+    /**
+     * Validates a key.
+     *
+     * @param key  the key to validate
+     * @throws IllegalArgumentException if invalid
+     */
+    private void validate(final K key) {
+        if (keyPredicate != null && !keyPredicate.evaluate(key)) {
+            throw new IllegalArgumentException("Cannot add key - Predicate rejected it");
+        }
+    }
+
+
     /**
      * Override to validate an object set into the map via {@code setValue}.
      *
@@ -184,4 +202,72 @@ public class PredicatedMap<K, V>
         super.putAll(mapToCopy);
     }
 
+    @Override
+    public MapIterator<K, V> mapIterator() {
+        return new EntrySetToMapIteratorAdapter<>(entrySet());
+    }
+
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        return decorated().getOrDefault(key,defaultValue);
+    }
+
+    @Override
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
+        decorated().replaceAll((k, v) -> checkSetValue(function.apply(k, v)));
+    }
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        validate(key, value);
+        return map.putIfAbsent(key, value);
+    }
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        validate(key, newValue);
+        return decorated().replace(key,oldValue,newValue);
+    }
+
+    @Override
+    public V replace(final K key, final V value) {
+        validate(key, value);
+        return decorated().replace(key,value);
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        validate(key);
+        return decorated().computeIfAbsent(key, k -> {
+            final V result = mappingFunction.apply(k);
+            return result != null ? checkSetValue(result) : null;
+        });
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        validate(key);
+        return decorated().computeIfPresent(key, (k, v) -> {
+            final V result = remappingFunction.apply(k, v);
+            return result != null ? checkSetValue(result) : null;
+        });
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        validate(key);
+        return decorated().compute(key, (k, v) -> {
+            final V result = remappingFunction.apply(k, v);
+            return result != null ? checkSetValue(result) : null;
+        });
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        validate(key, value);
+        return decorated().merge(key, value, (a, b) -> {
+            final V result = remappingFunction.apply(a, b);
+            return result != null ? checkSetValue(result) : null;
+        });
+    }
 }

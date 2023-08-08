@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -42,7 +45,7 @@ import java.util.Set;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, V> implements Serializable {
+public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, V>  {
 
     /** Serialization version */
     private static final long serialVersionUID = 653816313916772204L;
@@ -113,7 +116,7 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
     }
 
     @Override
-    public V getOrDefault(Object key, V defaultValue) {
+    public V getOrDefault(final Object key, final V defaultValue) {
         return decorated().getOrDefault(key, defaultValue);
     }
 
@@ -143,52 +146,52 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
     }
 
     @Override
-    public void forEach(BiConsumer<? super K, ? super V> action) {
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
         decorated().forEach(action);
     }
 
     @Override
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         decorated().replaceAll(function);
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         return decorated().putIfAbsent(key, value);
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    public boolean remove(final Object key, final Object value) {
         return decorated().remove(key, value);
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         return decorated().replace(key, oldValue, newValue);
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         return decorated().replace(key, value);
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         return decorated().computeIfAbsent(key, mappingFunction);
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         return decorated().computeIfPresent(key, remappingFunction);
     }
 
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         return decorated().compute(key, remappingFunction);
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         return decorated().merge(key, value, remappingFunction);
     }
 
@@ -219,42 +222,4 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
     public String toString() {
         return decorated().toString();
     }
-
-    // TODO remove these later
-
-    @Override
-    public abstract MapIterator<K, V> mapIterator();
-
-    @Override
-    public abstract V getOrDefault(Object key, V defaultValue);
-
-    @Override
-    public abstract void forEach(BiConsumer<? super K, ? super V> action);
-
-    @Override
-    public abstract void replaceAll(BiFunction<? super K, ? super V, ? extends V> function);
-
-    @Override
-    public abstract V putIfAbsent(K key, V value);
-
-    @Override
-    public abstract boolean remove(Object key, Object value);
-
-    @Override
-    public abstract boolean replace(K key, V oldValue, V newValue);
-
-    @Override
-    public abstract V replace(K key, V value);
-
-    @Override
-    public abstract V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction);
-
-    @Override
-    public abstract V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction);
-
-    @Override
-    public abstract V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction);
-
-    @Override
-    public abstract V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction);
 }

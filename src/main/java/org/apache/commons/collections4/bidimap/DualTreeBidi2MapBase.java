@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractNavigableMapDecorator<K, V>
-        implements SortedBidi2Map<K, V>, NavigableBoundMap<K, V> {
+        implements SortedBidi2Map<K, V> {
     protected static final boolean treeMapImplementsRemove2 = checkNotDefault("remove", Object.class, Object.class);
     protected static final boolean treeMapImplementsReplace3 = checkNotDefault("replace", Object.class, Object.class, Object.class);
     protected static final boolean treeMapImplementsPutIfAbsent = checkNotDefault("putIfAbsent", Object.class, Object.class);

@@ -897,8 +897,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private static class TrieValues<K extends Comparable<K>, V extends Comparable<V>>
-            extends TrieView<V, K, V>
-            implements Collection<V> {
+            extends TrieView<V, K, V> {
         public TrieValues(NickTrie<K, V> parent) {
             super(parent);
         }

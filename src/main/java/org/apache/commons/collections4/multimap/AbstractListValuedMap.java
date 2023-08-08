@@ -133,11 +133,6 @@ public abstract class AbstractListValuedMap<K, V> extends AbstractMultiValuedMap
         }
 
         @Override
-        public boolean addAll(Collection<? extends V> other) {
-            return super.addAll(other);
-        }
-
-        @Override
         public boolean addAll(final int index, final Collection<? extends V> c) {
             List<V> list = getMapping();
             if (list == null) {
