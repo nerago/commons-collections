@@ -16,8 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import java.util.Set;
-
 /**
  * Defines a map that allows bidirectional lookup between key and values
  * and retains both keys and values in sorted order.
@@ -30,15 +28,18 @@ import java.util.Set;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public interface SortedBidi2Map<K, V> extends SortedBidiMap<K, V>, SortedBoundMap<K, V> {
+public interface SortedExtendedBidiMap<K, V> extends SortedBidiMap<K, V>, SortedBoundMap<K, V> {
     SortedMapRange<? super V> getValueRange();
 
     @Override
-    SortedBidi2Map<K, V> subMap(K fromKey, K toKey);
+    SortedExtendedBidiMap<K, V> subMap(K fromKey, K toKey);
 
     @Override
-    SortedBidi2Map<K, V> headMap(K toKey);
+    SortedExtendedBidiMap<K, V> headMap(K toKey);
 
     @Override
-    SortedBidi2Map<K, V> tailMap(K fromKey);
+    SortedExtendedBidiMap<K, V> tailMap(K fromKey);
+
+    @Override
+    SortedExtendedBidiMap<V, K> inverseBidiMap();
 }

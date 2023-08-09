@@ -74,7 +74,7 @@ import java.util.function.Function;
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
-        implements OrderedBidiMap<K, V>, Serializable {
+        implements SortedExtendedBidiMap<K, V>, Serializable {
 
     private static final long serialVersionUID = 721969328361807L;
 
@@ -526,7 +526,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return the inverse map
      */
     @Override
-    public OrderedBidiMap<V, K> inverseBidiMap() {
+    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
         if (inverse == null) {
             inverse = new Inverse();
         }
@@ -2232,19 +2232,19 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         /**
          * The last node returned by the iterator.
          */
-        protected Node<K, V> lastReturnedNode;
+        Node<K, V> lastReturnedNode;
         /**
          * The next node to be returned by the iterator.
          */
-        protected Node<K, V> nextNode;
+        Node<K, V> nextNode;
         /**
          * The previous node in the sequence returned by the iterator.
          */
-        protected Node<K, V> previousNode;
+        Node<K, V> previousNode;
         /**
          * The modification count.
          */
-        protected int expectedModifications;
+        int expectedModifications;
 
         /**
          * Constructor.
@@ -2264,14 +2264,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return previousNode != null;
         }
 
-        protected final void checkCanGetKey() {
+        final void checkCanGetKey() {
             if (lastReturnedNode == null) {
                 throw new IllegalStateException(
                         "Iterator getKey() can only be called after next() and before remove()");
             }
         }
 
-        protected final void checkCanGetValue() {
+        final void checkCanGetValue() {
             if (lastReturnedNode == null) {
                 throw new IllegalStateException(
                         "Iterator getValue() can only be called after next() and before remove()");
@@ -2289,7 +2289,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             previousNode = null;
         }
 
-        protected final Node<K, V> navigateNext() {
+        final Node<K, V> navigateNext() {
             if (nextNode == null) {
                 throw new NoSuchElementException();
             }
@@ -2302,7 +2302,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return lastReturnedNode;
         }
 
-        protected final Node<K, V> navigatePrevious() {
+        final Node<K, V> navigatePrevious() {
             if (previousNode == null) {
                 throw new NoSuchElementException();
             }
@@ -2353,7 +2353,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             previousNode = null;
         }
 
-        protected final Node<K, V> navigateNext() {
+        final Node<K, V> navigateNext() {
             if (nextNode == null) {
                 throw new NoSuchElementException();
             }
@@ -2366,7 +2366,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return lastReturnedNode;
         }
 
-        protected final Node<K, V> navigatePrevious() {
+        final Node<K, V> navigatePrevious() {
             if (previousNode == null) {
                 throw new NoSuchElementException();
             }
@@ -2566,14 +2566,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL };
 
     private abstract class BaseSpliterator<E> implements Spliterator<E> {
-        protected final int expectedModifications;
+        final int expectedModifications;
         /** Whether to return KEY or VALUE order. */
-        protected SplitState state;
+        SplitState state;
         /** The next node to be returned by the spliterator. */
-        protected Node<K, V> currentNode;
+        Node<K, V> currentNode;
         /** The final node to be returned by the spliterator (just needed when split). */
-        protected Node<K, V> lastNode;
-        protected int estimatedSize;
+        Node<K, V> lastNode;
+        int estimatedSize;
 
         BaseSpliterator(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
             this.expectedModifications = modifications;
@@ -2629,7 +2629,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        protected boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
+        boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
             if (modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
@@ -2647,7 +2647,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        protected void forEachNode(Consumer<Node<K, V>> action) {
+        void forEachNode(Consumer<Node<K, V>> action) {
             checkInit();
             Node<K, V> current = currentNode, last = lastNode;
             while (current != null) {
@@ -2730,7 +2730,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        protected boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
+        boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
             if (modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
@@ -2748,7 +2748,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        protected void forEachNode(Consumer<Node<K, V>> action) {
+        void forEachNode(Consumer<Node<K, V>> action) {
             checkInit();
             Node<K, V> current = currentNode, last = lastNode;
             while (current != null) {
@@ -2806,7 +2806,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private final class SpliteratorKeyByKey extends SpliteratorByKey<K> {
-        public SpliteratorKeyByKey() {
+        SpliteratorKeyByKey() {
             super();
         }
 
@@ -2841,7 +2841,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private class SpliteratorKeyByValue extends SpliteratorByValue<K> {
-        public SpliteratorKeyByValue() {
+        SpliteratorKeyByValue() {
             super();
         }
 
@@ -2871,7 +2871,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private class SpliteratorValueByKey extends SpliteratorByKey<V> {
-        public SpliteratorValueByKey() {
+        SpliteratorValueByKey() {
             super();
         }
 
@@ -2901,7 +2901,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private class SpliteratorValueByValue extends SpliteratorByValue<V> {
-        public SpliteratorValueByValue() {
+        SpliteratorValueByValue() {
             super();
         }
 
@@ -2936,7 +2936,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private class SpliteratorEntryByKey extends SpliteratorByKey<Entry<K, V>> {
-        public SpliteratorEntryByKey() {
+        SpliteratorEntryByKey() {
             super();
         }
 
@@ -2971,7 +2971,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     private class SpliteratorEntryInvertedByValue extends SpliteratorByValue<Entry<V, K>> {
-        public SpliteratorEntryInvertedByValue() {
+        SpliteratorEntryInvertedByValue() {
             super();
         }
 
@@ -3128,11 +3128,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             throw new UnsupportedOperationException("Map.Entry.setValue is not supported");
         }
 
-        public boolean isKeyLessThanOrEqual(Node<K, V> other) {
+        boolean isKeyLessThanOrEqual(Node<K, V> other) {
             return compare(key, other.key) <= 0;
         }
 
-        public boolean isValueLessThanOrEqual(Node<K, V> other) {
+        boolean isValueLessThanOrEqual(Node<K, V> other) {
             return compare(value, other.value) <= 0;
         }
 
@@ -3172,7 +3172,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * The inverse map implementation.
      */
-    private final class Inverse implements OrderedBidiMap<V, K> {
+    private final class Inverse implements SortedExtendedBidiMap<V, K> {
 
         /**
          * Store the keySet once created.

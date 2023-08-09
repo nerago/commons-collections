@@ -304,7 +304,7 @@ public class SingletonMap<K, V>
      * Unsupported operation.
      */
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
@@ -312,7 +312,7 @@ public class SingletonMap<K, V>
      * Unsupported operation.
      */
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 

@@ -49,8 +49,9 @@ public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
      *
      * @param keyAnalyzer  the {@link KeyAnalyzer} to use
      */
-    protected AbstractBitwiseTrie(final KeyAnalyzer<? super K> keyAnalyzer, final SortedMapRange<? super K> keyRange) {
+    protected AbstractBitwiseTrie(final KeyAnalyzer<? super K> keyAnalyzer, final SortedMapRange<K> keyRange) {
         this.keyAnalyzer = Objects.requireNonNull(keyAnalyzer, "keyAnalyzer");
+        this.keyRange = keyRange;
     }
 
     /**

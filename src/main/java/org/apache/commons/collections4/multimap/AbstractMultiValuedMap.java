@@ -19,6 +19,7 @@ package org.apache.commons.collections4.multimap;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
@@ -46,7 +47,7 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  * @param <V> the type of the values in this map
  * @since 4.1
  */
-public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, V> {
+public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, V>, Serializable {
 
     /** The values view */
     private transient Collection<V> valuesView;
@@ -556,7 +557,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
                 getMap().remove(key);
             }
             if (result) {
-                updateEntryCount(coll.size() - oldSize);;
+                updateEntryCount(coll.size() - oldSize);
             }
             return result;
         }
@@ -592,7 +593,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
     }
 
     /**
-     * Inner class that provides a MultiSet<K> keys view.
+     * Inner class that provides a MultiSet&lt;K&gt; keys view.
      * Only used with unmodifiable wrapper.
      */
     private static class KeysMultiSet<K, V> extends AbstractMultiSet<K> {
@@ -732,15 +733,15 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
     private static abstract class BaseEntrySpliterator<E, K, V> implements Spliterator<E> {
         protected final Spliterator<Entry<K, Collection<V>>> entrySpliterator;
-        protected int estimateSize;
+        protected long estimateSize;
         protected boolean isSplit;
 
-        protected BaseEntrySpliterator(final Map<K, Collection<V>> map, final int exactSize) {
+        protected BaseEntrySpliterator(final Map<K, Collection<V>> map, final long exactSize) {
             this.entrySpliterator = map.entrySet().spliterator();
             this.estimateSize = exactSize;
         }
 
-        protected BaseEntrySpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected BaseEntrySpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final long estimateSize) {
             this.entrySpliterator = entrySpliterator;
             this.estimateSize = estimateSize;
             this.isSplit = true;
@@ -748,7 +749,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
 
         @Override
         public Spliterator<E> trySplit() {
-            Spliterator<Entry<K, Collection<V>>> partitionedEntries = entrySpliterator.trySplit();
+            final Spliterator<Entry<K, Collection<V>>> partitionedEntries = entrySpliterator.trySplit();
             if (partitionedEntries != null) {
                 isSplit = true;
                 return makeSplit(partitionedEntries, estimateSize >>>= 1);
@@ -757,7 +758,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             }
         }
 
-        protected abstract Spliterator<E> makeSplit(Spliterator<Entry<K, Collection<V>>> entrySpliterator, int estimateSize);
+        protected abstract Spliterator<E> makeSplit(Spliterator<Entry<K, Collection<V>>> entrySpliterator, long estimateSize);
 
         @Override
         public long estimateSize() {
@@ -774,16 +775,16 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         private K currentKey;
         private int itemCount;
 
-        protected MultiSetSpliterator(final Map<K, Collection<V>> map, final int exactSize) {
+        protected MultiSetSpliterator(final Map<K, Collection<V>> map, final long exactSize) {
             super(map, exactSize);
         }
 
-        protected MultiSetSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected MultiSetSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final long estimateSize) {
             super(entrySpliterator, estimateSize);
         }
 
         @Override
-        protected Spliterator<K> makeSplit(Spliterator<Entry<K, Collection<V>>> entrySpliterator, int estimateSize) {
+        protected Spliterator<K> makeSplit(Spliterator<Entry<K, Collection<V>>> entrySpliterator, long estimateSize) {
             return new MultiSetSpliterator<>(entrySpliterator, estimateSize);
         }
 
@@ -981,12 +982,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             super(parent.map, parent.entryCount);
         }
 
-        protected FullMapSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected FullMapSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final long estimateSize) {
             super(entrySpliterator, estimateSize);
         }
 
         @Override
-        protected Spliterator<Entry<K, V>> makeSplit(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected Spliterator<Entry<K, V>> makeSplit(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final long estimateSize) {
             return new FullMapSpliterator<>(entrySpliterator, estimateSize);
         }
 
@@ -1020,12 +1021,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
             super(parent.map, parent.entryCount);
         }
 
-        protected FullValuesSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected FullValuesSpliterator(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final long estimateSize) {
             super(entrySpliterator, estimateSize);
         }
 
         @Override
-        protected Spliterator<V> makeSplit(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final int estimateSize) {
+        protected Spliterator<V> makeSplit(final Spliterator<Entry<K, Collection<V>>> entrySpliterator, final long estimateSize) {
             return new FullValuesSpliterator<>(entrySpliterator, estimateSize);
         }
 
@@ -1098,7 +1099,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
                 final Collection<V> coll = iterator.next();
                 final int oldSize = coll.size();
                 if (coll.removeAll(removeCollection)) {
-                    updateEntryCount(coll.size() - oldSize);;
+                    updateEntryCount(coll.size() - oldSize);
                     if (coll.isEmpty()) {
                         iterator.remove();
                     }
@@ -1116,7 +1117,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
                 final Collection<V> coll = iterator.next();
                 final int oldSize = coll.size();
                 if (coll.retainAll(retainCollection)) {
-                    updateEntryCount(coll.size() - oldSize);;
+                    updateEntryCount(coll.size() - oldSize);
                     if (coll.isEmpty()) {
                         iterator.remove();
                     }
@@ -1233,12 +1234,12 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
         }
 
         @Override
-        public Collection<V> compute(K key, BiFunction<? super K, ? super Collection<V>, ? extends Collection<V>> remappingFunction) {
+        public Collection<V> compute(final K key, final BiFunction<? super K, ? super Collection<V>, ? extends Collection<V>> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Collection<V> merge(K key, Collection<V> value, BiFunction<? super Collection<V>, ? super Collection<V>, ? extends Collection<V>> remappingFunction) {
+        public Collection<V> merge(final K key, final Collection<V> value, final BiFunction<? super Collection<V>, ? super Collection<V>, ? extends Collection<V>> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 

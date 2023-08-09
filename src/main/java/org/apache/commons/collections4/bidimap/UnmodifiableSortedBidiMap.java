@@ -21,17 +21,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedBidi2Map;
+import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
-import org.apache.commons.collections4.map.UnmodifiableSortedMap;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -65,10 +63,10 @@ public final class UnmodifiableSortedBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> SortedBidiMap<K, V> unmodifiableSortedBidiMap(final SortedBidiMap<K, ? extends V> map) {
+    public static <K, V> SortedExtendedBidiMap<K, V> unmodifiableSortedBidiMap(final SortedExtendedBidiMap<K, ? extends V> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final SortedBidiMap<K, V> tmpMap = (SortedBidiMap<K, V>) map;
+            final SortedExtendedBidiMap<K, V> tmpMap = (SortedExtendedBidiMap<K, V>) map;
             return tmpMap;
         }
         return new UnmodifiableSortedBidiMap<>(map);
@@ -81,12 +79,12 @@ public final class UnmodifiableSortedBidiMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableSortedBidiMap(final SortedBidiMap<K, ? extends V> map) {
-        super((SortedBidi2Map<K, V>) map);
+    private UnmodifiableSortedBidiMap(final SortedExtendedBidiMap<K, ? extends V> map) {
+        super((SortedExtendedBidiMap<K, V>) map);
     }
 
     @Override
-    protected SortedBidi2Map<K, V> decorateDerived(final SortedBidi2Map<K, V> map) {
+    protected SortedExtendedBidiMap<K, V> decorateDerived(final SortedExtendedBidiMap<K, V> map) {
         return new UnmodifiableSortedBidiMap<>(map);
     }
 
@@ -185,7 +183,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public SortedBidiMap<V, K> inverseBidiMap() {
+    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
         if (inverse == null) {
             inverse = new UnmodifiableSortedBidiMap<>(decorated().inverseBidiMap());
             inverse.inverse = this;

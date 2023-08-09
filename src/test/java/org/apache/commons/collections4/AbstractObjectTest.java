@@ -359,7 +359,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         oStream.writeObject(o);
     }
 
-    protected  <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable, String message) {
+    protected  <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable) {
         try {
             executable.execute();
         } catch (Throwable throwable) {
@@ -371,6 +371,20 @@ public abstract class AbstractObjectTest extends BulkTest {
         }
 
         fail("Expected exception to be thrown, but nothing was thrown.");
+    }
+
+    protected  <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable, String message) {
+        try {
+            executable.execute();
+        } catch (Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            fail(message + " - Unexpected exception type thrown", throwable);
+        }
+
+        fail(message + " - Expected exception to be thrown, but nothing was thrown.");
     }
 
     static final Map<Long, Class<?>> serializationIds = new HashMap<>();

@@ -1095,11 +1095,41 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         if (!isTestFunctionalMethods()) {
             return;
         }
-        if (!isPutAddSupported() || !isPutChangeSupported() || !isRemoveSupported()) {
+
+        if (!isPutAddSupported() && !isPutChangeSupported() && !isRemoveSupported()) {
             resetFull();
-            assertThrows(UnsupportedOperationException.class, () -> getMap().compute(keys[0], (k, v) -> newValues[0]));
-            assertThrows(UnsupportedOperationException.class, () -> getMap().compute(keys[0], (k, v) -> null));
-            assertThrows(UnsupportedOperationException.class, () -> getMap().compute(otherKeys[0], (k, v) -> otherValues[0]));
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(otherKeys[0], (k, v) -> otherValues[0]));
+            final V newValue = Arrays.stream(newValues).filter(Objects::nonNull).findAny().get();
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(keys[0], (k, v) -> newValue));
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(keys[1], (k, v) -> null));
+            verify();
+            return;
+        } else if (!isPutAddSupported() && !isPutChangeSupported()) {
+            resetFull();
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(otherKeys[0], (k, v) -> otherValues[0]));
+            final V newValue = Arrays.stream(newValues).filter(Objects::nonNull).findAny().get();
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(keys[0], (k, v) -> newValue));
+
+            try {
+                getMap().compute(keys[1], (k, v) -> null);
+                getConfirmed().remove(keys[1]);
+            } catch (UnsupportedOperationException | IllegalArgumentException e) {
+                // nothing
+            }
+            verify();
+            return;
+        } else if (!isPutAddSupported() && !isRemoveSupported()) {
+            resetFull();
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(otherKeys[0], (k, v) -> otherValues[0]));
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class, () -> getMap().compute(keys[0], (k, v) -> null));
+
+            final V newValue = Arrays.stream(newValues).filter(Objects::nonNull).findAny().get();
+            try {
+                getMap().compute(keys[0], (k, v) -> newValue);
+                getConfirmed().put(keys[0], newValue);
+            } catch (UnsupportedOperationException | IllegalArgumentException e) {
+                // nothing
+            }
             verify();
             return;
         }

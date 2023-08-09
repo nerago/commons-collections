@@ -18,7 +18,7 @@ package org.apache.commons.collections4.bidimap;
 
 import java.util.Comparator;
 
-import org.apache.commons.collections4.SortedBidi2Map;
+import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 
@@ -41,7 +41,7 @@ import org.apache.commons.collections4.SortedMapRange;
  * @since 3.0
  */
 public abstract class AbstractSortedBidiMapDecorator<K, V>
-        extends AbstractOrderedBidiMapDecorator<K, V> implements SortedBidi2Map<K, V> {
+        extends AbstractOrderedBidiMapDecorator<K, V> implements SortedExtendedBidiMap<K, V> {
 
     private static final long serialVersionUID = -2025553015999206418L;
 
@@ -51,7 +51,7 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    public AbstractSortedBidiMapDecorator(final SortedBidi2Map<K, V> map) {
+    public AbstractSortedBidiMapDecorator(final SortedExtendedBidiMap<K, V> map) {
         super(map);
     }
 
@@ -61,16 +61,16 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
      * @return the decorated map
      */
     @Override
-    protected SortedBidi2Map<K, V> decorated() {
-        return (SortedBidi2Map<K, V>) super.decorated();
+    protected SortedExtendedBidiMap<K, V> decorated() {
+        return (SortedExtendedBidiMap<K, V>) super.decorated();
     }
 
-    protected SortedBidi2Map<K, V> decorateDerived(final SortedBidi2Map<K, V> map) {
+    protected SortedExtendedBidiMap<K, V> decorateDerived(final SortedExtendedBidiMap<K, V> map) {
         return map;
     }
 
     @Override
-    public SortedBidiMap<V, K> inverseBidiMap() {
+    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
         return decorated().inverseBidiMap();
     }
 
@@ -85,17 +85,17 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
     }
 
     @Override
-    public SortedBidi2Map<K, V> subMap(final K fromKey, final K toKey) {
+    public SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
         return decorateDerived(decorated().subMap(fromKey, toKey));
     }
 
     @Override
-    public SortedBidi2Map<K, V> headMap(final K toKey) {
+    public SortedExtendedBidiMap<K, V> headMap(final K toKey) {
         return decorateDerived(decorated().headMap(toKey));
     }
 
     @Override
-    public SortedBidi2Map<K, V> tailMap(final K fromKey) {
+    public SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
         return decorateDerived(decorated().tailMap(fromKey));
     }
 
