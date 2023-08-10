@@ -32,9 +32,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.Spliterator;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.Reference;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
@@ -138,60 +141,143 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
     @Override
     public V put(final K key, final V value) {
+        return doPut(key, value, true, true);
+    }
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        return doPut(key, value, true, false);
+    }
+
+    @Override
+    public V replace(final K key, final V value) {
+        return doPut(key, value, false, true);
+    }
+
+    private V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         Objects.requireNonNull(key, "key");
 
+        // empty key maps to root
         final int lengthInBits = lengthInBits(key);
-
-        // The only place to store a key with a length
-        // of zero bits is the root node
         if (lengthInBits == 0) {
-            if (root.isEmpty()) {
-                incrementSize();
-            } else {
-                incrementModCount();
-            }
-            return root.setKeyValue(key, value);
+            return doPutEntry(root, key, value, addIfAbsent, updateIfPresent);
         }
 
+        // find matching entry node
         final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
         if (equalKeys(key, found.key)) {
-            if (found.isEmpty()) { // <- must be the root
-                incrementSize();
-            } else {
-                incrementModCount();
-            }
-            return found.setKeyValue(key, value);
+            return doPutEntry(found, key, value, addIfAbsent, updateIfPresent);
         }
 
+        // find difference bit
         final int bitIndex = bitIndex(key, found.key);
-        if (!KeyAnalyzer.isOutOfBoundsIndex(bitIndex)) {
-            if (KeyAnalyzer.isValidBitIndex(bitIndex)) { // in 99.999...9% the case
-                /* NEW KEY+VALUE TUPLE */
+        if (KeyAnalyzer.isValidBitIndex(bitIndex)) {
+            if (addIfAbsent) {
                 final TrieEntry<K, V> t = new TrieEntry<>(key, value, bitIndex);
                 addEntry(t, lengthInBits);
                 incrementSize();
-                return null;
             }
-            if (KeyAnalyzer.isNullBitKey(bitIndex)) {
-                // A bits of the Key are zero. The only place to
-                // store such a Key is the root Node!
+            return null;
+        } else if (KeyAnalyzer.isNullBitKey(bitIndex)) {
+            return doPutEntry(root, key, value, addIfAbsent, updateIfPresent);
+        } else if (KeyAnalyzer.isEqualBitKey(bitIndex)) {
+            return doPutEntry(found, key, value, addIfAbsent, updateIfPresent);
+        } else {
+            throw new IllegalArgumentException("key");
+        }
+    }
 
-                /* NULL BIT KEY */
-                if (root.isEmpty()) {
+    private V doPut(final K key,
+                    final Function<? super K, ? extends V> absentFunc,
+                    final BiFunction<? super K, ? super V, ? extends V> presentFunc,
+                    final boolean saveNulls) {
+        Objects.requireNonNull(key, "key");
+        final int expectedModCount = this.modCount;
+
+        // empty key maps to root
+        final int lengthInBits = lengthInBits(key);
+        if (lengthInBits == 0) {
+            return doPutEntry(root, key, absentFunc, presentFunc, saveNulls, expectedModCount);
+        }
+
+        // find matching entry node
+        final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
+        if (equalKeys(key, found.key)) {
+            return doPutEntry(found, key, absentFunc, presentFunc, saveNulls, expectedModCount);
+        }
+
+        // find difference bit
+        final int bitIndex = bitIndex(key, found.key);
+        if (KeyAnalyzer.isValidBitIndex(bitIndex)) {
+            if (absentFunc != null) {
+                final V value = absentFunc.apply(key);
+                if (value != null || saveNulls) {
+                    final TrieEntry<K, V> t = new TrieEntry<>(key, value, bitIndex);
+                    addEntry(t, lengthInBits);
                     incrementSize();
-                } else {
-                    incrementModCount();
                 }
-                return root.setKeyValue(key, value);
-
             }
-            if (KeyAnalyzer.isEqualBitKey(bitIndex) && found != root) { // NOPMD
+            return null;
+        } else if (KeyAnalyzer.isNullBitKey(bitIndex)) {
+            return doPutEntry(root, key, absentFunc, presentFunc, saveNulls, expectedModCount);
+        } else if (KeyAnalyzer.isEqualBitKey(bitIndex)) {
+            return doPutEntry(found, key, absentFunc, presentFunc, saveNulls, expectedModCount);
+        } else {
+            throw new IllegalArgumentException("key");
+        }
+    }
+
+    private V doPutEntry(final TrieEntry<K, V> found, final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
+        if (found.isEmptyRoot()) {
+            if (addIfAbsent) {
+                incrementSize();
+                found.setKeyValue(key, value);
+            }
+            return null;
+        } else {
+            if (updateIfPresent) {
                 incrementModCount();
                 return found.setKeyValue(key, value);
             }
+            return found.value;
         }
+    }
 
-        throw new IllegalArgumentException("Failed to put: " + key + " -> " + value + ", " + bitIndex);
+    private V doPutEntry(final TrieEntry<K,V> found, final K key,
+                          final Function<? super K,? extends V> absentFunc,
+                          final BiFunction<? super K,? super V,? extends V> presentFunc,
+                          final boolean saveNulls,
+                          final int expectedModCount) {
+        if (found.isEmptyRoot()) {
+            if (absentFunc != null) {
+                final V value = absentFunc.apply(key);
+                if (expectedModCount != modCount) {
+                    throw new ConcurrentModificationException();
+                }
+                if (value != null || saveNulls) {
+                    incrementSize();
+                    found.setKeyValue(key, value);
+                    return value;
+                }
+            }
+            return null;
+        } else {
+            if (presentFunc != null) {
+                final V value = presentFunc.apply(key, found.value);
+                if (expectedModCount != modCount) {
+                    throw new ConcurrentModificationException();
+                }
+                if (value != null || saveNulls) {
+                    incrementModCount();
+                    found.setKeyValue(key, value);
+                    return value;
+                } else {
+                    removeEntry(found);
+                    return null;
+                }
+            }
+            return found.value;
+        }
     }
 
     /**
@@ -254,6 +340,12 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         return entry != null ? entry.getValue() : null;
     }
 
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        final TrieEntry<K, V> entry = getEntry(key);
+        return entry != null ? entry.getValue() : defaultValue;
+    }
+
     /**
      * Returns the entry associated with the specified key in the
      * PatriciaTrieBase.  Returns null if the map contains no mapping
@@ -269,7 +361,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         final int lengthInBits = lengthInBits(key);
         final TrieEntry<K, V> entry = getNearestEntryForKey(key, lengthInBits);
-        return !entry.isEmpty() && equalKeys(key, entry.key) ? entry : null;
+        return !entry.isEmptyRoot() && equalKeys(key, entry.key) ? entry : null;
     }
 
     /**
@@ -363,7 +455,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             // If we hit the root Node and it is empty
             // we have to look for an alternative best
             // matching node.
-            if (!h.isEmpty()) {
+            if (!h.isEmptyRoot()) {
                 reference.set(h);
                 return false;
             }
@@ -391,7 +483,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         final K key = castKey(k);
         final int lengthInBits = lengthInBits(key);
         final TrieEntry<K, V> entry = getNearestEntryForKey(key, lengthInBits);
-        return !entry.isEmpty() && equalKeys(key, entry.key);
+        return !entry.isEmptyRoot() && equalKeys(key, entry.key);
     }
 
     @Override
@@ -418,14 +510,10 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         return values;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws ClassCastException if provided key is of an incompatible type
-     */
     @Override
     public V remove(final Object k) {
         if (k == null) {
+            // TODO apply to root?
             return null;
         }
 
@@ -435,7 +523,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         TrieEntry<K, V> path = root;
         while (true) {
             if (current.bitIndex <= path.bitIndex) {
-                if (!current.isEmpty() && equalKeys(key, current.key)) {
+                if (!current.isEmptyRoot() && equalKeys(key, current.key)) {
                     return removeEntry(current);
                 }
                 return null;
@@ -449,6 +537,79 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
                 current = current.right;
             }
         }
+    }
+
+    @Override
+    public boolean remove(final Object k, final Object value) {
+        if (k == null) {
+            // TODO apply to root?
+            return false;
+        }
+
+        final K key = castKey(k);
+        final int lengthInBits = lengthInBits(key);
+        TrieEntry<K, V> current = root.left;
+        TrieEntry<K, V> path = root;
+        while (true) {
+            if (current.bitIndex <= path.bitIndex) {
+                if (!current.isEmptyRoot() && equalKeys(key, current.key) && Objects.equals(value, current.value)) {
+                    removeEntry(current);
+                    return true;
+                }
+                return false;
+            }
+
+            path = current;
+
+            if (!isBitSet(key, current.bitIndex, lengthInBits)) {
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
+    }
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        final MutableBoolean didUpdate = new MutableBoolean();
+        doPut(key, null, (k, v) -> {
+            if (Objects.equals(v, oldValue)) {
+                didUpdate.flag = true;
+                return newValue;
+            } else {
+                return v;
+            }
+        }, true);
+        return didUpdate.flag;
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        return doPut(key, mappingFunction, null, false);
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        return doPut(key, null, remappingFunction, false);
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        return doPut(key,
+                v -> remappingFunction.apply(v, null),
+                remappingFunction, false);
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(value);
+        Objects.requireNonNull(remappingFunction);
+        return doPut(key,
+                k -> value,
+                (k, v) -> remappingFunction.apply(v, value), false);
     }
 
     /**
@@ -665,7 +826,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         // the first check, otherwise we know we've already looked
         // at the left.
         if (previous == null || start != previous.predecessor) {
-            while (!current.left.isEmpty()) {
+            while (!current.left.isEmptyRoot()) {
                 // stop traversing if we've already
                 // returned the left of this node.
                 if (previous == current.left) {
@@ -681,7 +842,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         // If there's no data at all, exit.
-        if (current.isEmpty()) {
+        if (current.isEmptyRoot()) {
             return null;
         }
 
@@ -767,7 +928,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         while (true) {
             TrieEntry<K, V> child = node.left;
             // if we hit root and it didn't have a node, go right instead.
-            if (child.isEmpty()) {
+            if (child.isEmptyRoot()) {
                 child = node.right;
             }
 
@@ -896,7 +1057,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         final int lengthInBits = lengthInBits(key);
 
         if (lengthInBits == 0) {
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 // If data in root, and more after -- return it.
                 if (size() > 1) {
                     return nextEntry(root);
@@ -924,7 +1085,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             return ceil;
         }
         if (KeyAnalyzer.isNullBitKey(bitIndex)) {
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return firstEntry();
             }
             if (size() > 1) {
@@ -977,7 +1138,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         final int lengthInBits = lengthInBits(key);
 
         if (lengthInBits == 0) {
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return firstEntry();
@@ -999,7 +1160,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             return ceil;
         }
         if (KeyAnalyzer.isNullBitKey(bitIndex)) {
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return firstEntry();
@@ -1022,7 +1183,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         if (keyLengthInBits == 0) {
             System.out.println("ceilingEntry5 null");
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return firstEntry();
@@ -1093,7 +1254,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         if (keyLengthInBits == 0) {
             System.out.println("ceilingEntry4 null");
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return firstEntry();
@@ -1172,7 +1333,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         if (lengthInBits == 0) {
             System.out.println("ceilingEntry2 null");
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return firstEntry();
@@ -1283,7 +1444,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         if (lengthInBits == 0) {
             System.out.println("ceilingEntry2 null");
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return firstEntry();
@@ -1453,7 +1614,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         final int lengthInBits = lengthInBits(key);
 
         if (lengthInBits == 0) {
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return null;
@@ -1475,7 +1636,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             return floor;
         }
         if (KeyAnalyzer.isNullBitKey(bitIndex)) {
-            if (!root.isEmpty()) {
+            if (!root.isEmptyRoot()) {
                 return root;
             }
             return null;
@@ -1511,10 +1672,10 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         // Make sure the entry is valid for a subtree.
-        final TrieEntry<K, V> entry = current.isEmpty() ? path : current;
+        final TrieEntry<K, V> entry = current.isEmptyRoot() ? path : current;
 
         // If entry is root, it can't be empty.
-        if (entry.isEmpty()) {
+        if (entry.isEmptyRoot()) {
             return null;
         }
 
@@ -1585,8 +1746,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
      *        node != node.parent.left.
      *          - If node.parent.left is uplink from node.parent:
      *              - If node.parent.left is not root, return it.
-     *              - If it is root &amp; root isEmpty, return null.
-     *              - If it is root &amp; root !isEmpty, return root.
+     *              - If it is root &amp; root isEmptyRoot, return null.
+     *              - If it is root &amp; root !isEmptyRoot, return root.
      *          - If node.parent.left is not uplink from node.parent:
      *              - Follow right path for first right child from node.parent.left
      *
@@ -1614,7 +1775,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         if (isValidUplink(node.parent.left, node.parent)) {
             if (node.parent.left == root) {
-                if (root.isEmpty()) {
+                if (root.isEmptyRoot()) {
                     return null;
                 }
                 return root;
@@ -1644,7 +1805,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
      * Returns true if 'next' is a valid uplink coming from 'from'.
      */
     static boolean isValidUplink(final TrieEntry<?, ?> next, final TrieEntry<?, ?> from) {
-        return next != null && next.bitIndex <= from.bitIndex && !next.isEmpty();
+        return next != null && next.bitIndex <= from.bitIndex && !next.isEmptyRoot();
     }
 
     /**
@@ -1690,7 +1851,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
          * Only the root can potentially be empty, all other
          * nodes must have a key.
          */
-        public boolean isEmpty() {
+        public boolean isEmptyRoot() {
             return key == null;
         }
 
@@ -2160,17 +2321,17 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
 
         @Override
         public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-            return createRangeMap(getKeyRange().subRange(fromKey, toKey));
+            return createRangeMap(keyRange.subRange(fromKey, toKey));
         }
 
         @Override
         public IterableSortedMap<K, V> headMap(final K toKey) {
-            return createRangeMap(getKeyRange().head(toKey));
+            return createRangeMap(keyRange.head(toKey));
         }
 
         @Override
         public IterableSortedMap<K, V> tailMap(final K fromKey) {
-            return createRangeMap(getKeyRange().tail(fromKey));
+            return createRangeMap(keyRange.tail(fromKey));
         }
     }
 
