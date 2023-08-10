@@ -25,9 +25,8 @@ import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-// rename to GeneralRadixTrie?
 // https://en.wikipedia.org/wiki/Radix_tree
-public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
+public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractMap<K, V>
         implements Trie<K, V>, Serializable {
     private static final long serialVersionUID = -1993317552691676845L;
@@ -42,7 +41,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
     private transient Collection<V> values;
     private transient Set<Map.Entry<K, V>> entrySet;
 
-    public NickTrie(final KeyAnalyzer<K> keyAnalyzer) {
+    public GeneralRadixTrie(final KeyAnalyzer<K> keyAnalyzer) {
         this.keyAnalyzer = keyAnalyzer;
         this.keyRange = SortedMapRange.full(keyAnalyzer);
         this.root = TEntry.makeRoot();
@@ -667,12 +666,12 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static class TrieMapIterator<K extends Comparable<K>, V extends Comparable<V>>
             implements OrderedMapIterator<K, V>, ResettableIterator<K> {
-        private final NickTrie<K, V> parent;
+        private final GeneralRadixTrie<K, V> parent;
         private TEntry<K, V> current;
         private TEntry<K, V> nextEntry;
         private TEntry<K, V> previousEntry;
 
-        public TrieMapIterator(NickTrie<K, V> parent) {
+        public TrieMapIterator(GeneralRadixTrie<K, V> parent) {
             this.parent = parent;
             reset();
         }
@@ -744,9 +743,9 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static abstract class TrieView<E, K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractCollection<E> {
-        protected final NickTrie<K, V> parent;
+        protected final GeneralRadixTrie<K, V> parent;
 
-        public TrieView(NickTrie<K,V> parent) {
+        public TrieView(GeneralRadixTrie<K,V> parent) {
             this.parent = parent;
         }
 
@@ -780,7 +779,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieEntrySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<Entry<K, V>, K, V>
             implements Set<Entry<K, V>> {
-        public TrieEntrySet(NickTrie<K, V> parent) {
+        public TrieEntrySet(GeneralRadixTrie<K, V> parent) {
             super(parent);
         }
 
@@ -855,7 +854,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieKeySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<K, K, V>
             implements Set<K> {
-        public TrieKeySet(NickTrie<K, V> parent) {
+        public TrieKeySet(GeneralRadixTrie<K, V> parent) {
             super(parent);
         }
 
@@ -898,7 +897,7 @@ public class NickTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static class TrieValues<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<V, K, V> {
-        public TrieValues(NickTrie<K, V> parent) {
+        public TrieValues(GeneralRadixTrie<K, V> parent) {
             super(parent);
         }
 

@@ -17,26 +17,23 @@
 package org.apache.commons.collections4.trie;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.analyzer.StringKeyAnalyzer;
-
-import java.util.SortedMap;
 
 /**
  * JUnit tests for the PatriciaTrie.
  *
  * @since 4.0
  */
-public class NickTrieTest<V extends Comparable<V>> extends AbstractPatriciaTrieTest<V> {
+public class GeneralRadixTrieTest<V extends Comparable<V>> extends AbstractPatriciaTrieTest<V> {
 
-    public NickTrieTest() {
-        super(NickTrieTest.class.getSimpleName());
+    public GeneralRadixTrieTest() {
+        super(GeneralRadixTrieTest.class.getSimpleName());
     }
 
     @Override
     public Trie<String, V> makeObject() {
-        return new NickTrie<>(new StringKeyAnalyzer());
+        return new GeneralRadixTrie<>(new StringKeyAnalyzer());
     }
 
     @Override
