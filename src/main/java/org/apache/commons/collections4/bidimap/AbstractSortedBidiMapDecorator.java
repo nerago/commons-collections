@@ -19,7 +19,6 @@ package org.apache.commons.collections4.bidimap;
 import java.util.Comparator;
 
 import org.apache.commons.collections4.SortedExtendedBidiMap;
-import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 
 /**
@@ -105,7 +104,7 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
     }
 
     @Override
-    public SortedMapRange<? super V> getValueRange() {
+    public SortedMapRange<V> getValueRange() {
         return decorated().getValueRange();
     }
 }

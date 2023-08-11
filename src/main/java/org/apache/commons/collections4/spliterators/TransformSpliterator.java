@@ -26,24 +26,24 @@ public class TransformSpliterator<I, O> implements Spliterator<O> {
     private final Spliterator<I> spliterator;
     private final Transformer<? super I, ? extends O> transformer;
 
-    public TransformSpliterator(Spliterator<I> spliterator, Transformer<? super I, ? extends O> transformer) {
+    public TransformSpliterator(final Spliterator<I> spliterator, final Transformer<? super I, ? extends O> transformer) {
         this.spliterator = spliterator;
         this.transformer = transformer;
     }
 
     @Override
-    public boolean tryAdvance(Consumer<? super O> action) {
+    public boolean tryAdvance(final Consumer<? super O> action) {
         return spliterator.tryAdvance(e -> action.accept(transformer.transform(e)));
     }
 
     @Override
-    public void forEachRemaining(Consumer<? super O> action) {
+    public void forEachRemaining(final Consumer<? super O> action) {
         spliterator.forEachRemaining(e -> action.accept(transformer.transform(e)));
     }
 
     @Override
     public Spliterator<O> trySplit() {
-        Spliterator<I> split = spliterator.trySplit();
+        final Spliterator<I> split = spliterator.trySplit();
         if (split != null)
             return new TransformSpliterator<>(split, transformer);
         else
@@ -62,11 +62,11 @@ public class TransformSpliterator<I, O> implements Spliterator<O> {
 
     @Override
     public long getExactSizeIfKnown() {
-        return spliterator.characteristics();
+        return spliterator.getExactSizeIfKnown();
     }
 
     @Override
-    public boolean hasCharacteristics(int characteristics) {
+    public boolean hasCharacteristics(final int characteristics) {
         return spliterator.hasCharacteristics(characteristics);
     }
 }

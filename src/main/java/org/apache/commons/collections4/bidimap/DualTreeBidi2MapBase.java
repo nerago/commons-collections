@@ -69,7 +69,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     protected abstract DualTreeBidi2MapBase<K, V> decorateDerived(final NavigableMap<K, V> subMap, final SortedMapRange<K> keyRange);
 
     @Override
-    public final SortedMapRange<? super V> getValueRange() {
+    public final SortedMapRange<V> getValueRange() {
         return valueRange;
     }
 

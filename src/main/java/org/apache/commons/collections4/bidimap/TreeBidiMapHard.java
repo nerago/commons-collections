@@ -16,15 +16,34 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.KeyValue;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MutableBoolean;
+import org.apache.commons.collections4.OrderedIterator;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedExtendedBidiMap;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.map.AbstractIterableMap;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.AbstractSet;
+import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -73,10 +92,9 @@ import java.util.function.Function;
  * @param <V> the type of the values in this map
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
+@SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
         implements SortedExtendedBidiMap<K, V>, Serializable {
-
-    private static final long serialVersionUID = 721969328361807L;
 
     private transient Node<K, V> rootNodeKey;
     private transient Node<K, V> rootNodeValue;
@@ -293,10 +311,44 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Comparator<? super K> comparator() {
+        return null; // natural order
+    }
+
+    @Override
+    public Comparator<? super V> valueComparator() {
+        return null; // natural order
+    }
+
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return SortedMapRange.full(null);
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return SortedMapRange.full(null);
+    }
+
+    @Override
+    public SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
+        return new TreeBidiSubMap(getKeyRange().subRange(fromKey, toKey));
+    }
+
+    @Override
+    public SortedExtendedBidiMap<K, V> headMap(final K toKey) {
+        return new TreeBidiSubMap(getKeyRange().head(toKey));
+    }
+
+    @Override
+    public SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
+        return new TreeBidiSubMap(getKeyRange().tail(fromKey));
+    }
 
     /**
      * Removes the mapping for this key from this map if present.
@@ -430,7 +482,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     @Override
     public K nextKey(final K key) {
         checkKey(key);
-        final Node<K, V> node = lookupKeyHigher(key);
+        final Node<K, V> node = lookupKeyHigher(key, false);
         return node == null ? null : node.getKey();
     }
 
@@ -445,7 +497,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     @Override
     public K previousKey(final K key) {
         checkKey(key);
-        final Node<K, V> node = lookupKeyLower(key);
+        final Node<K, V> node = lookupKeyLower(key, false);
         return node == null ? null : node.getKey();
     }
 
@@ -515,7 +567,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         if (isEmpty()) {
-            return EmptyOrderedMapIterator.<K, V>emptyOrderedMapIterator();
+            return EmptyOrderedMapIterator.emptyOrderedMapIterator();
         }
         return new MapIteratorKeyByKey();
     }
@@ -554,7 +606,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         if (nodeCount > 0) {
             try {
-                MapIterator<?, ?> it = new MapIteratorKeyByKey();
+                final MapIterator<?, ?> it = new MapIteratorKeyByKey();
                 while (it.hasNext()) {
                     final Object key = it.next();
                     final Object value = it.getValue();
@@ -578,7 +630,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     public int hashCode() {
         int total = 0;
         if (nodeCount > 0) {
-            MapIterator<?, ?> it = new MapIteratorKeyByKey();
+            final MapIterator<?, ?> it = new MapIteratorKeyByKey();
             while (it.hasNext()) {
                 final Object key = it.next();
                 final Object value = it.getValue();
@@ -620,7 +672,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @param key   the key, always the main map key
      * @param value the value, always the main map value
      */
-    private V doPutKeyFirst(final K key, final V value, boolean addIfAbsent, boolean updateIfPresent) {
+    private V doPutKeyFirst(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         Node<K, V> node = rootNodeKey;
         if (node == null) {
             if (addIfAbsent) {
@@ -633,7 +685,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         final Node<K, V> keyNode;
         V oldValue = null;
         while (true) {
-            final int cmp = compare(key, node.getKey());
+            final int cmp = key.compareTo(node.getKey());
             if (cmp == 0) {
                 oldValue = node.value;
                 if (!updateIfPresent || Objects.equals(oldValue, value))
@@ -691,7 +743,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         final Node<K, V> keyNode;
         final V newValue;
         while (true) {
-            final int cmp = compare(key, node.getKey());
+            final int cmp = key.compareTo(node.getKey());
             if (cmp == 0) {
                 final V oldValue = node.getValue();
                 if (presentFunc != null) {
@@ -758,7 +810,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         while (true) {
-            final int cmp = compare(value, node.getValue());
+            final int cmp = value.compareTo(node.getValue());
 
             if (cmp == 0) {
                 // replace existing value node (assume different key)
@@ -853,8 +905,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         Node<K, V> node = rootNodeKey;
 
         while (node != null) {
-            K result = node.getKey();
-            final int cmp = compare(key, result);
+            final K result = node.getKey();
+            final int cmp = key.compareTo(result);
             if (cmp == 0) {
                 return node;
             } else if (cmp < 0) {
@@ -867,12 +919,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return null;
     }
 
-    private Node<K, V> lookupKeyHigher(final K key) {
+    private Node<K, V> lookupKeyHigher(final K key, final boolean includeEqual) {
         Node<K, V> node = rootNodeKey, higher = null;
 
         while (node != null) {
-            final int cmp = compare(node.getKey(), key);
-            if (cmp > 0) {
+            final int cmp = node.getKey().compareTo(key);
+            if (cmp == 0 && includeEqual) {
+                return node;
+            } else if (cmp > 0) {
                 higher = node;
                 node = node.keyLeftNode;
             } else {
@@ -883,12 +937,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return higher;
     }
 
-    private Node<K, V> lookupKeyLower(final K key) {
+    private Node<K, V> lookupKeyLower(final K key, final boolean includeEqual) {
         Node<K, V> node = rootNodeKey, lower = null;
 
         while (node != null) {
-            final int cmp = compare(node.getKey(), key);
-            if (cmp < 0) {
+            final int cmp = node.getKey().compareTo(key);
+            if (cmp == 0 && includeEqual) {
+                return node;
+            } else if (cmp < 0) {
                 lower = node;
                 node = node.keyRightNode;
             } else {
@@ -903,8 +959,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         Node<K, V> node = rootNodeValue;
 
         while (node != null) {
-            V result = node.getValue();
-            final int cmp = compare(value, result);
+            final int cmp = value.compareTo(node.getValue());
             if (cmp == 0) {
                 return node;
             } else if (cmp < 0) {
@@ -1026,18 +1081,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
-     * Compares two objects.
-     *
-     * @param o1 the first object
-     * @param o2 the second object
-     * @return negative value if o1 &lt; o2; 0 if o1 == o2; positive
-     * value if o1 &gt; o2
-     */
-    private static <T extends Comparable<T>> int compare(final T o1, final T o2) {
-        return o1.compareTo(o2);
-    }
-
-    /**
      * Finds the least node from a given node.
      *
      * @param node the node from which we will start searching
@@ -1117,7 +1160,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
         rightChild.keyParentNode = node.keyParentNode;
 
-        Node<K, V> parent = node.keyParentNode;
+        final Node<K, V> parent = node.keyParentNode;
         if (parent == null) {
             // node was the root ... now its right child is the root
             rootNodeKey = rightChild;
@@ -1142,7 +1185,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
         rightChild.valueParentNode = node.valueParentNode;
 
-        Node<K, V> parent = node.valueParentNode;
+        final Node<K, V> parent = node.valueParentNode;
         if (parent == null) {
             // node was the root ... now its right child is the root
             rootNodeValue = rightChild;
@@ -1168,12 +1211,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         final Node<K, V> leftChild = node.keyLeftNode;
         node.keyLeftNode = leftChild.keyRightNode;
         if (leftChild.keyRightNode != null) {
-            Node<K, V> kvNode = leftChild.keyRightNode;
+            final Node<K, V> kvNode = leftChild.keyRightNode;
             kvNode.keyParentNode = node;
         }
         leftChild.keyParentNode = node.keyParentNode;
 
-        Node<K, V> parent = node.keyParentNode;
+        final Node<K, V> parent = node.keyParentNode;
         if (parent == null) {
             // node was the root ... now its left child is the root
             rootNodeKey = leftChild;
@@ -1193,12 +1236,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         final Node<K, V> leftChild = node.valueLeftNode;
         node.valueLeftNode = leftChild.valueRightNode;
         if (leftChild.valueRightNode != null) {
-            Node<K, V> kvNode = leftChild.valueRightNode;
+            final Node<K, V> kvNode = leftChild.valueRightNode;
             kvNode.valueParentNode = node;
         }
         leftChild.valueParentNode = node.valueParentNode;
 
-        Node<K, V> parent = node.valueParentNode;
+        final Node<K, V> parent = node.valueParentNode;
         if (node.valueParentNode == null) {
             // node was the root ... now its left child is the root
             rootNodeValue = leftChild;
@@ -1328,7 +1371,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         shrink();
     }
 
-    private void doRedBlackDeleteKey(Node<K, V> deletedNode) {
+    private void doRedBlackDeleteKey(final Node<K, V> deletedNode) {
         // if deleted node has both left and children, swap with
         // the next greater node
         if (deletedNode.keyLeftNode != null && deletedNode.keyRightNode != null) {
@@ -1356,7 +1399,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 }
 
                 if (deletedNode.keyParentNode != null) {
-                    Node<K, V> parentNode = deletedNode.keyParentNode;
+                    final Node<K, V> parentNode = deletedNode.keyParentNode;
                     if (deletedNode == parentNode.keyLeftNode) {
                         parentNode.keyLeftNode = null;
                     } else {
@@ -1369,7 +1412,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private void doRedBlackDeleteValue(Node<K, V> deletedNode) {
+    private void doRedBlackDeleteValue(final Node<K, V> deletedNode) {
         // if deleted node has both left and children, swap with
         // the next greater node
         if (deletedNode.valueLeftNode != null && deletedNode.valueRightNode != null) {
@@ -1397,7 +1440,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 }
 
                 if (deletedNode.valueParentNode != null) {
-                    Node<K, V> parentNode = deletedNode.valueParentNode;
+                    final Node<K, V> parentNode = deletedNode.valueParentNode;
                     if (deletedNode == parentNode.valueLeftNode) {
                         parentNode.valueLeftNode = null;
                     } else {
@@ -1424,7 +1467,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         while (currentNode != rootNodeKey && currentNode != null && currentNode.keyParentNode != null) {
             if (!currentNode.isBlackKey()) break;
             Node<K, V> parent = currentNode.keyParentNode;
-            boolean isLeftChild = parent.keyLeftNode == currentNode;
+            final boolean isLeftChild = parent.keyLeftNode == currentNode;
             if (isLeftChild) {
                 Node<K, V> siblingNode = parent.keyRightNode;
 
@@ -1446,7 +1489,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     continue;
                 }
 
-                Node<K, V> siblingLeft = siblingNode.keyLeftNode, siblingRight = siblingNode.keyRightNode;
+                final Node<K, V> siblingLeft = siblingNode.keyLeftNode;
+                final Node<K, V> siblingRight = siblingNode.keyRightNode;
                 if ((siblingLeft == null || siblingLeft.isBlackKey()) && (siblingRight == null || siblingRight.isBlackKey())) {
                     siblingNode.setRedKey();
                     currentNode = parent;
@@ -1484,7 +1528,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     parent.setRedKey();
                     rotateRightKey(parent);
 
-                    Node<K, V> result;
+                    final Node<K, V> result;
                     result = parent.keyLeftNode;
                     siblingNode = result;
                 }
@@ -1494,7 +1538,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     continue;
                 }
 
-                Node<K, V> siblingLeft = siblingNode.keyLeftNode, siblingRight = siblingNode.keyRightNode;
+                final Node<K, V> siblingLeft = siblingNode.keyLeftNode;
+                final Node<K, V> siblingRight = siblingNode.keyRightNode;
                 if ((siblingLeft == null || siblingLeft.isBlackKey()) && (siblingRight == null || siblingRight.isBlackKey())) {
                     siblingNode.setRedKey();
                     currentNode = parent;
@@ -1533,7 +1578,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         while (currentNode != rootNodeValue && currentNode != null && currentNode.valueParentNode != null) {
             if (!currentNode.isBlackValue()) break;
             Node<K, V> parent = currentNode.valueParentNode;
-            boolean isLeftChild = parent.valueLeftNode == currentNode;
+            final boolean isLeftChild = parent.valueLeftNode == currentNode;
             if (isLeftChild) {
                 Node<K, V> siblingNode = parent.valueRightNode;
 
@@ -1555,7 +1600,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     continue;
                 }
 
-                Node<K, V> siblingLeft = siblingNode.valueLeftNode, siblingRight = siblingNode.valueRightNode;
+                final Node<K, V> siblingLeft = siblingNode.valueLeftNode;
+                final Node<K, V> siblingRight = siblingNode.valueRightNode;
                 if ((siblingLeft == null || siblingLeft.isBlackValue()) && (siblingRight == null || siblingRight.isBlackValue())) {
                     siblingNode.setRedValue();
                     currentNode = parent;
@@ -1593,7 +1639,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     parent.setRedValue();
                     rotateRightValue(parent);
 
-                    Node<K, V> result;
+                    final Node<K, V> result;
                     result = parent.valueLeftNode;
                     siblingNode = result;
                 }
@@ -1603,7 +1649,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                     continue;
                 }
 
-                Node<K, V> siblingLeft = siblingNode.valueLeftNode, siblingRight = siblingNode.valueRightNode;
+                final Node<K, V> siblingLeft = siblingNode.valueLeftNode;
+                final Node<K, V> siblingRight = siblingNode.valueRightNode;
                 if ((siblingLeft == null || siblingLeft.isBlackValue()) && (siblingRight == null || siblingRight.isBlackValue())) {
                     siblingNode.setRedValue();
                     currentNode = parent;
@@ -2563,7 +2610,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
     
-    private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL };
+    private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL }
 
     private abstract class BaseSpliterator<E> implements Spliterator<E> {
         final int expectedModifications;
@@ -2575,7 +2622,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         Node<K, V> lastNode;
         int estimatedSize;
 
-        BaseSpliterator(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        BaseSpliterator(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             this.expectedModifications = modifications;
             this.state = state;
             this.currentNode = currentNode;
@@ -2608,7 +2655,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super(SplitState.INITIAL, rootNodeKey, greatestNodeKey(rootNodeKey), nodeCount);
         }
         
-        SpliteratorByKey(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        SpliteratorByKey(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
         
@@ -2629,12 +2676,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
+        boolean tryAdvanceNode(final Consumer<Node<K, V>> action) {
             if (modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             checkInit();
-            Node<K, V> current = currentNode;
+            final Node<K, V> current = currentNode;
             if (current != null) {
                 action.accept(current);
                 if (current != lastNode)
@@ -2647,9 +2694,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        void forEachNode(Consumer<Node<K, V>> action) {
+        void forEachNode(final Consumer<Node<K, V>> action) {
             checkInit();
-            Node<K, V> current = currentNode, last = lastNode;
+            Node<K, V> current = currentNode;
+            final Node<K, V> last = lastNode;
             while (current != null) {
                 action.accept(current);
                 if (current != last)
@@ -2669,27 +2717,28 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
             Spliterator<E> split = null;
             if (state == SplitState.INITIAL) {
-                Node<K, V> splitLast = nextSmallerKey(currentNode);
+                final Node<K, V> splitLast = nextSmallerKey(currentNode);
                 if (left.isKeyLessThanOrEqual(splitLast) && currentNode.isKeyLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_MID) {
-                Node<K, V> splitLast = nextSmallerKey(currentNode);
+                final Node<K, V> splitLast = nextSmallerKey(currentNode);
                 if (left.isKeyLessThanOrEqual(splitLast) && currentNode.isKeyLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_RIGHT) {
-                Node<K, V> rightLeft = right.keyLeftNode;
+                final Node<K, V> rightLeft = right.keyLeftNode;
                 if (rightLeft != null && currentNode.isKeyLessThanOrEqual(rightLeft) && right.isKeyLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = right;
                 }
             } else if (state == SplitState.SPLITTING_LEFT) {
-                Node<K, V> passedSubTree = lastNode;
-                Node<K, V> subTreeLeft = passedSubTree.keyLeftNode, subTreeRight = passedSubTree.keyRightNode;
+                final Node<K, V> passedSubTree = lastNode;
+                final Node<K, V> subTreeLeft = passedSubTree.keyLeftNode;
+                final Node<K, V> subTreeRight = passedSubTree.keyRightNode;
                 if (subTreeLeft != null && currentNode.isKeyLessThanOrEqual(subTreeLeft) && subTreeRight != null) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
@@ -2709,7 +2758,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super(SplitState.INITIAL, rootNodeValue, greatestNodeValue(rootNodeValue), nodeCount);
         }
 
-        SpliteratorByValue(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        SpliteratorByValue(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
@@ -2730,12 +2779,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        boolean tryAdvanceNode(Consumer<Node<K, V>> action) {
+        boolean tryAdvanceNode(final Consumer<Node<K, V>> action) {
             if (modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             checkInit();
-            Node<K, V> current = currentNode;
+            final Node<K, V> current = currentNode;
             if (current != null) {
                 action.accept(current);
                 if (current != lastNode)
@@ -2748,9 +2797,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
         }
 
-        void forEachNode(Consumer<Node<K, V>> action) {
+        void forEachNode(final Consumer<Node<K, V>> action) {
             checkInit();
-            Node<K, V> current = currentNode, last = lastNode;
+            final Node<K, V> last = lastNode;
+            Node<K, V> current = currentNode;
             while (current != null) {
                 action.accept(current);
                 if (current != last)
@@ -2770,27 +2820,28 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
             Spliterator<E> split = null;
             if (state == SplitState.INITIAL) {
-                Node<K, V> splitLast = nextSmallerValue(currentNode);
+                final Node<K, V> splitLast = nextSmallerValue(currentNode);
                 if (left.isValueLessThanOrEqual(splitLast) && currentNode.isValueLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_MID) {
-                Node<K, V> splitLast = nextSmallerValue(currentNode);
+                final Node<K, V> splitLast = nextSmallerValue(currentNode);
                 if (left.isValueLessThanOrEqual(splitLast) && currentNode.isValueLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                 }
             } else if (state == SplitState.SPLITTING_RIGHT) {
-                Node<K, V> rightLeft = right.valueLeftNode;
+                final Node<K, V> rightLeft = right.valueLeftNode;
                 if (rightLeft != null && currentNode.isValueLessThanOrEqual(rightLeft) && right.isValueLessThanOrEqual(lastNode)) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
                     currentNode = right;
                 }
             } else if (state == SplitState.SPLITTING_LEFT) {
-                Node<K, V> passedSubTree = lastNode;
-                Node<K, V> subTreeLeft = passedSubTree.valueLeftNode, subTreeRight = passedSubTree.valueRightNode;
+                final Node<K, V> passedSubTree = lastNode;
+                final Node<K, V> subTreeLeft = passedSubTree.valueLeftNode;
+                final Node<K, V> subTreeRight = passedSubTree.valueRightNode;
                 if (subTreeLeft != null && currentNode.isValueLessThanOrEqual(subTreeLeft) && subTreeRight != null) {
                     split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
                     state = SplitState.SPLITTING_RIGHT;
@@ -2810,22 +2861,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super();
         }
 
-        private SpliteratorKeyByKey(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+        private SpliteratorKeyByKey(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        protected Spliterator<K> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        protected Spliterator<K> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             return new SpliteratorKeyByKey(state, currentNode, lastNode, estimatedSize);
         }
         
         @Override
-        public boolean tryAdvance(Consumer<? super K> action) {
+        public boolean tryAdvance(final Consumer<? super K> action) {
             return tryAdvanceNode(node -> action.accept(node.key));
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super K> action) {
+        public void forEachRemaining(final Consumer<? super K> action) {
             forEachNode(node -> action.accept(node.key));
         }
 
@@ -2845,22 +2896,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super();
         }
 
-        private SpliteratorKeyByValue(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+        private SpliteratorKeyByValue(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        protected Spliterator<K> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        protected Spliterator<K> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             return new SpliteratorKeyByValue(state, currentNode, lastNode, estimatedSize);
         }
         
         @Override
-        public boolean tryAdvance(Consumer<? super K> action) {
+        public boolean tryAdvance(final Consumer<? super K> action) {
             return tryAdvanceNode(node -> action.accept(node.key));
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super K> action) {
+        public void forEachRemaining(final Consumer<? super K> action) {
             forEachNode(node -> action.accept(node.key));
         }
 
@@ -2875,22 +2926,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super();
         }
 
-        private SpliteratorValueByKey(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+        private SpliteratorValueByKey(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        protected Spliterator<V> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        protected Spliterator<V> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             return new SpliteratorValueByKey(state, currentNode, lastNode, estimatedSize);
         }
         
         @Override
-        public boolean tryAdvance(Consumer<? super V> action) {
+        public boolean tryAdvance(final Consumer<? super V> action) {
             return tryAdvanceNode(node -> action.accept(node.value));
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super V> action) {
+        public void forEachRemaining(final Consumer<? super V> action) {
             forEachNode(node -> action.accept(node.value));
         }
 
@@ -2905,22 +2956,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super();
         }
 
-        private SpliteratorValueByValue(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+        private SpliteratorValueByValue(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        protected Spliterator<V> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        protected Spliterator<V> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             return new SpliteratorValueByValue(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        public boolean tryAdvance(Consumer<? super V> action) {
+        public boolean tryAdvance(final Consumer<? super V> action) {
             return tryAdvanceNode(node -> action.accept(node.value));
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super V> action) {
+        public void forEachRemaining(final Consumer<? super V> action) {
             forEachNode(node -> action.accept(node.value));
         }
 
@@ -2940,22 +2991,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super();
         }
 
-        private SpliteratorEntryByKey(SplitState state, Node<K,V> currentNode, Node<K,V> lastNode, int estimatedSize) {
+        private SpliteratorEntryByKey(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        protected Spliterator<Entry<K, V>> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        protected Spliterator<Entry<K, V>> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             return new SpliteratorEntryByKey(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        public boolean tryAdvance(Consumer<? super Entry<K, V>> action) {
+        public boolean tryAdvance(final Consumer<? super Entry<K, V>> action) {
             return tryAdvanceNode(node -> action.accept(node.copyEntryStandard()));
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super Entry<K, V>> action) {
+        public void forEachRemaining(final Consumer<? super Entry<K, V>> action) {
             forEachNode(node -> action.accept(node.copyEntryStandard()));
         }
         
@@ -2975,22 +3026,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             super();
         }
 
-        private SpliteratorEntryInvertedByValue(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        private SpliteratorEntryInvertedByValue(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
-        protected Spliterator<Entry<V, K>> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize) {
+        protected Spliterator<Entry<V, K>> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
             return new SpliteratorEntryInvertedByValue(state, currentNode, lastNode, estimatedSize);
         }
         
         @Override
-        public boolean tryAdvance(Consumer<? super Entry<V, K>> action) {
+        public boolean tryAdvance(final Consumer<? super Entry<V, K>> action) {
             return tryAdvanceNode(node -> action.accept(node.copyEntryInverted()));
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super Entry<V, K>> action) {
+        public void forEachRemaining(final Consumer<? super Entry<V, K>> action) {
             forEachNode(node -> action.accept(node.copyEntryInverted()));
         }
 
@@ -3008,7 +3059,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * A node used to store the data.
      */
-    private final static class Node<K extends Comparable<K>, V extends Comparable<V>> implements Entry<K, V>, KeyValue<K, V> {
+    private static final class Node<K extends Comparable<K>, V extends Comparable<V>> implements Entry<K, V>, KeyValue<K, V> {
 
         private K key;
         private V value;
@@ -3036,14 +3087,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             calculatedHashCode = false;
         }
 
-        private void swapColorsValue(Node<K, V> node) {
-            int tmp = node.colorFlags & 0x2;
+        private void swapColorsValue(final Node<K, V> node) {
+            final int tmp = node.colorFlags & 0x2;
             node.colorFlags = (short) ((node.colorFlags & 0x1) | (colorFlags & 0x2));
             colorFlags = (short) ((colorFlags & 0x1) | tmp);
         }
 
-        private void swapColorsKey(Node<K, V> node) {
-            int tmp = node.colorFlags & 0x1;
+        private void swapColorsKey(final Node<K, V> node) {
+            final int tmp = node.colorFlags & 0x1;
             node.colorFlags = (short) ((node.colorFlags & 0x2) | (colorFlags & 0x1));
             colorFlags = (short) ((colorFlags & 0x2) | tmp);
         }
@@ -3080,11 +3131,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             colorFlags &= 0xFFFE;
         }
 
-        private void copyColorValue(Node<K, V> node) {
+        private void copyColorValue(final Node<K, V> node) {
             colorFlags = (short) ((colorFlags & 0x1) | (node.colorFlags & 0x2));
         }
 
-        private void copyColorKey(Node<K, V> node) {
+        private void copyColorKey(final Node<K, V> node) {
             colorFlags = (short) ((colorFlags & 0x2) | (node.colorFlags & 0x1));
         }
 
@@ -3128,12 +3179,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             throw new UnsupportedOperationException("Map.Entry.setValue is not supported");
         }
 
-        boolean isKeyLessThanOrEqual(Node<K, V> other) {
-            return compare(key, other.key) <= 0;
+        boolean isKeyLessThanOrEqual(final Node<K, V> other) {
+            return key.compareTo(other.key) <= 0;
         }
 
-        boolean isValueLessThanOrEqual(Node<K, V> other) {
-            return compare(value, other.value) <= 0;
+        boolean isValueLessThanOrEqual(final Node<K, V> other) {
+            return value.compareTo(other.value) <= 0;
         }
 
         /**
@@ -3153,7 +3204,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 return false;
             }
             final Entry<?, ?> e = (Entry<?, ?>) obj;
-            return getKey().equals(e.getKey()) && getValue().equals(e.getValue());
+            return key.equals(e.getKey()) && value.equals(e.getValue());
         }
 
         /**
@@ -3162,7 +3213,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public int hashCode() {
             if (!calculatedHashCode) {
-                hashCodeValue = getKey().hashCode() ^ getValue().hashCode();
+                hashCodeValue = key.hashCode() ^ value.hashCode();
                 calculatedHashCode = true;
             }
             return hashCodeValue;
@@ -3173,6 +3224,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * The inverse map implementation.
      */
     private final class Inverse implements SortedExtendedBidiMap<V, K> {
+        private static final long serialVersionUID = -5940400507869486450L;
 
         /**
          * Store the keySet once created.
@@ -3245,13 +3297,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public V nextKey(final V key) {
-            Node<K, V> rval = lookupValueHigher(checkValue(key));
+            final Node<K, V> rval = lookupValueHigher(checkValue(key));
             return rval == null ? null : rval.getValue();
         }
 
         @Override
         public V previousKey(final V key) {
-            Node<K, V> rval = lookupValueLower(checkValue(key));
+            final Node<K, V> rval = lookupValueLower(checkValue(key));
             return rval == null ? null : rval.getValue();
         }
 
@@ -3373,14 +3425,49 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public OrderedMapIterator<V, K> mapIterator() {
             if (isEmpty()) {
-                return EmptyOrderedMapIterator.<V, K>emptyOrderedMapIterator();
+                return EmptyOrderedMapIterator.emptyOrderedMapIterator();
             }
             return new MapIteratorValueByValue();
         }
 
         @Override
-        public OrderedBidiMap<K, V> inverseBidiMap() {
+        public SortedExtendedBidiMap<K, V> inverseBidiMap() {
             return TreeBidiMapHard.this;
+        }
+
+        @Override
+        public Comparator<? super V> comparator() {
+            return null; // natural order
+        }
+
+        @Override
+        public Comparator<? super K> valueComparator() {
+            return null; // natural order
+        }
+
+        @Override
+        public SortedMapRange<V> getKeyRange() {
+            return SortedMapRange.full(null);
+        }
+
+        @Override
+        public SortedMapRange<K> getValueRange() {
+            return SortedMapRange.full(null);
+        }
+
+        @Override
+        public SortedExtendedBidiMap<V, K> subMap(final V fromKey, final V toKey) {
+            throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
+        }
+
+        @Override
+        public SortedExtendedBidiMap<V, K> headMap(final V toKey) {
+            throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
+        }
+
+        @Override
+        public SortedExtendedBidiMap<V, K> tailMap(final V fromKey) {
+            throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
 
         @Override
@@ -3398,7 +3485,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
             if (nodeCount > 0) {
                 try {
-                    MapIterator<?, ?> it = new MapIteratorValueByValue();
+                    final MapIterator<?, ?> it = new MapIteratorValueByValue();
                     while (it.hasNext()) {
                         final Object key = it.next();
                         final Object value = it.getValue();
@@ -3417,7 +3504,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public int hashCode() {
             int total = 0;
             if (nodeCount > 0) {
-                MapIterator<?, ?> it = new MapIteratorKeyByValue();
+                final MapIterator<?, ?> it = new MapIteratorKeyByValue();
                 while (it.hasNext()) {
                     final Object key = it.next();
                     final Object value = it.getValue();
@@ -3452,7 +3539,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             Node<K, V> node = rootNodeValue, higher = null;
 
             while (node != null) {
-                final int cmp = compare(node.getValue(), value);
+                final int cmp = node.getValue().compareTo(value);
                 if (cmp > 0) {
                     higher = node;
                     node = node.valueLeftNode;
@@ -3468,7 +3555,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             Node<K, V> node = rootNodeValue, lower = null;
 
             while (node != null) {
-                final int cmp = compare(node.getValue(), value);
+                final int cmp = node.getValue().compareTo(value);
                 if (cmp < 0) {
                     lower = node;
                     node = node.valueRightNode;
@@ -3480,7 +3567,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return lower;
         }
 
-        private K doPutValueFirst(final V value, final K key, boolean addIfAbsent, boolean updateIfPresent) {
+        private K doPutValueFirst(final V value, final K key, final boolean addIfAbsent, final boolean updateIfPresent) {
             checkKeyAndValue(key, value);
 
             Node<K, V> node = rootNodeValue;
@@ -3495,7 +3582,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             final Node<K, V> valueNode;
             K oldKey = null;
             while (true) {
-                final int cmp = compare(value, node.getValue());
+                final int cmp = value.compareTo(node.getValue());
                 if (cmp == 0) {
                     oldKey = node.key;
                     if (!updateIfPresent || Objects.equals(oldKey, key))
@@ -3553,7 +3640,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             final Node<K, V> valueNode;
             final K newKey;
             while (true) {
-                final int cmp = compare(value, node.getValue());
+                final int cmp = value.compareTo(node.getValue());
                 if (cmp == 0) {
                     final K oldKey = node.getKey();
                     if (presentFunc != null) {
@@ -3620,7 +3707,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             }
 
             while (true) {
-                final int cmp = compare(key, node.getKey());
+                final int cmp = key.compareTo(node.getKey());
 
                 if (cmp == 0) {
                     // replace existing key node (assume different value)
@@ -3691,6 +3778,254 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             node.key = key;
             node.calculatedHashCode = false;
             modify();
+        }
+    }
+
+    private class TreeBidiSubMap extends AbstractIterableMap<K, V> implements SortedExtendedBidiMap<K, V> {
+        private static final long serialVersionUID = 7793720431038658603L;
+        private final SortedMapRange<K> keyRange;
+
+        TreeBidiSubMap(final SortedMapRange<K> keyRange) {
+            this.keyRange = keyRange;
+        }
+
+        private void verifyRange(final K key) {
+            if (!keyRange.inRange(key)) {
+                throw new IllegalArgumentException("key");
+            }
+        }
+
+        @Override
+        public boolean containsKey(final Object keyObject) {
+            final K key = checkKey(keyObject);
+            if (keyRange.inRange(key)) {
+                return lookupKey(key) != null;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public V get(final Object key) {
+            return getOrDefault(key, null);
+        }
+
+        @Override
+        public V getOrDefault(final Object keyObject, final V defaultValue) {
+            final K key = checkKey(keyObject);
+            if (keyRange.inRange(key)) {
+                final Node<K, V> node = lookupKey(key);
+                if (node != null) {
+                    return node.value;
+                }
+            }
+            return defaultValue;
+        }
+
+        @Override
+        public boolean containsValue(final Object valueObject) {
+            final V value = checkValue(valueObject);
+            final Node<K, V> node = lookupValue(value);
+            if (node != null) {
+                return keyRange.inRange(node.key);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public K getKey(final Object value) {
+            return getKeyOrDefault(value, null);
+        }
+
+        @Override
+        public K getKeyOrDefault(final Object valueObject, final K defaultKey) {
+            final V value = checkValue(valueObject);
+            final Node<K, V> node = lookupValue(value);
+            if (node != null && keyRange.inRange(node.key)) {
+                return node.key;
+            }
+            return defaultKey;
+        }
+
+        @Override
+        public K removeValue(final Object valueObject) {
+            final V value = checkValue(valueObject);
+            final Node<K, V> node = lookupValue(value);
+            if (node != null && keyRange.inRange(node.key)) {
+                doRedBlackDelete(node);
+                return node.key;
+            }
+            return null;
+        }
+
+        @Override
+        public V remove(final Object keyObject) {
+            final K key = checkKey(keyObject);
+            if (keyRange.inRange(key)) {
+                return TreeBidiMapHard.this.remove(key);
+            }
+            return null;
+        }
+
+        @Override
+        public boolean remove(final Object keyObject, final Object value) {
+            final K key = checkKey(keyObject);
+            if (keyRange.inRange(key)) {
+                return TreeBidiMapHard.this.remove(key,  value);
+            }
+            return false;
+        }
+
+        @Override
+        public V put(final K key, final V value) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.put(key, value);
+        }
+
+        @Override
+        public void putAll(Map<? extends K, ? extends V> m) {
+            for (final K key : m.keySet()) {
+                verifyRange(key);
+            }
+            TreeBidiMapHard.this.putAll(m);
+        }
+
+        @Override
+        public V putIfAbsent(final K key, final V value) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.putIfAbsent(key, value);
+        }
+
+        @Override
+        public V replace(final K key, final V value) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.replace(key, value);
+        }
+
+        @Override
+        public boolean replace(final K key, final V oldValue, final V newValue) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.replace(key, oldValue, newValue);
+        }
+
+        @Override
+        public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.computeIfAbsent(key, mappingFunction);
+        }
+
+        @Override
+        public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.computeIfPresent(key, remappingFunction);
+        }
+
+        @Override
+        public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.compute(key, remappingFunction);
+        }
+
+        @Override
+        public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.merge(key, value, remappingFunction);
+        }
+
+        @Override
+        public int size() {
+            return IteratorUtils.size(mapIterator());
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return IteratorUtils.isEmpty(mapIterator());
+        }
+
+        @Override
+        public void clear() {
+
+        }
+
+        @Override
+        public Set<K> keySet() {
+            return null;
+        }
+
+        @Override
+        public Set<V> values() {
+            return null;
+        }
+
+        @Override
+        public Set<Entry<K, V>> entrySet() {
+            return null;
+        }
+
+        @Override
+        public OrderedMapIterator<K, V> mapIterator() {
+            return null;
+        }
+
+        @Override
+        public K firstKey() {
+            return null;
+        }
+
+        @Override
+        public K lastKey() {
+            return null;
+        }
+
+        @Override
+        public K nextKey(K key) {
+            return null;
+        }
+
+        @Override
+        public K previousKey(K key) {
+            return null;
+        }
+
+        @Override
+        public Comparator<? super V> valueComparator() {
+            return null; // natural order
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return null; // natural order
+        }
+
+        @Override
+        public SortedMapRange<K> getKeyRange() {
+            return keyRange;
+        }
+
+        @Override
+        public SortedMapRange<V> getValueRange() {
+            return SortedMapRange.full(null);
+        }
+
+        @Override
+        public SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
+            return new TreeBidiSubMap(keyRange.subRange(fromKey, toKey));
+        }
+
+        @Override
+        public SortedExtendedBidiMap<K, V> headMap(final K toKey) {
+            return new TreeBidiSubMap(keyRange.head(toKey));
+        }
+
+        @Override
+        public SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
+            return new TreeBidiSubMap(keyRange.tail(fromKey));
+        }
+
+        @Override
+        public SortedExtendedBidiMap<V, K> inverseBidiMap() {
+            throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
     }
 }

@@ -16,22 +16,22 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.SortedBidiMap;
 
 import java.util.TreeMap;
 
 /**
  * JUnit tests.
  */
-public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V> {
+public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
 
     public TreeBidiMapHardTest() {
         super(TreeBidiMapHardTest.class.getSimpleName());
     }
 
     @Override
-    public BidiMap<K, V> makeObject() {
+    public SortedBidiMap<K, V> makeObject() {
         return new TreeBidiMapHard<>();
     }
 
@@ -40,20 +40,10 @@ public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V
         return new TreeMap<>();
     }
 
-    @Override
-    public boolean isAllowNullKey() {
-        return false;
-    }
-
-    @Override
-    public boolean isAllowNullValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isSetValueSupported() {
-        return false;
-    }
+//    @Override
+//    public boolean isSetValueSupported() {
+//        return false;
+//    }
 
     @Override
     public boolean isCheckSerializationId() {
@@ -64,17 +54,5 @@ public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;
     }
-
-    @Override
-    public String getCompatibilityVersion() {
-        return "4";
-    }
-
-    //    public void testCreate() throws Exception {
-//        resetEmpty();
-//        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/TreeBidiMap.emptyCollection.version4.obj");
-//        resetFull();
-//        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/TreeBidiMap.fullCollection.version4.obj");
-//    }
 
 }

@@ -29,7 +29,7 @@ package org.apache.commons.collections4;
  * @since 3.0
  */
 public interface SortedExtendedBidiMap<K, V> extends SortedBidiMap<K, V>, SortedBoundMap<K, V> {
-    SortedMapRange<? super V> getValueRange();
+    SortedMapRange<V> getValueRange();
 
     @Override
     SortedExtendedBidiMap<K, V> subMap(K fromKey, K toKey);
