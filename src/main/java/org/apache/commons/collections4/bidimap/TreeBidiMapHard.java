@@ -16,19 +16,15 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.map.AbstractIterableMap;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -43,10 +39,10 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
 
 
 /**
@@ -94,15 +90,13 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
-        implements SortedExtendedBidiMap<K, V>, Serializable {
+        extends AbstractExtendedBidiMap<K, V> implements Serializable {
 
     private transient Node<K, V> rootNodeKey;
     private transient Node<K, V> rootNodeValue;
     private transient int nodeCount;
     private transient int modifications;
-    private transient Set<K> keySet;
-    private transient Set<V> valuesSet;
-    private transient Set<Entry<K, V>> entrySet;
+
     private transient Inverse inverse;
 
     /**
@@ -174,22 +168,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return lookupValue(checkValue(value)) != null;
     }
 
-    /**
-     * Gets the value to which this map maps the specified key.
-     * Returns null if the map contains no mapping for this key.
-     * <p>
-     * The key must implement {@code Comparable}.
-     *
-     * @param key key whose associated value is to be returned
-     * @return the value to which this map maps the specified key,
-     * or null if the map contains no mapping for this key
-     * @throws ClassCastException   if the key is of an inappropriate type
-     * @throws NullPointerException if the key is null
-     */
     @Override
-    public V get(final Object key) {
-        final Node<K, V> node = lookupKey(checkKey(key));
-        return node == null ? null : node.getValue();
+    protected Iterator<Entry<K, V>> entryIterator() {
+        return new EntryIteratorStandardByKey();
+    }
+
+    @Override
+    protected MapSpliterator<K, V> mapSpliterator() {
+        return null; // TODO
     }
 
     /**
@@ -203,97 +189,15 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return node == null ? defaultValue : node.getValue();
     }
 
-    /**
-     * Puts the key-value pair into the map, replacing any previous pair.
-     * <p>
-     * When adding a key-value pair, the value may already exist in the map
-     * against a different key. That mapping is removed, to ensure that the
-     * value only occurs once in the inverse map.
-     * <pre>
-     *  BidiMap map1 = new TreeBidiMap();
-     *  map.put("A","B");  // contains A mapped to B, as per Map
-     *  map.put("A","C");  // contains A mapped to C, as per Map
-     *
-     *  BidiMap map2 = new TreeBidiMap();
-     *  map.put("A","B");  // contains A mapped to B, as per Map
-     *  map.put("C","B");  // contains C mapped to B, key A is removed
-     * </pre>
-     * <p>
-     * Both key and value must implement {@code Comparable}.
-     *
-     * @param key   key with which the specified value is to be  associated
-     * @param value value to be associated with the specified key
-     * @return the previous value for the key
-     * @throws ClassCastException   if the key is of an inappropriate type
-     * @throws NullPointerException if the key is null
-     */
     @Override
-    public V put(final K key, final V value) {
+    protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         checkKeyAndValue(key, value);
-        return doPutKeyFirst(key, value, true, true);
+        return doPutKeyFirst(key, value, addIfAbsent, updateIfPresent);
     }
 
     @Override
-    public V putIfAbsent(final K key, final V value) {
-        checkKeyAndValue(key, value);
-        return doPutKeyFirst(key, value, true, false);
-    }
-
-    @Override
-    public V replace(final K key, final V value) {
-        checkKeyAndValue(key, value);
-        return doPutKeyFirst(key, value, false, true);
-    }
-
-    @Override
-    public boolean replace(final K key, final V oldValue, final V newValue) {
-        checkKey(key);
-        checkValue(oldValue);
-        checkValue(newValue);
-
-        final MutableBoolean didUpdate = new MutableBoolean();
-        doPutKeyFirst(key, null,
-                (k, currentValue) -> {
-                    if (Objects.equals(oldValue, currentValue)) {
-                        didUpdate.flag = true;
-                        return newValue;
-                    } else {
-                        return currentValue;
-                    }
-                });
-        return didUpdate.flag;
-    }
-
-    @Override
-    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
-        checkKey(key);
-        Objects.requireNonNull(mappingFunction);
-        return doPutKeyFirst(key, mappingFunction, null);
-    }
-
-    @Override
-    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        checkKey(key);
-        Objects.requireNonNull(remappingFunction);
-        return doPutKeyFirst(key, null, remappingFunction);
-    }
-
-    @Override
-    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        checkKey(key);
-        Objects.requireNonNull(remappingFunction);
-        return doPutKeyFirst(key,
-                k -> remappingFunction.apply(k, null),
-                remappingFunction);
-    }
-
-    @Override
-    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        checkKeyAndValue(key, value);
-        Objects.requireNonNull(remappingFunction);
-        return doPutKeyFirst(key,
-                k -> value,
-                (k, v) -> remappingFunction.apply(v, value));
+    protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
+        return doPutKeyFirst(key, absentFunc, presentFunc);
     }
 
     /**
@@ -372,6 +276,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
+    protected boolean removeAsBoolean(final Object key) {
+        final Node<K, V> node = lookupKey(checkKey(key));
+        if (node == null) {
+            return false;
+        }
+        doRedBlackDelete(node);
+        return true;
+    }
+
+    @Override
     public boolean remove(final Object key, final Object value) {
         final Node<K, V> node = lookupKey(checkKey(key));
         if (node == null || !Objects.equals(node.value, value)) {
@@ -391,24 +305,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         nodeCount = 0;
         rootNodeKey = null;
         rootNodeValue = null;
-    }
-
-    /**
-     * Returns the key to which this map maps the specified value.
-     * Returns null if the map contains no mapping for this value.
-     * <p>
-     * The value must implement {@code Comparable}.
-     *
-     * @param value value whose associated key is to be returned.
-     * @return the key to which this map maps the specified value,
-     * or null if the map contains no mapping for this value.
-     * @throws ClassCastException   if the value is of an inappropriate type
-     * @throws NullPointerException if the value is null
-     */
-    @Override
-    public K getKey(final Object value) {
-        final Node<K, V> node = lookupValue(checkValue(value));
-        return node == null ? null : node.getKey();
     }
 
     /**
@@ -441,6 +337,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
         doRedBlackDelete(node);
         return node.getKey();
+    }
+
+    @Override
+    protected boolean removeValueAsBoolean(final Object value) {
+        final Node<K, V> node = lookupValue(checkValue(value));
+        if (node == null) {
+            return false;
+        }
+        doRedBlackDelete(node);
+        return true;
     }
 
     /**
@@ -502,7 +408,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
-     * Returns a set view of the keys contained in this map in key order.
+     * Creates a set view of the keys contained in this map in key order.
      * <p>
      * The set is backed by the map, so changes to the map are reflected in
      * the set, and vice-versa. If the map is modified while an iteration over
@@ -514,15 +420,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return a set view of the keys contained in this map.
      */
     @Override
-    public Set<K> keySet() {
-        if (keySet == null) {
-            keySet = new KeyViewByKeys();
-        }
-        return keySet;
+    protected Set<K> createKeySet() {
+        return new KeyViewByKeys();
     }
 
     /**
-     * Returns a set view of the values contained in this map in key order.
+     * Creates a set view of the values contained in this map in key order.
      * The returned object can be cast to a Set.
      * <p>
      * The set is backed by the map, so changes to the map are reflected in
@@ -535,13 +438,9 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return a set view of the values contained in this map.
      */
     @Override
-    public Set<V> values() {
-        if (valuesSet == null) {
-            valuesSet = new ValueViewByKey();
-        }
-        return valuesSet;
+    protected Set<V> createValuesCollection() {
+        return new ValueViewByKey();
     }
-
     /**
      * Returns a set view of the entries contained in this map in key order.
      * For simple iteration through the map, the MapIterator is quicker.
@@ -557,11 +456,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return a set view of the values contained in this map.
      */
     @Override
-    public Set<Entry<K, V>> entrySet() {
-        if (entrySet == null) {
-            entrySet = new EntryView();
-        }
-        return entrySet;
+    protected Set<Entry<K, V>> createEntrySet() {
+        return new EntryView();
     }
 
     @Override
@@ -881,24 +777,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         node.value = value;
         node.calculatedHashCode = false;
         modify();
-    }
-
-    private V doRemoveKey(final K key) {
-        final Node<K, V> node = lookupKey(key);
-        if (node == null) {
-            return null;
-        }
-        doRedBlackDelete(node);
-        return node.getValue();
-    }
-
-    private K doRemoveValue(final V value) {
-        final Node<K, V> node = lookupValue(value);
-        if (node == null) {
-            return null;
-        }
-        doRedBlackDelete(node);
-        return node.getKey();
     }
 
     private Node<K, V> lookupKey(final K key) {
@@ -2086,6 +1964,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
+    protected static <K, V> K getKeyNullSafe(final Entry<K, V> entry) {
+        if (entry != null) {
+            return entry.getKey();
+        } else {
+            return null;
+        }
+    }
+
     /**
      * A view of this map.
      */
@@ -3223,21 +3109,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * The inverse map implementation.
      */
-    private final class Inverse implements SortedExtendedBidiMap<V, K> {
+    private final class Inverse extends AbstractExtendedBidiMap<V, K> {
         private static final long serialVersionUID = -5940400507869486450L;
-
-        /**
-         * Store the keySet once created.
-         */
-        private Set<V> inverseKeySet;
-        /**
-         * Store the valuesSet once created.
-         */
-        private Set<K> inverseValuesSet;
-        /**
-         * Store the entrySet once created.
-         */
-        private Set<Entry<V, K>> inverseEntrySet;
 
         @Override
         public int size() {
@@ -3250,18 +3123,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public K get(final Object key) {
-            return TreeBidiMapHard.this.getKey(key);
-        }
-
-        @Override
         public K getOrDefault(final Object value, final K defaultKey) {
             return TreeBidiMapHard.this.getKeyOrDefault(value, defaultKey);
-        }
-
-        @Override
-        public V getKey(final Object value) {
-            return TreeBidiMapHard.this.get(value);
         }
 
         @Override
@@ -3308,79 +3171,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public K put(final V value, final K key) {
+        protected K doPut(final V value, final K key, final boolean addIfAbsent, final boolean updateIfPresent) {
             checkKeyAndValue(key, value);
-            return doPutValueFirst(value, key, true,  true);
+            return doPutValueFirst(value, key, addIfAbsent,  updateIfPresent);
         }
 
         @Override
-        public K putIfAbsent(final V value, final K key) {
-            checkKeyAndValue(key, value);
-            return doPutValueFirst(value, key, true, false);
-        }
-
-        @Override
-        public K replace(final V value, final K key) {
-            checkKeyAndValue(key, value);
-            return doPutValueFirst(value, key, false, true);
-        }
-
-        @Override
-        public boolean replace(final V value, final K oldKey, final K newKey) {
-            checkValue(value);
-            checkKey(oldKey);
-            checkKey(newKey);
-
-            final MutableBoolean didUpdate = new MutableBoolean();
-            doPutValueFirst(value, null,
-                    (v, currentKey) -> {
-                        if (Objects.equals(oldKey, currentKey)) {
-                            didUpdate.flag = true;
-                            return newKey;
-                        } else {
-                            return currentKey;
-                        }
-                    });
-            return didUpdate.flag;
-        }
-
-        @Override
-        public K computeIfAbsent(final V value, final Function<? super V, ? extends K> mappingFunction) {
-            checkValue(value);
-            Objects.requireNonNull(mappingFunction);
-            return doPutValueFirst(value, mappingFunction, null);
-        }
-
-        @Override
-        public K computeIfPresent(final V value, final BiFunction<? super V, ? super K, ? extends K> remappingFunction) {
-            checkValue(value);
-            Objects.requireNonNull(remappingFunction);
-            return doPutValueFirst(value, null, remappingFunction);
-        }
-
-        @Override
-        public K compute(final V value, final BiFunction<? super V, ? super K, ? extends K> remappingFunction) {
-            checkValue(value);
-            Objects.requireNonNull(remappingFunction);
-            return doPutValueFirst(value,
-                    v -> remappingFunction.apply(v, null),
-                    remappingFunction);
-        }
-
-        @Override
-        public K merge(final V value, final K key, final BiFunction<? super K, ? super K, ? extends K> remappingFunction) {
-            checkKeyAndValue(key, value);
-            Objects.requireNonNull(remappingFunction);
-            return doPutValueFirst(value,
-                    v -> key,
-                    (v, k) -> remappingFunction.apply(k, key));
-        }
-
-        @Override
-        public void putAll(final Map<? extends V, ? extends K> map) {
-            for (final Entry<? extends V, ? extends K> e : map.entrySet()) {
-                put(e.getKey(), e.getValue());
-            }
+        protected K doPut(final V key, final Function<? super V, ? extends K> absentFunc, final BiFunction<? super V, ? super K, ? extends K> presentFunc, final boolean saveNulls) {
+            return doPutValueFirst(key, absentFunc, presentFunc);
         }
 
         @Override
@@ -3389,8 +3187,23 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public boolean remove(final Object key, final Object value) {
+            return TreeBidiMapHard.this.remove(value, key);
+        }
+
+        @Override
+        protected boolean removeAsBoolean(final Object value) {
+            return TreeBidiMapHard.this.removeValueAsBoolean(value);
+        }
+
+        @Override
         public V removeValue(final Object value) {
             return TreeBidiMapHard.this.remove(value);
+        }
+
+        @Override
+        protected boolean removeValueAsBoolean(final Object value) {
+            return TreeBidiMapHard.this.removeAsBoolean(value);
         }
 
         @Override
@@ -3399,27 +3212,18 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public Set<V> keySet() {
-            if (inverseKeySet == null) {
-                inverseKeySet = new ValueViewByValue();
-            }
-            return inverseKeySet;
+        protected Set<V> createKeySet() {
+            return new ValueViewByValue();
         }
 
         @Override
-        public Set<K> values() {
-            if (inverseValuesSet == null) {
-                inverseValuesSet = new KeyViewByValue();
-            }
-            return inverseValuesSet;
+        protected Set<K> createValuesCollection() {
+            return new KeyViewByValue();
         }
 
         @Override
-        public Set<Entry<V, K>> entrySet() {
-            if (inverseEntrySet == null) {
-                inverseEntrySet = new InverseEntryView();
-            }
-            return inverseEntrySet;
+        protected Set<Entry<V, K>> createEntrySet() {
+            return new InverseEntryView();
         }
 
         @Override
@@ -3428,6 +3232,17 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 return EmptyOrderedMapIterator.emptyOrderedMapIterator();
             }
             return new MapIteratorValueByValue();
+        }
+
+        @Override
+        protected MapSpliterator<V, K> mapSpliterator() {
+            // TODO
+            return null;
+        }
+
+        @Override
+        protected Iterator<Entry<V, K>> entryIterator() {
+            return super.entryIterator(); // TODO
         }
 
         @Override
@@ -3781,7 +3596,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private class TreeBidiSubMap extends AbstractIterableMap<K, V> implements SortedExtendedBidiMap<K, V> {
+    private class TreeBidiSubMap extends AbstractExtendedBidiMap<K, V> {
         private static final long serialVersionUID = 7793720431038658603L;
         private final SortedMapRange<K> keyRange;
 
@@ -3806,8 +3621,18 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public V get(final Object key) {
-            return getOrDefault(key, null);
+        protected Iterator<Entry<K, V>> entryIterator() {
+            return null; // TODO
+        }
+
+        @Override
+        public OrderedMapIterator<K, V> mapIterator() {
+            return null; // TODO
+        }
+
+        @Override
+        protected MapSpliterator<K, V> mapSpliterator() {
+            return null; // TODO
         }
 
         @Override
@@ -3834,11 +3659,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public K getKey(final Object value) {
-            return getKeyOrDefault(value, null);
-        }
-
-        @Override
         public K getKeyOrDefault(final Object valueObject, final K defaultKey) {
             final V value = checkValue(valueObject);
             final Node<K, V> node = lookupValue(value);
@@ -3860,6 +3680,17 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        protected boolean removeValueAsBoolean(final Object valueObject) {
+            final V value = checkValue(valueObject);
+            final Node<K, V> node = lookupValue(value);
+            if (node != null && keyRange.inRange(node.key)) {
+                doRedBlackDelete(node);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
         public V remove(final Object keyObject) {
             final K key = checkKey(keyObject);
             if (keyRange.inRange(key)) {
@@ -3878,9 +3709,24 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public V put(final K key, final V value) {
+        protected boolean removeAsBoolean(final Object keyObject) {
+            final K key = checkKey(keyObject);
+            if (keyRange.inRange(key)) {
+                return TreeBidiMapHard.this.removeAsBoolean(keyObject);
+            }
+            return false;
+        }
+
+        @Override
+        protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
             verifyRange(key);
-            return TreeBidiMapHard.this.put(key, value);
+            return TreeBidiMapHard.this.doPut(key, value, addIfAbsent, updateIfPresent);
+        }
+
+        @Override
+        protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
+            verifyRange(key);
+            return TreeBidiMapHard.this.doPut(key, absentFunc, presentFunc, saveNulls);
         }
 
         @Override
@@ -3891,101 +3737,46 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             TreeBidiMapHard.this.putAll(m);
         }
 
-        @Override
-        public V putIfAbsent(final K key, final V value) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.putIfAbsent(key, value);
+        private Entry<K, V> firstEntry() {
+            if (keyRange.hasFrom())
+                return lookupKeyHigher(keyRange.getFromKey(), keyRange.isFromInclusive());
+            else
+                return leastNodeKey(rootNodeKey);
         }
 
-        @Override
-        public V replace(final K key, final V value) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.replace(key, value);
+        private Entry<K, V> lastEntry() {
+            if (keyRange.hasTo())
+                return lookupKeyLower(keyRange.getToKey(), keyRange.isToInclusive());
+            else
+                return greatestNodeKey(rootNodeKey);
         }
 
-        @Override
-        public boolean replace(final K key, final V oldValue, final V newValue) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.replace(key, oldValue, newValue);
+        private Entry<K, V> nextEntry(final K key) {
+            return lookupKeyHigher(key, false);
         }
 
-        @Override
-        public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.computeIfAbsent(key, mappingFunction);
-        }
-
-        @Override
-        public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.computeIfPresent(key, remappingFunction);
-        }
-
-        @Override
-        public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.compute(key, remappingFunction);
-        }
-
-        @Override
-        public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-            verifyRange(key);
-            return TreeBidiMapHard.this.merge(key, value, remappingFunction);
-        }
-
-        @Override
-        public int size() {
-            return IteratorUtils.size(mapIterator());
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return IteratorUtils.isEmpty(mapIterator());
-        }
-
-        @Override
-        public void clear() {
-
-        }
-
-        @Override
-        public Set<K> keySet() {
-            return null;
-        }
-
-        @Override
-        public Set<V> values() {
-            return null;
-        }
-
-        @Override
-        public Set<Entry<K, V>> entrySet() {
-            return null;
-        }
-
-        @Override
-        public OrderedMapIterator<K, V> mapIterator() {
-            return null;
+        private Entry<K, V> previousEntry(final K key) {
+            return lookupKeyLower(key, false);
         }
 
         @Override
         public K firstKey() {
-            return null;
+            return getKeyNullSafe(firstEntry());
         }
 
         @Override
         public K lastKey() {
-            return null;
+            return getKeyNullSafe(lastEntry());
         }
 
         @Override
-        public K nextKey(K key) {
-            return null;
+        public K nextKey(final K key) {
+            return getKeyNullSafe(nextEntry(key));
         }
 
         @Override
-        public K previousKey(K key) {
-            return null;
+        public K previousKey(final K key) {
+            return getKeyNullSafe(previousEntry(key));
         }
 
         @Override

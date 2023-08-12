@@ -3,6 +3,8 @@ package org.apache.commons.collections4.map;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MutableBoolean;
+import org.apache.commons.collections4.iterators.TransformIterator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
@@ -16,15 +18,21 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterableMap<K, V> {
     private static final long serialVersionUID = 4016005260054821088L;
 
-    abstract Iterator<Map.Entry<K, V>> entryIterator();
+    private transient Set<Entry<K, V>> entrySet;
+    private transient Set<K> keySet;
+    private transient Collection<V> values;
 
-    abstract MapSpliterator<K, V> mapSpliterator();
+    protected abstract MapSpliterator<K, V> mapSpliterator();
+
+    protected Iterator<Map.Entry<K, V>> entryIterator() {
+        final MapIterator<K, V> mapIterator = mapIterator();
+        return new TransformIterator<>(mapIterator, k -> new UnmodifiableMapEntry<>(k, mapIterator.getValue()));
+    }
 
     @Override
     public abstract V getOrDefault(Object key, V defaultValue);
@@ -34,9 +42,9 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         return getOrDefault(key, null);
     }
 
-    abstract V doPut(K key, V value, final boolean addIfAbsent, final boolean updateIfPresent);
+    protected abstract V doPut(K key, V value, final boolean addIfAbsent, final boolean updateIfPresent);
 
-    abstract V doPut(final K key,
+    protected abstract V doPut(final K key,
                      final Function<? super K, ? extends V> absentFunc,
                      final BiFunction<? super K, ? super V, ? extends V> presentFunc,
                      final boolean saveNulls);
@@ -93,16 +101,19 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
 
     @Override
     public final V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(value);
         Objects.requireNonNull(remappingFunction);
         return doPut(key,
                 k -> value,
                 (k, v) -> remappingFunction.apply(v, value), false);
     }
 
-    abstract boolean removeAsBoolean(Object key);
+    protected abstract boolean removeAsBoolean(Object key);
 
     @Override
     public abstract boolean remove(Object key, Object value);
+
+    protected abstract boolean removeValueAsBoolean(Object value);
 
     @Override
     public int size() {
@@ -123,22 +134,43 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
+    protected Set<K> createKeySet() {
+        return new AbsIterMapKeySet();
+    }
+
+    protected Set<Map.Entry<K, V>> createEntrySet() {
+        return new AbsIterMapEntrySet();
+    }
+
+    protected Collection<V> createValuesCollection() {
+        return new AbsIterMapValues();
+    }
+
     @Override
     public final Set<K> keySet() {
-        return new AbsIterMapKeySet();
+        if (keySet != null)
+            return keySet;
+        keySet = createKeySet();
+        return keySet;
     }
 
     @Override
     public final Set<Map.Entry<K, V>> entrySet() {
-        return new AbsIterMapEntrySet();
+        if (entrySet != null)
+            return entrySet;
+        entrySet = createEntrySet();
+        return entrySet;
     }
 
     @Override
-    public final Collection<V> values() {
-        return new AbsIterMapValues();
+    public Collection<V> values() {
+        if (values != null)
+            return values;
+        values = createValuesCollection();
+        return values;
     }
 
-    private final class AbsIterMapKeySet extends AbstractSet<K> {
+    protected final class AbsIterMapKeySet extends AbstractSet<K> {
         @Override
         public Iterator<K> iterator() {
             return mapIterator();
@@ -175,7 +207,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    private final class AbsIterMapEntrySet extends AbstractSet<Map.Entry<K, V>> {
+    protected final class AbsIterMapEntrySet extends AbstractSet<Map.Entry<K, V>> {
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
             return entryIterator();
@@ -212,7 +244,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    private final class AbsIterMapValues extends AbstractCollection<V> {
+    protected final class AbsIterMapValues extends AbstractCollection<V> {
         @Override
         public Iterator<V> iterator() {
             return new AbsIterMapValueIterator<>(mapIterator());
@@ -235,12 +267,12 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
 
         @Override
         public boolean contains(final Object o) {
-            return AbstractIterableMapAlternate.this.containsKey(o);
+            return AbstractIterableMapAlternate.this.containsValue(o);
         }
 
         @Override
         public boolean remove(Object o) {
-            return AbstractIterableMapAlternate.this.removeAsBoolean(o);
+            return AbstractIterableMapAlternate.this.removeValueAsBoolean(o);
         }
 
         @Override
@@ -249,7 +281,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    private static class AbsIterMapValueIterator<V> implements Iterator<V> {
+    protected static final class AbsIterMapValueIterator<V> implements Iterator<V> {
         private final MapIterator<?, V> mapIterator;
 
         public AbsIterMapValueIterator(final MapIterator<?, V> mapIterator) {
@@ -263,7 +295,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
 
         @Override
         public V next() {
-            mapIterator.next()
+            mapIterator.next();
             return mapIterator.getValue();
         }
 
