@@ -162,18 +162,16 @@ public final class SortedMapRange<K> implements Serializable {
      * Returns true if the provided key is greater than TO and less than FROM.
      */
     public boolean inRange(final K key) {
-        if (isEmpty() || key == null) {
-            return false;
-        } else {
-            return inFromRange(key) && inToRange(key);
-        }
+        return inFromRange(key) && inToRange(key);
     }
 
     /**
      * Returns true if the provided key is in the FROM range of the {@link SortedMapRange}.
      */
-    private boolean inFromRange(final K key) {
-        if (fromKey == null) {
+    public boolean inFromRange(final K key) {
+        if (isEmpty() || key == null) {
+            return false;
+        } else if (fromKey == null) {
             return true;
         }
         final int ret = compare(key, fromKey);
@@ -183,7 +181,7 @@ public final class SortedMapRange<K> implements Serializable {
         return ret > 0;
     }
 
-    private boolean rangeInFromRange(final K key, final boolean inclusive) {
+    public boolean rangeInFromRange(final K key, final boolean inclusive) {
         if (fromKey == null) {
             return true;
         }
@@ -198,8 +196,10 @@ public final class SortedMapRange<K> implements Serializable {
     /**
      * Returns true if the provided key is in the TO range of the {@link SortedMapRange}.
      */
-    private boolean inToRange(final K key) {
-        if (toKey == null) {
+    public boolean inToRange(final K key) {
+        if (isEmpty() || key == null) {
+            return false;
+        } else if (toKey == null) {
             return true;
         }
         final int ret = compare(key, toKey);

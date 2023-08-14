@@ -24,12 +24,13 @@ import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.spliterators.AbstractTreeRangeSpliterator;
+import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -37,10 +38,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Set;
-import java.util.Spliterator;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 
@@ -90,7 +88,7 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractExtendedBidiMap<K, V> implements Serializable {
+        extends AbstractExtendedBidiMap<K, V> {
 
     private transient Node<K, V> rootNodeKey;
     private transient Node<K, V> rootNodeValue;
@@ -168,6 +166,27 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return lookupValue(checkValue(value)) != null;
     }
 
+    /**
+     * Checks whether this map contains a mapping between the specified key and value.
+     * <p>
+     * The key and value must implement {@code Comparable}.
+     *
+     * @param key key whose presence in this map is to be tested
+     * @param value value whose presence in this map is to be tested
+     * @return true if this map contains the specified mapping
+     * @throws ClassCastException   if the key or value is of an inappropriate type
+     * @throws NullPointerException if the key is null
+     */
+    @Override
+    protected boolean containsEntry(final Object key, final Object value) {
+        checkValue(value);
+        final Node<K, V> entry = lookupKey(checkKey(key));
+        if (entry != null) {
+            return Objects.equals(entry.getValue(), value);
+        }
+        return false;
+    }
+
     @Override
     protected Iterator<Entry<K, V>> entryIterator() {
         return new EntryIteratorStandardByKey();
@@ -175,7 +194,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
     @Override
     protected MapSpliterator<K, V> mapSpliterator() {
-        return null; // TODO
+        return new KeyMapSpliterator();
     }
 
     /**
@@ -419,10 +438,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      *
      * @return a set view of the keys contained in this map.
      */
-    @Override
-    protected Set<K> createKeySet() {
-        return new KeyViewByKeys();
-    }
+//    @Override
+//    protected Set<K> createKeySet() {
+//        return new KeyViewByKeys();
+//    }
 
     /**
      * Creates a set view of the values contained in this map in key order.
@@ -437,10 +456,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      *
      * @return a set view of the values contained in this map.
      */
-    @Override
-    protected Set<V> createValuesCollection() {
-        return new ValueViewByKey();
-    }
+//    @Override
+//    protected Set<V> createValuesCollection() {
+//        return new ValueViewByKey();
+//    }
+
     /**
      * Returns a set view of the entries contained in this map in key order.
      * For simple iteration through the map, the MapIterator is quicker.
@@ -455,10 +475,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      *
      * @return a set view of the values contained in this map.
      */
-    @Override
-    protected Set<Entry<K, V>> createEntrySet() {
-        return new EntryView();
-    }
+//    @Override
+//    protected Set<Entry<K, V>> createEntrySet() {
+//        return new EntryView();
+//    }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
@@ -1964,9 +1984,29 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    protected static <K, V> K getKeyNullSafe(final Entry<K, V> entry) {
+    private static <K, V> K getKeyNullSafe(final Entry<K, V> entry) {
         if (entry != null) {
             return entry.getKey();
+        } else {
+            return null;
+        }
+    }
+
+    private Node<K, V> firstEntryInRange(final SortedMapRange<K> keyRange) {
+        final Node<K, V> candidate = keyRange.hasFrom() ? lookupKeyHigher(keyRange.getFromKey(), keyRange.isFromInclusive())
+                                                        : leastNodeKey(rootNodeKey);
+        if (keyRange.inRange(candidate.getKey())) {
+            return candidate;
+        } else {
+            return null;
+        }
+    }
+
+    private Node<K, V> lastEntryInRange(final SortedMapRange<K> keyRange) {
+        final Node<K, V> candidate = keyRange.hasTo() ? lookupKeyLower(keyRange.getToKey(), keyRange.isToInclusive())
+                                                      : greatestNodeKey(rootNodeKey);
+        if (keyRange.inRange(candidate.getKey())) {
+            return candidate;
         } else {
             return null;
         }
@@ -2005,158 +2045,157 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private final class KeyViewByKeys extends KeyView {
-        @Override
-        public Iterator<K> iterator() {
-            return new MapIteratorKeyByKey();
-        }
-
-        @Override
-        public Spliterator<K> spliterator() {
-            return new SpliteratorKeyByKey();
-        }
-    }
-
-    private final class KeyViewByValue extends View<K> {
-        @Override
-        public Iterator<K> iterator() {
-            return new MapIteratorKeyByValue();
-        }
-
-        @Override
-        public Spliterator<K> spliterator() {
-            return new SpliteratorKeyByValue();
-        }
-    }
-
-    private abstract class ValueView extends View<V> {
-        @Override
-        public final boolean contains(final Object obj) {
-            return lookupValue(checkValue(obj)) != null;
-        }
-
-        @Override
-        public final boolean remove(final Object obj) {
-            K result = null;
-            final Node<K, V> node = lookupValue(checkValue(obj));
-            if (node != null) {
-                doRedBlackDelete(node);
-                result = node.getKey();
-            }
-            return result != null;
-        }
-
-    }
-
-    private final class ValueViewByKey extends ValueView {
-        @Override
-        public Iterator<V> iterator() {
-            return new MapIteratorValueByKey();
-        }
-
-        @Override
-        public Spliterator<V> spliterator() {
-            return new SpliteratorValueByKey();
-        }
-    }
-
-    private final class ValueViewByValue extends ValueView {
-        @Override
-        public Iterator<V> iterator() {
-            return new MapIteratorValueByValue();
-        }
-
-        @Override
-        public Spliterator<V> spliterator() {
-            return new SpliteratorValueByValue();
-        }
-    }
-
-    /**
-     * A view of this map.
-     */
-    private final class EntryView extends View<Entry<K, V>> {
-        @Override
-        public boolean contains(final Object obj) {
-            if (!(obj instanceof Map.Entry)) {
-                return false;
-            }
-            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-            final K key = checkKey(entry.getKey());
-            final V value = checkValue(entry.getValue());
-            final Node<K, V> node = lookupKey(key);
-            return node != null && node.getValue().equals(value);
-        }
-
-        @Override
-        public boolean remove(final Object obj) {
-            if (!(obj instanceof Map.Entry)) {
-                return false;
-            }
-            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-            final K key = checkKey(entry.getKey());
-            final V value = checkValue(entry.getValue());
-            final Node<K, V> node = lookupKey(key);
-            if (node != null && node.getValue().equals(value)) {
-                doRedBlackDelete(node);
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public Iterator<Entry<K, V>> iterator() {
-            return new EntryIteratorStandardByKey();
-        }
-
-        @Override
-        public Spliterator<Entry<K, V>> spliterator() {
-            return new SpliteratorEntryByKey();
-        }
-    }
+//    private final class KeyViewByKeys extends KeyView {
+//        @Override
+//        public Iterator<K> iterator() {
+//            return new MapIteratorKeyByKey();
+//        }
+//
+//        @Override
+//        public Spliterator<K> spliterator() {
+//            return new SpliteratorKeyByKey();
+//        }
+//    }
+//
+//    private final class KeyViewByValue extends View<K> {
+//        @Override
+//        public Iterator<K> iterator() {
+//            return new MapIteratorKeyByValue();
+//        }
+//
+//        @Override
+//        public Spliterator<K> spliterator() {
+//            return new SpliteratorKeyByValue();
+//        }
+//    }
+//
+//    private abstract class ValueView extends View<V> {
+//        @Override
+//        public final boolean contains(final Object obj) {
+//            return lookupValue(checkValue(obj)) != null;
+//        }
+//
+//        @Override
+//        public final boolean remove(final Object obj) {
+//            K result = null;
+//            final Node<K, V> node = lookupValue(checkValue(obj));
+//            if (node != null) {
+//                doRedBlackDelete(node);
+//                result = node.getKey();
+//            }
+//            return result != null;
+//        }
+//    }
+//
+//    private final class ValueViewByKey extends ValueView {
+//        @Override
+//        public Iterator<V> iterator() {
+//            return new MapIteratorValueByKey();
+//        }
+//
+//        @Override
+//        public Spliterator<V> spliterator() {
+//            return new SpliteratorValueByKey();
+//        }
+//    }
+//
+//    private final class ValueViewByValue extends ValueView {
+//        @Override
+//        public Iterator<V> iterator() {
+//            return new MapIteratorValueByValue();
+//        }
+//
+//        @Override
+//        public Spliterator<V> spliterator() {
+//            return new SpliteratorValueByValue();
+//        }
+//    }
 
     /**
      * A view of this map.
      */
-    private final class InverseEntryView extends View<Entry<V, K>> {
-        @Override
-        public boolean contains(final Object obj) {
-            if (!(obj instanceof Map.Entry)) {
-                return false;
-            }
-            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-            final K key = checkKey(entry.getValue());
-            final V value = checkValue(entry.getKey());
-            final Node<K, V> node = lookupValue(value);
-            return node != null && node.getKey().equals(key);
-        }
+//    private final class EntryView extends View<Entry<K, V>> {
+//        @Override
+//        public boolean contains(final Object obj) {
+//            if (!(obj instanceof Map.Entry)) {
+//                return false;
+//            }
+//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
+//            final K key = checkKey(entry.getKey());
+//            final V value = checkValue(entry.getValue());
+//            final Node<K, V> node = lookupKey(key);
+//            return node != null && node.getValue().equals(value);
+//        }
+//
+//        @Override
+//        public boolean remove(final Object obj) {
+//            if (!(obj instanceof Map.Entry)) {
+//                return false;
+//            }
+//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
+//            final K key = checkKey(entry.getKey());
+//            final V value = checkValue(entry.getValue());
+//            final Node<K, V> node = lookupKey(key);
+//            if (node != null && node.getValue().equals(value)) {
+//                doRedBlackDelete(node);
+//                return true;
+//            }
+//            return false;
+//        }
+//
+//        @Override
+//        public Iterator<Entry<K, V>> iterator() {
+//            return new EntryIteratorStandardByKey();
+//        }
+//
+//        @Override
+//        public Spliterator<Entry<K, V>> spliterator() {
+//            return new SpliteratorEntryByKey();
+//        }
+//    }
 
-        @Override
-        public boolean remove(final Object obj) {
-            if (!(obj instanceof Map.Entry)) {
-                return false;
-            }
-            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-            final K key = checkKey(entry.getValue());
-            final V value = checkValue(entry.getKey());
-            final Node<K, V> node = lookupValue(value);
-            if (node != null && node.getKey().equals(key)) {
-                doRedBlackDelete(node);
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public Iterator<Entry<V, K>> iterator() {
-            return new EntryIteratorInvertedByValue();
-        }
-
-        @Override
-        public Spliterator<Entry<V, K>> spliterator() {
-            return new SpliteratorEntryInvertedByValue();
-        }
-    }
+    /**
+     * A view of this map.
+     */
+//    private final class InverseEntryView extends View<Entry<V, K>> {
+//        @Override
+//        public boolean contains(final Object obj) {
+//            if (!(obj instanceof Map.Entry)) {
+//                return false;
+//            }
+//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
+//            final K key = checkKey(entry.getValue());
+//            final V value = checkValue(entry.getKey());
+//            final Node<K, V> node = lookupValue(value);
+//            return node != null && node.getKey().equals(key);
+//        }
+//
+//        @Override
+//        public boolean remove(final Object obj) {
+//            if (!(obj instanceof Map.Entry)) {
+//                return false;
+//            }
+//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
+//            final K key = checkKey(entry.getValue());
+//            final V value = checkValue(entry.getKey());
+//            final Node<K, V> node = lookupValue(value);
+//            if (node != null && node.getKey().equals(key)) {
+//                doRedBlackDelete(node);
+//                return true;
+//            }
+//            return false;
+//        }
+//
+//        @Override
+//        public Iterator<Entry<V, K>> iterator() {
+//            return new EntryIteratorInvertedByValue();
+//        }
+//
+//        @Override
+//        public Spliterator<Entry<V, K>> spliterator() {
+//            return new SpliteratorEntryInvertedByValue();
+//        }
+//    }
 
     /**
      * Base class for all iterators.
@@ -2495,457 +2534,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return navigatePrevious().copyEntryInverted();
         }
     }
-    
-    private enum SplitState { READY, READY_SPLIT, SPLITTING_LEFT, SPLITTING_MID, SPLITTING_RIGHT, INITIAL }
-
-    private abstract class BaseSpliterator<E> implements Spliterator<E> {
-        final int expectedModifications;
-        /** Whether to return KEY or VALUE order. */
-        SplitState state;
-        /** The next node to be returned by the spliterator. */
-        Node<K, V> currentNode;
-        /** The final node to be returned by the spliterator (just needed when split). */
-        Node<K, V> lastNode;
-        int estimatedSize;
-
-        BaseSpliterator(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            this.expectedModifications = modifications;
-            this.state = state;
-            this.currentNode = currentNode;
-            this.lastNode = lastNode;
-            this.estimatedSize = estimatedSize;
-        }
-
-        protected abstract Spliterator<E> makeSplit(SplitState state, Node<K, V> currentNode, Node<K, V> lastNode, int estimatedSize);
-        
-        @Override
-        public long estimateSize() {
-            return estimatedSize;
-        }
-
-        @Override
-        public int characteristics() {
-            int characteristics = Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED;
-            if (state == SplitState.INITIAL || state == SplitState.READY) {
-                characteristics |= Spliterator.SIZED;
-            }
-            return characteristics;
-        }
-
-        @Override
-        public abstract Comparator<? super E> getComparator();
-    }
-
-    private abstract class SpliteratorByKey<E> extends BaseSpliterator<E> {
-        SpliteratorByKey() {
-            super(SplitState.INITIAL, rootNodeKey, greatestNodeKey(rootNodeKey), nodeCount);
-        }
-        
-        SpliteratorByKey(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-        
-        private void checkInit() {
-            if (state != SplitState.READY && state != SplitState.READY_SPLIT) {
-                if (state == SplitState.INITIAL) {
-                    currentNode = leastNodeKey(currentNode);
-                    state = SplitState.READY;
-                } else if (state == SplitState.SPLITTING_MID) {
-                    currentNode = leastNodeKey(currentNode);
-                    state = SplitState.READY_SPLIT;
-                } else if (state == SplitState.SPLITTING_RIGHT) {
-                    state = SplitState.READY_SPLIT;
-                } else if (state == SplitState.SPLITTING_LEFT) {
-                    lastNode = greatestNodeKey(lastNode);
-                    state = SplitState.READY_SPLIT;
-                }
-            }
-        }
-
-        boolean tryAdvanceNode(final Consumer<Node<K, V>> action) {
-            if (modifications != expectedModifications) {
-                throw new ConcurrentModificationException();
-            }
-            checkInit();
-            final Node<K, V> current = currentNode;
-            if (current != null) {
-                action.accept(current);
-                if (current != lastNode)
-                    currentNode = nextGreaterKey(current);
-                else
-                    currentNode = null;
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        void forEachNode(final Consumer<Node<K, V>> action) {
-            checkInit();
-            Node<K, V> current = currentNode;
-            final Node<K, V> last = lastNode;
-            while (current != null) {
-                action.accept(current);
-                if (current != last)
-                    current = nextGreaterKey(current);
-                else
-                    current = null;
-            }
-            if (modifications != expectedModifications)
-                throw new ConcurrentModificationException();
-            currentNode = null;
-        }
-        
-        public Spliterator<E> trySplit() {
-            final Node<K, V> left = currentNode.keyLeftNode, right = currentNode.keyRightNode;
-            if (left == null || right == null)
-                return null;
-
-            Spliterator<E> split = null;
-            if (state == SplitState.INITIAL) {
-                final Node<K, V> splitLast = nextSmallerKey(currentNode);
-                if (left.isKeyLessThanOrEqual(splitLast) && currentNode.isKeyLessThanOrEqual(lastNode)) {
-                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                }
-            } else if (state == SplitState.SPLITTING_MID) {
-                final Node<K, V> splitLast = nextSmallerKey(currentNode);
-                if (left.isKeyLessThanOrEqual(splitLast) && currentNode.isKeyLessThanOrEqual(lastNode)) {
-                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                }
-            } else if (state == SplitState.SPLITTING_RIGHT) {
-                final Node<K, V> rightLeft = right.keyLeftNode;
-                if (rightLeft != null && currentNode.isKeyLessThanOrEqual(rightLeft) && right.isKeyLessThanOrEqual(lastNode)) {
-                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                    currentNode = right;
-                }
-            } else if (state == SplitState.SPLITTING_LEFT) {
-                final Node<K, V> passedSubTree = lastNode;
-                final Node<K, V> subTreeLeft = passedSubTree.keyLeftNode;
-                final Node<K, V> subTreeRight = passedSubTree.keyRightNode;
-                if (subTreeLeft != null && currentNode.isKeyLessThanOrEqual(subTreeLeft) && subTreeRight != null) {
-                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                    currentNode = passedSubTree;
-                    lastNode = greatestNodeKey(passedSubTree);
-                }
-            } else {
-                throw new IllegalStateException();
-            }
-
-            return split;
-        }
-    }
-
-    private abstract class SpliteratorByValue<E> extends BaseSpliterator<E> {
-        SpliteratorByValue() {
-            super(SplitState.INITIAL, rootNodeValue, greatestNodeValue(rootNodeValue), nodeCount);
-        }
-
-        SpliteratorByValue(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        private void checkInit() {
-            if (state != SplitState.READY && state != SplitState.READY_SPLIT) {
-                if (state == SplitState.INITIAL) {
-                    currentNode = leastNodeValue(currentNode);
-                    state = SplitState.READY;
-                } else if (state == SplitState.SPLITTING_MID) {
-                    currentNode = leastNodeValue(currentNode);
-                    state = SplitState.READY_SPLIT;
-                } else if (state == SplitState.SPLITTING_RIGHT) {
-                    state = SplitState.READY_SPLIT;
-                } else if (state == SplitState.SPLITTING_LEFT) {
-                    lastNode = greatestNodeValue(lastNode);
-                    state = SplitState.READY_SPLIT;
-                }
-            }
-        }
-
-        boolean tryAdvanceNode(final Consumer<Node<K, V>> action) {
-            if (modifications != expectedModifications) {
-                throw new ConcurrentModificationException();
-            }
-            checkInit();
-            final Node<K, V> current = currentNode;
-            if (current != null) {
-                action.accept(current);
-                if (current != lastNode)
-                    currentNode = nextGreaterValue(current);
-                else
-                    currentNode = null;
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        void forEachNode(final Consumer<Node<K, V>> action) {
-            checkInit();
-            final Node<K, V> last = lastNode;
-            Node<K, V> current = currentNode;
-            while (current != null) {
-                action.accept(current);
-                if (current != last)
-                    current = nextGreaterValue(current);
-                else
-                    current = null;
-            }
-            if (modifications != expectedModifications)
-                throw new ConcurrentModificationException();
-            currentNode = null;
-        }
-
-        public Spliterator<E> trySplit() {
-            final Node<K, V> left = currentNode.valueLeftNode, right = currentNode.valueRightNode;
-            if (left == null || right == null)
-                return null;
-
-            Spliterator<E> split = null;
-            if (state == SplitState.INITIAL) {
-                final Node<K, V> splitLast = nextSmallerValue(currentNode);
-                if (left.isValueLessThanOrEqual(splitLast) && currentNode.isValueLessThanOrEqual(lastNode)) {
-                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                }
-            } else if (state == SplitState.SPLITTING_MID) {
-                final Node<K, V> splitLast = nextSmallerValue(currentNode);
-                if (left.isValueLessThanOrEqual(splitLast) && currentNode.isValueLessThanOrEqual(lastNode)) {
-                    split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                }
-            } else if (state == SplitState.SPLITTING_RIGHT) {
-                final Node<K, V> rightLeft = right.valueLeftNode;
-                if (rightLeft != null && currentNode.isValueLessThanOrEqual(rightLeft) && right.isValueLessThanOrEqual(lastNode)) {
-                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                    currentNode = right;
-                }
-            } else if (state == SplitState.SPLITTING_LEFT) {
-                final Node<K, V> passedSubTree = lastNode;
-                final Node<K, V> subTreeLeft = passedSubTree.valueLeftNode;
-                final Node<K, V> subTreeRight = passedSubTree.valueRightNode;
-                if (subTreeLeft != null && currentNode.isValueLessThanOrEqual(subTreeLeft) && subTreeRight != null) {
-                    split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
-                    state = SplitState.SPLITTING_RIGHT;
-                    currentNode = passedSubTree;
-                    lastNode = greatestNodeValue(passedSubTree);
-                }
-            } else {
-                throw new IllegalStateException();
-            }
-
-            return split;
-        }
-    }
-
-    private final class SpliteratorKeyByKey extends SpliteratorByKey<K> {
-        SpliteratorKeyByKey() {
-            super();
-        }
-
-        private SpliteratorKeyByKey(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        protected Spliterator<K> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            return new SpliteratorKeyByKey(state, currentNode, lastNode, estimatedSize);
-        }
-        
-        @Override
-        public boolean tryAdvance(final Consumer<? super K> action) {
-            return tryAdvanceNode(node -> action.accept(node.key));
-        }
-
-        @Override
-        public void forEachRemaining(final Consumer<? super K> action) {
-            forEachNode(node -> action.accept(node.key));
-        }
-
-        @Override
-        public Comparator<? super K> getComparator() {
-            return null;
-        }
-
-        @Override
-        public int characteristics() {
-            return super.characteristics() | Spliterator.SORTED;
-        }
-    }
-
-    private class SpliteratorKeyByValue extends SpliteratorByValue<K> {
-        SpliteratorKeyByValue() {
-            super();
-        }
-
-        private SpliteratorKeyByValue(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        protected Spliterator<K> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            return new SpliteratorKeyByValue(state, currentNode, lastNode, estimatedSize);
-        }
-        
-        @Override
-        public boolean tryAdvance(final Consumer<? super K> action) {
-            return tryAdvanceNode(node -> action.accept(node.key));
-        }
-
-        @Override
-        public void forEachRemaining(final Consumer<? super K> action) {
-            forEachNode(node -> action.accept(node.key));
-        }
-
-        @Override
-        public Comparator<? super K> getComparator() {
-            throw new IllegalStateException();
-        }
-    }
-
-    private class SpliteratorValueByKey extends SpliteratorByKey<V> {
-        SpliteratorValueByKey() {
-            super();
-        }
-
-        private SpliteratorValueByKey(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        protected Spliterator<V> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            return new SpliteratorValueByKey(state, currentNode, lastNode, estimatedSize);
-        }
-        
-        @Override
-        public boolean tryAdvance(final Consumer<? super V> action) {
-            return tryAdvanceNode(node -> action.accept(node.value));
-        }
-
-        @Override
-        public void forEachRemaining(final Consumer<? super V> action) {
-            forEachNode(node -> action.accept(node.value));
-        }
-
-        @Override
-        public Comparator<? super V> getComparator() {
-            throw new IllegalStateException();
-        }
-    }
-
-    private class SpliteratorValueByValue extends SpliteratorByValue<V> {
-        SpliteratorValueByValue() {
-            super();
-        }
-
-        private SpliteratorValueByValue(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        protected Spliterator<V> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            return new SpliteratorValueByValue(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        public boolean tryAdvance(final Consumer<? super V> action) {
-            return tryAdvanceNode(node -> action.accept(node.value));
-        }
-
-        @Override
-        public void forEachRemaining(final Consumer<? super V> action) {
-            forEachNode(node -> action.accept(node.value));
-        }
-
-        @Override
-        public Comparator<? super V> getComparator() {
-            return null;
-        }
-
-        @Override
-        public int characteristics() {
-            return super.characteristics() | Spliterator.SORTED;
-        }
-    }
-
-    private class SpliteratorEntryByKey extends SpliteratorByKey<Entry<K, V>> {
-        SpliteratorEntryByKey() {
-            super();
-        }
-
-        private SpliteratorEntryByKey(final SplitState state, final Node<K,V> currentNode, final Node<K,V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        protected Spliterator<Entry<K, V>> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            return new SpliteratorEntryByKey(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        public boolean tryAdvance(final Consumer<? super Entry<K, V>> action) {
-            return tryAdvanceNode(node -> action.accept(node.copyEntryStandard()));
-        }
-
-        @Override
-        public void forEachRemaining(final Consumer<? super Entry<K, V>> action) {
-            forEachNode(node -> action.accept(node.copyEntryStandard()));
-        }
-        
-        @Override
-        public Comparator<? super Entry<K, V>> getComparator() {
-            return Entry.comparingByKey();
-        }
-
-        @Override
-        public int characteristics() {
-            return super.characteristics() | Spliterator.SORTED;
-        }
-    }
-
-    private class SpliteratorEntryInvertedByValue extends SpliteratorByValue<Entry<V, K>> {
-        SpliteratorEntryInvertedByValue() {
-            super();
-        }
-
-        private SpliteratorEntryInvertedByValue(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            super(state, currentNode, lastNode, estimatedSize);
-        }
-
-        @Override
-        protected Spliterator<Entry<V, K>> makeSplit(final SplitState state, final Node<K, V> currentNode, final Node<K, V> lastNode, final int estimatedSize) {
-            return new SpliteratorEntryInvertedByValue(state, currentNode, lastNode, estimatedSize);
-        }
-        
-        @Override
-        public boolean tryAdvance(final Consumer<? super Entry<V, K>> action) {
-            return tryAdvanceNode(node -> action.accept(node.copyEntryInverted()));
-        }
-
-        @Override
-        public void forEachRemaining(final Consumer<? super Entry<V, K>> action) {
-            forEachNode(node -> action.accept(node.copyEntryInverted()));
-        }
-
-        @Override
-        public Comparator<? super Entry<V, K>> getComparator() {
-            return Entry.comparingByKey();
-        }
-
-        @Override
-        public int characteristics() {
-            return super.characteristics() | Spliterator.SORTED;
-        }
-    }
 
     /**
      * A node used to store the data.
      */
     private static final class Node<K extends Comparable<K>, V extends Comparable<V>> implements Entry<K, V>, KeyValue<K, V> {
+
+        // TODO make finals (replacing)
 
         private K key;
         private V value;
@@ -3069,6 +2664,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return key.compareTo(other.key) <= 0;
         }
 
+        boolean isKeyLessThan(final Node<K, V> other) {
+            return key.compareTo(other.key) < 0;
+        }
+
         boolean isValueLessThanOrEqual(final Node<K, V> other) {
             return value.compareTo(other.value) <= 0;
         }
@@ -3143,6 +2742,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        protected boolean containsEntry(final Object key, final Object value) {
+            return TreeBidiMapHard.this.containsEntry(value, key);
+        }
+
+        @Override
         public V firstKey() {
             if (TreeBidiMapHard.this.nodeCount == 0) {
                 throw new NoSuchElementException("Map is empty");
@@ -3209,21 +2813,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public void clear() {
             TreeBidiMapHard.this.clear();
-        }
-
-        @Override
-        protected Set<V> createKeySet() {
-            return new ValueViewByValue();
-        }
-
-        @Override
-        protected Set<K> createValuesCollection() {
-            return new KeyViewByValue();
-        }
-
-        @Override
-        protected Set<Entry<V, K>> createEntrySet() {
-            return new InverseEntryView();
         }
 
         @Override
@@ -3627,12 +3216,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public OrderedMapIterator<K, V> mapIterator() {
-            return null; // TODO
+            // TODO
+            return new MapIteratorKeyByKey();
         }
 
         @Override
         protected MapSpliterator<K, V> mapSpliterator() {
-            return null; // TODO
+            return new KeyRangeMapSpliterator(keyRange);
         }
 
         @Override
@@ -3645,6 +3235,19 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 }
             }
             return defaultValue;
+        }
+
+        @Override
+        protected boolean containsEntry(final Object keyObject, final Object valueObject) {
+            final K key = checkKey(keyObject);
+            final V value = checkValue(valueObject);
+            if (keyRange.inRange(key)) {
+                final Node<K, V> node = lookupKey(key);
+                if (node != null) {
+                    return Objects.equals(node.value, value);
+                }
+            }
+            return false;
         }
 
         @Override
@@ -3730,25 +3333,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public void putAll(Map<? extends K, ? extends V> m) {
+        public void putAll(final Map<? extends K, ? extends V> m) {
             for (final K key : m.keySet()) {
                 verifyRange(key);
             }
             TreeBidiMapHard.this.putAll(m);
-        }
-
-        private Entry<K, V> firstEntry() {
-            if (keyRange.hasFrom())
-                return lookupKeyHigher(keyRange.getFromKey(), keyRange.isFromInclusive());
-            else
-                return leastNodeKey(rootNodeKey);
-        }
-
-        private Entry<K, V> lastEntry() {
-            if (keyRange.hasTo())
-                return lookupKeyLower(keyRange.getToKey(), keyRange.isToInclusive());
-            else
-                return greatestNodeKey(rootNodeKey);
         }
 
         private Entry<K, V> nextEntry(final K key) {
@@ -3761,12 +3350,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public K firstKey() {
-            return getKeyNullSafe(firstEntry());
+            return getKeyNullSafe(firstEntryInRange(keyRange));
         }
 
         @Override
         public K lastKey() {
-            return getKeyNullSafe(lastEntry());
+            return getKeyNullSafe(lastEntryInRange(keyRange));
         }
 
         @Override
@@ -3817,6 +3406,149 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public SortedExtendedBidiMap<V, K> inverseBidiMap() {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
+        }
+    }
+
+    private final class KeyMapSpliterator extends AbstractTreeSpliterator<K, V, Node<K, V>> {
+        private KeyMapSpliterator() {
+        }
+
+        private KeyMapSpliterator(final SplitState state,
+                                  final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected AbstractTreeSpliterator<K, V, Node<K, V>> makeSplit(final SplitState state,
+                                                                      final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
+            return new KeyMapSpliterator(state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected int modCount() {
+            return modifications;
+        }
+
+        @Override
+        protected Node<K, V> rootNode() {
+            return rootNodeKey;
+        }
+
+        @Override
+        protected Node<K, V> getLeft(final Node<K, V> node) {
+            return node.keyLeftNode;
+        }
+
+        @Override
+        protected Node<K, V> getRight(final Node<K, V> node) {
+            return node.keyRightNode;
+        }
+
+        @Override
+        protected Node<K, V> nextLower(final Node<K, V> node) {
+            return nextSmallerKey(node);
+        }
+
+        @Override
+        protected Node<K, V> nextGreater(final Node<K, V> node) {
+            return nextGreaterKey(node);
+        }
+
+        @Override
+        protected Node<K, V> subTreeLowest(final Node<K, V> node) {
+            return leastNodeKey(node);
+        }
+
+        @Override
+        protected Node<K, V> subTreeGreatest(final Node<K, V> node) {
+            return greatestNodeKey(node);
+        }
+
+        @Override
+        protected boolean isLowerThanOrEqual(final Node<K, V> node, final Node<K, V> other) {
+            return node.isKeyLessThanOrEqual(other);
+        }
+
+        @Override
+        protected boolean isLowerThan(final Node<K, V> node, final Node<K, V> other) {
+            return node.isKeyLessThan(other);
+        }
+    }
+
+    private final class KeyRangeMapSpliterator extends AbstractTreeRangeSpliterator<K, V, Node<K, V>> {
+        private KeyRangeMapSpliterator(final SortedMapRange<K> range) {
+            super(range);
+        }
+
+        private KeyRangeMapSpliterator(final SortedMapRange<K> range, final SplitState state,
+                                       final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
+            super(range, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected AbstractTreeSpliterator<K, V, Node<K, V>> makeSplit(final SplitState state,
+                                                                      final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
+            return new KeyRangeMapSpliterator(keyRange, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected int modCount() {
+            return modifications;
+        }
+
+        @Override
+        protected Node<K, V> rootNode() {
+            return rootNodeKey;
+        }
+
+        @Override
+        protected Node<K, V> getLeft(final Node<K, V> node) {
+            return node.keyLeftNode;
+        }
+
+        @Override
+        protected Node<K, V> getRight(final Node<K, V> node) {
+            return node.keyRightNode;
+        }
+
+        @Override
+        protected Node<K, V> nextLower(final Node<K, V> node) {
+            return nextSmallerKey(node);
+        }
+
+        @Override
+        protected Node<K, V> nextGreater(final Node<K, V> node) {
+            return nextGreaterKey(node);
+        }
+
+        @Override
+        protected Node<K, V> subTreeLowest(final Node<K, V> node) {
+            return leastNodeKey(node);
+        }
+
+        @Override
+        protected Node<K, V> subTreeGreatest(final Node<K, V> node) {
+            return greatestNodeKey(node);
+        }
+
+        @Override
+        protected boolean isLowerThan(final Node<K, V> node, final Node<K, V> other) {
+            return node.isKeyLessThan(other);
+        }
+
+        @Override
+        protected boolean isLowerThanOrEqual(final Node<K, V> node, final Node<K, V> other) {
+            return node.isKeyLessThanOrEqual(other);
+        }
+
+        @Override
+        protected Node<K, V> findFirstNode() {
+            return firstEntryInRange(keyRange);
+        }
+
+        @Override
+        protected Node<K, V> findLastNode() {
+            return lastEntryInRange(keyRange);
         }
     }
 }

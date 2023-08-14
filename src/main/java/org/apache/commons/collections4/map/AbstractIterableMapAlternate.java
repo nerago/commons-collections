@@ -42,6 +42,8 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         return getOrDefault(key, null);
     }
 
+    protected abstract boolean containsEntry(Object key, Object value);
+
     protected abstract V doPut(K key, V value, final boolean addIfAbsent, final boolean updateIfPresent);
 
     protected abstract V doPut(final K key,
@@ -229,13 +231,21 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
 
         @Override
-        public boolean contains(final Object o) {
-            return AbstractIterableMapAlternate.this.containsKey(o);
+        public boolean contains(final Object obj) {
+            if (!(obj instanceof Map.Entry)) {
+                return false;
+            }
+            final Entry<?, ?> entry = (Entry<?, ?>) obj;
+            return AbstractIterableMapAlternate.this.containsEntry(entry.getKey(), entry.getValue());
         }
 
         @Override
-        public boolean remove(Object o) {
-            return AbstractIterableMapAlternate.this.removeAsBoolean(o);
+        public boolean remove(final Object obj) {
+            if (!(obj instanceof Map.Entry)) {
+                return false;
+            }
+            final Entry<?, ?> entry = (Entry<?, ?>) obj;
+            return AbstractIterableMapAlternate.this.remove(entry.getKey(), entry.getValue());
         }
 
         @Override
