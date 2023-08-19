@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class PredicatedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
+public class PredicatedSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
 
     private class ReverseStringComparator implements Comparator<K> {
         @Override

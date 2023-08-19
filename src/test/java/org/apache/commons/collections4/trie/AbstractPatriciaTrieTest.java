@@ -19,6 +19,7 @@ package org.apache.commons.collections4.trie;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Trie;
+import org.apache.commons.collections4.map.AbstractIterableSortedMapTest;
 import org.apache.commons.collections4.map.AbstractSortedMapTest;
 import org.easymock.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class AbstractPatriciaTrieTest<V> extends AbstractSortedMapTest<String, V> {
+public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSortedMapTest<String, V> {
     public AbstractPatriciaTrieTest(String testName) {
         super(testName);
     }

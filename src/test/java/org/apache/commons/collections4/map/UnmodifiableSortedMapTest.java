@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class UnmodifiableSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
+public class UnmodifiableSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
 
     public UnmodifiableSortedMapTest() {
         super(UnmodifiableSortedMapTest.class.getSimpleName());

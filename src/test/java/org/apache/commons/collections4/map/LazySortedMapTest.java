@@ -50,7 +50,7 @@ import org.junit.jupiter.api.TestFactory;
  * @since 3.0
  */
 @SuppressWarnings("boxing")
-public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
+public class LazySortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
 
     private static class ReverseStringComparator implements Comparator<String> {
 

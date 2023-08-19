@@ -129,7 +129,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         }
     }
 
-    public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
+    public abstract static class TestViewMap<K, V> extends AbstractIterableSortedMapTest<K, V> {
         protected final AbstractMapTest<K, V> main;
         protected final List<K> subSortedKeys = new ArrayList<>();
         protected final List<V> subSortedValues = new ArrayList<>();

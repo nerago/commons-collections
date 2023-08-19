@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Trie;
+import org.apache.commons.collections4.map.AbstractIterableSortedMapTest;
 import org.junit.jupiter.api.Test;
 
 /**

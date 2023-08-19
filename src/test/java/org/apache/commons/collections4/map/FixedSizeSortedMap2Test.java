@@ -17,29 +17,31 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.collection.IterationBehaviour;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
  * Extension of {@link AbstractSortedMapTest} for exercising the {@link FixedSizeSortedMap}
- * implementation, applying SortedMap tests..
+ * implementation, applying IterableMap tests.
  *
  * @since 3.0
  */
-public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
+public class FixedSizeSortedMap2Test<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public FixedSizeSortedMapTest() {
-        super(FixedSizeSortedMapTest.class.getSimpleName());
+    public FixedSizeSortedMap2Test() {
+        super(FixedSizeSortedMap2Test.class.getSimpleName());
     }
 
     @Override
-    public SortedMap<K, V> makeObject() {
+    public IterableMap<K, V> makeObject() {
         return FixedSizeSortedMap.fixedSizeSortedMap(new TreeMap<K, V>());
     }
 
     @Override
-    public SortedMap<K, V> makeFullMap() {
+    public IterableMap<K, V> makeFullMap() {
         final SortedMap<K, V> map = new TreeMap<>();
         addSampleMappings(map);
         return FixedSizeSortedMap.fixedSizeSortedMap(map);
@@ -48,11 +50,6 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<
     @Override
     public boolean isSubMapViewsSerializable() {
         // TreeMap sub map views have a bug in deserialization.
-        return false;
-    }
-
-    @Override
-    public boolean isFailFastFunctionalExpected() {
         return false;
     }
 
@@ -67,8 +64,8 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<
     }
 
     @Override
-    public CollectionCommonsRole collectionRole() {
-        return CollectionCommonsRole.OTHER_DECORATOR;
+    public boolean isAllowNullKey() {
+        return false; // need to override in this as opposed to primary test suite which has same override via SortedMapTests
     }
 
     @Override
@@ -76,15 +73,14 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<
         return "4";
     }
 
-//    public void testCreate() throws Exception {
-//        resetEmpty();
-//        writeExternalFormToDisk(
-//            (java.io.Serializable) map,
-//            "src/test/resources/data/test/FixedSizeSortedMap.emptyCollection.version4.obj");
-//        resetFull();
-//        writeExternalFormToDisk(
-//            (java.io.Serializable) map,
-//            "src/test/resources/data/test/FixedSizeSortedMap.fullCollection.version4.obj");
-//    }
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
+    }
+
+    @Override
+    protected IterationBehaviour getIterationBehaviour() {
+        return IterationBehaviour.UNKNOWN;
+    }
 
 }
