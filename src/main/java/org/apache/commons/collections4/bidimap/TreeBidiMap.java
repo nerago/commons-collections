@@ -1460,7 +1460,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    abstract class View<E> extends AbstractSet<E> {
+    abstract class AbstractView<E> extends AbstractSet<E> {
 
         /** Whether to return KEY or VALUE order. */
         final DataElement orderType;
@@ -1469,7 +1469,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Constructor.
          * @param orderType  the KEY or VALUE int for the order
          */
-        View(final DataElement orderType) {
+        AbstractView(final DataElement orderType) {
             this.orderType = orderType;
         }
 
@@ -1484,7 +1484,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
-    class KeyView extends View<K> {
+    class KeyView extends AbstractView<K> {
 
         /**
          * Creates a new TreeBidiMap.KeyView.
@@ -1512,7 +1512,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
     }
 
-    class ValueView extends View<V> {
+    class ValueView extends AbstractView<V> {
 
         /**
          * Creates a new TreeBidiMap.ValueView.
@@ -1543,7 +1543,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    class EntryView extends View<Map.Entry<K, V>> {
+    class EntryView extends AbstractView<Map.Entry<K, V>> {
 
         EntryView() {
             super(KEY);
@@ -1588,7 +1588,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    class InverseEntryView extends View<Map.Entry<V, K>> {
+    class InverseEntryView extends AbstractView<Map.Entry<V, K>> {
 
         InverseEntryView() {
             super(VALUE);
@@ -1629,7 +1629,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map.
      */
-    abstract class ViewIterator {
+    abstract class AbstractViewIterator {
 
         /** Whether to return KEY or VALUE order. */
         private final DataElement orderType;
@@ -1646,7 +1646,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Constructor.
          * @param orderType  the KEY or VALUE int for the order
          */
-        ViewIterator(final DataElement orderType) {
+        AbstractViewIterator(final DataElement orderType) {
             this.orderType = orderType;
             expectedModifications = modifications;
             reset();
@@ -1723,7 +1723,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map.
      */
-    class ViewMapIterator extends ViewIterator implements OrderedMapIterator<K, V> {
+    class ViewMapIterator extends AbstractViewIterator implements OrderedMapIterator<K, V> {
 
         /**
          * Constructor.
@@ -1769,7 +1769,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map.
      */
-    class InverseViewMapIterator extends ViewIterator implements OrderedMapIterator<V, K> {
+    class InverseViewMapIterator extends AbstractViewIterator implements OrderedMapIterator<V, K> {
 
         /**
          * Creates a new TreeBidiMap.InverseViewMapIterator.
@@ -1815,7 +1815,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map entries.
      */
-    class ViewMapEntryIterator extends ViewIterator implements OrderedIterator<Map.Entry<K, V>> {
+    class ViewMapEntryIterator extends AbstractViewIterator implements OrderedIterator<Map.Entry<K, V>> {
 
         /**
          * Constructor.
@@ -1842,7 +1842,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the inverse map entries.
      */
-    class InverseViewMapEntryIterator extends ViewIterator implements OrderedIterator<Map.Entry<V, K>> {
+    class InverseViewMapEntryIterator extends AbstractViewIterator implements OrderedIterator<Map.Entry<V, K>> {
 
         /**
          * Constructor.
