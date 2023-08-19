@@ -21,12 +21,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -134,12 +136,12 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return new DualTreeBidiMap<>(normalMap, reverseMap, inverseMap);
     }
 
-    protected TreeMap<K, V> normalMap() {
-        return (TreeMap<K, V>) normalMap;
+    protected NavigableMap<K, V> normalMap() {
+        return (NavigableMap<K, V>) normalMap;
     }
 
-    protected TreeMap<V, K> reverseMap() {
-        return (TreeMap<V, K>) reverseMap;
+    protected NavigableMap<V, K> reverseMap() {
+        return (NavigableMap<V, K>) reverseMap;
     }
 
     @Override
@@ -303,6 +305,59 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         @Override
         public K nextKey(final K key) {
             return decorated().nextKey(key);
+        }
+
+        @Override
+        public Collection<V> values() {
+            return new ViewValues<>(decorated());
+        }
+
+        /**
+         * Inner class Values.
+         */
+        protected static class ViewValues<V> extends View<Object, V, V> implements Set<V> {
+
+            /** Generated serial version ID. */
+            private static final long serialVersionUID = 4023777119829639864L;
+
+            /**
+             * Constructor.
+             *
+             * @param parent  the parent BidiMap
+             */
+            @SuppressWarnings("unchecked")
+            protected ViewValues(final AbstractDualBidiMap<?, V> parent) {
+                super(parent.normalMap.values(), (AbstractDualBidiMap<Object, V>) parent);
+            }
+
+            @Override
+            public Iterator<V> iterator() {
+                return parent.createValuesIterator(super.iterator());
+            }
+
+            @Override
+            public boolean contains(final Object value) {
+                // override as default implementation uses reverseMap only
+                final Object key = parent.reverseMap.get(value);
+                if (key != null) {
+                    return parent.normalMap.containsKey(key);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean remove(final Object value) {
+                // override as default implementation removes from reverseMap before checking in range
+                if (parent.reverseMap.containsKey(value)) {
+                    final Object key = parent.reverseMap.get(value);
+                    if (parent.normalMap.containsKey(key)) {
+                        parent.reverseMap.remove(value);
+                        parent.normalMap.remove(key);
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
     }
 
