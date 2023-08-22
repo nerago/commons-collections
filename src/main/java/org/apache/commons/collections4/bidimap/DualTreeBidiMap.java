@@ -34,6 +34,8 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
 
 /**
@@ -375,7 +377,11 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
             final V oldValue = parent.put(last.getKey(), value);
             // Map.Entry specifies that the behavior is undefined when the backing map
             // has been modified (as we did with the put), so we also set the value
-            last.setValue(value);
+            if (last instanceof Unmodifiable) {
+                last = new UnmodifiableMapEntry<>(key, value);
+            } else {
+                last.setValue(value);
+            }
             return oldValue;
         }
 

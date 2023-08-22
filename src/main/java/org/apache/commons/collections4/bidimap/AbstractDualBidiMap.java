@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
@@ -29,6 +30,8 @@ import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.map.EntrySetUtil;
 
 /**
  * Abstract {@link BidiMap} implemented using two maps.
@@ -634,6 +637,27 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
                 }
             }
             return false;
+
+        @Override
+        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+            return super.removeIf(entry -> filter.test(new UnmodifiableMapEntry<>(entry)));
+        }
+
+        @Override
+        public void forEach(Consumer<? super Entry<K, V>> action) {
+            super.forEach(entry -> action.accept(new UnmodifiableMapEntry<>(entry)));
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object[] toArray() {
+            return EntrySetUtil.toArrayUnmodifiable(decorated());
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T> T[] toArray(final T[] array) {
+            return EntrySetUtil.toArrayUnmodifiable(decorated(), array);
         }
     }
 
