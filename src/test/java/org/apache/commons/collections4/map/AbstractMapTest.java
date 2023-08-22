@@ -223,6 +223,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     /**
      * Returns true if the maps produced by
      * {@link #makeObject()} and {@link #makeFullMap()}
+     * support the {@code setValue} operation on entrySet entries
+     * in toArray results and foreach functions.
+     * <p>
+     * Default implementation returns isSetValueSupported().
+     * Override if your collection class does support setValue in some cases
+     * but not where generally unneeded.
+     */
+    public boolean isSetValueInArraySupported() {
+        return isSetValueSupported();
+    }
+
+    /**
+     * Returns true if the maps produced by
+     * {@link #makeObject()} and {@link #makeFullMap()}
      * support the {@code remove} and {@code clear} operations.
      * <p>
      * Default implementation returns true.

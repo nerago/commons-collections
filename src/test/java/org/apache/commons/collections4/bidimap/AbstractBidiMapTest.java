@@ -76,6 +76,14 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
     }
 
     /**
+     * Would require too much wrapping and overriding to support easily.
+     */
+    @Override
+    public boolean isSetValueInArraySupported() {
+        return false;
+    }
+
+    /**
      * Override as DualHashBidiMap didn't exist until version 3.
      */
     @Override
