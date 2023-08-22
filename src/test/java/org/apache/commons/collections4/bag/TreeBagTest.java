@@ -23,6 +23,10 @@ import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.SortedBag;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+
 /**
  * Extension of {@link AbstractBagTest} for exercising the {@link TreeBag}
  * implementation.
@@ -75,8 +79,30 @@ public class TreeBagTest<T> extends AbstractSortedBagTest<T> {
         assertEquals("A", bag.toArray()[0], "Should get elements in correct order");
         assertEquals("B", bag.toArray()[1], "Should get elements in correct order");
         assertEquals("C", bag.toArray()[2], "Should get elements in correct order");
-        assertEquals("A", ((SortedBag<T>) bag).first(), "Should get first key");
-        assertEquals("D", ((SortedBag<T>) bag).last(), "Should get last key");
+        assertEquals("A", ((SortedBag<String>)bag).first(), "Should get first key");
+        assertEquals("D", ((SortedBag<String>)bag).last(), "Should get last key");
+    }
+
+    @Test
+    public void testComparator() {
+        final Comparator<String> comparator = String.CASE_INSENSITIVE_ORDER;
+        final SortedBag<String> bag = new TreeBag<>(comparator);
+        bag.add("a");
+        bag.add("B");
+        bag.add("A");
+        bag.add("B");
+        bag.add("a");
+        assertEquals(3, bag.getCount("a"));
+        assertEquals(3, bag.getCount("A"));
+        assertEquals(2, bag.getCount("b"));
+        assertEquals(2, bag.getCount("B"));
+        assertEquals(0, bag.getCount("c"));
+        assertEquals(5, bag.size());
+
+        assertEquals(new HashSet<>(Arrays.asList("a", "B")), bag.uniqueSet());
+        assertEquals("a", bag.first());
+        assertEquals("B", bag.last());
+        assertEquals(comparator, bag.comparator());
     }
 
     @Override

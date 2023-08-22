@@ -46,6 +46,14 @@ public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V> 
         return new CaseInsensitiveMap<>();
     }
 
+    @Override
+    public K[] getOtherKeys() {
+        return (K[]) new Object[] {
+                "for", "then", "despite", "space", "i", "would", "be", "brought",
+                "from", "limits", "far", "remote", "where", "thou", "dost", "stay"
+        };
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testCaseInsensitive() {

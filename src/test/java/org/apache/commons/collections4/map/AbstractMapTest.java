@@ -137,6 +137,7 @@ import org.junit.jupiter.api.Test;
  * cases.  For example, if your map does not allow duplicate values, override
  * {@link #isAllowDuplicateValues()} and have it return {@code false}
  */
+@SuppressWarnings("unchecked")
 public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     /**
@@ -223,6 +224,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     /**
      * Returns true if the maps produced by
      * {@link #makeObject()} and {@link #makeFullMap()}
+     * support the {@code setValue} operation on entrySet entries
+     * in toArray results and foreach functions.
+     * <p>
+     * Default implementation returns isSetValueSupported().
+     * Override if your collection class does support setValue in some cases
+     * but not where generally unneeded.
+     */
+    public boolean isSetValueInArraySupported() {
+        return isSetValueSupported();
+    }
+
+    /**
+     * Returns true if the maps produced by
+     * {@link #makeObject()} and {@link #makeFullMap()}
      * support the {@code remove} and {@code clear} operations.
      * <p>
      * Default implementation returns true.
@@ -230,6 +245,17 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     public boolean isRemoveSupported() {
         return true;
+    }
+    /**
+     * Returns true if the maps produced by
+     * {@link #makeObject()} and {@link #makeFullMap()}
+     * support the {@code remove} operation on values collection.
+     * <p>
+     * Default implementation returns isRemoveSupported.
+     * Override if your collection class does not support removal operations.
+     */
+    public boolean isSpecificValueRemoveSupported() {
+        return isRemoveSupported();
     }
 
     /**
@@ -435,6 +461,14 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
         assertEquals(keys.length, m.size(),
                 "size must reflect number of mappings added.");
+    }
+
+    private void addSampleMappingsUnchecked(final Map<K, V> m) {
+        final K[] keys = getSampleKeys();
+        final V[] values = getSampleValues();
+        for (int i = 0; i < keys.length; i++) {
+            m.put(keys[i], values[i]);
+        }
     }
 
     /**
@@ -655,6 +689,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             assertTrue(getMap().containsKey(key), "Map must contain key for a mapping in the map. " +
                     "Missing: " + key);
         }
+        for (final Object key : getOtherKeys()) {
+            assertFalse(getMap().containsKey(key), "Map must not contain other key");
+        }
         verify();
     }
 
@@ -677,6 +714,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         for (final Object value : values) {
             assertTrue(getMap().containsValue(value),
                     "Map must contain value for a mapping in the map.");
+        }
+        for (final Object value : getOtherValues()) {
+            assertFalse(getMap().containsValue(value), "Map must not contain other values");
         }
         verify();
     }
