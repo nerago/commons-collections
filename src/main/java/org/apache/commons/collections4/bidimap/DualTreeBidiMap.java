@@ -21,11 +21,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Objects;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -242,16 +245,35 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
 
         @Override
         public boolean containsValue(final Object value) {
-            // override as default implementation uses reverseMap
-            return decorated().normalMap.containsValue(value);
+            // override as default implementation uses reverseMap only
+            if (decorated().reverseMap().containsKey(value)) {
+                Object key = decorated().reverseMap().get(value);
+                return decorated().normalMap().containsKey(key);
+            }
+            return false;
         }
 
         @Override
         public void clear() {
-            // override as default implementation uses reverseMap
+            // override as default implementation would clear everything
             for (final Iterator<K> it = keySet().iterator(); it.hasNext();) {
                 it.next();
                 it.remove();
+            }
+        }
+
+        @Override
+        public V put(K key, V value) {
+            // override to avoid cases where we'd need to clean up on parent maps
+            if (!containsKey(key)) {
+                throw new IllegalArgumentException(
+                        "Cannot use put on sub map unless the key is already in that map");
+            } else if (decorated().reverseMap().containsKey(value) &&
+                    !Objects.equals(decorated().reverseMap().get(value), key)) {
+                throw new IllegalArgumentException(
+                        "Cannot use put on sub map when the value being set is already in the map");
+            } else {
+                return decorated().put(key, value);
             }
         }
 
@@ -283,6 +305,59 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         @Override
         public K nextKey(final K key) {
             return decorated().nextKey(key);
+        }
+
+        @Override
+        public Collection<V> values() {
+            return new ViewValues<>(decorated());
+        }
+
+        /**
+         * Inner class Values.
+         */
+        protected static class ViewValues<V> extends View<Object, V, V> implements Set<V> {
+
+            /** Generated serial version ID. */
+            private static final long serialVersionUID = 4023777119829639864L;
+
+            /**
+             * Constructor.
+             *
+             * @param parent  the parent BidiMap
+             */
+            @SuppressWarnings("unchecked")
+            protected ViewValues(final AbstractDualBidiMap<?, V> parent) {
+                super(parent.normalMap.values(), (AbstractDualBidiMap<Object, V>) parent);
+            }
+
+            @Override
+            public Iterator<V> iterator() {
+                return parent.createValuesIterator(super.iterator());
+            }
+
+            @Override
+            public boolean contains(final Object value) {
+                // override as default implementation uses reverseMap only
+                final Object key = parent.reverseMap.get(value);
+                if (key != null) {
+                    return parent.normalMap.containsKey(key);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean remove(final Object value) {
+                // override as default implementation removes from reverseMap before checking in range
+                if (parent.reverseMap.containsKey(value)) {
+                    final Object key = parent.reverseMap.get(value);
+                    if (parent.normalMap.containsKey(key)) {
+                        parent.reverseMap.remove(value);
+                        parent.normalMap.remove(key);
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
     }
 
