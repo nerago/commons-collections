@@ -924,13 +924,6 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
                     currentNode = getGrandParent(currentNode, dataElement);
                 } else {
-                    //dead code?
-                    if (currentNode.isRightChild(dataElement)) {
-                        currentNode = getParent(currentNode, dataElement);
-
-                        rotateLeft(currentNode, dataElement);
-                    }
-
                     makeBlack(getParent(currentNode, dataElement), dataElement);
                     makeRed(getGrandParent(currentNode, dataElement), dataElement);
 
@@ -950,13 +943,6 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
                     currentNode = getGrandParent(currentNode, dataElement);
                 } else {
-                    //dead code?
-                    if (currentNode.isLeftChild(dataElement)) {
-                        currentNode = getParent(currentNode, dataElement);
-
-                        rotateRight(currentNode, dataElement);
-                    }
-
                     makeBlack(getParent(currentNode, dataElement), dataElement);
                     makeRed(getGrandParent(currentNode, dataElement), dataElement);
 
