@@ -252,7 +252,7 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
         two.add((E) "1");
         c.addComposited(one);
         assertTrue(c.containsAll(two));
-        assertFalse(c.containsAll(null));
+        assertThrows(NullPointerException.class, () -> c.containsAll(null));
     }
 
     @Test
@@ -351,7 +351,7 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
         assertFalse(c.contains("1"));
         assertFalse(one.contains("1"));
         assertFalse(two.contains("1"));
-        c.removeAll(null);
+        assertThrows(NullPointerException.class, () -> c.removeAll(null));
         assertFalse(c.contains("1"));
         assertFalse(one.contains("1"));
         assertFalse(two.contains("1"));
@@ -406,7 +406,7 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
         assertFalse(one.contains("2"));
         assertTrue(c.contains("1"));
         assertTrue(one.contains("1"));
-        c.retainAll(null);
+        assertThrows(NullPointerException.class, () -> c.retainAll(null));
         assertFalse(c.contains("2"));
         assertFalse(one.contains("2"));
         assertTrue(c.contains("1"));

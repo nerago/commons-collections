@@ -596,6 +596,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         } else {
             assertEquals(size, getCollection().size(), "Size should not change if addAll returns false");
         }
+
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().addAll(null));
+        verify();
     }
 
     /**
@@ -734,6 +738,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 "Full collection should containAll duplicate full elements");
 
         // make sure calls to "containsAll" don't change anything
+        verify();
+
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().containsAll(null));
         verify();
     }
 
@@ -940,6 +948,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         for (final E element : all) {
             assertFalse(getCollection().contains(element), "Collection shouldn't contain removed element");
         }
+
+        // can pass by either throwing exception or return false without change
+        // contract does imply that the exception is the correct behavior
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().removeAll(null));
+        verify();
     }
 
     /**
@@ -1045,6 +1059,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         verify();
         assertEquals(size, getCollection().size(),
                 "Collection size didn't change from nonduplicate " + "retainAll");
+
+        // can pass by either throwing exception or return false without change
+        // contract does imply that the exception is the correct behavior
+        resetFull();
+        assertThrows(NullPointerException.class, () -> getCollection().retainAll(null));
+        verify();
     }
 
     /**
