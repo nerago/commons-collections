@@ -1006,6 +1006,18 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
     }
 
     @Test
+    public void testListReplaceAll() {
+        if (!isSetSupported()) {
+            return;
+        }
+
+        resetFull();
+        getCollection().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        getConfirmed().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        verify();
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testEmptyListSerialization() throws IOException, ClassNotFoundException {
         final List<E> list = makeObject();

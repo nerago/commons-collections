@@ -382,6 +382,26 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     }
 
     @Test
+    @Override
+    public void testListReplaceAll() {
+        resetFull();
+        getCollection().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        Collection<E> confirmed = makeConfirmedCollection();
+        for (E e : getFullElements()) {
+            if (e instanceof String) {
+                E s = (E) ((String) e).toLowerCase();
+                if (!confirmed.contains(s))
+                    confirmed.add(s);
+            } else {
+                if (!confirmed.contains(null))
+                    confirmed.add(null);
+            }
+        }
+        setConfirmed(confirmed);
+        verify();
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testRetainAll() {
         final List<E> list = new ArrayList<>(10);
