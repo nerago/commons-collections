@@ -18,6 +18,7 @@ package org.apache.commons.collections4.collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -851,12 +852,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertTrue(getCollection().isEmpty(), "Collection should be empty after iterator purge");
 
         resetFull();
-        iter = getCollection().iterator();
-        iter.next();
-        iter.remove();
-        final Iterator<E> finalIter = iter;
-        assertThrows(IllegalStateException.class, () -> finalIter.remove(),
+        final Iterator<E> iter2 = getCollection().iterator();
+        getConfirmed().remove(iter2.next());
+        iter2.remove();
+        verify();
+        assertThrows(IllegalStateException.class, () -> iter2.remove(),
                 "Second iter.remove should raise IllegalState");
+        verify();
     }
 
     /**
@@ -1074,9 +1076,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     public void testCollectionSize() {
         resetEmpty();
         assertEquals(0, getCollection().size(), "Size of new Collection is 0.");
+        assertTrue(getCollection().isEmpty(), "Empty collection reports isEmpty");
 
         resetFull();
-        assertFalse(getCollection().isEmpty(), "Size of full collection should be greater than zero");
+        assertNotEquals(0, getCollection().size(), "Size of full collection should be greater than zero");
+        assertFalse(getCollection().isEmpty(), "Full collection should not report isEmpty");
+        assertEquals(getConfirmed().size(), getCollection().size(), "Size should match confirmed collection");
     }
 
     /**

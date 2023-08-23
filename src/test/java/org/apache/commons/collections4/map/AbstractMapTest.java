@@ -669,6 +669,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             assertTrue(getMap().containsKey(key), "Map must contain key for a mapping in the map. " +
                     "Missing: " + key);
         }
+        for (final Object key : getOtherKeys()) {
+            assertFalse(getMap().containsKey(key), "Map must not contain other key");
+        }
         verify();
     }
 
@@ -691,6 +694,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         for (final Object value : values) {
             assertTrue(getMap().containsValue(value),
                     "Map must contain value for a mapping in the map.");
+        }
+        for (final Object value : getOtherValues()) {
+            assertFalse(getMap().containsValue(value), "Map must not contain other values");
         }
         verify();
     }
