@@ -2,6 +2,7 @@ package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
@@ -170,6 +171,27 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
             return values;
         values = createValuesCollection();
         return values;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        } else if (!(obj instanceof Map)) {
+            return false;
+        } else {
+            return MapUtils.isEqualMap(mapIterator(), (Map<?, ?>) obj);
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return MapUtils.hashCode(mapIterator());
+    }
+
+    @Override
+    public String toString() {
+        return MapUtils.toString(mapIterator());
     }
 
     protected final class AbsIterMapKeySet extends AbstractSet<K> {

@@ -7,12 +7,16 @@ import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
+import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
+import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
 import org.apache.commons.collections4.map.EntrySetUtil;
+import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 import java.io.Serializable;
-import java.util.AbstractCollection;
-import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -24,10 +28,12 @@ import java.util.SortedMap;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 // https://en.wikipedia.org/wiki/Radix_tree
 public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractMap<K, V>
+        extends AbstractIterableMapAlternate<K, V>
         implements Trie<K, V>, Serializable {
     private static final long serialVersionUID = -1993317552691676845L;
 
@@ -118,15 +124,10 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public V get(final Object key) {
-        return getOrDefault(key, null);
-    }
-
-    @Override
     public V getOrDefault(final Object key, final V defaultValue) {
         if (!(key instanceof Comparable<?>))
             return null;
-        TEntry<K, V> entry = getEntry(castKey(key));
+        final TEntry<K, V> entry = getEntry(castKey(key));
         if (entry != null)
             return entry.getValue();
         else
@@ -137,15 +138,24 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     public boolean containsKey(final Object key) {
         if (!(key instanceof Comparable<?>))
             return false;
-        TEntry<K, V> entry = getEntry(castKey(key));
+        final TEntry<K, V> entry = getEntry(castKey(key));
         return entry != null;
+    }
+
+    @Override
+    protected boolean containsEntry(final Object key, final Object valueObject) {
+        if (!(key instanceof Comparable<?>))
+            return false;
+        final V value = castValue(valueObject);
+        final TEntry<K, V> entry = getEntry(castKey(key));
+        return entry != null && valueEquals(value, entry.getValue());
     }
 
     @Override
     public boolean containsValue(final Object valueObject) {
         if (!(valueObject instanceof Comparable<?>))
             return false;
-        V value = castValue(valueObject);
+        final V value = castValue(valueObject);
         TEntry<K, V> entry = firstEntry();
         while (entry != null) {
             if (valueEquals(value, entry.getValue()))
@@ -155,30 +165,15 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         return false;
     }
 
-    private boolean removeValue(final Object valueObject) {
-        if (!(valueObject instanceof Comparable<?>))
-            return false;
-        V value = castValue(valueObject);
-        TEntry<K, V> entry = firstEntry();
-        while (entry != null) {
-            if (valueEquals(value, entry.getValue())) {
-                removeEntry(entry);
-                return true;
-            }
-            entry = entry.next();
-        }
-        return false;
-    }
-
     @Override
     public K firstKey() {
-        TEntry<K, V> first = firstEntry();
+        final TEntry<K, V> first = firstEntry();
         return first != null ? first.getKey() : null;
     }
 
     @Override
     public K lastKey() {
-        TEntry<K, V> last = lastEntry();
+        final TEntry<K, V> last = lastEntry();
         return last != null ? last.getKey() : null;
     }
 
@@ -192,28 +187,26 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     @Override
     public K nextKey(final K key) {
-        TEntry<K, V> entry = getRelativeEntry(key, true, false);
+        final TEntry<K, V> entry = getRelativeEntry(key, true, false);
         return entry != null ? entry.getKey() : null;
     }
 
     @Override
     public K previousKey(final K key) {
-        TEntry<K, V> entry = getRelativeEntry(key, false, false);
+        final TEntry<K, V> entry = getRelativeEntry(key, false, false);
         return entry != null ? entry.getKey() : null;
     }
 
     @Override
-    public V put(final K key, final V value) {
+    protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         final int keyLengthInBits = keyAnalyzer.lengthInBits(key);
         if (keyLengthInBits == 0) {
-            if (root.isEmptyRoot())
-                incrementSize();
-            else
-                incrementModCount();
-            return root.setKeyValue(key, value);
+            return doPutRoot(key, value, addIfAbsent, updateIfPresent);
         }
 
         TEntry<K, V> node = root.right, path = root;
+        boolean lastWasRight = true;
+        int lastDiffBit = -1;
         int startIndex = 0;
         while (true) {
             final K nodeKey = node.getKey();
@@ -222,69 +215,39 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
                     nodeKey, startIndex, keyAnalyzer.lengthInBits(nodeKey) - startIndex);
 
             if (KeyAnalyzer.isEqualBitKey(diffBit)) {
-                incrementModCount();
-                return node.setValue(value);
-            } else if (KeyAnalyzer.isNullBitKey(diffBit)) {
-                if (node.isEmptyRoot())
-                    incrementSize();
-                else
+                if (updateIfPresent) {
                     incrementModCount();
-                return node.setKeyValue(key, value);
+                    return node.setValue(value);
+                } else {
+                    return node.getValue();
+                }
+            } else if (KeyAnalyzer.isNullBitKey(diffBit)) {
+                assert node == root;
+                return doPutRoot(key, value, addIfAbsent, updateIfPresent);
             } else if (size == 0 || (size == 1 && !root.isEmptyRoot())) {
-                root.right = new TEntry<>(key, value, diffBit, root, root, null);
-                incrementSize();
+                if (addIfAbsent) {
+                    root.right = new TEntry<>(key, value, diffBit, root, root, root);
+                    incrementSize();
+                }
                 return null;
             } else if (diffBit < node.diffBit) {
                 // need to split before we get here, attached to path
-                TEntry<K, V> add = new TEntry<>(key, value, diffBit, path, null, null);
-                if (path.left == node) {
-                    path.left = add;
-                } else {
-                    path.right = add;
+                if (addIfAbsent) {
+                    doPutOnPath(key, value, keyLengthInBits, node, path, diffBit, lastWasRight);
                 }
-                if (keyAnalyzer.isBitSet(key, diffBit, keyLengthInBits)) {
-                    // node < add
-                    add.left = node;
-                    add.right = node.right;
-                    node.right = add;
-                } else {
-                    // node > add
-                    add.right = node;
-                    add.left = node.left;
-                    node.left = add;
-                }
-                // might we want to copy an uplink too?
-                node.parent = add;
-                incrementSize();
                 return null;
             } else if (node == path) {
-                TEntry<K, V> add = new TEntry<>(key, value, diffBit, path, null, null);
-                assert node != root;
-                assert path.left != node || path.right != node; // kinda expect another link in the mix, root if nothing else?
-                if (path.left == node) {
-                    path.left = add;
-                    add.right = path;
-                } else {
-                    path.right = add;
-                    add.left = path;
-                }
-                incrementSize();
-                return null;
+                throw new IllegalStateException("not doing self links anymore?");
+//                if (addIfAbsent) {
+//                    doPutLeaf(key, value, node, path, diffBit);
+//                }
+//                return null;
             } else if (node.diffBit <= path.diffBit) {
                 // we've hit a self-link or uplink
-                TEntry<K, V> add = new TEntry<>(key, value, diffBit, path, null, null);
-                assert path.left != node || path.right != node; // not sure if true
-                if (path.left == node) {
-                    path.left = add;
-                    add.right = path;
-                    add.left = node;
-                } else {
-                    path.right = add;
-                    add.left = path;
-                    add.right = node;
+                if (addIfAbsent) {
+                    assert lastDiffBit != -1;
+                    doPutLeaf(key, value, node, path, lastDiffBit, lastWasRight);
                 }
-                node.parent = add;
-                incrementSize();
                 return null;
 //            } else if (diffBit == node.diffBit) {
 //                // may be able to keep going down
@@ -293,14 +256,94 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
                 // key < node
                 path = node;
                 node = node.left;
+                lastWasRight = false;
             } else {
                 // key > node
                 path = node;
                 node = node.right;
+                lastWasRight = true;
             }
 
-            startIndex = node.diffBit + 1;
+            lastDiffBit = diffBit;
+            startIndex = diffBit + 1;
         }
+    }
+
+    private V doPutRoot(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
+        if (root.isEmptyRoot() && addIfAbsent) {
+            incrementSize();
+            return root.setKeyValue(key, value);
+        } else if (!root.isEmptyRoot() && updateIfPresent) {
+            incrementModCount();
+            return root.setKeyValue(key, value);
+        } else {
+            return root.getValue();
+        }
+    }
+
+    private void doPutOnPath(final K key, final V value, final int keyLengthInBits, final TEntry<K, V> node, final TEntry<K, V> path, final int diffBit, final boolean lastWasRight) {
+        final TEntry<K, V> add = new TEntry<>(key, value, diffBit, path, null, null);
+
+        if (lastWasRight) {
+            path.right = add;
+        } else {
+            path.left = add;
+        }
+
+        if (keyAnalyzer.isBitSet(key, diffBit, keyLengthInBits)) {
+            // node < add
+            add.left = node;
+            add.right = node.right;
+            node.right = add;
+        } else {
+            // node > add
+            add.right = node;
+            add.left = node.left;
+            node.left = add;
+        }
+
+        // might we want to copy an uplink too?
+        node.parent = add;
+        incrementSize();
+    }
+
+    private void doPutLeaf(final K key, final V value, final TEntry<K, V> node, final TEntry<K, V> path, final int diffBit, final boolean lastWasRight) {
+        final TEntry<K, V> add = new TEntry<>(key, value, diffBit, path, null, null);
+        //assert path.left != node || path.right != node; // not sure if true
+        if (lastWasRight) {
+            path.right = add;
+            add.left = path;
+            add.right = node;
+        } else {
+            path.left = add;
+            add.right = path;
+            add.left = node;
+        }
+        incrementSize();
+    }
+
+    @Override
+    protected V doPut(K key, Function<? super K, ? extends V> absentFunc, BiFunction<? super K, ? super V, ? extends V> presentFunc, boolean saveNulls) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    protected boolean removeAsBoolean(Object key) {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+        // TODO
+        return false;
+    }
+
+    @Override
+    protected boolean removeValueAsBoolean(Object value) {
+        // TODO
+        return false;
     }
 
     protected void removeEntry(final TEntry<K,V> entry) {
@@ -367,53 +410,15 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         size = 0;
     }
 
-//    @Override
-//    public boolean remove(Object key, Object value) {
-//        return Trie.super.remove(key, value);
-//    }
-//
-//    @Override
-//    public boolean replace(K key, V oldValue, V newValue) {
-//        return Trie.super.replace(key, oldValue, newValue);
-//    }
-//
-//    @Override
-//    public V replace(K key, V value) {
-//        return Trie.super.replace(key, value);
-//    }
-//
-//    @Override
-//    public V putIfAbsent(K key, V value) {
-//        return Trie.super.putIfAbsent(key, value);
-//    }
-//
-//    @Override
-//    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-//        return Trie.super.computeIfAbsent(key, mappingFunction);
-//    }
-//
-//    @Override
-//    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-//        return Trie.super.computeIfPresent(key, remappingFunction);
-//    }
-//
-//    @Override
-//    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-//        return Trie.super.compute(key, remappingFunction);
-//    }
-//
-//    @Override
-//    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-//        return Trie.super.merge(key, value, remappingFunction);
-//    }
-
     @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
+        // TODO
         Trie.super.forEach(action);
     }
 
     @Override
     public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        // TODO
         Trie.super.replaceAll(function);
     }
 
@@ -443,27 +448,18 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public Set<K> keySet() {
-        if (keySet != null)
-            return keySet;
-        else
-            return keySet = new TrieKeySet<>(this);
+    protected Set<K> createKeySet() {
+        return new TrieKeySet<>(this);
     }
 
     @Override
-    public Collection<V> values() {
-        if (values != null)
-            return values;
-        else
-            return values = new TrieValues<>(this);
+    protected Set<Entry<K, V>> createEntrySet() {
+        return new TrieEntrySet<>(this);
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
-        if (entrySet != null)
-            return entrySet;
-        else
-            return entrySet = new TrieEntrySet<>(this);
+    protected Collection<V> createValuesCollection() {
+        return new TrieValues<>(this);
     }
 
     @Override
@@ -472,23 +468,18 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
+    protected MapSpliterator<K, V> mapSpliterator() {
+        return null;
+    }
+
+    @Override
     public Comparator<? super K> comparator() {
         return keyAnalyzer;
     }
 
     @Override
-    public boolean equals(Object o) {
-        return super.equals(o);
-    }
-
-    @Override
     public int hashCode() {
         return super.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return super.toString();
     }
 
     private TEntry<K, V> getEntry(K key) {
@@ -512,7 +503,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
             } else if (diffBit <= node.diffBit) {
                 // if we aren't equal by this point we've gone too far
                 return null;
-            } else if (path != null && node.diffBit >= path.diffBit) {
+            } else if (path != null && node.diffBit <= path.diffBit) {
                 // we've hit a self-link or uplink
                 return null;
             } else if (!keyAnalyzer.isBitSet(key, diffBit, keyLengthInBits)) {
@@ -524,7 +515,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
                 node = node.right;
             }
 
-            startIndex = node.diffBit + 1;
+            startIndex = diffBit + 1;
         }
     }
 
@@ -570,11 +561,11 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
                 node = node.right;
             }
 
-            startIndex = node.diffBit + 1;
+            startIndex = diffBit + 1;
         }
     }
 
-    private final static class TEntry<K, V> extends AbstractMapEntry<K, V> {
+    private static final class TEntry<K, V> extends AbstractMapEntry<K, V> {
         private int diffBit;
         private TEntry<K, V> parent;
         private TEntry<K, V> left;
@@ -643,7 +634,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
         private TEntry<K,V> next() {
             //assert right.diffBit != diffBit;
-            if (right == this) {
+            if (right.isRoot()) {
                 return null;
             } else if (right.diffBit > diffBit) { // is deeper
                 return right.lowestGrandchild();
@@ -654,7 +645,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
         private TEntry<K,V> prev() {
             // assert left.diffBit != diffBit;
-            if (left == this) {
+            if (isRoot() || left.isEmptyRoot()) {
                 return null;
             } else if (left.diffBit > diffBit) { // is deeper
                 return left.highestGrandchild();
@@ -671,7 +662,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         private TEntry<K, V> nextEntry;
         private TEntry<K, V> previousEntry;
 
-        public TrieMapIterator(GeneralRadixTrie<K, V> parent) {
+        public TrieMapIterator(final GeneralRadixTrie<K, V> parent) {
             this.parent = parent;
             reset();
         }
@@ -741,8 +732,121 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
-    private static abstract class TrieView<E, K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractCollection<E> {
+    private static final class TrieEntryIterator<K extends Comparable<K>, V extends Comparable<V>>
+            implements ResettableIterator<Entry<K, V>> {
+        private final GeneralRadixTrie<K, V> parent;
+        private TEntry<K, V> current;
+        private TEntry<K, V> nextEntry;
+
+        private TrieEntryIterator(final GeneralRadixTrie<K, V> parent) {
+            this.parent = parent;
+            reset();
+        }
+
+        @Override
+        public void reset() {
+            nextEntry = parent.firstEntry();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextEntry != null;
+        }
+
+        @Override
+        public Entry<K, V> next() {
+            if (nextEntry == null)
+                throw new NoSuchElementException();
+            current = nextEntry;
+            nextEntry = nextEntry.next();
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            ResettableIterator.super.remove();
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super Entry<K, V>> action) {
+            ResettableIterator.super.forEachRemaining(action);
+        }
+    }
+
+    private static class TrieEntrySpliterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractTreeSpliterator<K, V, TEntry<K, V>> {
+        private final GeneralRadixTrie<K, V> parent;
+
+        TrieEntrySpliterator(final GeneralRadixTrie<K, V> parent) {
+            this.parent = parent;
+        }
+
+        TrieEntrySpliterator(final GeneralRadixTrie<K, V> parent, final SplitState state, final TEntry<K, V> currentNode, final TEntry<K, V> lastNode, final long estimatedSize) {
+            super(state, currentNode, lastNode, estimatedSize);
+            this.parent = parent;
+        }
+
+        @Override
+        protected AbstractTreeSpliterator<K, V, TEntry<K, V>> makeSplit(final SplitState state, final TEntry<K, V> currentNode, final TEntry<K, V> lastNode, final long estimatedSize) {
+            return new TrieEntrySpliterator<>(parent, state, currentNode, lastNode, estimatedSize);
+        }
+
+        @Override
+        protected int modCount() {
+            return parent.modCount;
+        }
+
+        @Override
+        protected TEntry<K, V> rootNode() {
+            if (parent.isEmpty())
+                return null;
+            else
+                return parent.getEffectiveRoot();
+        }
+
+        @Override
+        protected TEntry<K, V> getLeft(final TEntry<K, V> node) {
+            return node.left;
+        }
+
+        @Override
+        protected TEntry<K, V> getRight(final TEntry<K, V> node) {
+            return node.right;
+        }
+
+        @Override
+        protected TEntry<K, V> nextLower(final TEntry<K, V> node) {
+            return node.prev();
+        }
+
+        @Override
+        protected TEntry<K, V> nextGreater(final TEntry<K, V> node) {
+            return node.next();
+        }
+
+        @Override
+        protected TEntry<K, V> subTreeLowest(final TEntry<K, V> node) {
+            return node.lowestGrandchild();
+        }
+
+        @Override
+        protected TEntry<K, V> subTreeGreatest(final TEntry<K, V> node) {
+            return node.highestGrandchild();
+        }
+
+        @Override
+        protected boolean isLowerThan(final TEntry<K, V> node, final TEntry<K, V> other) {
+            return parent.comparator().compare(node.getKey(), other.getKey()) < 0;
+        }
+
+        @Override
+        protected boolean isLowerThanOrEqual(final TEntry<K, V> node, final TEntry<K, V> other) {
+            return parent.comparator().compare(node.getKey(), other.getKey()) <= 0;
+        }
+    }
+
+    private abstract static class TrieView<E, K extends Comparable<K>, V extends Comparable<V>>
+        extends AbstractSet<E> {
         protected final GeneralRadixTrie<K, V> parent;
 
         public TrieView(GeneralRadixTrie<K,V> parent) {
@@ -765,7 +869,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(final Object other) {
             if (this == other) return true;
             if (other instanceof Set) {
                 Set<?> otherSet = (Set<?>) other;
@@ -779,21 +883,21 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieEntrySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<Entry<K, V>, K, V>
             implements Set<Entry<K, V>> {
-        public TrieEntrySet(GeneralRadixTrie<K, V> parent) {
+        private TrieEntrySet(final GeneralRadixTrie<K, V> parent) {
             super(parent);
         }
 
         @Override
         public Iterator<Entry<K, V>> iterator() {
-            return null;
+            return new TrieEntryIterator<>(parent);
         }
 
         @Override
         public Spliterator<Entry<K, V>> spliterator() {
-            return Set.super.spliterator();
+            return new TrieEntrySpliterator<>(parent);
         }
 
-        protected TEntry<K, V> findCandidateEntry(final Object obj) {
+        protected TEntry<K, V> findMatchingEntry(final Object obj) {
             if (!(obj instanceof Map.Entry)) {
                 return null;
             }
@@ -805,20 +909,25 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
             }
 
             final K key = parent.castKey(keyObject);
-            return parent.getEntry(key);
+            final TEntry<K, V> mapEntry = parent.getEntry(key);
+            if (mapEntry != null && Objects.equals(mapEntry.getValue(), entry.getValue())) {
+                return mapEntry;
+            } else {
+                return null;
+            }
         }
 
         @Override
         public boolean contains(final Object obj) {
-            final TEntry<K, V> candidate = findCandidateEntry(obj);
-            return Objects.equals(candidate, obj);
+            final TEntry<K, V> entry = findMatchingEntry(obj);
+            return entry != null;
         }
 
         @Override
         public boolean remove(final Object obj) {
-            final TEntry<K, V> candidate = findCandidateEntry(obj);
-            if (Objects.equals(candidate, obj)) {
-                parent.removeEntry(candidate);
+            final TEntry<K, V> entry = findMatchingEntry(obj);
+            if (entry != null) {
+                parent.removeEntry(entry);
                 return true;
             }
             return false;
@@ -854,18 +963,18 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieKeySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<K, K, V>
             implements Set<K> {
-        public TrieKeySet(GeneralRadixTrie<K, V> parent) {
+        public TrieKeySet(final GeneralRadixTrie<K, V> parent) {
             super(parent);
         }
 
         @Override
         public Iterator<K> iterator() {
-            return null;
+            return new TransformIterator<>(new TrieEntryIterator<>(parent), Entry::getKey);
         }
 
         @Override
         public Spliterator<K> spliterator() {
-            return Set.super.spliterator();
+            return new TransformSpliterator<>(new TrieEntrySpliterator<>(parent), Entry::getKey);
         }
 
         @Override
@@ -897,18 +1006,18 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static class TrieValues<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<V, K, V> {
-        public TrieValues(GeneralRadixTrie<K, V> parent) {
+        private TrieValues(final GeneralRadixTrie<K, V> parent) {
             super(parent);
         }
 
         @Override
         public Iterator<V> iterator() {
-            return null;
+            return new TransformIterator<>(new TrieEntryIterator<>(parent), Entry::getValue);
         }
 
         @Override
         public Spliterator<V> spliterator() {
-            return super.spliterator();
+            return new TransformSpliterator<>(new TrieEntrySpliterator<>(parent), Entry::getValue);
         }
 
         @Override
@@ -917,15 +1026,26 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public boolean remove(Object value) {
-            return parent.removeValue(value);
+        public boolean remove(final Object value) {
+            if (!(value instanceof Comparable<?>))
+                return false;
+            final V value1 = parent.castValue(value);
+            TEntry<K, V> entry = parent.firstEntry();
+            while (entry != null) {
+                if (parent.valueEquals(value1, entry.getValue())) {
+                    parent.removeEntry(entry);
+                    return true;
+                }
+                entry = entry.next();
+            }
+            return false;
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(final Object other) {
             if (this == other) return true;
             if (other instanceof Collection) {
-                Collection<?> otherCollection = (Collection<?>) other;
+                final Collection<?> otherCollection = (Collection<?>) other;
                 return CollectionUtils.isEqualCollection(this, otherCollection);
             } else {
                 return false;
