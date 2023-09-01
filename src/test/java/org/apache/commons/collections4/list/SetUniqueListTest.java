@@ -65,6 +65,16 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     }
 
     @Override
+    public boolean isAllowDuplicateValues() {
+        return false;
+    }
+
+    @Override
+    public boolean isIteratorSetSupported() {
+        return false;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public E[] getFullNonNullElements() {
         // override to avoid duplicate "One"

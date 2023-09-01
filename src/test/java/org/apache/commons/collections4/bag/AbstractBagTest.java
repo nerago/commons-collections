@@ -35,10 +35,10 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -126,7 +126,7 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
     }
 
     /**
-     * Returns the {@link #collection} field cast to a {@link Bag}.
+     * Returns the collection field cast to a {@link Bag}.
      *
      * @return the collection field as a Bag
      */
@@ -143,13 +143,13 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         }
 
         final Bag<T> bag = makeObject();
-        bag.add((T) "A");
+        assertTrue(bag.add((T) "A"));
         assertTrue(bag.contains("A"), "Should contain 'A'");
         assertEquals(1, bag.getCount("A"), "Should have count of 1");
-        bag.add((T) "A");
+        assertFalse(bag.add((T) "A"));
         assertTrue(bag.contains("A"), "Should contain 'A'");
         assertEquals(2, bag.getCount("A"), "Should have count of 2");
-        bag.add((T) "B");
+        assertTrue(bag.add((T) "B"));
         assertTrue(bag.contains("A"));
         assertTrue(bag.contains("B"));
     }
@@ -601,18 +601,102 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         assertEquals(total, bag2.hashCode());
     }
 
+    @Test
+    public void testBagAddNumbers() {
+        if (!isAddSupported()) {
+            return;
+        }
+
+        Bag<T> bag = makeObject();
+        assertTrue(bag.add((T) "A", 1));
+        assertTrue(bag.contains("A"), "Should contain 'A'");
+        assertEquals(1, bag.getCount("A"), "Should have count of 1");
+        assertEquals(1, bag.size());
+
+        bag = makeObject();
+        assertTrue(bag.add((T) "A", 5));
+        assertTrue(bag.contains("A"), "Should contain 'A'");
+        assertEquals(5, bag.getCount("A"), "Should have count of 5");
+        assertEquals(5, bag.size());
+        assertFalse(bag.add((T) "A", 2));
+        assertTrue(bag.contains("A"), "Should contain 'A'");
+        assertEquals(7, bag.getCount("A"), "Should have count of 5");
+        assertEquals(7, bag.size());
+        assertFalse(bag.add((T) "A", -7));
+        assertTrue(bag.contains("A"), "Should contain 'A'");
+        assertEquals(7, bag.getCount("A"), "Should have count of 5");
+        assertEquals(7, bag.size());
+
+        assertFalse(bag.add((T) "Z", 0));
+        assertFalse(bag.contains("Z"), "Should not contain 'Z'");
+        assertEquals(0, bag.getCount("Z"), "Should have count of 0");
+        assertEquals(7, bag.size());
+        assertFalse(bag.add((T) "Z", -1));
+        assertFalse(bag.contains("Z"), "Should not contain 'Z'");
+        assertEquals(0, bag.getCount("Z"), "Should have count of 0");
+        assertEquals(7, bag.size());
+        assertFalse(bag.add((T) "Z", -9));
+        assertFalse(bag.contains("Z"), "Should not contain 'Z'");
+        assertEquals(0, bag.getCount("Z"), "Should have count of 0");
+        assertEquals(7, bag.size());
+    }
+
+    @Test
+    public void testBagRemoveNumbers() {
+        if (!isAddSupported() || !isRemoveSupported()) {
+            return;
+        }
+
+        Bag<T> bag = makeObject();
+        bag.add((T) "A", 4);
+        bag.add((T) "B", 3);
+        bag.add((T) "C", 2);
+        assertEquals(4, bag.getCount("A"));
+        assertEquals(3, bag.getCount("B"));
+        assertEquals(2, bag.getCount("C"));
+        assertEquals(9, bag.size());
+
+        assertTrue(bag.remove("A", 2));
+        assertEquals(2, bag.getCount("A"));
+        assertTrue(bag.contains("A"));
+        assertTrue(bag.remove("A", 2));
+        assertEquals(0, bag.getCount("A"));
+        assertFalse(bag.contains("A"));
+        assertEquals(5, bag.size());
+
+        assertTrue(bag.remove("B", 2));
+        assertEquals(1, bag.getCount("B"));
+        assertTrue(bag.contains("B"));
+        assertTrue(bag.remove("B", 2));
+        assertEquals(0, bag.getCount("B"));
+        assertFalse(bag.contains("B"));
+        assertEquals(2, bag.size());
+
+        assertFalse(bag.remove("C", 0));
+        assertEquals(2, bag.getCount("C"));
+        assertTrue(bag.contains("C"));
+        assertFalse(bag.remove("C", -2));
+        assertEquals(2, bag.getCount("C"));
+        assertTrue(bag.contains("C"));
+        assertEquals(2, bag.size());
+
+        assertFalse(bag.remove("Z", 0));
+        assertEquals(2, bag.size());
+        assertTrue(bag.contains("C"));
+        assertFalse(bag.contains("Z"));
+        assertFalse(bag.remove("Z", 2));
+        assertEquals(2, bag.size());
+        assertTrue(bag.contains("C"));
+        assertFalse(bag.contains("Z"));
+    }
+
     /**
      * Bulk test {@link Bag#uniqueSet()}.  This method runs through all of
      * the tests in {@link AbstractSetTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the bag and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing the bag's unique set
      */
-    public BulkTest bulkTestBagUniqueSet() {
-        return new TestBagUniqueSet();
-    }
-
+    @Nested
     public class TestBagUniqueSet extends AbstractSetTest<T> {
 
         public TestBagUniqueSet() {

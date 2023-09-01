@@ -94,6 +94,14 @@ public abstract class AbstractListIteratorTest<E> extends AbstractIteratorTest<E
     }
 
     /**
+     * Returns true if the collections backing these iterators can
+     * and should accept multiple copies of the same value.
+     */
+    public boolean isAllowDuplicateValues() {
+        return true;
+    }
+
+    /**
      * Test that the empty list iterator contract is correct.
      */
     @Test
@@ -179,12 +187,27 @@ public abstract class AbstractListIteratorTest<E> extends AbstractIteratorTest<E
 
         // add in middle and at end should be OK
         it = makeObject();
-        while (it.hasNext()) {
-            it.next();
+        if (isAllowDuplicateValues()) {
+            while (it.hasNext()) {
+                it.next();
+                it.add(addValue);
+                // check add OK
+                assertEquals(addValue, it.previous());
+                it.next();
+            }
+        } else {
+            assertTrue(it.hasNext());
+            assertNotSame(addValue, it.next());
             it.add(addValue);
-            // check add OK
             assertEquals(addValue, it.previous());
-            it.next();
+            assertEquals(addValue, it.next());
+            while (it.hasNext()) {
+                assertNotSame(addValue, it.next());
+                // check won't add again
+                it.add(addValue);
+                assertNotSame(addValue, it.previous());
+                assertNotSame(addValue, it.next());
+            }
         }
     }
 
