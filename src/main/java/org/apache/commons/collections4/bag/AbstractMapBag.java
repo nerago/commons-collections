@@ -250,7 +250,7 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      *
      * @param object the object to search for
      * @param nCopies the number of copies to add
-     * @return {@code true} if the object was not already in the {@code uniqueSet}
+     * @return {@code true} if the object was added to the {@code uniqueSet}
      */
     @Override
     public boolean add(final E object, final int nCopies) {
