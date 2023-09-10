@@ -374,62 +374,6 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Override
-    public BulkTest bulkTestMapIterator() {
-        return new TestFlatMapIterator();
-    }
-
-    public class TestFlatMapIterator extends AbstractMapIteratorTest<K, V> {
-        public TestFlatMapIterator() {
-            super("TestFlatMapIterator");
-        }
-
-        @Override
-        public V[] addSetValues() {
-            return Flat3MapTest.this.getNewSampleValues();
-        }
-
-        @Override
-        public boolean supportsRemove() {
-            return Flat3MapTest.this.isRemoveSupported();
-        }
-
-        @Override
-        public boolean supportsSetValue() {
-            return Flat3MapTest.this.isSetValueSupported();
-        }
-
-        @Override
-        public MapIterator<K, V> makeEmptyIterator() {
-            resetEmpty();
-            return Flat3MapTest.this.getMap().mapIterator();
-        }
-
-        @Override
-        public MapIterator<K, V> makeObject() {
-            resetFull();
-            return Flat3MapTest.this.getMap().mapIterator();
-        }
-
-        @Override
-        public IterableMap<K, V> getMap() {
-            // assumes makeFullMapIterator() called first
-            return Flat3MapTest.this.getMap();
-        }
-
-        @Override
-        public Map<K, V> getConfirmedMap() {
-            // assumes makeFullMapIterator() called first
-            return Flat3MapTest.this.getConfirmed();
-        }
-
-        @Override
-        public void verify() {
-            super.verify();
-            Flat3MapTest.this.verify();
-        }
-    }
-
-    @Override
     public String getCompatibilityVersion() {
         return "4";
     }
