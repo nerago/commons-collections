@@ -27,6 +27,7 @@ import java.util.Collection;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -119,6 +120,18 @@ public class CollectionBagTest<T> extends AbstractCollectionTest<T> {
             final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
             assertEquals(bag.size(), bag2.size(), "Bag is the right size");
             assertEquals(bag, bag2);
+        }
+    }
+
+    @Nested
+    public class BagTests extends AbstractBagTest<T> {
+        BagTests() {
+            super(BagTests.class.getSimpleName());
+        }
+
+        @Override
+        public Bag<T> makeObject() {
+            return CollectionBag.collectionBag(new HashBag<>());
         }
     }
 }

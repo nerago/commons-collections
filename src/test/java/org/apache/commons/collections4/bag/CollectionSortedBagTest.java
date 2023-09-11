@@ -27,6 +27,7 @@ import java.util.Collection;
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.SortedBag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -154,4 +155,15 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionTest<T> {
         }
     }
 
+    @Nested
+    public class SortedBagTests extends AbstractSortedBagTest<T> {
+        SortedBagTests() {
+            super(SortedBagTests.class.getSimpleName());
+        }
+
+        @Override
+        public SortedBag<T> makeObject() {
+            return CollectionSortedBag.collectionSortedBag(new TreeBag<>());
+        }
+    }
 }
