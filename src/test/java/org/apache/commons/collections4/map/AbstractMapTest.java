@@ -1824,6 +1824,94 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             verify();
         }
 
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testMapEntrySetIteratorEntrySetValueMixedPutsClonedKeys() {
+            K key1 = getSampleKeys()[0];
+            V newValue1 = getNewSampleValues()[0];
+            V newValue2 = getNewSampleValues().length ==1 ? getNewSampleValues()[0] : getNewSampleValues()[1];
+            resetFull();
+            final Iterator<Map.Entry<K, V>> it = TestMapEntrySet.this.getCollection().iterator();
+            final Map.Entry<K, V> entry1 = getEntry(it, key1);
+            Iterator<Map.Entry<K, V>> itConfirmed = TestMapEntrySet.this.getConfirmed().iterator();
+            final Map.Entry<K, V> entryConfirmed1 = getEntry(itConfirmed, key1);
+
+            if (isSetValueSupported()) {
+                key1 = copyKey(key1);
+                newValue1 = copyValue(newValue1);
+
+                map.put(key1, newValue1);
+                confirmed.put(key1, newValue1);
+                verify();
+
+                key1 = copyKey(key1);
+                newValue1 = copyValue(newValue1);
+
+                entry1.setValue(newValue1);
+                entryConfirmed1.setValue(newValue1);
+                verify();
+
+                key1 = copyKey(key1);
+                newValue1 = copyValue(newValue1);
+
+                map.put(key1, newValue1);
+                confirmed.put(key1, newValue1);
+                verify();
+
+                key1 = copyKey(key1);
+                newValue1 = copyValue( newValue1);
+
+                entry1.setValue(newValue1);
+                entryConfirmed1.setValue(newValue1);
+                verify();
+
+                key1 = copyKey(key1);
+                newValue2 = copyValue(newValue2);
+
+                map.put(key1, newValue2);
+                confirmed.put(key1, newValue2);
+                verify();
+
+                newValue1 = copyValue(newValue1);
+
+                entry1.setValue(newValue1);
+                entryConfirmed1.setValue(newValue1);
+                verify();
+            } else {
+                assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(getNewSampleValues()[0]));
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        private K copyKey(K key) {
+            if (key == null)
+                return null;
+            else if (key instanceof String)
+                return (K) new String((String) key);
+            else {
+                try {
+                    return (K) serializeDeserialize(key);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        private V copyValue(V value) {
+            if (value == null)
+                return null;
+            else if (value instanceof String)
+                return (V) new String((String) value);
+            else {
+                try {
+                    return (V) serializeDeserialize(value);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
         public Map.Entry<K, V> getEntry(final Iterator<Map.Entry<K, V>> itConfirmed, final K key) {
             Map.Entry<K, V> entry = null;
             while (itConfirmed.hasNext()) {
