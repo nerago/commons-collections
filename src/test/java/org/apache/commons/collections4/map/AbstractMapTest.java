@@ -33,10 +33,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.BulkTest;
@@ -45,6 +48,8 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -655,6 +660,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             assertTrue(getMap().containsKey(key), "Map must contain key for a mapping in the map. " +
                     "Missing: " + key);
         }
+        for (final Object key : getOtherKeys()) {
+            assertFalse(getMap().containsKey(key), "Map must not contain other key");
+        }
         verify();
     }
 
@@ -677,6 +685,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         for (final Object value : values) {
             assertTrue(getMap().containsValue(value),
                     "Map must contain value for a mapping in the map.");
+        }
+        for (final Object value : getOtherValues()) {
+            assertFalse(getMap().containsValue(value), "Map must not contain other values");
         }
         verify();
     }
@@ -714,21 +725,115 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Test
     public void testMapGet() {
-        resetEmpty();
-
         final Object[] keys = getSampleKeys();
+        final Object[] otherKeys = getOtherKeys();
         final Object[] values = getSampleValues();
 
+        resetEmpty();
         for (final Object key : keys) {
             assertNull(getMap().get(key), "Empty map.get() should return null.");
         }
-        verify();
+        if (!isGetStructuralModify())
+            verify();
 
         resetFull();
         for (int i = 0; i < keys.length; i++) {
             assertEquals(values[i], getMap().get(keys[i]),
                     "Full map.get() should return value from mapping.");
         }
+        for (final Object key : otherKeys) {
+            assertNull(getMap().get(key), "Other keys with map.get() should return null.");
+        }
+        if (!isGetStructuralModify())
+            verify();
+    }
+
+    @Test
+    public void testMapGetOrDefault() {
+        final Object[] keys = getSampleKeys();
+        final Object[] otherKeys = getOtherKeys();
+        final Object[] values = getSampleValues();
+        final V missingValue = (V) "abc";
+
+        resetEmpty();
+        for (final Object key : keys) {
+            assertEquals(missingValue, getMap().getOrDefault(key, missingValue),
+                    "getOrDefault should always return parameter for missing");
+        }
+        verify();
+
+        resetFull();
+        for (int i = 0; i < keys.length; i++) {
+            assertEquals(values[i], getMap().getOrDefault(keys[i], missingValue),
+                    "Full map.getOrDefault() should return value from mapping.");
+        }
+        for (final Object key : otherKeys) {
+            assertEquals(missingValue, getMap().getOrDefault(key, missingValue),
+                    "getOrDefault should always return parameter for missing");
+        }
+        verify();
+    }
+
+    @Test
+    public void testForeach() {
+        resetEmpty();
+        HashMap<K, V> seen = new HashMap<>();
+        getMap().forEach((k, v) -> seen.put(k, v));
+        assertEquals(makeConfirmedMap(), seen);
+
+        resetFull();
+        seen.clear();
+        getMap().forEach((k, v) -> seen.put(k, v));
+        assertEquals(makeConfirmedFullMap(), seen);
+    }
+
+    @Test
+    public void testForeachErrors() {
+        resetFull();
+
+        resetFull();
+        assertThrows(ArithmeticException.class,
+                () -> getMap().forEach((k, v) -> { throw new ArithmeticException(); }));
+        assertThrows(NullPointerException.class,
+                () -> getMap().forEach(null));
+        verify();
+    }
+
+    @Test
+    public void testReplaceAll() {
+        if (!isSetValueSupported())
+            return;
+
+        final Queue<V> newValueQueueMap = new LinkedList<>(Arrays.asList(getNewSampleValues()));
+
+        resetFull();
+        final HashMap<K, V> seen = new HashMap<>();
+        final HashMap<K, V> after = new HashMap<>();
+        getMap().replaceAll((k, v) -> {
+            seen.put(k, v);
+            V replace = newValueQueueMap.poll();
+            after.put(k, replace);
+            return replace;
+        });
+        assertEquals(makeConfirmedFullMap(), seen);
+
+        // can't use same sequence of values on confirmed since contract doesn't guarantee order
+        // just use lookup
+        getConfirmed().replaceAll((k, v) -> after.get(k));
+        verify();
+    }
+
+    @Test
+    public void testReplaceAllErrors() {
+        if (!isSetValueSupported())
+            return;
+
+        resetFull();
+        assertThrows(ArithmeticException.class,
+                () -> getMap().replaceAll((k, v) -> { throw new ArithmeticException(); }));
+        assertThrows(NullPointerException.class,
+                () -> getMap().replaceAll(null));
+        verify();
     }
 
     /**
@@ -2206,6 +2311,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                         "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
         assertTrue(entrySet.containsAll(getConfirmed().entrySet()),
                 "entrySet should contain all HashMap's elements" +
+                        "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
+        assertTrue(getConfirmed().entrySet().containsAll(entrySet),
+                "HashMap should contain all entrySet's elements" +
                         "\nTest: " + entrySet + "\nReal: " + getConfirmed().entrySet());
         assertEquals(getConfirmed().entrySet().hashCode(), entrySet.hashCode(),
                 "entrySet hashCodes should be the same" +
