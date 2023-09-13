@@ -848,23 +848,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                     }
                 }
             } else {
-                try {
-                    // two possible exception here, either valid
-                    getMap().put(keys[0], newValues[0]);
-                    fail("Expected IllegalArgumentException or UnsupportedOperationException on put (change)");
-                } catch (final IllegalArgumentException | UnsupportedOperationException ex) {
-                    // ignore
-                }
+                assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                        ()->getMap().put(keys[0], newValues[0]),
+                        "Expected IllegalArgumentException or UnsupportedOperationException on put (change)");
             }
 
         } else if (isPutChangeSupported()) {
             resetEmpty();
-            try {
-                getMap().put(keys[0], values[0]);
-                fail("Expected UnsupportedOperationException or IllegalArgumentException on put (add) when fixed size");
-            } catch (final IllegalArgumentException | UnsupportedOperationException ex) {
-                // ignore
-            }
+            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                    ()->getMap().put(keys[0], values[0]),
+                    "Expected UnsupportedOperationException or IllegalArgumentException on put (add) when fixed size");
 
             resetFull();
             int i = 0;
@@ -903,10 +896,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (isAllowNullKey()) {
                 getMap().put(null, values[0]);
             } else {
-                try {
-                    getMap().put(null, values[0]);
-                    fail("put(null, value) should throw NPE/IAE");
-                } catch (final NullPointerException | IllegalArgumentException ex) {}
+                assertThrowsEither(NullPointerException.class, IllegalArgumentException.class,
+                        () -> getMap().put(null, values[0]),
+                        "put(null, value) should throw NPE/IAE");
             }
         }
     }
@@ -923,10 +915,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (isAllowNullValue()) {
                 getMap().put(keys[0], null);
             } else {
-                try {
-                    getMap().put(keys[0], null);
-                    fail("put(key, null) should throw NPE/IAE");
-                } catch (final NullPointerException | IllegalArgumentException ex) {}
+                assertThrowsEither(NullPointerException.class, IllegalArgumentException.class,
+                        () -> getMap().put(keys[0], null),
+                        "put(null, value) should throw NPE/IAE");
             }
         }
     }
@@ -1792,10 +1783,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             verify();
 
             if (!isSetValueSupported()) {
-                try {
-                    entry1.setValue(newValue1);
-                } catch (final UnsupportedOperationException ex) {
-                }
+                assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(newValue1));
                 return;
             }
 
