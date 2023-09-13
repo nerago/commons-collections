@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bag;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 /**
  * Test class for {@link CollectionBag}.
@@ -132,6 +134,46 @@ public class CollectionBagTest<T> extends AbstractCollectionTest<T> {
         @Override
         public Bag<T> makeObject() {
             return CollectionBag.collectionBag(new HashBag<>());
+        }
+
+        @Test
+        @Override
+        public void testBagAdd() {
+            // add should follow collection's contract for return value and thus fail bag's test
+            assertThrows(AssertionFailedError.class, super::testBagAdd);
+        }
+
+        @Test
+        @Override
+        public void testBagContainsAll() {
+            // containsAll should follow collection's contract for checking multiple and thus fail bag's test
+            assertThrows(AssertionFailedError.class, super::testBagContainsAll);
+        }
+
+        @Test
+        @Override
+        public void testBagRemove() {
+            // remove should follow collection's contract removing copies and thus fail bag's test
+            assertThrows(AssertionFailedError.class, super::testBagRemove);
+        }
+
+        @Test
+        @Override
+        public void testBagRemoveAll() {
+            // removeAll should follow collection's contract removing copies and thus fail bag's test
+            assertThrows(AssertionFailedError.class, super::testBagRemoveAll);
+        }
+
+        @Test
+        @Override
+        public void testBagRetainAll() {
+            // retainAll should follow collection's contract removing copies and thus fail bag's test
+            assertThrows(AssertionFailedError.class, super::testBagRetainAll);
+        }
+
+        @Override
+        public void testBagSize() {
+            // skip since test uses other methods we can't rely on but test separately
         }
     }
 }
