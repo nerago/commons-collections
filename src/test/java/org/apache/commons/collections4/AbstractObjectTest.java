@@ -18,7 +18,9 @@ package org.apache.commons.collections4;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,6 +35,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 /**
  * Abstract test class for {@link java.lang.Object} methods and contracts.
@@ -334,4 +337,31 @@ public abstract class AbstractObjectTest extends BulkTest {
         oStream.writeObject(o);
     }
 
+    protected static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable) {
+        try {
+            executable.execute();
+        } catch (final Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            fail("Unexpected exception type thrown", throwable);
+        }
+
+        fail("Expected exception to be thrown, but nothing was thrown.");
+    }
+
+    protected static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
+        try {
+            executable.execute();
+        } catch (final Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            fail(message + " ==> Unexpected exception type thrown. " + message, throwable);
+        }
+
+        fail(message + " ==> Expected exception to be thrown, but nothing was thrown.");
+    }
 }
