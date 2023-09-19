@@ -937,16 +937,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             // check putAll OK adding empty map to empty map
             resetEmpty();
             assertEquals(0, getMap().size());
-            getMap().putAll(new HashMap<K, V>());
+            getMap().putAll(new HashMap<>());
             assertEquals(0, getMap().size());
             verify();
 
             // check putAll OK adding empty map to non-empty map
             resetFull();
-            getMap().putAll(new HashMap<K, V>());
+            getMap().putAll(new HashMap<>());
             verify();
 
-            // check putAll OK adding JDK map with current values
+            // check putAll OK adding JDK map with current values (no change)
             resetFull();
             final Map<K, V> m1 = makeConfirmedMap();
             for (int i = 0; i < keys.length; i++) {
@@ -1009,10 +1009,13 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             verify();
 
             // check putAll OK adding non-empty JDK map to non-empty map
-            resetFull();
+            resetEmpty();
+            getMap().put(keys[0], values[0]);
+            getConfirmed().put(keys[0], values[0]);
+            verify();
             final Map<K, V> m4 = makeConfirmedMap();
-            for (int i = 0; i < otherKeys.length; i++) {
-                m4.put(otherKeys[i], otherValues[i]);
+            for (int i = 1; i < keys.length; i++) {
+                m4.put(keys[i], values[i]);
             }
             getMap().putAll(m4);
             getConfirmed().putAll(m4);
