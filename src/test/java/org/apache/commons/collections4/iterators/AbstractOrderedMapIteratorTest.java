@@ -166,4 +166,76 @@ public abstract class AbstractOrderedMapIteratorTest<K, V> extends AbstractMapIt
         assertEquals(0, list.size());
     }
 
+    @Test
+    public void testMapIteratorDirectionChange() {
+        final Object[] keys = getMap().keySet().toArray(new Object[0]);
+        final OrderedMapIterator<K, V> it = makeObject();
+        // initial state before first element
+        assertTrue(it.hasNext());
+        assertFalse(it.hasPrevious());
+        assertThrows(NoSuchElementException.class, it::previous);
+        // first element
+        K key = it.next();
+        assertEquals(key, it.getKey());
+        assertEquals(keys[0], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        // middle elements
+        for (int i = 1; i < keys.length - 1; ++i) {
+            key = it.next();
+            assertEquals(key, it.getKey());
+            assertEquals(keys[i], key);
+            assertTrue(it.hasNext());
+            assertTrue(it.hasPrevious());
+        }
+        // final element
+        key = it.next();
+        assertEquals(keys[keys.length - 1], key);
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertThrows(NoSuchElementException.class, it::next);
+        // iterate backwards
+        for (int i = keys.length - 1; i > 0; --i) {
+            key = it.previous();
+            assertEquals(key, it.getKey());
+            assertEquals(keys[i], key);
+            assertTrue(it.hasNext());
+            assertTrue(it.hasPrevious());
+        }
+        // reach first element on backwards iteration
+        key = it.previous();
+        assertEquals(key, it.getKey());
+        assertEquals(keys[0], key);
+        assertTrue(it.hasNext());
+        assertFalse(it.hasPrevious());
+        assertThrows(NoSuchElementException.class, it::previous);
+        // now try going 2 elements in, and then flipping direction a few times
+        key = it.next();
+        assertEquals(key, it.getKey());
+        assertEquals(keys[0], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        key = it.next();
+        assertEquals(key, it.getKey());
+        assertEquals(keys[1], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        key = it.next();
+        assertEquals(key, it.getKey());
+        assertEquals(keys[2], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        key = it.previous();
+        assertEquals(keys[2], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        key = it.next();
+        assertEquals(keys[2], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+        key = it.next();
+        assertEquals(keys[3], key);
+        assertTrue(it.hasNext());
+        assertTrue(it.hasPrevious());
+    }
 }
