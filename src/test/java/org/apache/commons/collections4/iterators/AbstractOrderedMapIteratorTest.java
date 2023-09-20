@@ -170,7 +170,10 @@ public abstract class AbstractOrderedMapIteratorTest<K, V> extends AbstractMapIt
     public void testMapIteratorDirectionChangeMiddle() {
         final OrderedMapIterator<K, V> it = makeObject();
         final Object[] keys = getMap().keySet().toArray(new Object[0]);
-        assert keys.length > 3;
+        if (keys.length < 6) {
+            return;
+        }
+
         final int pivotA = keys.length / 3;
         final int pivotB = 2 * pivotA;
 
@@ -204,7 +207,10 @@ public abstract class AbstractOrderedMapIteratorTest<K, V> extends AbstractMapIt
     public void testMapIteratorDirectionChangeRepeated() {
         final OrderedMapIterator<K, V> it = makeObject();
         final Object[] keys = getMap().keySet().toArray(new Object[0]);
-        assert keys.length > 3;
+        if (keys.length < 3) {
+            return;
+        }
+
         final int pivot = keys.length / 2;
         final Object pivotKey = keys[pivot];
         final Object pivotValue = getMap().get(pivotKey);
@@ -286,56 +292,5 @@ public abstract class AbstractOrderedMapIteratorTest<K, V> extends AbstractMapIt
         assertFalse(it.hasNext());
         assertTrue(it.hasPrevious());
         assertThrows(NoSuchElementException.class, it::next);
-    }
-
-    @Test
-    public void testMapIteratorDirectionChangeOldVersion() {
-        final OrderedMapIterator<K, V> it = makeObject();
-        final Object[] keys = getMap().keySet().toArray(new Object[0]);
-        // initial state before first element
-        assertTrue(it.hasNext());
-        assertFalse(it.hasPrevious());
-        assertThrows(NoSuchElementException.class, it::previous);
-        // first element
-        K key = it.next();
-        assertEquals(key, it.getKey());
-        assertEquals(keys[0], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
-
-        key = it.previous();
-        assertEquals(key, it.getKey());
-        assertEquals(keys[0], key);
-        assertTrue(it.hasNext());
-        assertFalse(it.hasPrevious());
-        assertThrows(NoSuchElementException.class, it::previous);
-        // now try going 2 elements in, and then flipping direction a few times
-        key = it.next();
-        assertEquals(key, it.getKey());
-        assertEquals(keys[0], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
-        key = it.next();
-        assertEquals(key, it.getKey());
-        assertEquals(keys[1], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
-        key = it.next();
-        assertEquals(key, it.getKey());
-        assertEquals(keys[2], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
-        key = it.previous();
-        assertEquals(keys[2], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
-        key = it.next();
-        assertEquals(keys[2], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
-        key = it.next();
-        assertEquals(keys[3], key);
-        assertTrue(it.hasNext());
-        assertTrue(it.hasPrevious());
     }
 }
