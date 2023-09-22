@@ -39,12 +39,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.collections4.AbstractObjectTest;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -1656,13 +1656,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * the tests in {@link AbstractSetTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the map and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing the map's entry set
      */
-    public BulkTest bulkTestMapEntrySet() {
-        return new TestMapEntrySet();
-    }
-
+    @Nested
     public class TestMapEntrySet extends AbstractSetTest<Map.Entry<K, V>> {
         public TestMapEntrySet() {
             super("MapEntrySet");
@@ -1816,90 +1811,60 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Test
-        @SuppressWarnings("unchecked")
-        public void testMapEntrySetIteratorEntrySetValueMixedPutsClonedKeys() {
+        public void testMapEntrySetIteratorEntrySetValueClonedKeysValues() throws Exception {
             K key1 = getSampleKeys()[0];
             V newValue1 = getNewSampleValues()[0];
-            V newValue2 = getNewSampleValues().length ==1 ? getNewSampleValues()[0] : getNewSampleValues()[1];
+            V newValue2 = getNewSampleValues().length == 1 ? getNewSampleValues()[0] : getNewSampleValues()[1];
+
             resetFull();
             final Iterator<Map.Entry<K, V>> it = TestMapEntrySet.this.getCollection().iterator();
             final Map.Entry<K, V> entry1 = getEntry(it, key1);
-            Iterator<Map.Entry<K, V>> itConfirmed = TestMapEntrySet.this.getConfirmed().iterator();
+            final Iterator<Map.Entry<K, V>> itConfirmed = TestMapEntrySet.this.getConfirmed().iterator();
             final Map.Entry<K, V> entryConfirmed1 = getEntry(itConfirmed, key1);
 
             if (isSetValueSupported()) {
-                key1 = copyKey(key1);
-                newValue1 = copyValue(newValue1);
+                key1 = cloneObject(key1);
+                newValue1 = cloneObject(newValue1);
 
                 map.put(key1, newValue1);
                 confirmed.put(key1, newValue1);
                 verify();
 
-                key1 = copyKey(key1);
-                newValue1 = copyValue(newValue1);
+                key1 = cloneObject(key1);
+                newValue1 = cloneObject(newValue1);
 
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
 
-                key1 = copyKey(key1);
-                newValue1 = copyValue(newValue1);
+                key1 = cloneObject(key1);
+                newValue1 = cloneObject(newValue1);
 
                 map.put(key1, newValue1);
                 confirmed.put(key1, newValue1);
                 verify();
 
-                key1 = copyKey(key1);
-                newValue1 = copyValue( newValue1);
+                key1 = cloneObject(key1);
+                newValue1 = cloneObject(newValue1);
 
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
 
-                key1 = copyKey(key1);
-                newValue2 = copyValue(newValue2);
+                key1 = cloneObject(key1);
+                newValue2 = cloneObject(newValue2);
 
                 map.put(key1, newValue2);
                 confirmed.put(key1, newValue2);
                 verify();
 
-                newValue1 = copyValue(newValue1);
+                newValue1 = cloneObject(newValue1);
 
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
             } else {
                 assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(getNewSampleValues()[0]));
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        private K copyKey(K key) {
-            if (key == null)
-                return null;
-            else if (key instanceof String)
-                return (K) new String((String) key);
-            else {
-                try {
-                    return (K) serializeDeserialize(key);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        private V copyValue(V value) {
-            if (value == null)
-                return null;
-            else if (value instanceof String)
-                return (V) new String((String) value);
-            else {
-                try {
-                    return (V) serializeDeserialize(value);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
             }
         }
 
@@ -1919,6 +1884,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             }
             assertNotNull(entry, "No matching entry in map for key '" + key + "'");
             return entry;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> T cloneObject(T obj) throws Exception {
+            return (T) serializeDeserialize(obj);
         }
 
         @Test
@@ -1944,13 +1914,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * the tests in {@link AbstractSetTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the map and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing the map's key set
      */
-    public BulkTest bulkTestMapKeySet() {
-        return new TestMapKeySet();
-    }
-
+    @Nested
     public class TestMapKeySet extends AbstractSetTest<K> {
         public TestMapKeySet() {
             super("");
@@ -2028,14 +1993,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * the tests in {@link AbstractCollectionTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the map and the other collection views are still valid.
-     *
-     * @return a {@link AbstractCollectionTest} instance for testing the map's
-     *    values collection
      */
-    public BulkTest bulkTestMapValues() {
-        return new TestMapValues();
-    }
-
+    @Nested
     public class TestMapValues extends AbstractCollectionTest<V> {
         public TestMapValues() {
             super("");
