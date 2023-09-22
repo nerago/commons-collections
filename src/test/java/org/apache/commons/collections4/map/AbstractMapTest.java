@@ -1823,43 +1823,28 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             final Map.Entry<K, V> entryConfirmed1 = getEntry(itConfirmed, key1);
 
             if (isSetValueSupported()) {
+                // set new value using put
                 key1 = cloneObject(key1);
                 newValue1 = cloneObject(newValue1);
-
                 map.put(key1, newValue1);
                 confirmed.put(key1, newValue1);
                 verify();
 
-                key1 = cloneObject(key1);
+                // set same value using setValue, should be noop
                 newValue1 = cloneObject(newValue1);
-
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
 
-                key1 = cloneObject(key1);
-                newValue1 = cloneObject(newValue1);
-
-                map.put(key1, newValue1);
-                confirmed.put(key1, newValue1);
-                verify();
-
-                key1 = cloneObject(key1);
-                newValue1 = cloneObject(newValue1);
-
-                entry1.setValue(newValue1);
-                entryConfirmed1.setValue(newValue1);
-                verify();
-
+                // set another new value using put
                 key1 = cloneObject(key1);
                 newValue2 = cloneObject(newValue2);
-
                 map.put(key1, newValue2);
                 confirmed.put(key1, newValue2);
                 verify();
 
+                // set back to first value using setValue
                 newValue1 = cloneObject(newValue1);
-
                 entry1.setValue(newValue1);
                 entryConfirmed1.setValue(newValue1);
                 verify();
@@ -1884,11 +1869,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             }
             assertNotNull(entry, "No matching entry in map for key '" + key + "'");
             return entry;
-        }
-
-        @SuppressWarnings("unchecked")
-        public <T> T cloneObject(T obj) throws Exception {
-            return (T) serializeDeserialize(obj);
         }
 
         @Test
