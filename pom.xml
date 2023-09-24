@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.commons</groupId>
     <artifactId>commons-parent</artifactId>
-    <version>59</version>
+    <version>62</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>commons-collections4</artifactId>
@@ -488,7 +488,7 @@
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
-      <version>5.1.0</version>
+      <version>5.2.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
