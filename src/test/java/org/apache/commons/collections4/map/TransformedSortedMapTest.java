@@ -39,10 +39,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
 
-    @Override
-    public String[] ignoredTests() {
-        return null;
-    }
 
     @Override
     @SuppressWarnings("unchecked")

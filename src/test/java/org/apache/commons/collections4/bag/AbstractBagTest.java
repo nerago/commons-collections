@@ -39,6 +39,7 @@ import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -597,13 +598,8 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
      * the tests in {@link AbstractSetTest}.
      * After modification operations, {@link #verify()} is invoked to ensure
      * that the bag and the other collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing the bag's unique set
      */
-    public BulkTest bulkTestBagUniqueSet() {
-        return new TestBagUniqueSet();
-    }
-
+    @Nested
     public class TestBagUniqueSet extends AbstractSetTest<T> {
 
         @Override

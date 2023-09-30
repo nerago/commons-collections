@@ -31,14 +31,6 @@ public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
         return new DualHashBidiMap<>();
     }
 
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return new String[] { "DualHashBidiMapTest.bulkTestInverseMap.bulkTestInverseMap" };
-    }
-
     @Override
     protected int getIterationBehaviour() {
         return AbstractCollectionTest.UNORDERED;
