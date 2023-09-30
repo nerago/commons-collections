@@ -98,11 +98,11 @@ import org.junit.jupiter.api.Test;
  *  </Ol>
  *
  *  In the graphical junit test runners, the tests would be displayed in
- *  the following tree:<P>
+ *  the following tree:
  *
  *  <UL>
  *  <LI>HashMapTest</LI>
- *      <UL>
+ *      <LI><UL>
  *      <LI>testClear
  *      <LI>TestKeySet
  *          <UL>
@@ -114,7 +114,7 @@ import org.junit.jupiter.api.Test;
  *          <LI>testContains
  *          <LI>testClear
  *          </UL>
- *      </UL>
+ *      </UL></LI>
  *  </UL>
  *
  *  A subclass can override a superclass's bulk test by
