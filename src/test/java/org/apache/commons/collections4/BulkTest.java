@@ -16,44 +16,38 @@
  */
 package org.apache.commons.collections4;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 /**
- * A {@link TestCase} that can define both simple and bulk test methods.
+ * Base class for all test classes that can define both simple and bulk test methods.
  * <p>
- * A <I>simple test method</I> is the type of test traditionally
- * supplied by {@link TestCase}.  To define a simple test, create a public
- * no-argument method whose name starts with "test".  You can specify
- * the name of simple test in the constructor of {@code BulkTest};
- * a subsequent call to {@link TestCase#run} will run that simple test.
+ * A <I>simple test method</I> is the type of test
+ * in a regular method annotated by {@link Test}.
  * <p>
- * A <I>bulk test method</I>, on the other hand, returns a new instance
- * of {@code BulkTest}, which can itself define new simple and bulk
- * test methods.  By using the {@link #makeSuite} method, you can
- * automatically create a hierarchical suite of tests and child bulk tests.
+ * A <I>bulk test</I>, on the other hand, is an inner class (non-static) that also derives (probably) indirectly from {@code BulkTest},
+ * is annotated on the class definition with {@link Nested}, and which can itself define new simple and bulk tests.
+ * By using this method, you can automatically create a hierarchical suite of tests and child bulk tests.
  * <p>
  * For instance, consider the following two classes:
  *
  * <Pre>
- *  public class SetTest extends BulkTest {
+ *  public abstract class SetTest extends BulkTest {
  *
- *      private Set set;
+ *      public abstract Set makeSet();
  *
- *      public SetTest(Set set) {
- *          this.set = set;
- *      }
- *
- *      @Test
+ *      &#60;Test
  *      public void testContains() {
- *          boolean r = set.contains(set.iterator().next()));
- *          assertTrue("Set should contain first element, r);
+ *          Set set = makeSet();
+ *          boolean r = set.contains(set.iterator().next());
+ *          assertTrue(r, "Set should contain first element");
  *      }
  *
- *      @Test
+ *      &#60;Test
  *      public void testClear() {
+ *          Set set = makeSet();
  *          set.clear();
- *          assertTrue("Set should be empty after clear", set.isEmpty());
+ *          assertTrue(set.isEmpty(), "Set should be empty after clear");
  *      }
  *  }
  *
@@ -67,35 +61,40 @@ import junit.framework.TestSuite;
  *          return result;
  *      }
  *
- *      @Test
+ *      &#60;Test
  *      public void testClear() {
  *          Map map = makeFullMap();
  *          map.clear();
- *          assertTrue("Map empty after clear", map.isEmpty());
+ *          assertTrue(map.isEmpty(), "Map empty after clear");
  *      }
  *
- *      public BulkTest bulkTestKeySet() {
- *          return new SetTest(makeFullMap().keySet());
+ *      &#60;Nested
+ *      public class TestKeySet extends SetTest {
+ *          public Set makeSet() {
+ *              return makeFullMap().keySet();
+ *          }
  *      }
  *
- *      public BulkTest bulkTestEntrySet() {
- *          return new SetTest(makeFullMap().entrySet());
+ *      &#60;Nested
+ *      public class TestEntrySet extends SetTest {
+ *          public Set makeSet() {
+ *              return makeFullMap().entrySet();
+ *          }
  *      }
  *  }
  *  </Pre>
  *
  *  In the above examples, {@code SetTest} defines two
- *  simple test methods and no bulk test methods; {@code HashMapTest}
- *  defines one simple test method and two bulk test methods.  When
- *  {@code makeSuite(HashMapTest.class).run} is executed,
- *  <I>five</I> simple test methods will be run, in this order:<P>
+ *  simple test methods and no bulk tests; {@code HashMapTest}
+ *  defines one simple test method and two nested test classes.  When
+ *  the tests are run, <I>five</I> simple test methods will be run, in undefined order:
  *
  *  <Ol>
  *  <Li>HashMapTest.testClear()
- *  <Li>HashMapTest.bulkTestKeySet().testContains();
- *  <Li>HashMapTest.bulkTestKeySet().testClear();
- *  <Li>HashMapTest.bulkTestEntrySet().testContains();
- *  <Li>HashMapTest.bulkTestEntrySet().testClear();
+ *  <Li>HashMapTest.new TestKeySet().testContains();
+ *  <Li>HashMapTest.new TestKeySet().testClear();
+ *  <Li>HashMapTest.new TestEntrySet().testContains();
+ *  <Li>HashMapTest.new TestEntrySet().testClear();
  *  </Ol>
  *
  *  In the graphical junit test runners, the tests would be displayed in
@@ -105,12 +104,12 @@ import junit.framework.TestSuite;
  *  <LI>HashMapTest</LI>
  *      <UL>
  *      <LI>testClear
- *      <LI>bulkTestKeySet
+ *      <LI>TestKeySet
  *          <UL>
  *          <LI>testContains
  *          <LI>testClear
  *          </UL>
- *      <LI>bulkTestEntrySet
+ *      <LI>TestEntrySet
  *          <UL>
  *          <LI>testContains
  *          <LI>testClear
@@ -119,14 +118,7 @@ import junit.framework.TestSuite;
  *  </UL>
  *
  *  A subclass can override a superclass's bulk test by
- *  returning {@code null} from the bulk test method.  If you only
- *  want to override specific simple tests within a bulk test, use the
- *  {@link #ignoredTests} method.<P>
- *
- *  Note that if you want to use the bulk test methods, you <I>must</I>
- *  define your {@code suite()} method to use {@link #makeSuite}.
- *  The ordinary {@link TestSuite} constructor doesn't know how to
- *  interpret bulk test methods.
+ *  defining its own inner class with the same name.
  */
 public class BulkTest implements Cloneable {
 
@@ -145,39 +137,6 @@ public class BulkTest implements Cloneable {
     public static final String TEST_PROPERTIES_PATH = "src/test/resources/org/apache/commons/collections4/properties/";
 
     /**
-     *  The full name of this bulk test instance.  This is the full name
-     *  that is compared to {@link #ignoredTests} to see if this
-     *  test should be ignored.  It's also displayed in the text runner
-     *  to ease debugging.
-     */
-    String verboseName;
-
-    /**
-     *  the name of the simple test method
-     */
-    private final String name;
-
-    /**
-     *  Constructs a new {@code BulkTest} instance that will run the
-     *  specified simple test.
-     *
-     *  @param name  the name of the simple test method to run
-     */
-    public BulkTest(final String name) {
-        this.name = name;
-        this.verboseName = getClass().getName();
-    }
-
-    /**
-     *  Returns the name of the simple test method of this {@code BulkTest}.
-     *
-     *  @return the name of the simple test method of this {@code BulkTest}
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
      *  Creates a clone of this {@code BulkTest}.<P>
      *
      *  @return  a clone of this {@code BulkTest}
@@ -190,52 +149,4 @@ public class BulkTest implements Cloneable {
             throw new Error(); // should never happen
         }
     }
-
-    /**
-     *  Returns an array of test names to ignore.<P>
-     *
-     *  If a test that's defined by this {@code BulkTest} or
-     *  by one of its bulk test methods has a name that's in the returned
-     *  array, then that simple test will not be executed.<P>
-     *
-     *  A test's name is formed by taking the class name of the
-     *  root {@code BulkTest}, eliminating the package name, then
-     *  appending the names of any bulk test methods that were invoked
-     *  to get to the simple test, and then appending the simple test
-     *  method name.  The method names are delimited by periods:
-     *
-     *  <pre>
-     *  HashMapTest.bulkTestEntrySet.testClear
-     *  </pre>
-     *
-     *  is the name of one of the simple tests defined in the sample classes
-     *  described above.  If the sample {@code HashMapTest} class
-     *  included this method:
-     *
-     *  <pre>
-     *  public String[] ignoredTests() {
-     *      return new String[] { "HashMapTest.bulkTestEntrySet.testClear" };
-     *  }
-     *  </pre>
-     *
-     *  then the entry set's clear method wouldn't be tested, but the key
-     *  set's clear method would.
-     *
-     *  @return an array of the names of tests to ignore, or null if
-     *   no tests should be ignored
-     */
-    public String[] ignoredTests() {
-        return null;
-    }
-
-    /**
-     *  Returns the display name of this {@code BulkTest}.
-     *
-     *  @return the display name of this {@code BulkTest}
-     */
-    @Override
-    public String toString() {
-        return getName() + "(" + verboseName + ") ";
-    }
-
 }
