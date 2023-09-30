@@ -48,9 +48,6 @@ import org.junit.jupiter.api.function.Executable;
  */
 public abstract class AbstractObjectTest extends BulkTest {
 
-    /** Current major release for Collections */
-    public static final int COLLECTIONS_MAJOR_VERSION = 4;
-
     /**
      * Implement this method to return the object to test.
      *

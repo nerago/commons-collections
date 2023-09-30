@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -126,7 +127,7 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
         final SortedBidiMap<K, V> sm = makeFullMap();
 
         // Sort by the comparator used in the makeEmptyBidiMap() method
-        List<K> newSortedKeys = getAsList(getSampleKeys());
+        List<K> newSortedKeys = Arrays.asList(getSampleKeys());
         newSortedKeys.sort(new ReverseComparator<>(ComparableComparator.<K>comparableComparator()));
         newSortedKeys = Collections.unmodifiableList(newSortedKeys);
 
