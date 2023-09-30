@@ -38,10 +38,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedQueueTest<E> extends AbstractQueueTest<E> {
 
-    public PredicatedQueueTest() {
-        super(PredicatedQueueTest.class.getSimpleName());
-    }
-
     protected Predicate<E> truePredicate = TruePredicate.<E>truePredicate();
 
     protected Queue<E> decorateCollection(final Queue<E> queue, final Predicate<E> predicate) {

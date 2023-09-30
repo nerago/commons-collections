@@ -42,15 +42,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractListIteratorTest<E> extends AbstractIteratorTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractListIteratorTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Implements the abstract superclass method to return the list iterator.
      *
      * @return an empty iterator

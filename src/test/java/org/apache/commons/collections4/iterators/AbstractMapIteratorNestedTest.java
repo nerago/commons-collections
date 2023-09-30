@@ -26,10 +26,6 @@ import java.util.Map;
  * Abstract class for testing MapIterator to simplify nesting inside AbstractMapTest types
  */
 public abstract class AbstractMapIteratorNestedTest<K, V> extends AbstractMapIteratorTest<K, V> {
-    protected AbstractMapIteratorNestedTest() {
-        super("AbstractMapIteratorNestedTest");
-    }
-
     protected abstract AbstractIterableMapTest<K, V> getEnclosing();
 
     @Override

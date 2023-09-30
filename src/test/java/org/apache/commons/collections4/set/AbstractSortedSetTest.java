@@ -37,15 +37,6 @@ import org.apache.commons.collections4.BulkTest;
 public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param name  name for test
-     */
-    public AbstractSortedSetTest(final String name) {
-        super(name);
-    }
-
-    /**
      * Verification extension, will check the order of elements,
      * the sets should already be verified equal.
      */
@@ -193,7 +184,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
 
         @SuppressWarnings("unchecked")
         public TestSortedSetSubSet(final int bound, final boolean head) {
-            super("TestSortedSetSubSet");
             if (head) {
                 //System.out.println("HEADSET");
                 m_Type = TYPE_HEADSET;
@@ -228,7 +218,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
 
         @SuppressWarnings("unchecked")
         public TestSortedSetSubSet(final int loBound, final int hiBound) {
-            super("TestSortedSetSubSet");
             //System.out.println("SUBSET");
             m_Type = TYPE_SUBSET;
             m_LowBound = loBound;

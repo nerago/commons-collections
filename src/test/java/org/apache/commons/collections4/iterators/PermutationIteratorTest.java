@@ -43,10 +43,6 @@ public class PermutationIteratorTest extends AbstractIteratorTest<List<Character
     protected Character[] testArray = { 'A', 'B', 'C' };
     protected List<Character> testList;
 
-    public PermutationIteratorTest() {
-        super(PermutationIteratorTest.class.getSimpleName());
-    }
-
     @BeforeEach
     public void setUp() {
         testList = new ArrayList<>();

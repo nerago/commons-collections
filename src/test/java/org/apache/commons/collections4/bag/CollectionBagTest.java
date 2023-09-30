@@ -39,14 +39,6 @@ import org.junit.jupiter.api.Test;
  */
 public class CollectionBagTest<T> extends AbstractCollectionTest<T> {
 
-    /**
-     * JUnit constructor.
-     */
-    public CollectionBagTest() {
-        super(CollectionBagTest.class.getSimpleName());
-    }
-
-
     @Override
     public Bag<T> makeObject() {
         return CollectionBag.collectionBag(new HashBag<>());

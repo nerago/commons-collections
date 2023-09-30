@@ -41,14 +41,6 @@ public class NodeListIteratorTest extends AbstractIteratorTest<Node> {
     // NodeListIterator supports two constructors. This flag allows to
     // control, which constructor to use in makeObject() and makeEmptyIterator
     private boolean createIteratorWithStandardConstr = true;
-
-    /**
-     * Junit Constructor
-     */
-    public NodeListIteratorTest() {
-        super(NodeListIteratorTest.class.getSimpleName());
-    }
-
     @BeforeEach
     protected void setUp() throws Exception {
 

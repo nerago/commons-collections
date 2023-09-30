@@ -26,10 +26,6 @@ import org.apache.commons.collections4.MultiSet;
  */
 public class HashMultiSetTest<T> extends AbstractMultiSetTest<T> {
 
-    public HashMultiSetTest() {
-        super(HashMultiSetTest.class.getSimpleName());
-    }
-
     @Override
     public MultiSet<T> makeObject() {
         return new HashMultiSet<>();

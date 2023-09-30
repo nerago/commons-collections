@@ -29,10 +29,6 @@ import org.junit.jupiter.api.Test;
  */
 public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public StaticBucketMapTest() {
-        super(StaticBucketMapTest.class.getSimpleName());
-    }
-
     @Override
     public StaticBucketMap<K, V> makeObject() {
         return new StaticBucketMap<>(30);

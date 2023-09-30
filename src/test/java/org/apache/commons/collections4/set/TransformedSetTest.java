@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedSetTest<E> extends AbstractSetTest<E> {
 
-    public TransformedSetTest() {
-        super(TransformedSetTest.class.getSimpleName());
-    }
-
     @Override
     public Set<E> makeConfirmedCollection() {
         return new HashSet<>();

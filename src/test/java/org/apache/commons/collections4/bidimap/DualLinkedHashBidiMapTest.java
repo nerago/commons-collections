@@ -21,10 +21,6 @@ package org.apache.commons.collections4.bidimap;
  */
 public class DualLinkedHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
 
-    public DualLinkedHashBidiMapTest() {
-        super(DualLinkedHashBidiMapTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */

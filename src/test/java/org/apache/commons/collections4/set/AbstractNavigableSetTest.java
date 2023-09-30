@@ -37,15 +37,6 @@ import org.apache.commons.collections4.BulkTest;
 public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param name  name for test
-     */
-    public AbstractNavigableSetTest(final String name) {
-        super(name);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -185,7 +176,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
 
         @SuppressWarnings("unchecked")
         public TestNavigableSetSubSet(final int bound, final boolean head, final boolean inclusive) {
-            super("TestNavigableSetSubSet");
             if (head) {
                 type = TYPE_HEADSET;
                 m_Inclusive = inclusive;
@@ -214,7 +204,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
 
         @SuppressWarnings("unchecked")
         public TestNavigableSetSubSet(final int loBound, final int hiBound, final boolean inclusive) {
-            super("TestNavigableSetSubSet");
             type = TYPE_SUBSET;
             lowBound = loBound;
             highBound = hiBound;

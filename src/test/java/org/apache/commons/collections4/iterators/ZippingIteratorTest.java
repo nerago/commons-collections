@@ -32,12 +32,6 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("boxing")
 public class ZippingIteratorTest extends AbstractIteratorTest<Integer> {
 
-    //------------------------------------------------------------ Conventional
-
-    public ZippingIteratorTest() {
-        super(ZippingIteratorTest.class.getSimpleName());
-    }
-
     //--------------------------------------------------------------- Lifecycle
 
     private ArrayList<Integer> evens = null;

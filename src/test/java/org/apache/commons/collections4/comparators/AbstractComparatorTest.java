@@ -40,16 +40,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractComparatorTest(final String testName) {
-        super(testName);
-    }
-
-
-    /**
      * Implement this method to return a list of sorted objects.
      *
      * @return sorted objects

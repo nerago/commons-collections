@@ -57,10 +57,6 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
 
     boolean extraVerify = true;
 
-    public SetUniqueListTest() {
-        super(SetUniqueListTest.class.getSimpleName());
-    }
-
     @Override
     public String getCompatibilityVersion() {
         return "4";

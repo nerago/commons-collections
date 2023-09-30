@@ -174,15 +174,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     protected Map<K, V> confirmed;
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractMapTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Returns true if the maps produced by
      * {@link #makeObject()} and {@link #makeFullMap()}
      * support the {@code put} and {@code putAll} operations
@@ -1669,10 +1660,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Nested
     public class TestMapEntrySet extends AbstractSetTest<Map.Entry<K, V>> {
-        public TestMapEntrySet() {
-            super("MapEntrySet");
-        }
-
         // Have to implement manually; entrySet doesn't support addAll
         /**
          * {@inheritDoc}
@@ -1911,10 +1898,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Nested
     public class TestMapKeySet extends AbstractSetTest<K> {
-        public TestMapKeySet() {
-            super("");
-        }
-
         @Override
         public K[] getFullElements() {
             return getSampleKeys();
@@ -1990,10 +1973,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Nested
     public class TestMapValues extends AbstractCollectionTest<V> {
-        public TestMapValues() {
-            super("");
-        }
-
         @Override
         public V[] getFullElements() {
             return getSampleValues();

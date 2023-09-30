@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
-    public LinkedMapTest() {
-        super(LinkedMapTest.class.getSimpleName());
-    }
-
     @Override
     public LinkedMap<K, V> makeObject() {
         return new LinkedMap<>();
@@ -232,10 +228,6 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     public class TestListView extends AbstractListTest<K> {
-
-        TestListView() {
-            super("TestListView");
-        }
 
         @Override
         public List<K> makeObject() {

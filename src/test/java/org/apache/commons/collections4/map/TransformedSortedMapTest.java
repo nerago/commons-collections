@@ -39,10 +39,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
 
-    public TransformedSortedMapTest() {
-        super(TransformedSortedMapTest.class.getSimpleName());
-    }
-
     @Override
     public String[] ignoredTests() {
         return null;

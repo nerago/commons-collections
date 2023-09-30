@@ -29,10 +29,6 @@ import org.apache.commons.collections4.IterableMap;
  */
 public class FixedSizeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public FixedSizeMapTest() {
-        super(FixedSizeMapTest.class.getSimpleName());
-    }
-
     @Override
     public IterableMap<K, V> makeObject() {
         return FixedSizeMap.fixedSizeMap(new HashMap<>());

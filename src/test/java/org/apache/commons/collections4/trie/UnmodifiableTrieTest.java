@@ -34,10 +34,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableTrieTest<V> extends AbstractIterableSortedMapTest<String, V> {
 
-    public UnmodifiableTrieTest() {
-        super(UnmodifiableTrieTest.class.getSimpleName());
-    }
-
     @Override
     public Trie<String, V> makeObject() {
         return UnmodifiableTrie.unmodifiableTrie(new PatriciaTrie<>());

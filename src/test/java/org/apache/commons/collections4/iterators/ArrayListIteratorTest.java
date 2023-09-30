@@ -32,9 +32,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ArrayListIteratorTest<E> extends ArrayIteratorTest<E> {
 
-    public ArrayListIteratorTest() {
-    }
-
     @Override
     public ArrayListIterator<E> makeEmptyIterator() {
         return new ArrayListIterator<>(new Object[0]);
@@ -117,10 +114,6 @@ public class ArrayListIteratorTest<E> extends ArrayIteratorTest<E> {
 
     @Nested
     public class TestAsListIterator extends AbstractListIteratorTest<E> {
-        public TestAsListIterator() {
-            super("TestAsListIterator");
-        }
-
         @Override
         public ListIterator<E> makeEmptyIterator() {
             return ArrayListIteratorTest.this.makeEmptyIterator();

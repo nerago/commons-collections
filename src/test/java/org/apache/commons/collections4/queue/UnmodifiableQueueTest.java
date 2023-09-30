@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableQueueTest<E> extends AbstractQueueTest<E> {
 
-    public UnmodifiableQueueTest() {
-        super(UnmodifiableQueueTest.class.getSimpleName());
-    }
-
     @Override
     public Queue<E> makeObject() {
         return UnmodifiableQueue.unmodifiableQueue(new LinkedList<>());

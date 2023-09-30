@@ -26,10 +26,6 @@ import org.apache.commons.collections4.map.AbstractIterableSortedMapTest;
  */
 public class PatriciaTrie2Test<V> extends AbstractIterableSortedMapTest<String, V> {
 
-    public PatriciaTrie2Test() {
-        super(PatriciaTrie2Test.class.getSimpleName());
-    }
-
     @Override
     public IterableSortedMap<String, V> makeObject() {
         return new PatriciaTrie<>();

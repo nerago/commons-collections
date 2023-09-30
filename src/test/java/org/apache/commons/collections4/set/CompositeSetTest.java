@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class CompositeSetTest<E> extends AbstractSetTest<E> {
 
-    public CompositeSetTest() {
-        super(CompositeSetTest.class.getSimpleName());
-    }
-
     @Override
     public CompositeSet<E> makeObject() {
         final HashSet<E> contained = new HashSet<>();

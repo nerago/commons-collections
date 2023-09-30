@@ -40,10 +40,6 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class AbstractLinkedListTest<T> extends AbstractListTest<T> {
 
-    public AbstractLinkedListTest(final String testName) {
-        super(testName);
-    }
-
     @Override
     public abstract LinkedList<T> makeObject();
 

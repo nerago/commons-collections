@@ -46,10 +46,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PatriciaTrieTest<V> extends AbstractIterableSortedMapTest<String, V> {
 
-    public PatriciaTrieTest() {
-        super(PatriciaTrieTest.class.getSimpleName());
-    }
-
     @Override
     public IterableSortedMap<String, V> makeObject() {
         return new PatriciaTrie<>();

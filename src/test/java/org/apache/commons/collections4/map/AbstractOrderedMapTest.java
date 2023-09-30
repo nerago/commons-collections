@@ -41,15 +41,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractOrderedMapTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override

@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
-    public ListOrderedMapTest() {
-        super(ListOrderedMapTest.class.getSimpleName());
-    }
-
     @Override
     public ListOrderedMap<K, V> makeObject() {
         return ListOrderedMap.listOrderedMap(new HashMap<>());
@@ -434,10 +430,6 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
     public class TestKeyListView extends AbstractListTest<K> {
 
-        TestKeyListView() {
-            super("TestKeyListView");
-        }
-
         @Override
         public List<K> makeObject() {
             return ListOrderedMapTest.this.makeObject().keyList();
@@ -481,10 +473,6 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     public class TestValueListView extends AbstractListTest<V> {
-
-        TestValueListView() {
-            super("TestValueListView");
-        }
 
         @Override
         public List<V> makeObject() {

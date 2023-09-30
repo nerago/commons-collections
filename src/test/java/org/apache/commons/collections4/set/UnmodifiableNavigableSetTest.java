@@ -39,10 +39,6 @@ public class UnmodifiableNavigableSetTest<E> extends AbstractNavigableSetTest<E>
     protected UnmodifiableNavigableSet<E> set = null;
     protected ArrayList<E> array = null;
 
-    public UnmodifiableNavigableSetTest() {
-        super(UnmodifiableNavigableSetTest.class.getSimpleName());
-    }
-
     @Override
     public NavigableSet<E> makeObject() {
         return UnmodifiableNavigableSet.unmodifiableNavigableSet(new TreeSet<>());

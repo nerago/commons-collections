@@ -24,10 +24,6 @@ import java.util.Map;
  * Abstract class for testing the MapIterator interface to simplify nesting inside AbstractMapTest types
  */
 public abstract class AbstractOrderedMapNestedTest<K, V> extends AbstractOrderedMapTest<K, V> {
-    protected AbstractOrderedMapNestedTest() {
-        super("AbstractOrderedMapNestedTest");
-    }
-
     protected abstract AbstractMapTest<K, V> getEnclosing();
 
     @Override

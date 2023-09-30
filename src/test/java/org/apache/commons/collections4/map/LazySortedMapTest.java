@@ -58,10 +58,6 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
 
     protected final Comparator<String> reverseStringComparator = new ReverseStringComparator();
 
-    public LazySortedMapTest() {
-        super(LazySortedMapTest.class.getSimpleName());
-    }
-
     @Override
     public SortedMap<K, V> makeObject() {
         return lazySortedMap(new TreeMap<>(), FactoryUtils.<V>nullFactory());

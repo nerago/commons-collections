@@ -36,15 +36,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractSortedMapTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Can't sort null keys.
      *
      * @return false
@@ -118,8 +109,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         protected final List<V> subSortedValues = new ArrayList<>();
         protected final List<V> subSortedNewValues = new ArrayList<>();
 
-        public TestViewMap(final String name, final AbstractMapTest<K, V> main) {
-            super(name);
+        public TestViewMap(final AbstractMapTest<K, V> main) {
             this.main = main;
         }
         @Override
@@ -216,7 +206,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         final K toKey;
 
         public TestHeadMap(final AbstractMapTest<K, V> main) {
-            super("SortedMap.HeadMap", main);
+            super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
                 this.subSortedKeys.add(entry.getKey());
@@ -269,7 +259,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         final K invalidKey;
 
         public TestTailMap(final AbstractMapTest<K, V> main) {
-            super("SortedMap.TailMap", main);
+            super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
                 this.subSortedKeys.add(entry.getKey());
@@ -323,7 +313,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         final K toKey;
 
         public TestSubMap(final AbstractMapTest<K, V> main) {
-            super("SortedMap.SubMap", main);
+            super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
                 this.subSortedKeys.add(entry.getKey());

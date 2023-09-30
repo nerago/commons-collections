@@ -33,10 +33,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
 
-    public UnmodifiableBidiMapTest() {
-        super(UnmodifiableBidiMapTest.class.getSimpleName());
-    }
-
     @Override
     public BidiMap<K, V> makeObject() {
         return UnmodifiableBidiMap.unmodifiableBidiMap(new DualHashBidiMap<>());

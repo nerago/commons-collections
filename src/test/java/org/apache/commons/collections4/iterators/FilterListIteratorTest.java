@@ -428,10 +428,6 @@ public class FilterListIteratorTest {
 
     @Nested
     public class TestAsListIterator extends AbstractListIteratorTest<Integer> {
-        public TestAsListIterator() {
-            super("TestAsListIterator");
-        }
-
         @Override
         public ListIterator<Integer> makeEmptyIterator() {
             return new FilterListIterator<>(new ArrayList<Integer>().listIterator(), evenPred);

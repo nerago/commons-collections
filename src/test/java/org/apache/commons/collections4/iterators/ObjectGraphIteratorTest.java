@@ -44,10 +44,6 @@ public class ObjectGraphIteratorTest extends AbstractIteratorTest<Object> {
     protected List<String> list3 = null;
     protected List<Iterator<String>> iteratorList = null;
 
-    public ObjectGraphIteratorTest() {
-        super(ObjectGraphIteratorTest.class.getSimpleName());
-    }
-
     @BeforeEach
     public void setUp() {
         list1 = new ArrayList<>();

@@ -44,15 +44,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractMapIteratorTest<K, V> extends AbstractIteratorTest<K> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractMapIteratorTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Implement this method to return a map iterator over an empty map.
      *
      * @return an empty iterator

@@ -69,15 +69,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractBagTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Returns an empty {@link ArrayList}.
      */
     @Override
@@ -614,10 +605,6 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
     }
 
     public class TestBagUniqueSet extends AbstractSetTest<T> {
-
-        public TestBagUniqueSet() {
-            super("");
-        }
 
         @Override
         public T[] getFullElements() {

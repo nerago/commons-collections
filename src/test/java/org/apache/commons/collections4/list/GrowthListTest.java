@@ -38,10 +38,6 @@ import org.junit.jupiter.api.function.Executable;
  */
 public class GrowthListTest<E> extends AbstractListTest<E> {
 
-    public GrowthListTest() {
-        super(GrowthListTest.class.getSimpleName());
-    }
-
     @Override
     public List<E> makeObject() {
         return new GrowthList<>();

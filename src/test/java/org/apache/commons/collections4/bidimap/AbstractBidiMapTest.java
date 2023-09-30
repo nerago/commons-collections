@@ -43,15 +43,6 @@ import org.junit.jupiter.api.Test;
  * Abstract test class for {@link BidiMap} methods and contracts.
  */
 public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public AbstractBidiMapTest(final String testName) {
-        super(testName);
-    }
-
-    public AbstractBidiMapTest() {
-        super("Inverse");
-    }
-
     /**
      * Override to create a full {@code BidiMap} other than the default.
      *

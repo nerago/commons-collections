@@ -35,10 +35,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableBoundedCollectionTest<E> extends AbstractCollectionTest<E> {
 
-    public UnmodifiableBoundedCollectionTest() {
-        super(UnmodifiableBoundedCollectionTest.class.getSimpleName());
-    }
-
     @Override
     public Collection<E> makeObject() {
         final BoundedCollection<E> coll = FixedSizeList.<E>fixedSizeList(new ArrayList<>());

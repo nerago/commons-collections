@@ -47,10 +47,6 @@ public class BoundedIteratorTest<E> extends AbstractIteratorTest<E> {
 
     private List<E> testList;
 
-    public BoundedIteratorTest() {
-        super(BoundedIteratorTest.class.getSimpleName());
-    }
-
     @SuppressWarnings("unchecked")
     @BeforeEach
     public void setUp()

@@ -47,10 +47,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ReferenceMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public ReferenceMapTest() {
-        super(ReferenceMapTest.class.getSimpleName());
-    }
-
     @Override
     public ReferenceMap<K, V> makeObject() {
         return new ReferenceMap<>(ReferenceStrength.WEAK, ReferenceStrength.WEAK);

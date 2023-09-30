@@ -26,10 +26,6 @@ import java.util.SortedMap;
  * Abstract test class to apply tests for both {@link SortedMap} and {@link OrderedMap} contracts.
  */
 public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
-    protected AbstractIterableSortedMapTest(final String testName) {
-        super(testName);
-    }
-
     @Override
     public abstract IterableSortedMap<K, V> makeObject();
 

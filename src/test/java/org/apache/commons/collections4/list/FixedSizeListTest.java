@@ -35,10 +35,6 @@ import org.junit.jupiter.api.Test;
  */
 public class FixedSizeListTest<E> extends AbstractListTest<E> {
 
-    public FixedSizeListTest() {
-        super(FixedSizeListTest.class.getSimpleName());
-    }
-
     @Override
     public List<E> makeObject() {
         return FixedSizeList.fixedSizeList(new ArrayList<>());

@@ -38,10 +38,6 @@ public class ListIteratorWrapperTest<E> extends AbstractListIteratorTest<E> {
         "One", "Two", "Three", "Four", "Five", "Six"
     };
 
-    public ListIteratorWrapperTest() {
-        super(ListIteratorWrapperTest.class.getSimpleName());
-    }
-
     @SuppressWarnings("unchecked")
     private List<E> makeList() {
         final List<E> list = new ArrayList<>();

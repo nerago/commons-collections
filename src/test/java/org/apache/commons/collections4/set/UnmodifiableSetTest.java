@@ -35,10 +35,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableSetTest<E> extends AbstractSetTest<E> {
 
-    public UnmodifiableSetTest() {
-        super(UnmodifiableSetTest.class.getSimpleName());
-    }
-
     @Override
     public Set<E> makeObject() {
         return UnmodifiableSet.unmodifiableSet(new HashSet<>());

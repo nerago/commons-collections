@@ -65,15 +65,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractMultiSetTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Returns an empty {@link ArrayList}.
      */
     @Override
@@ -629,10 +620,6 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
     }
 
     public class TestMultiSetUniqueSet extends AbstractSetTest<T> {
-        public TestMultiSetUniqueSet() {
-            super("");
-        }
-
         @Override
         public T[] getFullElements() {
             return AbstractMultiSetTest.this.getFullElements();

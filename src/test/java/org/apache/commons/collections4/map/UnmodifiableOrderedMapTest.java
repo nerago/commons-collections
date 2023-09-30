@@ -34,10 +34,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
-    public UnmodifiableOrderedMapTest() {
-        super(UnmodifiableOrderedMapTest.class.getSimpleName());
-    }
-
     @Override
     public OrderedMap<K, V> makeObject() {
         return UnmodifiableOrderedMap.unmodifiableOrderedMap(ListOrderedMap.listOrderedMap(new HashMap<>()));

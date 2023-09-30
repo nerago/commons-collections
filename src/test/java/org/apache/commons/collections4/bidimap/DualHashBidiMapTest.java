@@ -23,10 +23,6 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
  */
 public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
 
-    public DualHashBidiMapTest() {
-        super(DualHashBidiMapTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */

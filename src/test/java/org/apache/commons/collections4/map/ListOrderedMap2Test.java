@@ -36,10 +36,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
 
-    public ListOrderedMap2Test() {
-        super(ListOrderedMap2Test.class.getSimpleName());
-    }
-
     @Override
     public ListOrderedMap<K, V> makeObject() {
         return new ListOrderedMap<>();
@@ -161,11 +157,6 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     public class TestListView extends AbstractListTest<K> {
-
-        TestListView() {
-            super("TestListView");
-        }
-
         @Override
         public List<K> makeObject() {
             return ListOrderedMap2Test.this.makeObject().asList();

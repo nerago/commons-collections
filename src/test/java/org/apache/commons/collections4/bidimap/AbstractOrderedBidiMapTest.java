@@ -38,14 +38,6 @@ import org.junit.jupiter.api.Test;
  * Abstract test class for {@link OrderedBidiMap} methods and contracts.
  */
 public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
-
-    public AbstractOrderedBidiMapTest(final String testName) {
-        super(testName);
-    }
-
-    public AbstractOrderedBidiMapTest() {
-    }
-
     @Test
     public void testFirstKey() {
         resetEmpty();

@@ -40,14 +40,6 @@ import org.junit.jupiter.api.Test;
 public class CollectionSortedBagTest<T> extends AbstractCollectionTest<T> {
 
     /**
-     * JUnit constructor.
-     */
-    public CollectionSortedBagTest() {
-        super(CollectionSortedBagTest.class.getSimpleName());
-    }
-
-
-    /**
      * Overridden because SortedBags don't allow null elements (normally).
      * @return false
      */

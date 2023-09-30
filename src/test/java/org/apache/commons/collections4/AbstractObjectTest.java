@@ -52,15 +52,6 @@ public abstract class AbstractObjectTest extends BulkTest {
     public static final int COLLECTIONS_MAJOR_VERSION = 4;
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractObjectTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      * Implement this method to return the object to test.
      *
      * @return the object to test

@@ -65,11 +65,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     /** MultiValuedHashMap created by reset(). */
     protected MultiValuedMap<K, V> confirmed;
 
-
-    public AbstractMultiValuedMapTest(final String testName) {
-        super(testName);
-    }
-
     @Override
     public abstract MultiValuedMap<K, V> makeObject();
 
@@ -903,10 +898,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     }
 
     public class TestMultiValuedMapEntries extends AbstractCollectionTest<Entry<K, V>> {
-        public TestMultiValuedMapEntries() {
-            super("");
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public Entry<K, V>[] getFullElements() {
@@ -990,10 +981,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     }
 
     public class TestMultiValuedMapKeySet extends AbstractSetTest<K> {
-        public TestMultiValuedMapKeySet() {
-            super("");
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public K[] getFullElements() {
@@ -1050,10 +1037,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     }
 
     public class TestMultiValuedMapValues extends AbstractCollectionTest<V> {
-        public TestMultiValuedMapValues() {
-            super("");
-        }
-
         @Override
         public V[] getFullElements() {
             return getSampleValues();
@@ -1135,11 +1118,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     }
 
     public class TestMultiValuedMapKeys extends AbstractMultiSetTest<K> {
-
-        public TestMultiValuedMapKeys() {
-            super("");
-        }
-
         @Override
         public K[] getFullElements() {
             return getSampleKeys();
@@ -1200,10 +1178,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     }
 
     public class TestMultiValuedMapAsMap extends AbstractMapTest<K, Collection<V>> {
-
-        public TestMultiValuedMapAsMap() {
-            super("");
-        }
 
         @Override
         public Map<K, Collection<V>> makeObject() {
