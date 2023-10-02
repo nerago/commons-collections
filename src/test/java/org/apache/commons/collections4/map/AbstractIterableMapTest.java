@@ -32,110 +32,102 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V> {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public abstract IterableMap<K, V> makeObject();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public IterableMap<K, V> makeFullMap() {
         return (IterableMap<K, V>) super.makeFullMap();
     }
 
-    @Test
-    public void testFailFastEntrySet() {
-        if (!isRemoveSupported()) {
-            return;
-        }
-        if (!isFailFastExpected()) {
-            return;
-        }
-        resetFull();
-        Iterator<Map.Entry<K, V>> it = getMap().entrySet().iterator();
-        final Map.Entry<K, V> val = it.next();
-        getMap().remove(val.getKey());
-        final Iterator<Map.Entry<K, V>> finalIt0 = it;
-        assertThrows(ConcurrentModificationException.class, () -> finalIt0.next());
-
-        resetFull();
-        it = getMap().entrySet().iterator();
-        it.next();
-        getMap().clear();
-        final Iterator<Map.Entry<K, V>> finalIt1 = it;
-        assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+    @Override
+    public MapTest makeMapTest() {
+        return new MapTest();
     }
 
-    @Test
-    public void testFailFastKeySet() {
-        if (!isRemoveSupported()) {
-            return;
-        }
-        if (!isFailFastExpected()) {
-            return;
-        }
-        resetFull();
-        Iterator<K> it = getMap().keySet().iterator();
-        final K val = it.next();
-        getMap().remove(val);
-        final Iterator<K> finalIt0 = it;
-        assertThrows(ConcurrentModificationException.class, () -> finalIt0.next());
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    @Nested
+    public class MapTest extends AbstractMapTest<K, V>.MapTest {
+        @Test
+        public void testFailFastEntrySet() {
+            if (!isRemoveSupported()) {
+                return;
+            }
+            if (!isFailFastExpected()) {
+                return;
+            }
+            resetFull();
+            Iterator<Map.Entry<K, V>> it = getMap().entrySet().iterator();
+            final Map.Entry<K, V> val = it.next();
+            getMap().remove(val.getKey());
+            final Iterator<Map.Entry<K, V>> finalIt0 = it;
+            assertThrows(ConcurrentModificationException.class, () -> finalIt0.next());
 
-        resetFull();
-        it = getMap().keySet().iterator();
-        it.next();
-        getMap().clear();
-        final Iterator<K> finalIt1 = it;
-        assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
-    }
-
-    @Test
-    public void testFailFastValues() {
-        if (!isRemoveSupported()) {
-            return;
+            resetFull();
+            it = getMap().entrySet().iterator();
+            it.next();
+            getMap().clear();
+            final Iterator<Map.Entry<K, V>> finalIt1 = it;
+            assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
         }
-        if (!isFailFastExpected()) {
-            return;
-        }
-        resetFull();
-        Iterator<V> it = getMap().values().iterator();
-        it.next();
-        getMap().remove(getMap().keySet().iterator().next());
-        final Iterator<V> finalIt0 = it;
-        assertThrows(ConcurrentModificationException.class, () -> finalIt0.next());
 
-        resetFull();
-        it = getMap().values().iterator();
-        it.next();
-        getMap().clear();
-        final Iterator<V> finalIt1 = it;
-        assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+        @Test
+        public void testFailFastKeySet() {
+            if (!isRemoveSupported()) {
+                return;
+            }
+            if (!isFailFastExpected()) {
+                return;
+            }
+            resetFull();
+            Iterator<K> it = getMap().keySet().iterator();
+            final K val = it.next();
+            getMap().remove(val);
+            final Iterator<K> finalIt0 = it;
+            assertThrows(ConcurrentModificationException.class, () -> finalIt0.next());
+
+            resetFull();
+            it = getMap().keySet().iterator();
+            it.next();
+            getMap().clear();
+            final Iterator<K> finalIt1 = it;
+            assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+        }
+
+        @Test
+        public void testFailFastValues() {
+            if (!isRemoveSupported()) {
+                return;
+            }
+            if (!isFailFastExpected()) {
+                return;
+            }
+            resetFull();
+            Iterator<V> it = getMap().values().iterator();
+            it.next();
+            getMap().remove(getMap().keySet().iterator().next());
+            final Iterator<V> finalIt0 = it;
+            assertThrows(ConcurrentModificationException.class, () -> finalIt0.next());
+
+            resetFull();
+            it = getMap().values().iterator();
+            it.next();
+            getMap().clear();
+            final Iterator<V> finalIt1 = it;
+            assertThrows(ConcurrentModificationException.class, () -> finalIt1.next());
+        }
+
+        @Override
+        public IterableMap<K, V> getMap() {
+            return (IterableMap<K, V>) super.getMap();
+        }
     }
 
     @Nested
     public class TestMapIterator extends AbstractMapIteratorNestedTest<K, V> {
         @Override
-        protected AbstractIterableMapTest<K, V> getEnclosing() {
+        public AbstractIterableMapTest<K, V> outerTest() {
             return AbstractIterableMapTest.this;
         }
     }
-
-//  public void testCreate() throws Exception {
-//      resetEmpty();
-//      writeExternalFormToDisk((Serializable) map, "D:/dev/collections/data/test/HashedMap.emptyCollection.version3.obj");
-//      resetFull();
-//      writeExternalFormToDisk((Serializable) map, "D:/dev/collections/data/test/HashedMap.fullCollection.version3.obj");
-//  }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IterableMap<K, V> getMap() {
-        return (IterableMap<K, V>) super.getMap();
-    }
-
 }

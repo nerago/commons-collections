@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.set.AbstractSetTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
@@ -31,17 +32,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractNestedMapEntrySetTest<K, V> extends AbstractSetTest<Map.Entry<K, V>> {
+    protected AbstractMapTest<K, V>.MapTest mapTest;
     
     public abstract AbstractMapTest<K, V> outerTest();
-    
-    public abstract AbstractMapTest<K, V>.MapTest mapTest();
-    
+
+    @BeforeEach
+    protected void prepare() {
+        mapTest = outerTest().makeMapTest();
+    }
+
     public Map<K, V> getMap() {
-        return mapTest().getMap();
+        return mapTest.getMap();
     }
 
     public Map<K, V> getConfirmedMap() {
-        return mapTest().getConfirmed();
+        return mapTest.getConfirmed();
     }
     
     // Have to implement manually; entrySet doesn't support addAll
@@ -103,14 +108,14 @@ public abstract class AbstractNestedMapEntrySetTest<K, V> extends AbstractSetTes
 
     @Override
     public void resetFull() {
-        mapTest().resetFull();
+        mapTest.resetFull();
         setCollection(getMap().entrySet());
         setConfirmed(getConfirmedMap().entrySet());
     }
 
     @Override
     public void resetEmpty() {
-        mapTest().resetEmpty();
+        mapTest.resetEmpty();
         setCollection(getMap().entrySet());
         setConfirmed(getConfirmedMap().entrySet());
     }
@@ -265,6 +270,6 @@ public abstract class AbstractNestedMapEntrySetTest<K, V> extends AbstractSetTes
     @Override
     public void verify() {
         super.verify();
-        mapTest().verify();
+        mapTest.verify();
     }
 }

@@ -57,8 +57,7 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
 
     @Test
     public void testComparator() {
-        resetEmpty();
-        final SortedBidiMap<K, V> bidi = (SortedBidiMap<K, V>) map;
+        final SortedBidiMap<K, V> bidi = makeObject();
         assertNotNull(bidi.comparator());
         assertTrue(bidi.comparator() instanceof ReverseComparator);
     }

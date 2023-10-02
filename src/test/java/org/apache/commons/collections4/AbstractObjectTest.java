@@ -228,7 +228,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         return "4";
     }
 
-    protected String getCanonicalEmptyCollectionName(final Object object) {
+    public String getCanonicalEmptyCollectionName(final Object object) {
         final StringBuilder retval = new StringBuilder();
         retval.append(TEST_DATA_PATH);
         String colName = object.getClass().getName();
@@ -240,7 +240,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         return retval.toString();
     }
 
-    protected String getCanonicalFullCollectionName(final Object object) {
+    public String getCanonicalFullCollectionName(final Object object) {
         final StringBuilder retval = new StringBuilder();
         retval.append(TEST_DATA_PATH);
         String colName = object.getClass().getName();
@@ -294,7 +294,7 @@ public abstract class AbstractObjectTest extends BulkTest {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    protected Object readExternalFormFromDisk(final String path) throws IOException, ClassNotFoundException {
+    public Object readExternalFormFromDisk(final String path) throws IOException, ClassNotFoundException {
         try (FileInputStream stream = new FileInputStream(path)) {
             return readExternalFormFromStream(stream);
         }
@@ -314,7 +314,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         return readExternalFormFromStream(stream);
     }
 
-    protected boolean skipSerializedCanonicalTests() {
+    public boolean skipSerializedCanonicalTests() {
         return Boolean.getBoolean("org.apache.commons.collections:with-clover");
     }
 
@@ -329,7 +329,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         oStream.writeObject(o);
     }
 
-    protected static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
+    public static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
         try {
             executable.execute();
         } catch (final Throwable throwable) {

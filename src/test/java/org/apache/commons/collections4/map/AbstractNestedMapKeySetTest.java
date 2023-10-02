@@ -17,22 +17,27 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.set.AbstractSetTest;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Map;
 import java.util.Set;
 
 public abstract class AbstractNestedMapKeySetTest<K, V> extends AbstractSetTest<K> {
+    protected AbstractMapTest<K, V>.MapTest mapTest;
 
     public abstract AbstractMapTest<K, V> outerTest();
 
-    public abstract AbstractMapTest<K, V>.MapTest mapTest();
+    @BeforeEach
+    protected void prepare() {
+        mapTest = outerTest().makeMapTest();
+    }
 
     public Map<K, V> getMap() {
-        return mapTest().getMap();
+        return mapTest.getMap();
     }
 
     public Map<K, V> getConfirmedMap() {
-        return mapTest().getConfirmed();
+        return mapTest.getConfirmed();
     }
 
     @Override
@@ -77,14 +82,14 @@ public abstract class AbstractNestedMapKeySetTest<K, V> extends AbstractSetTest<
 
     @Override
     public void resetEmpty() {
-        mapTest().resetEmpty();
+        mapTest.resetEmpty();
         setCollection(getMap().keySet());
         setConfirmed(getConfirmedMap().keySet());
     }
 
     @Override
     public void resetFull() {
-        mapTest().resetFull();
+        mapTest.resetFull();
         setCollection(getMap().keySet());
         setConfirmed(getConfirmedMap().keySet());
     }
@@ -92,7 +97,7 @@ public abstract class AbstractNestedMapKeySetTest<K, V> extends AbstractSetTest<
     @Override
     public void verify() {
         super.verify();
-        mapTest().verify();
+        mapTest.verify();
     }
 
     @Override

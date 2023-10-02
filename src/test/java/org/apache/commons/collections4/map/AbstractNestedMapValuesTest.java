@@ -17,22 +17,27 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Collection;
 import java.util.Map;
 
 public abstract class AbstractNestedMapValuesTest<K, V> extends AbstractCollectionTest<V> {
+    protected AbstractMapTest<K, V>.MapTest mapTest;
 
     public abstract AbstractMapTest<K, V> outerTest();
 
-    public abstract AbstractMapTest<K, V>.MapTest mapTest();
+    @BeforeEach
+    protected void prepare() {
+        mapTest = outerTest().makeMapTest();
+    }
 
     public Map<K, V> getMap() {
-        return mapTest().getMap();
+        return mapTest.getMap();
     }
 
     public Map<K, V> getConfirmedMap() {
-        return mapTest().getConfirmed();
+        return mapTest.getConfirmed();
     }
 
     @Override
@@ -96,14 +101,14 @@ public abstract class AbstractNestedMapValuesTest<K, V> extends AbstractCollecti
 
     @Override
     public void resetFull() {
-        mapTest().resetFull();
+        mapTest.resetFull();
         setCollection(getMap().values());
         setConfirmed(getConfirmedMap().values());
     }
 
     @Override
     public void resetEmpty() {
-        mapTest().resetEmpty();
+        mapTest.resetEmpty();
         setCollection(getMap().values());
         setConfirmed(getConfirmedMap().values());
     }
@@ -111,11 +116,15 @@ public abstract class AbstractNestedMapValuesTest<K, V> extends AbstractCollecti
     @Override
     public void verify() {
         super.verify();
-        mapTest().verify();
+        mapTest.verify();
     }
 
     @Override
     protected int getIterationBehaviour() {
         return outerTest().getIterationBehaviour();
     }
+
+    // TODO: should test that a remove on the values collection view
+    // removes the proper mapping and not just any mapping that may have
+    // the value equal to the value returned from the values iterator.
 }

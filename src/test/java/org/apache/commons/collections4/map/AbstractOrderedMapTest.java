@@ -40,15 +40,9 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public abstract OrderedMap<K, V> makeObject();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public OrderedMap<K, V> makeFullMap() {
         return (OrderedMap<K, V>) super.makeFullMap();
@@ -76,117 +70,120 @@ public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTe
         return (K[]) list.toArray();
     }
 
-    @Test
-    public void testFirstKey() {
-        resetEmpty();
-        OrderedMap<K, V> ordered = getMap();
-        final OrderedMap<K, V> finalOrdered = ordered;
-        assertThrows(NoSuchElementException.class, () -> finalOrdered.firstKey());
-
-        resetFull();
-        ordered = getMap();
-        final K confirmedFirst = confirmed.keySet().iterator().next();
-        assertEquals(confirmedFirst, ordered.firstKey());
-    }
-
-    @Test
-    public void testLastKey() {
-        resetEmpty();
-        OrderedMap<K, V> ordered = getMap();
-        final OrderedMap<K, V> finalOrdered = ordered;
-        assertThrows(NoSuchElementException.class, () -> finalOrdered.lastKey());
-
-        resetFull();
-        ordered = getMap();
-        K confirmedLast = null;
-        for (final Iterator<K> it = confirmed.keySet().iterator(); it.hasNext();) {
-            confirmedLast = it.next();
-        }
-        assertEquals(confirmedLast, ordered.lastKey());
-    }
-
-    @Test
-    public void testNextKey() {
-        resetEmpty();
-        OrderedMap<K, V> ordered = getMap();
-        assertNull(ordered.nextKey(getOtherKeys()[0]));
-        if (!isAllowNullKey()) {
-            try {
-                assertNull(ordered.nextKey(null)); // this is allowed too
-            } catch (final NullPointerException ex) {}
-        } else {
-            assertNull(ordered.nextKey(null));
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    @Nested
+    public class MapTest extends AbstractIterableMapTest<K, V>.MapTest {
+        @Override
+        public OrderedMap<K, V> getMap() {
+            return (OrderedMap<K, V>) super.getMap();
         }
 
-        resetFull();
-        ordered = getMap();
-        final Iterator<K> it = confirmed.keySet().iterator();
-        K confirmedLast = it.next();
-        while (it.hasNext()) {
-            final K confirmedObject = it.next();
-            assertEquals(confirmedObject, ordered.nextKey(confirmedLast));
-            confirmedLast = confirmedObject;
-        }
-        assertNull(ordered.nextKey(confirmedLast));
-
-        if (!isAllowNullKey()) {
+        @Test
+        public void testFirstKey() {
+            resetEmpty();
+            OrderedMap<K, V> ordered = getMap();
             final OrderedMap<K, V> finalOrdered = ordered;
-            assertThrows(NullPointerException.class, () -> finalOrdered.nextKey(null));
-        } else {
-            assertNull(ordered.nextKey(null));
-        }
-    }
+            assertThrows(NoSuchElementException.class, () -> finalOrdered.firstKey());
 
-    @Test
-    public void testPreviousKey() {
-        resetEmpty();
-        OrderedMap<K, V> ordered = getMap();
-        assertNull(ordered.previousKey(getOtherKeys()[0]));
-        if (!isAllowNullKey()) {
-            try {
-                assertNull(ordered.previousKey(null)); // this is allowed too
-            } catch (final NullPointerException ex) {}
-        } else {
-            assertNull(ordered.previousKey(null));
+            resetFull();
+            ordered = getMap();
+            final K confirmedFirst = getConfirmed().keySet().iterator().next();
+            assertEquals(confirmedFirst, ordered.firstKey());
         }
 
-        resetFull();
-        ordered = getMap();
-        final List<K> list = new ArrayList<>(confirmed.keySet());
-        Collections.reverse(list);
-        final Iterator<K> it = list.iterator();
-        K confirmedLast = it.next();
-        while (it.hasNext()) {
-            final K confirmedObject = it.next();
-            assertEquals(confirmedObject, ordered.previousKey(confirmedLast));
-            confirmedLast = confirmedObject;
-        }
-        assertNull(ordered.previousKey(confirmedLast));
-
-        if (!isAllowNullKey()) {
+        @Test
+        public void testLastKey() {
+            resetEmpty();
+            OrderedMap<K, V> ordered = getMap();
             final OrderedMap<K, V> finalOrdered = ordered;
-            assertThrows(NullPointerException.class, () -> finalOrdered.previousKey(null));
-        } else {
+            assertThrows(NoSuchElementException.class, () -> finalOrdered.lastKey());
+
+            resetFull();
+            ordered = getMap();
+            K confirmedLast = null;
+            for (final Iterator<K> it = getConfirmed().keySet().iterator(); it.hasNext(); ) {
+                confirmedLast = it.next();
+            }
+            assertEquals(confirmedLast, ordered.lastKey());
+        }
+
+        @Test
+        public void testNextKey() {
+            resetEmpty();
+            OrderedMap<K, V> ordered = getMap();
+            assertNull(ordered.nextKey(getOtherKeys()[0]));
             if (!isAllowNullKey()) {
+                try {
+                    assertNull(ordered.nextKey(null)); // this is allowed too
+                } catch (final NullPointerException ex) {
+                }
+            } else {
+                assertNull(ordered.nextKey(null));
+            }
+
+            resetFull();
+            ordered = getMap();
+            final Iterator<K> it = getConfirmed().keySet().iterator();
+            K confirmedLast = it.next();
+            while (it.hasNext()) {
+                final K confirmedObject = it.next();
+                assertEquals(confirmedObject, ordered.nextKey(confirmedLast));
+                confirmedLast = confirmedObject;
+            }
+            assertNull(ordered.nextKey(confirmedLast));
+
+            if (!isAllowNullKey()) {
+                final OrderedMap<K, V> finalOrdered = ordered;
+                assertThrows(NullPointerException.class, () -> finalOrdered.nextKey(null));
+            } else {
+                assertNull(ordered.nextKey(null));
+            }
+        }
+
+        @Test
+        public void testPreviousKey() {
+            resetEmpty();
+            OrderedMap<K, V> ordered = getMap();
+            assertNull(ordered.previousKey(getOtherKeys()[0]));
+            if (!isAllowNullKey()) {
+                try {
+                    assertNull(ordered.previousKey(null)); // this is allowed too
+                } catch (final NullPointerException ex) {
+                }
+            } else {
                 assertNull(ordered.previousKey(null));
+            }
+
+            resetFull();
+            ordered = getMap();
+            final List<K> list = new ArrayList<>(getConfirmed().keySet());
+            Collections.reverse(list);
+            final Iterator<K> it = list.iterator();
+            K confirmedLast = it.next();
+            while (it.hasNext()) {
+                final K confirmedObject = it.next();
+                assertEquals(confirmedObject, ordered.previousKey(confirmedLast));
+                confirmedLast = confirmedObject;
+            }
+            assertNull(ordered.previousKey(confirmedLast));
+
+            if (!isAllowNullKey()) {
+                final OrderedMap<K, V> finalOrdered = ordered;
+                assertThrows(NullPointerException.class, () -> finalOrdered.previousKey(null));
+            } else {
+                if (!isAllowNullKey()) {
+                    assertNull(ordered.previousKey(null));
+                }
             }
         }
     }
 
+    @SuppressWarnings("ClassNameSameAsAncestorName")
     @Nested
     public class TestMapIterator extends AbstractOrderedMapIteratorNestedTest<K, V> {
         @Override
-        protected AbstractIterableMapTest<K, V> getEnclosing() {
+        public AbstractMapTest<K, V> outerTest() {
             return AbstractOrderedMapTest.this;
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OrderedMap<K, V> getMap() {
-        return (OrderedMap<K, V>) super.getMap();
-    }
-
 }

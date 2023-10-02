@@ -19,6 +19,8 @@ package org.apache.commons.collections4.iterators;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
+import org.apache.commons.collections4.map.AbstractMapTest;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Map;
 
@@ -26,55 +28,62 @@ import java.util.Map;
  * Abstract class for testing the MapIterator interface to simplify nesting inside AbstractMapTest types
  */
 public abstract class AbstractOrderedMapIteratorNestedTest<K, V> extends AbstractOrderedMapIteratorTest<K, V> {
-    protected abstract AbstractIterableMapTest<K, V> getEnclosing();
+    protected AbstractMapTest<K, V>.MapTest mapTest;
+
+    public abstract AbstractMapTest<K, V> outerTest();
+
+    @BeforeEach
+    protected void prepare() {
+        mapTest = outerTest().makeMapTest();
+    }
 
     @Override
     public OrderedMapIterator<K, V> makeEmptyIterator() {
-        getEnclosing().resetEmpty();
+        mapTest.resetEmpty();
         return getMap().mapIterator();
     }
 
     @Override
     public OrderedMapIterator<K, V> makeObject() {
-        getEnclosing().resetFull();
+        mapTest.resetFull();
         return getMap().mapIterator();
     }
 
     @Override
     public OrderedMap<K, V> getMap() {
         // assumes makeFullMapIterator() called first
-        return (OrderedMap<K, V>) getEnclosing().getMap();
+        return (OrderedMap<K, V>) mapTest.getMap();
     }
 
     @Override
     public Map<K, V> getConfirmedMap() {
         // assumes makeFullMapIterator() called first
-        return getEnclosing().getConfirmed();
+        return mapTest.getConfirmed();
     }
 
     @Override
     public V[] addSetValues() {
-        return getEnclosing().getNewSampleValues();
+        return outerTest().getNewSampleValues();
     }
 
     @Override
     public boolean supportsRemove() {
-        return getEnclosing().isRemoveSupported();
+        return outerTest().isRemoveSupported();
     }
 
     @Override
     public boolean supportsSetValue() {
-        return getEnclosing().isSetValueSupported();
+        return outerTest().isSetValueSupported();
     }
 
     @Override
     public boolean isGetStructuralModify() {
-        return getEnclosing().isGetStructuralModify();
+        return outerTest().isGetStructuralModify();
     }
 
     @Override
     public void verify() {
         super.verify();
-        getEnclosing().verify();
+        mapTest.verify();
     }
 }

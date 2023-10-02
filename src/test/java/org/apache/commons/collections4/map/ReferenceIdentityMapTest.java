@@ -281,46 +281,52 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
         assertFalse(entry1.equals(entry3));
     }
 
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testNullHandling() {
-        resetFull();
-        assertNull(getMap().get(null));
-        assertFalse(getMap().containsKey(null));
-        assertFalse(getMap().containsValue(null));
-        assertNull(getMap().remove(null));
-        assertFalse(getMap().entrySet().contains(null));
-        assertFalse(getMap().containsKey(null));
-        assertFalse(getMap().containsValue(null));
-        assertThrows(NullPointerException.class, () -> getMap().put(null, null));
-        assertThrows(NullPointerException.class, () -> getMap().put((K) new Object(), null));
-        assertThrows(NullPointerException.class, () -> getMap().put(null, (V) new Object()));
-    }
 
-    /** Tests whether purge values setting works */
-    @Test
-    public void testPurgeValues() throws Exception {
-        // many thanks to Juozas Baliuka for suggesting this method
-        final Map<K, V> testMap = buildRefMap();
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    @Nested
+    public class MapTest extends AbstractIterableMapTest<K, V>.MapTest {
+        @Test
+        @SuppressWarnings("unchecked")
+        public void testNullHandling() {
+            resetFull();
+            assertNull(getMap().get(null));
+            assertFalse(getMap().containsKey(null));
+            assertFalse(getMap().containsValue(null));
+            assertNull(getMap().remove(null));
+            assertFalse(getMap().entrySet().contains(null));
+            assertFalse(getMap().containsKey(null));
+            assertFalse(getMap().containsValue(null));
+            assertThrows(NullPointerException.class, () -> getMap().put(null, null));
+            assertThrows(NullPointerException.class, () -> getMap().put((K) new Object(), null));
+            assertThrows(NullPointerException.class, () -> getMap().put(null, (V) new Object()));
+        }
 
-        int iterations = 0;
-        int bytz = 2;
-        while (true) {
-            System.gc();
-            if (iterations++ > 50) {
-                fail("Max iterations reached before resource released.");
+        /**
+         * Tests whether purge values setting works
+         */
+        @Test
+        public void testPurgeValues() throws Exception {
+            // many thanks to Juozas Baliuka for suggesting this method
+            final Map<K, V> testMap = buildRefMap();
+
+            int iterations = 0;
+            int bytz = 2;
+            while (true) {
+                System.gc();
+                if (iterations++ > 50) {
+                    fail("Max iterations reached before resource released.");
+                }
+                testMap.isEmpty();
+                if (
+                        keyReference.get() == null &&
+                                valueReference.get() == null) {
+                    break;
+
+                }
+                // create garbage:
+                @SuppressWarnings("unused") final byte[] b = new byte[bytz];
+                bytz = bytz * 2;
             }
-            testMap.isEmpty();
-            if (
-                keyReference.get() == null &&
-                valueReference.get() == null) {
-                break;
-
-            }
-            // create garbage:
-            @SuppressWarnings("unused")
-            final byte[] b =  new byte[bytz];
-            bytz = bytz * 2;
         }
     }
 
@@ -345,5 +351,4 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
             assertThrows(AssertionFailedError.class, super::testMapEntrySetIteratorEntrySetValueClonedKeysValues);
         }
     }
-
 }
