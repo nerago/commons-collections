@@ -314,7 +314,7 @@ public abstract class AbstractNestedMapTest<K, V> extends AbstractObjectTest {
         // test to make sure the canonical form has been preserved
         final Map<K, V> map = makeObject();
         if (map instanceof Serializable && !outerTest().skipSerializedCanonicalTests() && outerTest().isTestSerialization()) {
-            @SuppressWarnings("unchecked") final Map<K, V> map2 = (Map<K, V>) outerTest().readExternalFormFromDisk(outerTest().getCanonicalEmptyCollectionName(map));
+            @SuppressWarnings("unchecked") final Map<K, V> map2 = (Map<K, V>) AbstractObjectTest.readExternalFormFromDisk(outerTest().getCanonicalEmptyCollectionName(map));
             assertEquals(0, map2.size(), "Map is empty");
         }
     }
@@ -336,7 +336,7 @@ public abstract class AbstractNestedMapTest<K, V> extends AbstractObjectTest {
         // test to make sure the canonical form has been preserved
         final Map<K, V> map = makeFullMap();
         if (map instanceof Serializable && !outerTest().skipSerializedCanonicalTests() && outerTest().isTestSerialization()) {
-            @SuppressWarnings("unchecked") final Map<K, V> map2 = (Map<K, V>) outerTest().readExternalFormFromDisk(outerTest().getCanonicalFullCollectionName(map));
+            @SuppressWarnings("unchecked") final Map<K, V> map2 = (Map<K, V>) AbstractObjectTest.readExternalFormFromDisk(outerTest().getCanonicalFullCollectionName(map));
             Assertions.assertEquals(getSampleKeys().length, map2.size(), "Map is the right size");
         }
     }

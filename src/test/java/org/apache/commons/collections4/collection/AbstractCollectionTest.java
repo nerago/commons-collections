@@ -70,18 +70,18 @@ import org.junit.jupiter.api.Test;
  * <p>
  * Override these if your collection doesn't support certain operations:
  * <ul>
- * <li>{@link #isAddSupported()}
- * <li>{@link #isRemoveSupported()}
- * <li>{@link #areEqualElementsDistinguishable()}
- * <li>{@link #isNullSupported()}
- * <li>{@link #isFailFastSupported()}
+ * <li>{@link CollectionTestParameters#isAddSupported()}
+ * <li>{@link CollectionTestParameters#isRemoveSupported()}
+ * <li>{@link CollectionTestParameters#areEqualElementsDistinguishable()}
+ * <li>{@link CollectionTestParameters#isNullSupported()}
+ * <li>{@link CollectionTestParameters#isFailFastSupported()}
  * </ul>
  * <p>
  * <b>Indicate Collection Behaviour</b>
  * <p>
  * Override these if your collection makes specific behavior guarantees:
  * <ul>
- * <li>{@link #getIterationBehaviour()}</li>
+ * <li>{@link CollectionTestParameters#getIterationBehaviour()}</li>
  * </ul>
  * <p>
  * <b>Fixture Methods</b>
@@ -148,12 +148,113 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     // tests on Collection.equals nor any for Collection.hashCode.
     //
 
-    /**
-     * Flag to indicate the collection makes no ordering guarantees for the iterator. If this is not used
-     * then the behavior is assumed to be ordered and the output order of the iterator is matched by
-     * the toArray method.
-     */
-    public static final int UNORDERED = 0x1;
+    @Override
+    public CollectionTestParameters testParameters() {
+        return new CollectionTestParameters();
+    }
+
+    public static class CollectionTestParameters extends TestParameters {
+        /**
+         * Flag to indicate the collection makes no ordering guarantees for the iterator. If this is not used
+         * then the behavior is assumed to be ordered and the output order of the iterator is matched by
+         * the toArray method.
+         */
+        public static final int UNORDERED = 0x1;
+
+        /**
+         * Return a flag specifying the iteration behavior of the collection.
+         * This is used to change the assertions used by specific tests.
+         * The default implementation returns 0 which indicates ordered iteration behavior.
+         *
+         * @return the iteration behavior
+         * @see #UNORDERED
+         */
+        protected int getIterationBehaviour(){
+            return 0;
+        }
+
+        private boolean isIterationUnordered() {
+            return (getIterationBehaviour() & UNORDERED) != 0;
+        }
+
+        /**
+         *  Specifies whether equal elements in the collection are, in fact,
+         *  distinguishable with information not readily available.  That is, if a
+         *  particular value is to be removed from the collection, then there is
+         *  one and only one value that can be removed, even if there are other
+         *  elements which are equal to it.
+         *
+         *  <P>In most collection cases, elements are not distinguishable (equal is
+         *  equal), thus this method defaults to return false.  In some cases,
+         *  however, they are.  For example, the collection returned from the map's
+         *  values() collection view are backed by the map, so while there may be
+         *  two values that are equal, their associated keys are not.  Since the
+         *  keys are distinguishable, the values are.
+         *
+         *  <P>This flag is used to skip some verifications for iterator.remove()
+         *  where it is impossible to perform an equivalent modification on the
+         *  confirmed collection because it is not possible to determine which
+         *  value in the confirmed collection to actually remove.  Tests that
+         *  override the default (i.e. where equal elements are distinguishable),
+         *  should provide additional tests on iterator.remove() to make sure the
+         *  proper elements are removed when remove() is called on the iterator.
+         **/
+        public boolean areEqualElementsDistinguishable() {
+            return false;
+        }
+
+        /**
+         *  Returns true if the collections produced by
+         *  {@link #makeObject()} and {@link #makeFullCollection()}
+         *  support the {@code add} and {@code addAll}
+         *  operations.<P>
+         *  Default implementation returns true.  Override if your collection
+         *  class does not support add or addAll.
+         */
+        public boolean isAddSupported() {
+            return true;
+        }
+
+        /**
+         *  Returns true if the collections produced by
+         *  {@link #makeObject()} and {@link #makeFullCollection()}
+         *  support the {@code remove}, {@code removeAll},
+         *  {@code retainAll}, {@code clear} and
+         *  {@code iterator().remove()} methods.
+         *  Default implementation returns true.  Override if your collection
+         *  class does not support removal operations.
+         */
+        public boolean isRemoveSupported() {
+            return true;
+        }
+
+        /**
+         * Returns true to indicate that the collection supports holding null.
+         * The default implementation returns true;
+         */
+        public boolean isNullSupported() {
+            return true;
+        }
+
+        /**
+         * Returns true to indicate that the collection supports fail fast iterators.
+         * The default implementation returns true;
+         */
+        public boolean isFailFastSupported() {
+            return false;
+        }
+
+        /**
+         * Returns true to indicate that the collection supports equals() comparisons.
+         * This implementation returns false;
+         */
+        @Override
+        public boolean isEqualsCheckable() {
+            return false;
+        }
+
+    }
+
 
     // These fields are used by reset() and verify(), and any test
     // method that tests a modification.
@@ -172,82 +273,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  still matches the confirmed collection.
      */
     private Collection<E> confirmed;
-
-    /**
-     *  Specifies whether equal elements in the collection are, in fact,
-     *  distinguishable with information not readily available.  That is, if a
-     *  particular value is to be removed from the collection, then there is
-     *  one and only one value that can be removed, even if there are other
-     *  elements which are equal to it.
-     *
-     *  <P>In most collection cases, elements are not distinguishable (equal is
-     *  equal), thus this method defaults to return false.  In some cases,
-     *  however, they are.  For example, the collection returned from the map's
-     *  values() collection view are backed by the map, so while there may be
-     *  two values that are equal, their associated keys are not.  Since the
-     *  keys are distinguishable, the values are.
-     *
-     *  <P>This flag is used to skip some verifications for iterator.remove()
-     *  where it is impossible to perform an equivalent modification on the
-     *  confirmed collection because it is not possible to determine which
-     *  value in the confirmed collection to actually remove.  Tests that
-     *  override the default (i.e. where equal elements are distinguishable),
-     *  should provide additional tests on iterator.remove() to make sure the
-     *  proper elements are removed when remove() is called on the iterator.
-     **/
-    public boolean areEqualElementsDistinguishable() {
-        return false;
-    }
-
-    /**
-     *  Returns true if the collections produced by
-     *  {@link #makeObject()} and {@link #makeFullCollection()}
-     *  support the {@code add} and {@code addAll}
-     *  operations.<P>
-     *  Default implementation returns true.  Override if your collection
-     *  class does not support add or addAll.
-     */
-    public boolean isAddSupported() {
-        return true;
-    }
-
-    /**
-     *  Returns true if the collections produced by
-     *  {@link #makeObject()} and {@link #makeFullCollection()}
-     *  support the {@code remove}, {@code removeAll},
-     *  {@code retainAll}, {@code clear} and
-     *  {@code iterator().remove()} methods.
-     *  Default implementation returns true.  Override if your collection
-     *  class does not support removal operations.
-     */
-    public boolean isRemoveSupported() {
-        return true;
-    }
-
-    /**
-     * Returns true to indicate that the collection supports holding null.
-     * The default implementation returns true;
-     */
-    public boolean isNullSupported() {
-        return true;
-    }
-
-    /**
-     * Returns true to indicate that the collection supports fail fast iterators.
-     * The default implementation returns true;
-     */
-    public boolean isFailFastSupported() {
-        return false;
-    }
-
-    /**
-     * Returns true to indicate that the collection supports equals() comparisons.
-     * This implementation returns false;
-     */
-    @Override
-    public boolean isEqualsCheckable() {
-        return false;
-    }
 
     /**
      *  Verifies that {@link #collection} and {@link #confirmed} have
@@ -400,7 +425,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @SuppressWarnings("unchecked")
     public E[] getFullElements() {
-        if (isNullSupported()) {
+        if (testParameters().isNullSupported()) {
             final ArrayList<E> list = new ArrayList<>(Arrays.asList(getFullNonNullElements()));
             list.add(4, null);
             return (E[]) list.toArray();
@@ -499,25 +524,13 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         };
     }
 
-    /**
-     * Return a flag specifying the iteration behavior of the collection.
-     * This is used to change the assertions used by specific tests.
-     * The default implementation returns 0 which indicates ordered iteration behavior.
-     *
-     * @return the iteration behavior
-     * @see #UNORDERED
-     */
-    protected int getIterationBehaviour(){
-        return 0;
-    }
-
     // Tests
     /**
      *  Tests {@link Collection#add(Object)}.
      */
     @Test
     public void testCollectionAdd() {
-        if (!isAddSupported()) {
+        if (!testParameters().isAddSupported()) {
             return;
         }
 
@@ -550,7 +563,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionAddAll() {
-        if (!isAddSupported()) {
+        if (!testParameters().isAddSupported()) {
             return;
         }
 
@@ -590,12 +603,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     /**
-     *  If {@link #isAddSupported()} returns false, tests that add operations
-     *  raise <code>UnsupportedOperationException.
+     *  If {@link CollectionTestParameters#isAddSupported()} returns false, tests that add operations
+     *  raise {@link UnsupportedOperationException}.
      */
     @Test
     public void testUnsupportedAdd() {
-        if (isAddSupported()) {
+        if (testParameters().isAddSupported()) {
             return;
         }
 
@@ -631,7 +644,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionClear() {
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -787,7 +800,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testCollectionIteratorRemove() {
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -822,7 +835,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             // verify because we don't know how).
             //
             // see areEqualElementsDistinguishable()
-            if (!areEqualElementsDistinguishable()) {
+            if (!testParameters().areEqualElementsDistinguishable()) {
                 getConfirmed().remove(o);
                 verify();
             }
@@ -847,7 +860,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionRemove() {
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -880,7 +893,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             // verify because we don't know how).
             //
             // see areEqualElementsDistinguishable()
-            if (!areEqualElementsDistinguishable()) {
+            if (!testParameters().areEqualElementsDistinguishable()) {
                 getConfirmed().remove(element);
                 verify();
             }
@@ -894,7 +907,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionRemoveAll() {
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -939,7 +952,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionRemoveIf() {
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -982,7 +995,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionRetainAll() {
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -1120,7 +1133,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         array = getCollection().toArray(ArrayUtils.EMPTY_OBJECT_ARRAY);
         a = getCollection().toArray();
 
-        if ((getIterationBehaviour() & UNORDERED) != 0) {
+        if (testParameters().isIterationUnordered()) {
             assertUnorderedArrayEquals(array, a, "toArray(Object[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array), Arrays.asList(a), "toArrays should be equal");
@@ -1144,7 +1157,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertEquals(a.getClass(), array.getClass(),
                 "toArray(Object[]) should return correct array type");
 
-        if ((getIterationBehaviour() & UNORDERED) != 0) {
+        if (testParameters().isIterationUnordered()) {
             assertUnorderedArrayEquals(array, getCollection().toArray(), "type-specific toArray(T[]) and toArray()");
         } else {
             assertEquals(Arrays.asList(array),
@@ -1205,7 +1218,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testUnsupportedRemove() {
-        if (isRemoveSupported()) {
+        if (testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -1244,11 +1257,11 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     @Test
     public void testCollectionIteratorFailFast() {
-        if (!isFailFastSupported()) {
+        if (!testParameters().isFailFastSupported()) {
             return;
         }
 
-        if (isAddSupported()) {
+        if (testParameters().isAddSupported()) {
             resetFull();
             final Iterator<E> iter0 = getCollection().iterator();
             final E o = getOtherElements()[0];
@@ -1267,7 +1280,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             verify();
         }
 
-        if (!isRemoveSupported()) {
+        if (!testParameters().isRemoveSupported()) {
             return;
         }
 
@@ -1313,7 +1326,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     @Override
     public void testSerializeDeserializeThenCompare() throws Exception {
         Object obj = makeObject();
-        if (obj instanceof Serializable && isTestSerialization()) {
+        if (obj instanceof Serializable && testParameters().isTestSerialization()) {
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             final ObjectOutputStream out = new ObjectOutputStream(buffer);
             out.writeObject(obj);
@@ -1322,12 +1335,12 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()));
             final Object dest = in.readObject();
             in.close();
-            if (isEqualsCheckable()) {
+            if (testParameters().isEqualsCheckable()) {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj)) - EMPTY Collection");
             }
         }
         obj = makeFullCollection();
-        if (obj instanceof Serializable && isTestSerialization()) {
+        if (obj instanceof Serializable && testParameters().isTestSerialization()) {
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             final ObjectOutputStream out = new ObjectOutputStream(buffer);
             out.writeObject(obj);
@@ -1336,7 +1349,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()));
             final Object dest = in.readObject();
             in.close();
-            if (isEqualsCheckable()) {
+            if (testParameters().isEqualsCheckable()) {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj)) - FULL Collection");
             }
         }
@@ -1417,5 +1430,4 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
             //apparently not
         }
     }
-
 }

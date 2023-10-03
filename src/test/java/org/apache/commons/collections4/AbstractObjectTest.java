@@ -24,14 +24,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -55,42 +53,71 @@ public abstract class AbstractObjectTest extends BulkTest {
      */
     public abstract Object makeObject();
 
-    /**
-     * Override this method if a subclass is testing an object
-     * that cannot serialize an "empty" Collection.
-     * (e.g. Comparators have no contents)
-     *
-     * @return true
-     */
-    public boolean supportsEmptyCollections() {
-        return true;
+    public TestParameters testParameters() {
+        return new TestParameters();
     }
 
-    /**
-     * Override this method if a subclass is testing an object
-     * that cannot serialize a "full" Collection.
-     * (e.g. Comparators have no contents)
-     *
-     * @return true
-     */
-    public boolean supportsFullCollections() {
-        return true;
-    }
+    public static class TestParameters {
+        /**
+         * Override this method if a subclass is testing an object
+         * that cannot serialize an "empty" Collection.
+         * (e.g. Comparators have no contents)
+         *
+         * @return true
+         */
+        public boolean supportsEmptyCollections() {
+            return true;
+        }
 
-    /**
-     * Is serialization testing supported.
-     * Default is true.
-     */
-    public boolean isTestSerialization() {
-        return true;
-    }
+        /**
+         * Override this method if a subclass is testing an object
+         * that cannot serialize a "full" Collection.
+         * (e.g. Comparators have no contents)
+         *
+         * @return true
+         */
+        public boolean supportsFullCollections() {
+            return true;
+        }
 
-    /**
-     * Returns true to indicate that the collection supports equals() comparisons.
-     * This implementation returns true;
-     */
-    public boolean isEqualsCheckable() {
-        return true;
+        /**
+         * Is serialization testing supported.
+         * Default is true.
+         */
+        public boolean isTestSerialization() {
+            return true;
+        }
+
+        /**
+         * Returns true to indicate that the collection supports equals() comparisons.
+         * This implementation returns true;
+         */
+        public boolean isEqualsCheckable() {
+            return true;
+        }
+
+        public boolean skipSerializedCanonicalTests() {
+            return Boolean.getBoolean("org.apache.commons.collections:with-clover");
+        }
+
+        /**
+         * Get the version of Collections that this object tries to
+         * maintain serialization compatibility with. Defaults to 4, due to
+         * the package change to collections4 introduced in version 4.
+         *
+         * This constant makes it possible for TestMap (and other subclasses,
+         * if necessary) to automatically check SCM for a versionX copy of a
+         * Serialized object, so we can make sure that compatibility is maintained.
+         * See, for example, TestMap.getCanonicalFullMapName(Map map).
+         * Subclasses can override this variable, indicating compatibility
+         * with earlier Collections versions.
+         *
+         * @return The version, or {@code null} if this object shouldn't be
+         * tested for compatibility with previous versions.
+         */
+        public String getCompatibilityVersion() {
+            return "4";
+        }
     }
 
     @Test
@@ -149,9 +176,9 @@ public abstract class AbstractObjectTest extends BulkTest {
     @Test
     public void testSerializeDeserializeThenCompare() throws Exception {
         final Object obj = makeObject();
-        if (obj instanceof Serializable && isTestSerialization()) {
+        if (obj instanceof Serializable && testParameters().isTestSerialization()) {
             final Object dest = serializeDeserialize(obj);
-            if (isEqualsCheckable()) {
+            if (testParameters().isEqualsCheckable()) {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj))");
             }
         }
@@ -168,7 +195,7 @@ public abstract class AbstractObjectTest extends BulkTest {
     @Test
     public void testSimpleSerialization() throws Exception {
         final Object o = makeObject();
-        if (o instanceof Serializable && isTestSerialization()) {
+        if (o instanceof Serializable && testParameters().isTestSerialization()) {
             final byte[] object = writeExternalFormToBytes((Serializable) o);
             readExternalFormFromBytes(object);
         }
@@ -180,7 +207,7 @@ public abstract class AbstractObjectTest extends BulkTest {
      */
     @Test
     public void testCanonicalEmptyCollectionExists() {
-        if (supportsEmptyCollections() && isTestSerialization() && !skipSerializedCanonicalTests()) {
+        if (testParameters().supportsEmptyCollections() && testParameters().isTestSerialization() && !testParameters().skipSerializedCanonicalTests()) {
             final Object object = makeObject();
             if (object instanceof Serializable) {
                 final String name = getCanonicalEmptyCollectionName(object);
@@ -197,7 +224,7 @@ public abstract class AbstractObjectTest extends BulkTest {
      */
     @Test
     public void testCanonicalFullCollectionExists() {
-        if (supportsFullCollections() && isTestSerialization() && !skipSerializedCanonicalTests()) {
+        if (testParameters().supportsFullCollections() && testParameters().isTestSerialization() && !testParameters().skipSerializedCanonicalTests()) {
             final Object object = makeObject();
             if (object instanceof Serializable) {
                 final String name = getCanonicalFullCollectionName(object);
@@ -208,26 +235,6 @@ public abstract class AbstractObjectTest extends BulkTest {
         }
     }
 
-    // protected implementation
-    /**
-     * Get the version of Collections that this object tries to
-     * maintain serialization compatibility with. Defaults to 4, due to
-     * the package change to collections4 introduced in version 4.
-     *
-     * This constant makes it possible for TestMap (and other subclasses,
-     * if necessary) to automatically check SCM for a versionX copy of a
-     * Serialized object, so we can make sure that compatibility is maintained.
-     * See, for example, TestMap.getCanonicalFullMapName(Map map).
-     * Subclasses can override this variable, indicating compatibility
-     * with earlier Collections versions.
-     *
-     * @return The version, or {@code null} if this object shouldn't be
-     * tested for compatibility with previous versions.
-     */
-    public String getCompatibilityVersion() {
-        return "4";
-    }
-
     public String getCanonicalEmptyCollectionName(final Object object) {
         final StringBuilder retval = new StringBuilder();
         retval.append(TEST_DATA_PATH);
@@ -235,7 +242,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         colName = colName.substring(colName.lastIndexOf(".") + 1);
         retval.append(colName);
         retval.append(".emptyCollection.version");
-        retval.append(getCompatibilityVersion());
+        retval.append(testParameters().getCompatibilityVersion());
         retval.append(".obj");
         return retval.toString();
     }
@@ -247,7 +254,7 @@ public abstract class AbstractObjectTest extends BulkTest {
         colName = colName.substring(colName.lastIndexOf(".") + 1);
         retval.append(colName);
         retval.append(".fullCollection.version");
-        retval.append(getCompatibilityVersion());
+        retval.append(testParameters().getCompatibilityVersion());
         retval.append(".obj");
         return retval.toString();
     }
@@ -264,9 +271,9 @@ public abstract class AbstractObjectTest extends BulkTest {
      * @param path path to write the serialized Object
      * @throws IOException
      */
-    protected void writeExternalFormToDisk(final Serializable o, final String path) throws IOException {
-        try (FileOutputStream fileStream = new FileOutputStream(path)) {
-            writeExternalFormToStream(o, fileStream);
+    protected static void writeExternalFormToDisk(final Serializable o, final String path) throws IOException {
+        try (final ObjectOutputStream oStream = new ObjectOutputStream(Files.newOutputStream(Paths.get(path)))) {
+            oStream.writeObject(o);
         }
     }
 
@@ -278,9 +285,11 @@ public abstract class AbstractObjectTest extends BulkTest {
      * @return serialized form of the Object
      * @throws IOException
      */
-    protected byte[] writeExternalFormToBytes(final Serializable o) throws IOException {
+    protected static byte[] writeExternalFormToBytes(final Serializable o) throws IOException {
         final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        writeExternalFormToStream(o, byteStream);
+        try (final ObjectOutputStream oStream = new ObjectOutputStream(byteStream)) {
+            oStream.writeObject(o);
+        }
         return byteStream.toByteArray();
     }
 
@@ -294,9 +303,9 @@ public abstract class AbstractObjectTest extends BulkTest {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public Object readExternalFormFromDisk(final String path) throws IOException, ClassNotFoundException {
-        try (FileInputStream stream = new FileInputStream(path)) {
-            return readExternalFormFromStream(stream);
+    public static Object readExternalFormFromDisk(final String path) throws IOException, ClassNotFoundException {
+        try (final ObjectInputStream oStream = new ObjectInputStream(Files.newInputStream(Paths.get(path)))) {
+            return oStream.readObject();
         }
     }
 
@@ -309,9 +318,10 @@ public abstract class AbstractObjectTest extends BulkTest {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    protected Object readExternalFormFromBytes(final byte[] b) throws IOException, ClassNotFoundException {
-        final ByteArrayInputStream stream = new ByteArrayInputStream(b);
-        return readExternalFormFromStream(stream);
+    protected static Object readExternalFormFromBytes(final byte[] b) throws IOException, ClassNotFoundException {
+        try (final ObjectInputStream oStream = new ObjectInputStream(new ByteArrayInputStream(b))) {
+            return oStream.readObject();
+        }
     }
 
     public boolean skipSerializedCanonicalTests() {
@@ -319,15 +329,6 @@ public abstract class AbstractObjectTest extends BulkTest {
     }
 
     // private implementation
-    private Object readExternalFormFromStream(final InputStream stream) throws IOException, ClassNotFoundException {
-        final ObjectInputStream oStream = new ObjectInputStream(stream);
-        return oStream.readObject();
-    }
-
-    private void writeExternalFormToStream(final Serializable o, final OutputStream stream) throws IOException {
-        final ObjectOutputStream oStream = new ObjectOutputStream(stream);
-        oStream.writeObject(o);
-    }
 
     public static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
         try {

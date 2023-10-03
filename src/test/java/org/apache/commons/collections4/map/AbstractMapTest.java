@@ -76,7 +76,7 @@ import org.junit.jupiter.api.Test;
  * <p>
  * Override these if your map makes specific behavior guarantees:
  * <ul>
- * <li>{@link #getIterationBehaviour()}</li>
+ * <li>{@link MapTestParameters#getIterationBehaviour()}</li>
  * </ul>
  *
  * <b>Supported Operation Methods</b>
@@ -84,14 +84,14 @@ import org.junit.jupiter.api.Test;
  * Override these methods if your map doesn't support certain operations:
  *
  * <ul>
- * <li> {@link #isPutAddSupported()}
- * <li> {@link #isPutChangeSupported()}
- * <li> {@link #isSetValueSupported()}
- * <li> {@link #isRemoveSupported()}
- * <li> {@link #isGetStructuralModify()}
- * <li> {@link #isAllowDuplicateValues()}
- * <li> {@link #isAllowNullKey()}
- * <li> {@link #isAllowNullValue()}
+ * <li> {@link MapTestParameters#isPutAddSupported()}
+ * <li> {@link MapTestParameters#isPutChangeSupported()}
+ * <li> {@link MapTestParameters#isSetValueSupported()}
+ * <li> {@link MapTestParameters#isRemoveSupported()}
+ * <li> {@link MapTestParameters#isGetStructuralModify()}
+ * <li> {@link MapTestParameters#isAllowDuplicateValues()}
+ * <li> {@link MapTestParameters#isAllowNullKey()}
+ * <li> {@link MapTestParameters#isAllowNullValue()}
  * </ul>
  *
  * <b>Fixture Methods</b>
@@ -113,13 +113,13 @@ import org.junit.jupiter.api.Test;
  * if a key is removed by the map's key set's iterator, then the entry set
  * is checked to make sure the key/value pair no longer appears.<P>
  *
- * The {@link MapTest#map} field holds an instance of your collection implementation.
- * And the {@link MapTest#confirmed} field holds
+ * The {@link MapTest#getMap()} field holds an instance of your collection implementation.
+ * And the {@link MapTest#getConfirmed()} field holds
  * an instance of the confirmed collection implementation.  The
  * {@link MapTest#resetEmpty()} and {@link MapTest#resetFull()} methods set these fields to
  * empty or full maps, so that tests can proceed from a known state.<P>
  *
- * After a modification operation to both {@link MapTest#map} and {@link MapTest#confirmed},
+ * After a modification operation to both {@link MapTest#getMap()} and {@link MapTest#getConfirmed()},
  * the {@link MapTest#verify()} method is invoked to compare the results.  The
  * {@link MapTest#verify} method calls separate methods to verify the map and its three
  * collection views ({@link MapTest#verifyMap}, {@link MapTest#verifyEntrySet},
@@ -135,134 +135,153 @@ import org.junit.jupiter.api.Test;
  * this base set of cases.  Simply override the test case (method) your map
  * fails and/or the methods that define the assumptions used by the test
  * cases.  For example, if your map does not allow duplicate values, override
- * {@link #isAllowDuplicateValues()} and have it return {@code false}
+ * {@link MapTestParameters#isAllowDuplicateValues()} and have it return {@code false}
  */
 public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * support the {@code put} and {@code putAll} operations
-     * adding new mappings.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support put adding.
-     */
-    public boolean isPutAddSupported() {
-        return true;
+    @Override
+    public MapTestParameters testParameters() {
+        return new MapTestParameters();
     }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * support the {@code put} and {@code putAll} operations
-     * changing existing mappings.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support put changing.
-     */
-    public boolean isPutChangeSupported() {
-        return true;
-    }
+    public class MapTestParameters extends TestParameters {
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * support the {@code put} and {@code putAll} operations
+         * adding new mappings.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support put adding.
+         */
+        public boolean isPutAddSupported() {
+            return true;
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * support the {@code setValue} operation on entrySet entries.
-     * <p>
-     * Default implementation returns isPutChangeSupported().
-     * Override if your collection class does not support setValue but does
-     * support put changing.
-     */
-    public boolean isSetValueSupported() {
-        return isPutChangeSupported();
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * support the {@code put} and {@code putAll} operations
+         * changing existing mappings.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support put changing.
+         */
+        public boolean isPutChangeSupported() {
+            return true;
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * support the {@code remove} and {@code clear} operations.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support removal operations.
-     */
-    public boolean isRemoveSupported() {
-        return true;
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * support the {@code setValue} operation on entrySet entries.
+         * <p>
+         * Default implementation returns isPutChangeSupported().
+         * Override if your collection class does not support setValue but does
+         * support put changing.
+         */
+        public boolean isSetValueSupported() {
+            return isPutChangeSupported();
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * can cause structural modification on a get(). The example is LRUMap.
-     * <p>
-     * Default implementation returns false.
-     * Override if your map class structurally modifies on get.
-     */
-    public boolean isGetStructuralModify() {
-        return false;
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * support the {@code remove} and {@code clear} operations.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support removal operations.
+         */
+        public boolean isRemoveSupported() {
+            return true;
+        }
 
-    /**
-     * Returns whether the sub map views of SortedMap are serializable.
-     * If the class being tested is based around a TreeMap then you should
-     * override and return false as TreeMap has a bug in deserialization.
-     *
-     * @return false
-     */
-    public boolean isSubMapViewsSerializable() {
-        return true;
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * can cause structural modification on a get(). The example is LRUMap.
+         * <p>
+         * Default implementation returns false.
+         * Override if your map class structurally modifies on get.
+         */
+        public boolean isGetStructuralModify() {
+            return false;
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * supports null keys.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support null keys.
-     */
-    public boolean isAllowNullKey() {
-        return true;
-    }
+        /**
+         * Returns whether the sub map views of SortedMap are serializable.
+         * If the class being tested is based around a TreeMap then you should
+         * override and return false as TreeMap has a bug in deserialization.
+         *
+         * @return false
+         */
+        public boolean isSubMapViewsSerializable() {
+            return true;
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * supports null values.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support null values.
-     */
-    public boolean isAllowNullValue() {
-        return true;
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * supports null keys.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support null keys.
+         */
+        public boolean isAllowNullKey() {
+            return true;
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * supports duplicate values.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support duplicate values.
-     */
-    public boolean isAllowDuplicateValues() {
-        return true;
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * supports null values.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support null values.
+         */
+        public boolean isAllowNullValue() {
+            return true;
+        }
 
-    /**
-     * Returns true if the maps produced by
-     * {@link #makeObject()} and {@link #makeFullMap()}
-     * provide fail-fast behavior on their various iterators.
-     * <p>
-     * Default implementation returns true.
-     * Override if your collection class does not support fast failure.
-     */
-    public boolean isFailFastExpected() {
-        return true;
-    }
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * supports duplicate values.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support duplicate values.
+         */
+        public boolean isAllowDuplicateValues() {
+            return true;
+        }
 
-    public boolean areEqualElementsDistinguishable() {
-        return false;
+        /**
+         * Returns true if the maps produced by
+         * {@link #makeObject()} and {@link #makeFullMap()}
+         * provide fail-fast behavior on their various iterators.
+         * <p>
+         * Default implementation returns true.
+         * Override if your collection class does not support fast failure.
+         */
+        public boolean isFailFastExpected() {
+            return true;
+        }
+
+        public boolean areEqualElementsDistinguishable() {
+            return false;
+        }
+
+        /**
+         * Return a flag specifying the iteration behavior of the collection.
+         * This is used to change the assertions used by specific tests.
+         * The default implementation returns 0 which indicates ordered iteration behavior.
+         *
+         * @return the iteration behavior
+         * @see org.apache.commons.collections4.collection.AbstractCollectionTest.CollectionTestParameters#UNORDERED
+         */
+        protected int getIterationBehaviour(){
+            return 0;
+        }
     }
 
     /**
@@ -270,7 +289,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      *  method must return an array with the same length as {@link
      *  #getSampleValues()} and all array elements must be different. The
      *  default implementation constructs a set of String keys, and includes a
-     *  single null key if {@link #isAllowNullKey()} returns {@code true}.
+     *  single null key if {@link MapTestParameters#isAllowNullKey()} returns {@code true}.
      */
     @SuppressWarnings({"unchecked", "SuspiciousArrayCast"})
     public K[] getSampleKeys() {
@@ -279,7 +298,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             "hello", "goodbye", "we'll", "see", "you", "all", "again",
             "key",
             "key2",
-            isAllowNullKey() ? null : "nonnullkey"
+            testParameters().isAllowNullKey() ? null : "nonnullkey"
         };
         return (K[]) result;
     }
@@ -314,8 +333,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * method must return an array with the same length as
      * {@link #getSampleKeys()}.  The default implementation constructs a set of
      * String values and includes a single null value if
-     * {@link #isAllowNullValue()} returns {@code true}, and includes
-     * two values that are the same if {@link #isAllowDuplicateValues()} returns
+     * {@link MapTestParameters#isAllowNullValue()} returns {@code true}, and includes
+     * two values that are the same if {@link MapTestParameters#isAllowDuplicateValues()} returns
      * {@code true}.
      */
     @SuppressWarnings({"unchecked", "SuspiciousArrayCast"})
@@ -323,9 +342,9 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final Object[] result = {
             "blahv", "foov", "barv", "bazv", "tmpv", "goshv", "gollyv", "geev",
             "hellov", "goodbyev", "we'llv", "seev", "youv", "allv", "againv",
-            isAllowNullValue() ? null : "nonnullvalue",
+            testParameters().isAllowNullValue() ? null : "nonnullvalue",
             "value",
-            isAllowDuplicateValues() ? "value" : "value2",
+            testParameters().isAllowDuplicateValues() ? "value" : "value2",
         };
         return (V[]) result;
     }
@@ -337,16 +356,16 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * returned from this method should not be the same as those returned from
      * {@link #getSampleValues()}.  The default implementation constructs a
      * set of String values and includes a single null value if
-     * {@link #isAllowNullValue()} returns {@code true}, and includes two values
-     * that are the same if {@link #isAllowDuplicateValues()} returns
+     * {@link MapTestParameters#isAllowNullValue()} returns {@code true}, and includes two values
+     * that are the same if {@link MapTestParameters#isAllowDuplicateValues()} returns
      * {@code true}.
      */
     @SuppressWarnings({"unchecked", "SuspiciousArrayCast"})
     public V[] getNewSampleValues() {
         final Object[] result = {
-            isAllowNullValue() && isAllowDuplicateValues() ? null : "newnonnullvalue",
+            testParameters().isAllowNullValue() && testParameters().isAllowDuplicateValues() ? null : "newnonnullvalue",
             "newvalue",
-            isAllowDuplicateValues() ? "newvalue" : "newvalue2",
+            testParameters().isAllowDuplicateValues() ? "newvalue" : "newvalue2",
             "newblahv", "newfoov", "newbarv", "newbazv", "newtmpv", "newgoshv",
             "newgollyv", "newgeev", "newhellov", "newgoodbyev", "newwe'llv",
             "newseev", "newyouv", "newallv", "newagainv",
@@ -371,11 +390,11 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                         "NullPointerException only allowed to be thrown " +
                                 "if either the key or value is null.");
 
-                assertTrue(keys[i] == null || !isAllowNullKey(),
+                assertTrue(keys[i] == null || !testParameters().isAllowNullKey(),
                         "NullPointerException on null key, but " +
                                 "isAllowNullKey is not overridden to return false.");
 
-                assertTrue(values[i] == null || !isAllowNullValue(),
+                assertTrue(values[i] == null || !testParameters().isAllowNullValue(),
                         "NullPointerException on null value, but " +
                                 "isAllowNullValue is not overridden to return false.");
 
@@ -447,14 +466,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
-     * Gets the compatibility version, needed for package access.
-     */
-    @Override
-    public String getCompatibilityVersion() {
-        return super.getCompatibilityVersion();
-    }
-
-    /**
      * Test to ensure the test setup is working properly.  This method checks
      * to ensure that the getSampleKeys and getSampleValues methods are
      * returning results that look appropriate.  That is, they both return a
@@ -492,27 +503,15 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                 assertTrue(keys[i] == null || keys[j] == null || !keys[i].equals(keys[j]) && !keys[j].equals(keys[i]),
                         "failure in test: duplicate non-null key.");
             }
-            assertTrue(keys[i] != null || isAllowNullKey(),
+            assertTrue(keys[i] != null || testParameters().isAllowNullKey(),
                     "failure in test: found null key, but isNullKeySupported " + "is false.");
-            assertTrue(values[i] != null || isAllowNullValue(),
+            assertTrue(values[i] != null || testParameters().isAllowNullValue(),
                     "failure in test: found null value, but isNullValueSupported " + "is false.");
-            assertTrue(newValues[i] != null || isAllowNullValue(),
+            assertTrue(newValues[i] != null || testParameters().isAllowNullValue(),
                     "failure in test: found null new value, but isNullValueSupported " + "is false.");
             assertTrue(values[i] != newValues[i] && (values[i] == null || !values[i].equals(newValues[i])),
                     "failure in test: values should not be the same as new value");
         }
-    }
-
-    /**
-     * Return a flag specifying the iteration behavior of the collection.
-     * This is used to change the assertions used by specific tests.
-     * The default implementation returns 0 which indicates ordered iteration behavior.
-     *
-     * @return the iteration behavior
-     * @see AbstractCollectionTest#UNORDERED
-     */
-    protected int getIterationBehaviour(){
-        return 0;
     }
 
     // tests begin here.  Each test adds a little bit of tested functionality.
