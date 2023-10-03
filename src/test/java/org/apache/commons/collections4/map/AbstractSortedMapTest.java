@@ -22,12 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.commons.collections4.BulkTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -83,6 +81,16 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             return (SortedMap<K, V>) super.getConfirmed();
         }
 
+        @Override
+        protected SortedMap<K, V> makeFullMap() {
+            return (SortedMap<K, V>) super.makeFullMap();
+        }
+
+        @Override
+        public SortedMap<K, V> makeObject() {
+            return (SortedMap<K, V>) super.makeObject();
+        }
+
         @Test
         public void testFirstKey() {
             final SortedMap<K, V> sm = makeFullMap();
@@ -101,14 +109,14 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
     }
 
     public abstract class TestViewMapBase extends MapTest {
-        protected final List<K> subSortedKeys = new ArrayList<>();
-        protected final List<V> subSortedValues = new ArrayList<>();
-        protected final List<V> subSortedNewValues = new ArrayList<>();
+        protected final List<K> subKeys = new ArrayList<>();
+        protected final List<V> subValues = new ArrayList<>();
+        protected final List<V> subNewValues = new ArrayList<>();
 
         protected MapTest mainTest;
 
         @BeforeEach
-        protected void prepare() {
+        protected void prepareTest() {
             mainTest = makeMapTest();
         }
 
@@ -133,43 +141,23 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             mainTest.verify();
         }
         @Override
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "SuspiciousArrayCast"})
         public K[] getSampleKeys() {
-            return (K[]) subSortedKeys.toArray();
+            return (K[]) subKeys.toArray();
         }
 
         @Override
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "SuspiciousArrayCast"})
         public V[] getSampleValues() {
-            return (V[]) subSortedValues.toArray();
+            return (V[]) subValues.toArray();
         }
 
         @Override
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "SuspiciousArrayCast"})
         public V[] getNewSampleValues() {
-            return (V[]) subSortedNewValues.toArray();
+            return (V[]) subNewValues.toArray();
         }
 
-        @Override
-        public boolean isAllowNullKey() {
-            return main.isAllowNullKey();
-        }
-        @Override
-        public boolean isAllowNullValue() {
-            return main.isAllowNullValue();
-        }
-        @Override
-        public boolean isPutAddSupported() {
-            return main.isPutAddSupported();
-        }
-        @Override
-        public boolean isPutChangeSupported() {
-            return main.isPutChangeSupported();
-        }
-        @Override
-        public boolean isRemoveSupported() {
-            return main.isRemoveSupported();
-        }
         @Override
         public boolean isTestSerialization() {
             return false;
@@ -177,32 +165,31 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
     }
 
     @Nested
-    public static class TestHeadMap<K, V> extends TestViewMapBase<K, V> {
+    public class TestHeadMap extends TestViewMapBase {
         static final int SUBSIZE = 6;
-        final K toKey;
+        K toKey;
 
-        public TestHeadMap(final AbstractMapTest<K, V> main) {
-            super(main);
-            final Map<K, V> sm = main.makeFullMap();
+        @BeforeEach
+        protected void prepareRange() {
+            final SortedMap<K, V> sm = mainTest.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
-                this.subSortedKeys.add(entry.getKey());
-                this.subSortedValues.add(entry.getValue());
+                subKeys.add(entry.getKey());
+                subValues.add(entry.getValue());
             }
-            this.toKey = this.subSortedKeys.get(SUBSIZE);
-            this.subSortedKeys.subList(SUBSIZE, this.subSortedKeys.size()).clear();
-            this.subSortedValues.subList(SUBSIZE, this.subSortedValues.size()).clear();
-            this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
+            toKey = subKeys.get(SUBSIZE);
+            subKeys.subList(SUBSIZE, subKeys.size()).clear();
+            subValues.subList(SUBSIZE, subValues.size()).clear();
+            subNewValues.addAll(Arrays.asList(mainTest.getNewSampleValues()).subList(0, SUBSIZE));
         }
 
         @Override
         public SortedMap<K, V> makeObject() {
-            // done this way so toKey is correctly set in the returned map
-            return ((SortedMap<K, V>) main.makeObject()).headMap(toKey);
+            return mainTest.makeObject().headMap(toKey);
         }
 
         @Override
         public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).headMap(toKey);
+            return mainTest.makeFullMap().headMap(toKey);
         }
 
         @Test
@@ -211,43 +198,45 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
                 return;
             }
             resetEmpty();
-            assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subSortedValues.get(0)));
+            assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subValues.get(0)));
             verify();
         }
 
         @Override
         public String getCompatibilityVersion() {
-            return main.getCompatibilityVersion() + ".HeadMapView";
+            return mainTest.getCompatibilityVersion() + ".HeadMapView";
         }
     }
 
     @Nested
-    public class TestTailMap<K, V> extends TestViewMapBase<K, V> {
+    public class TestTailMap extends TestViewMapBase {
         static final int SUBSIZE = 6;
-        final K fromKey;
-        final K invalidKey;
+        K fromKey;
+        K invalidKey;
 
-        public TestTailMap(final AbstractMapTest<K, V> main) {
-            super(main);
-            final Map<K, V> sm = main.makeFullMap();
+        @BeforeEach
+        protected void prepareRange() {
+            final SortedMap<K, V> sm = mainTest.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
-                this.subSortedKeys.add(entry.getKey());
-                this.subSortedValues.add(entry.getValue());
+                subKeys.add(entry.getKey());
+                subValues.add(entry.getValue());
             }
-            this.fromKey = this.subSortedKeys.get(this.subSortedKeys.size() - SUBSIZE);
-            this.invalidKey = this.subSortedKeys.get(this.subSortedKeys.size() - SUBSIZE - 1);
-            this.subSortedKeys.subList(0, this.subSortedKeys.size() - SUBSIZE).clear();
-            this.subSortedValues.subList(0, this.subSortedValues.size() - SUBSIZE).clear();
-            this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
+            fromKey = subKeys.get(subKeys.size() - SUBSIZE);
+            invalidKey = subKeys.get(subKeys.size() - SUBSIZE - 1);
+            subKeys.subList(0, subKeys.size() - SUBSIZE).clear();
+            subValues.subList(0, subValues.size() - SUBSIZE).clear();
+            subNewValues.addAll(Arrays.asList(mainTest.getNewSampleValues()).subList(0, SUBSIZE));
         }
+        
         @Override
         public SortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return ((SortedMap<K, V>) main.makeObject()).tailMap(fromKey);
+            return mainTest.makeObject().tailMap(fromKey);
         }
+        
         @Override
         public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).tailMap(fromKey);
+            return mainTest.makeFullMap().tailMap(fromKey);
         }
 
         @Test
@@ -256,50 +245,51 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
                 return;
             }
             resetEmpty();
-            assertThrows(IllegalArgumentException.class, () -> getMap().put(invalidKey, subSortedValues.get(0)));
+            assertThrows(IllegalArgumentException.class, () -> getMap().put(invalidKey, subValues.get(0)));
             verify();
         }
         @Override
         public String getCompatibilityVersion() {
-            return main.getCompatibilityVersion() + ".TailMapView";
+            return mainTest.getCompatibilityVersion() + ".TailMapView";
         }
     }
 
     @Nested
-    public static class TestSubMap<K, V> extends TestViewMapBase<K, V> {
+    public class TestSubMap extends TestViewMapBase {
         static final int SUBSIZE = 3;
-        final K fromKey;
-        final K toKey;
+        K fromKey;
+        K toKey;
 
-        public TestSubMap(final AbstractMapTest<K, V> main) {
-            super(main);
-            final Map<K, V> sm = main.makeFullMap();
+        @BeforeEach
+        protected void prepareRange() {
+            final SortedMap<K, V> sm = mainTest.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
-                this.subSortedKeys.add(entry.getKey());
-                this.subSortedValues.add(entry.getValue());
+                subKeys.add(entry.getKey());
+                subValues.add(entry.getValue());
             }
-            this.fromKey = this.subSortedKeys.get(SUBSIZE);
-            this.toKey = this.subSortedKeys.get(this.subSortedKeys.size() - SUBSIZE);
 
-            this.subSortedKeys.subList(0, SUBSIZE).clear();
-            this.subSortedKeys.subList(this.subSortedKeys.size() - SUBSIZE, this.subSortedKeys.size()).clear();
+            fromKey = subKeys.get(SUBSIZE);
+            toKey = subKeys.get(subKeys.size() - SUBSIZE);
 
-            this.subSortedValues.subList(0, SUBSIZE).clear();
-            this.subSortedValues.subList(this.subSortedValues.size() - SUBSIZE, this.subSortedValues.size()).clear();
+            subKeys.subList(0, SUBSIZE).clear();
+            subKeys.subList(subKeys.size() - SUBSIZE, subKeys.size()).clear();
 
-            this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(
-                SUBSIZE, this.main.getNewSampleValues().length - SUBSIZE));
+            subValues.subList(0, SUBSIZE).clear();
+            subValues.subList(subValues.size() - SUBSIZE, subValues.size()).clear();
+
+            subNewValues.addAll(Arrays.asList(mainTest.getNewSampleValues()).subList(
+                SUBSIZE, mainTest.getNewSampleValues().length - SUBSIZE));
         }
 
         @Override
         public SortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return ((SortedMap<K, V>) main.makeObject()).subMap(fromKey, toKey);
+            return mainTest.makeObject().subMap(fromKey, toKey);
         }
 
         @Override
         public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).subMap(fromKey, toKey);
+            return mainTest.makeFullMap().subMap(fromKey, toKey);
         }
 
         @Test
@@ -308,13 +298,13 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
                 return;
             }
             resetEmpty();
-            assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subSortedValues.get(0)));
+            assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subValues.get(0)));
             verify();
         }
 
         @Override
         public String getCompatibilityVersion() {
-            return main.getCompatibilityVersion() + ".SubMapView";
+            return mainTest.getCompatibilityVersion() + ".SubMapView";
         }
     }
 }

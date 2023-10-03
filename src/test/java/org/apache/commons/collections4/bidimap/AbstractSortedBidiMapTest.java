@@ -46,7 +46,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
     protected List<V> sortedValues = new ArrayList<>();
     protected SortedSet<V> sortedNewValues = new TreeSet<>();
 
-    public AbstractSortedBidiMapTest() {
+    protected AbstractSortedBidiMapTest() {
         sortedKeys = Arrays.asList(getSampleKeys());
         sortedKeys.sort(null);
         sortedKeys = Collections.unmodifiableList(sortedKeys);
@@ -60,22 +60,6 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         sortedNewValues.addAll(Arrays.asList(getNewSampleValues()));
     }
 
-//    public AbstractTestSortedBidiMap() {
-//        super();
-//        sortedKeys.addAll(Arrays.asList(getSampleValues()));
-//        Collections.sort(sortedKeys);
-//        sortedKeys = Collections.unmodifiableList(sortedKeys);
-//
-//        Map map = new TreeMap();
-//        for (int i = 0; i < getSampleKeys().length; i++) {
-//            map.put(getSampleValues()[i], getSampleKeys()[i]);
-//        }
-//        sortedValues.addAll(map.values());
-//        sortedValues = Collections.unmodifiableList(sortedValues);
-//
-//        sortedNewValues.addAll(Arrays.asList(getNewSampleValues()));
-//    }
-
     @Override
     public boolean isAllowNullKey() {
         return false;
@@ -86,15 +70,9 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public abstract SortedBidiMap<K, V> makeObject();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SortedBidiMap<K, V> makeFullMap() {
         return (SortedBidiMap<K, V>) super.makeFullMap();

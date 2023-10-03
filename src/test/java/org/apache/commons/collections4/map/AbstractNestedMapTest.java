@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class AbstractNestedMapTest<K, V> {
+public abstract class AbstractNestedMapTest<K, V> extends AbstractObjectTest {
 
     // These instance variables are initialized with the reset method.
     // Tests for map methods that alter the map (put, putAll, remove)
@@ -66,16 +66,49 @@ public abstract class AbstractNestedMapTest<K, V> {
 
     public abstract AbstractMapTest<K, V> outerTest();
 
-    protected Map<K,V> makeObject() {
+    @Override
+    public Map<K, V> makeObject() {
         return outerTest().makeObject();
     }
 
-    private K[] getSampleKeys() {
+    protected Map<K, V> makeFullMap() {
+        return outerTest().makeFullMap();
+    }
+
+    protected Map<K, V> makeConfirmedMap() {
+        return outerTest().makeConfirmedMap();
+    }
+
+    protected K[] getSampleKeys() {
         return outerTest().getSampleKeys();
     }
 
-    private V[] getSampleValues() {
+    protected V[] getSampleValues() {
         return outerTest().getSampleValues();
+    }
+
+    protected V[] getNewSampleValues() {
+        return outerTest().getNewSampleValues();
+    }
+
+    protected K[] getOtherKeys() {
+        return outerTest().getOtherKeys();
+    }
+
+    protected V[] getOtherValues() {
+        return outerTest().getOtherValues();
+    }
+
+    protected boolean isPutAddSupported() {
+        return outerTest().isPutAddSupported();
+    }
+
+    protected boolean isPutChangeSupported() {
+        return outerTest().isPutChangeSupported();
+    }
+
+    protected boolean isRemoveSupported() {
+        return outerTest().isRemoveSupported();
     }
 
     /**

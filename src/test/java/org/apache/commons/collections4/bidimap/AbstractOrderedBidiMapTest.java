@@ -38,118 +38,128 @@ import org.junit.jupiter.api.Test;
  * Abstract test class for {@link OrderedBidiMap} methods and contracts.
  */
 public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
-    @Test
-    public void testFirstKey() {
-        resetEmpty();
-        OrderedBidiMap<K, V> bidi = getMap();
 
-        final OrderedBidiMap<K, V> finalBidi = bidi;
-        assertThrows(NoSuchElementException.class, () -> finalBidi.firstKey());
-
-        resetFull();
-        bidi = getMap();
-        final K confirmedFirst = confirmed.keySet().iterator().next();
-        assertEquals(confirmedFirst, bidi.firstKey());
-    }
-
-    @Test
-    public void testLastKey() {
-        resetEmpty();
-        OrderedBidiMap<K, V> bidi = getMap();
-
-        final OrderedBidiMap<K, V> finalBidi = bidi;
-        assertThrows(NoSuchElementException.class, () -> finalBidi.lastKey());
-
-        resetFull();
-        bidi = getMap();
-        K confirmedLast = null;
-        for (final Iterator<K> it = confirmed.keySet().iterator(); it.hasNext();) {
-            confirmedLast = it.next();
-        }
-        assertEquals(confirmedLast, bidi.lastKey());
-    }
-
-    @Test
-    public void testNextKey() {
-        resetEmpty();
-        OrderedBidiMap<K, V> bidi = (OrderedBidiMap<K, V>) map;
-        assertNull(bidi.nextKey(getOtherKeys()[0]));
-        if (!isAllowNullKey()) {
-            try {
-                assertNull(bidi.nextKey(null)); // this is allowed too
-            } catch (final NullPointerException ex) {}
-        } else {
-            assertNull(bidi.nextKey(null));
-        }
-
-        resetFull();
-        bidi = (OrderedBidiMap<K, V>) map;
-        final Iterator<K> it = confirmed.keySet().iterator();
-        K confirmedLast = it.next();
-        while (it.hasNext()) {
-            final K confirmedObject = it.next();
-            assertEquals(confirmedObject, bidi.nextKey(confirmedLast));
-            confirmedLast = confirmedObject;
-        }
-        assertNull(bidi.nextKey(confirmedLast));
-
-        if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V> finalBidi = bidi;
-            assertThrows(NullPointerException.class, () -> finalBidi.nextKey(null));
-
-        } else {
-            assertNull(bidi.nextKey(null));
-        }
-    }
-
-    @Test
-    public void testPreviousKey() {
-        resetEmpty();
-        OrderedBidiMap<K, V> bidi = getMap();
-        assertNull(bidi.previousKey(getOtherKeys()[0]));
-        if (!isAllowNullKey()) {
-            try {
-                assertNull(bidi.previousKey(null)); // this is allowed too
-            } catch (final NullPointerException ex) {}
-        } else {
-            assertNull(bidi.previousKey(null));
-        }
-
-        resetFull();
-        bidi = getMap();
-        final List<K> list = new ArrayList<>(confirmed.keySet());
-        Collections.reverse(list);
-        final Iterator<K> it = list.iterator();
-        K confirmedLast = it.next();
-        while (it.hasNext()) {
-            final K confirmedObject = it.next();
-            assertEquals(confirmedObject, bidi.previousKey(confirmedLast));
-            confirmedLast = confirmedObject;
-        }
-        assertNull(bidi.previousKey(confirmedLast));
-
-        if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V> finalBidi = bidi;
-            assertThrows(NullPointerException.class, () -> finalBidi.previousKey(null));
-
-        } else {
-            assertNull(bidi.previousKey(null));
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public OrderedBidiMap<K, V> getMap() {
-        return (OrderedBidiMap<K, V>) super.getMap();
+    public AbstractBidiMapTest<K, V>.MapTest<K, V> makeMapTest() {
+        return new MapTest();
     }
 
+    @SuppressWarnings("ClassNameSameAsAncestorName")
     @Nested
-    public class TestMapIterator extends AbstractOrderedMapIteratorNestedTest<K, V> {
+    public class MapTest extends AbstractBidiMapTest<K, V>.MapTest<K, V> {
+        @Test
+        public void testFirstKey() {
+            resetEmpty();
+            OrderedBidiMap<K, V> bidi = getMap();
+
+            final OrderedBidiMap<K, V> finalBidi = bidi;
+            assertThrows(NoSuchElementException.class, () -> finalBidi.firstKey());
+
+            resetFull();
+            bidi = getMap();
+            final K confirmedFirst = getConfirmed().keySet().iterator().next();
+            assertEquals(confirmedFirst, bidi.firstKey());
+        }
+
+        @Test
+        public void testLastKey() {
+            resetEmpty();
+            OrderedBidiMap<K, V> bidi = getMap();
+
+            final OrderedBidiMap<K, V> finalBidi = bidi;
+            assertThrows(NoSuchElementException.class, () -> finalBidi.lastKey());
+
+            resetFull();
+            bidi = getMap();
+            K confirmedLast = null;
+            for (final Iterator<K> it = getConfirmed().keySet().iterator(); it.hasNext(); ) {
+                confirmedLast = it.next();
+            }
+            assertEquals(confirmedLast, bidi.lastKey());
+        }
+
+        @Test
+        public void testNextKey() {
+            resetEmpty();
+            OrderedBidiMap<K, V> bidi = (OrderedBidiMap<K, V>) getMap();
+            assertNull(bidi.nextKey(getOtherKeys()[0]));
+            if (!isAllowNullKey()) {
+                try {
+                    assertNull(bidi.nextKey(null)); // this is allowed too
+                } catch (final NullPointerException ex) {
+                }
+            } else {
+                assertNull(bidi.nextKey(null));
+            }
+
+            resetFull();
+            bidi = getMap();
+            final Iterator<K> it = getConfirmed().keySet().iterator();
+            K confirmedLast = it.next();
+            while (it.hasNext()) {
+                final K confirmedObject = it.next();
+                assertEquals(confirmedObject, bidi.nextKey(confirmedLast));
+                confirmedLast = confirmedObject;
+            }
+            assertNull(bidi.nextKey(confirmedLast));
+
+            if (!isAllowNullKey()) {
+                final OrderedBidiMap<K, V> finalBidi = bidi;
+                assertThrows(NullPointerException.class, () -> finalBidi.nextKey(null));
+
+            } else {
+                assertNull(bidi.nextKey(null));
+            }
+        }
+
+        @Test
+        public void testPreviousKey() {
+            resetEmpty();
+            OrderedBidiMap<K, V> bidi = getMap();
+            assertNull(bidi.previousKey(getOtherKeys()[0]));
+            if (!isAllowNullKey()) {
+                try {
+                    assertNull(bidi.previousKey(null)); // this is allowed too
+                } catch (final NullPointerException ex) {
+                }
+            } else {
+                assertNull(bidi.previousKey(null));
+            }
+
+            resetFull();
+            bidi = getMap();
+            final List<K> list = new ArrayList<>(getConfirmed().keySet());
+            Collections.reverse(list);
+            final Iterator<K> it = list.iterator();
+            K confirmedLast = it.next();
+            while (it.hasNext()) {
+                final K confirmedObject = it.next();
+                assertEquals(confirmedObject, bidi.previousKey(confirmedLast));
+                confirmedLast = confirmedObject;
+            }
+            assertNull(bidi.previousKey(confirmedLast));
+
+            if (!isAllowNullKey()) {
+                final OrderedBidiMap<K, V> finalBidi = bidi;
+                assertThrows(NullPointerException.class, () -> finalBidi.previousKey(null));
+
+            } else {
+                assertNull(bidi.previousKey(null));
+            }
+        }
+
         @Override
-        protected AbstractIterableMapTest<K, V> getEnclosing() {
-            return AbstractOrderedBidiMapTest.this;
+        public OrderedBidiMap<K, V> getMap() {
+            return (OrderedBidiMap<K, V>) super.getMap();
+        }
+
+        @SuppressWarnings("ClassNameSameAsAncestorName")
+        @Nested
+        public class TestMapIterator extends AbstractOrderedMapIteratorNestedTest<K, V> {
+            @Override
+            public AbstractMapTest<K, V> outerTest() {
+                return AbstractOrderedBidiMapTest.this;
+            }
         }
     }
 

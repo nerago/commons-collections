@@ -31,6 +31,7 @@ import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.collections4.functors.ConstantFactory;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -49,22 +50,26 @@ public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return DefaultedMap.defaultedMap(new HashMap<K, V>(), nullFactory);
     }
 
-    @Test
-    @Override
-    @SuppressWarnings("unchecked")
-    public void testMapGet() {
-        final Map<K, V> map = new DefaultedMap<>((V) "NULL");
+    @Nested
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    public class MapTest extends AbstractIterableMapTest<K, V>.MapTest {
+        @Test
+        @Override
+        @SuppressWarnings("unchecked")
+        public void testMapGet() {
+            final Map<K, V> map = new DefaultedMap<>((V) "NULL");
 
-        assertEquals(0, map.size());
-        assertFalse(map.containsKey("NotInMap"));
-        assertEquals("NULL", map.get("NotInMap"));
+            assertEquals(0, map.size());
+            assertFalse(map.containsKey("NotInMap"));
+            assertEquals("NULL", map.get("NotInMap"));
 
-        map.put((K) "Key", (V) "Value");
-        assertEquals(1, map.size());
-        assertTrue(map.containsKey("Key"));
-        assertEquals("Value", map.get("Key"));
-        assertFalse(map.containsKey("NotInMap"));
-        assertEquals("NULL", map.get("NotInMap"));
+            map.put((K) "Key", (V) "Value");
+            assertEquals(1, map.size());
+            assertTrue(map.containsKey("Key"));
+            assertEquals("Value", map.get("Key"));
+            assertFalse(map.containsKey("NotInMap"));
+            assertEquals("NULL", map.get("NotInMap"));
+        }
     }
 
     @Test
