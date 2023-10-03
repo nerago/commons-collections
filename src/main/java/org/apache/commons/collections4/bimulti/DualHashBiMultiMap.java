@@ -4,8 +4,10 @@ import org.apache.commons.collections4.BiMultiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.set.HashedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 
@@ -20,8 +22,7 @@ import java.util.Set;
 @SuppressWarnings("CollectionDeclaredAsConcreteClass")
 public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
-    @SuppressWarnings("ClassExtendsConcreteCollection")
-    protected static class DHBSet<E> extends HashSet<E> {
+    protected static class DHBSet<E> extends HashedSet<E> {
         private static final long serialVersionUID = -3193048174884758097L;
 
         private transient Set<E> wrapper;
@@ -107,25 +108,47 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
     @Override
     public boolean addAll(final K key, final Iterable<? extends V> values) {
-        final DHBSet<V> valueSet = keyMap.computeIfAbsent(key, DualHashBiMultiMap::makeSet);
-        final boolean changed = CollectionUtils.addAll(valueSet, values);
+        return addAllOneSlot(keyMap, valueMap, key, values);
+    }
 
-        for (final V val : values) {
-            valueMap.computeIfAbsent(val, DualHashBiMultiMap::makeSet).add(key);
+    private static <S, O> boolean addAllOneSlot(final HashMap<S, DHBSet<O>> slotMap, final HashMap<O, DHBSet<S>> otherMap,
+                                                final S slot, final Iterable<? extends O> others) {
+        final DHBSet<O> mapSlot = slotMap.get(slot);
+        if (mapSlot == null) {
+            final DHBSet<O> slotSet = makeSet(null);
+            final boolean changed = CollectionUtils.addAll(slotSet, others);
+            if (changed) {
+                slotMap.putIfAbsent(slot, slotSet);
+                for (final O other : others) {
+                    otherMap.computeIfAbsent(other, DualHashBiMultiMap::makeSet).add(slot);
+                }
+                return true;
+            }
+        } else {
+            final boolean changed = CollectionUtils.addAll(mapSlot, others);
+            if (changed) {
+                for (final O other : others) {
+                    otherMap.computeIfAbsent(other, DualHashBiMultiMap::makeSet).add(slot);
+                }
+                return true;
+            }
         }
-
-        return changed;
+        return false;
     }
 
     @Override
     public boolean addAll(final Iterable<? extends K> keys, final V value) {
-        final DHBSet<K> keySet = valueMap.computeIfAbsent(value, DualHashBiMultiMap::makeSet);
+        final DHBSet<K> mapKeySet = valueMap.get(value);
+        final DHBSet<K> keySet = mapKeySet != null ? mapKeySet : makeSet(value);
         final boolean changed = CollectionUtils.addAll(keySet, keys);
-
-        for (final K key : keys) {
-            keyMap.computeIfAbsent(key, DualHashBiMultiMap::makeSet).add(value);
+        if (changed) {
+            for (final K key : keys) {
+                keyMap.computeIfAbsent(key, DualHashBiMultiMap::makeSet).add(value);
+            }
+            if (mapKeySet == null) {
+                valueMap.put(value, keySet);
+            }
         }
-
         return changed;
     }
 
@@ -154,15 +177,28 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
     @Override
     public boolean addAll(final BiMultiMap<? extends K, ? extends V> map) {
+        boolean changed = false;
         if (map.keySet().size() < map.valueSet().size()) {
-//            final MapIterator<? extends K, ? extends Set<? extends V>> it = map.mapIteratorKeys();
-            final MapIterator<K, ? extends Set<? extends V>> it = map.mapIteratorKeys();
+            final MapIterator<? extends K, ? extends Set<? extends V>> it = map.mapIteratorKeys();
+            while (it.hasNext()) {
+                final K key = it.next();
+                changed |= addAll(key, it.getValue());
+            }
+        } else {
+            final MapIterator<? extends V, ? extends Set<? extends K>> it = map.mapIteratorValues();
+            while (it.hasNext()) {
+                final V value = it.next();
+                changed |= addAll(it.getValue(), value);
+            }
         }
-        return false;
+        return changed;
     }
 
     @Override
-    public boolean addAll(final MultiValuedMap<? extends K, ? extends V> map) {
+    public boolean addAll(final MultiValuedMap<? extends K, ? extends V> mvm) {
+        for (final Map.Entry<? extends K, ? extends Collection<? extends V>> entry : mvm.asMap().entrySet()) {
+
+        }
         return false;
     }
 
@@ -197,9 +233,14 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
     }
 
     @Override
-    public Collection<Map.Entry<K, V>> entries() {
+    public Collection<Map.Entry<K, V>> allEntries() {
         return null;
     }
+
+//    @Override
+//    public Collection<Map.Entry<K, V>> entries() {
+//        return null;
+//    }
 
     @Override
     public MultiSet<K> keys() {
@@ -237,7 +278,17 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
     }
 
     @Override
-    public MapIterator<K, V> mapIterator() {
+    public MapIterator<K, V> mapIteratorFull() {
+        return null;
+    }
+
+    @Override
+    public MapIterator<K, Set<V>> mapIteratorKeys() {
+        return null;
+    }
+
+    @Override
+    public MapIterator<V, Set<K>> mapIteratorValues() {
         return null;
     }
 
