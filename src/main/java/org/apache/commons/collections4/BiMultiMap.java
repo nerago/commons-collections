@@ -62,9 +62,9 @@ public interface BiMultiMap<K, V> {
 
     Set<K> removeValue(V value);
 
-    boolean removeAllKeys(K key);
+    boolean removeAllKeys(Collection<K> collection);
 
-    Set<V> removeAllValues(V value);
+    boolean removeAllValues(Collection<V> collection);
 
     boolean removeMapping(K key, V value);
 

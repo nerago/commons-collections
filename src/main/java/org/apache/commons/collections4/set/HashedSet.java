@@ -1,18 +1,14 @@
 package org.apache.commons.collections4.set;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.iterators.EmptyIterator;
-import org.apache.commons.collections4.list.AbstractLinkedList;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
@@ -179,6 +175,7 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
         final Object convertedValue = convertValue(value);
         final int hashCode = hash(convertedValue);
         final int index = hashIndex(hashCode, data.length);
+
         HashEntry<E> entry = data[index];
         while (entry != null) {
             if (entry.hashCode == hashCode && isEqualValue(convertedValue, entry.value)) {
@@ -187,7 +184,12 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
             entry = entry.next;
         }
 
-        addMapping(index, hashCode, value);
+        data[index] = new HashEntry<>(data[index], hashCode, convertedValue);;
+
+        size++;
+        modCount++;
+
+        checkCapacity();
         return true;
     }
 
@@ -207,13 +209,38 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
         if (collSize == 0) {
             return false;
         }
-        final int newSize = (int) ((size + collSize) / loadFactor + 1);
-        ensureCapacity(calculateNewCapacity(newSize));
-        boolean modified = false;
+        final int capacity = (int) ((size + collSize) / loadFactor + 1);
+        ensureCapacity(calculateNewCapacity(capacity));
+
+        int newSize = size;
+        boolean changed = false;
         for (final E element : coll) {
-            modified |= add(element);
+            final Object convertedValue = convertValue(element);
+            final int hashCode = hash(convertedValue);
+            final int index = hashIndex(hashCode, data.length);
+
+            boolean missing = true;
+            HashEntry<E> entry = data[index];
+            while (entry != null) {
+                if (entry.hashCode == hashCode && isEqualValue(convertedValue, entry.value)) {
+                    missing = false;
+                    break;
+                }
+                entry = entry.next;
+            }
+
+            if (missing) {
+                data[index] = new HashEntry<>(data[index], hashCode, convertedValue);
+                changed = true;
+                newSize++;
+            }
         }
-        return modified;
+
+        if (changed) {
+            size = newSize;
+            modCount++;
+        }
+        return changed;
     }
 
     /**
@@ -232,6 +259,8 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
         while (entry != null) {
             if (entry.hashCode == hashCode && isEqualValue(convertedValue, entry.value)) {
                 removeMapping(entry, index, previous);
+                size--;
+                modCount++;
                 return true;
             }
             previous = entry;
@@ -244,6 +273,7 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
     public boolean removeIf(final Predicate<? super E> filter) {
         final int expectedModCount = modCount;
         final HashEntry<E>[] data = this.data;
+        int newSize = size;
         boolean changed = false;
         for (int index = data.length - 1; index >= 0; --index) {
             HashEntry<E> entry = data[index];
@@ -257,11 +287,17 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
                 final HashEntry<E> next = entry.next;
                 if (remove) {
                     removeMapping(entry, index, previous);
+                    newSize--;
                     changed = true;
+                } else {
+                    previous = entry;
                 }
-                previous = entry;
                 entry = next;
             }
+        }
+        if (changed) {
+            size = newSize;
+            modCount++;
         }
         return changed;
     }
@@ -269,6 +305,7 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
     @Override
     public boolean retainAll(final Collection<?> coll) {
         final HashEntry<E>[] data = this.data;
+        int newSize = size;
         boolean changed = false;
         for (int index = data.length - 1; index >= 0; --index) {
             HashEntry<E> entry = data[index];
@@ -278,11 +315,17 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
                 final HashEntry<E> next = entry.next;
                 if (remove) {
                     removeMapping(entry, index, previous);
+                    newSize--;
                     changed = true;
+                } else {
+                    previous = entry;
                 }
-                previous = entry;
                 entry = next;
             }
+        }
+        if (changed) {
+            size = newSize;
+            modCount++;
         }
         return changed;
     }
@@ -290,6 +333,7 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
     @Override
     public boolean removeAll(final Collection<?> coll) {
         final HashEntry<E>[] data = this.data;
+        int newSize = size;
         boolean changed = false;
         for (int index = data.length - 1; index >= 0; --index) {
             HashEntry<E> entry = data[index];
@@ -299,11 +343,17 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
                 final HashEntry<E> next = entry.next;
                 if (remove) {
                     removeMapping(entry, index, previous);
+                    newSize--;
                     changed = true;
+                } else {
+                    previous = entry;
                 }
-                previous = entry;
                 entry = next;
             }
+        }
+        if (changed) {
+            size = newSize;
+            modCount++;
         }
         return changed;
     }
@@ -314,10 +364,9 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
      */
     @Override
     public void clear() {
-        modCount++;
-        final HashEntry<E>[] data = this.data;
         Arrays.fill(data, null);
         size = 0;
+        modCount++;
     }
 
     /**
@@ -378,28 +427,6 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
     }
 
     /**
-     * Adds a new key-value mapping into this map.
-     * <p>
-     * This implementation calls {@code createEntry()}, {@code addEntry()}
-     * and {@code checkCapacity()}.
-     * It also handles changes to {@code modCount} and {@code size}.
-     * Subclasses could override to fully control adds to the map.
-     *
-     * @param hashIndex  the index into the data array to store at
-     * @param hashCode  the hash code of the key to add
-     * @param value  the value to add
-     */
-    private void addMapping(final int hashIndex, final int hashCode, final E value) {
-        final HashEntry<E> entry = new HashEntry<>(data[hashIndex], hashCode, value);
-        data[hashIndex] = entry;
-
-        size++;
-        modCount++;
-
-        checkCapacity();
-    }
-
-    /**
      * Removes a mapping from the map.
      * <p>
      * This implementation calls {@code removeEntry()} and {@code destroyEntry()}.
@@ -419,9 +446,6 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
 
         entry.next = null;
         entry.value = null;
-
-        size--;
-        modCount++;
     }
 
     /**
@@ -619,19 +643,20 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
         /** The hash code of the key */
         protected int hashCode;
         /** The value */
-        protected E value;
+        protected Object value;
 
-        protected HashEntry(final HashEntry<E> next, final int hashCode, final E value) {
+        protected HashEntry(final HashEntry<E> next, final int hashCode, final Object value) {
             this.next = next;
             this.hashCode = hashCode;
             this.value = value;
         }
 
+        @SuppressWarnings("unchecked")
         public E getValue() {
             if (value == NULL) {
                 return null;
             }
-            return value;
+            return (E) value;
         }
     }
 
@@ -705,7 +730,7 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
             if (parent.modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
             }
-            parent.remove(last);
+            parent.remove(last.getValue());
             last = null;
             expectedModCount = parent.modCount;
         }

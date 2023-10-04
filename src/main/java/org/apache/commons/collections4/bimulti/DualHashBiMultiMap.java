@@ -4,17 +4,15 @@ import org.apache.commons.collections4.BiMultiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.collections4.set.HashedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -22,14 +20,10 @@ import java.util.Set;
 @SuppressWarnings("CollectionDeclaredAsConcreteClass")
 public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
-    protected static class DHBSet<E> extends HashedSet<E> {
+    protected static class SlotSet<E> extends HashedSet<E> {
         private static final long serialVersionUID = -3193048174884758097L;
 
         private transient Set<E> wrapper;
-
-        DHBSet() {
-
-        }
 
         public Set<E> wrapped() {
             if (wrapper == null) {
@@ -39,14 +33,13 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
         }
     }
 
-    private static <E> DHBSet<E> makeSet(final Object ignored) {
-        return new DHBSet<>();
+    private static <E> SlotSet<E> makeSet(final Object ignored) {
+        return new SlotSet<>();
     }
 
     private int entryCount;
-
-    private HashMap<K, DHBSet<V>> keyMap;
-    private HashMap<V, DHBSet<K>> valueMap;
+    private final Map<K, SlotSet<V>> keyMap = new HashedMap<>();
+    private final Map<V, SlotSet<K>> valueMap = new HashedMap<>();
 
     @Override
     public int size() {
@@ -70,7 +63,7 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
     @Override
     public boolean containsMapping(final K key, final V value) {
-        final DHBSet<V> valueSet = keyMap.get(key);
+        final SlotSet<V> valueSet = keyMap.get(key);
         if (valueSet != null) {
             return valueSet.contains(value);
         }
@@ -79,7 +72,7 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
     @Override
     public Set<V> getValues(final K key) {
-        final DHBSet<V> valueSet = keyMap.get(key);
+        final SlotSet<V> valueSet = keyMap.get(key);
         if (valueSet != null) {
             return valueSet.wrapped();
         } else {
@@ -89,7 +82,7 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
     @Override
     public Set<K> getKeys(final V value) {
-        final DHBSet<K> keySet = valueMap.get(value);
+        final SlotSet<K> keySet = valueMap.get(value);
         if (keySet != null) {
             return keySet.wrapped();
         } else {
@@ -99,11 +92,20 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
 
     @Override
     public boolean add(final K key, final V value) {
-        final DHBSet<V> valueSet = keyMap.computeIfAbsent(key, DualHashBiMultiMap::makeSet);
-        valueSet.add(value);
+        final SlotSet<V> valueSet = keyMap.computeIfAbsent(key, DualHashBiMultiMap::makeSet);
+        final boolean addedValue = valueSet.add(value);
 
-        final DHBSet<K> keySet = valueMap.computeIfAbsent(value, DualHashBiMultiMap::makeSet);
-        return keySet.add(key);
+        final SlotSet<K> keySet = valueMap.computeIfAbsent(value, DualHashBiMultiMap::makeSet);
+        final boolean addedKey = keySet.add(key);
+
+        if (addedValue != addedKey) {
+            throw new IllegalStateException();
+        }
+
+        if (addedValue) {
+            entryCount++;
+        }
+        return addedValue;
     }
 
     @Override
@@ -111,45 +113,37 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
         return addAllOneSlot(keyMap, valueMap, key, values);
     }
 
-    private static <S, O> boolean addAllOneSlot(final HashMap<S, DHBSet<O>> slotMap, final HashMap<O, DHBSet<S>> otherMap,
+    @Override
+    public boolean addAll(final Iterable<? extends K> keys, final V value) {
+        return addAllOneSlot(valueMap, keyMap, value, keys);
+    }
+
+    private <S, O> boolean addAllOneSlot(final Map<S, SlotSet<O>> slotMap, final Map<O, SlotSet<S>> otherMap,
                                                 final S slot, final Iterable<? extends O> others) {
-        final DHBSet<O> mapSlot = slotMap.get(slot);
+        final SlotSet<O> mapSlot = slotMap.get(slot);
         if (mapSlot == null) {
-            final DHBSet<O> slotSet = makeSet(null);
+            final SlotSet<O> slotSet = makeSet(null);
             final boolean changed = CollectionUtils.addAll(slotSet, others);
             if (changed) {
                 slotMap.putIfAbsent(slot, slotSet);
                 for (final O other : others) {
                     otherMap.computeIfAbsent(other, DualHashBiMultiMap::makeSet).add(slot);
                 }
+                entryCount += slotSet.size();
                 return true;
             }
         } else {
+            final int startSize = mapSlot.size();
             final boolean changed = CollectionUtils.addAll(mapSlot, others);
             if (changed) {
                 for (final O other : others) {
                     otherMap.computeIfAbsent(other, DualHashBiMultiMap::makeSet).add(slot);
                 }
+                entryCount += mapSlot.size() - startSize;
                 return true;
             }
         }
         return false;
-    }
-
-    @Override
-    public boolean addAll(final Iterable<? extends K> keys, final V value) {
-        final DHBSet<K> mapKeySet = valueMap.get(value);
-        final DHBSet<K> keySet = mapKeySet != null ? mapKeySet : makeSet(value);
-        final boolean changed = CollectionUtils.addAll(keySet, keys);
-        if (changed) {
-            for (final K key : keys) {
-                keyMap.computeIfAbsent(key, DualHashBiMultiMap::makeSet).add(value);
-            }
-            if (mapKeySet == null) {
-                valueMap.put(value, keySet);
-            }
-        }
-        return changed;
     }
 
     @Override
@@ -195,52 +189,118 @@ public class DualHashBiMultiMap<K, V> implements BiMultiMap<K, V> {
     }
 
     @Override
-    public boolean addAll(final MultiValuedMap<? extends K, ? extends V> mvm) {
-        for (final Map.Entry<? extends K, ? extends Collection<? extends V>> entry : mvm.asMap().entrySet()) {
+    public boolean addAll(final MultiValuedMap<? extends K, ? extends V> mv) {
+        boolean changed = false;
+        for (final Map.Entry<? extends K, ? extends Collection<? extends V>> entry : mv.asMap().entrySet()) {
+            changed |= addAll(entry.getKey(), entry.getValue());
+        }
+        return changed;
+    }
 
+    @Override
+    public Set<V> removeKey(final K key) {
+        return removeSlotWithOld(key, keyMap, valueMap);
+    }
+
+    @Override
+    public Set<K> removeValue(final V value) {
+        return removeSlotWithOld(value, valueMap, keyMap);
+    }
+
+    @Override
+    public boolean removeAllKeys(final Collection<K> collection) {
+        boolean changed = false;
+        for (final K key : collection) {
+            changed |= removeSlot(key, keyMap, valueMap);
+        }
+        return changed;
+    }
+
+    @Override
+    public boolean removeAllValues(final Collection<V> collection) {
+        boolean changed = false;
+        for (final V value : collection) {
+            changed |= removeSlot(value, valueMap, keyMap);
+        }
+        return changed;
+    }
+
+    private <S, O> Set<O> removeSlotWithOld(final S slot, final Map<S, SlotSet<O>> slotMap, final Map<O, SlotSet<S>> otherMap) {
+        final SlotSet<O> removedSet = slotMap.remove(slot);
+        if (removedSet != null) {
+            for (final O val : removedSet) {
+                final SlotSet<S> keySet = otherMap.get(val);
+                if (keySet == null || !keySet.remove(slot)) {
+                    throw new IllegalStateException();
+                }
+                if (keySet.isEmpty()) {
+                    otherMap.remove(val);
+                }
+            }
+            entryCount -= removedSet.size();
+            return removedSet.wrapped();
+        } else {
+            return Collections.emptySet();
+        }
+    }
+
+    private <S, O> boolean removeSlot(final S slot, final Map<S, SlotSet<O>> slotMap, final Map<O, SlotSet<S>> otherMap) {
+        final SlotSet<O> removedSet = slotMap.remove(slot);
+        if (removedSet != null) {
+            if (removedSet.isEmpty()) {
+                throw new IllegalStateException();
+            }
+            for (final O val : removedSet) {
+                final SlotSet<S> keySet = otherMap.get(val);
+                if (keySet == null || !keySet.remove(slot)) {
+                    throw new IllegalStateException();
+                }
+                if (keySet.isEmpty()) {
+                    otherMap.remove(val);
+                }
+            }
+            entryCount -= removedSet.size();
+            return true;
         }
         return false;
     }
 
     @Override
-    public Set<V> removeKey(final K key) {
-        return null;
-    }
-
-    @Override
-    public Set<K> removeValue(final V value) {
-        return null;
-    }
-
-    @Override
-    public boolean removeAllKeys(final K key) {
-        return false;
-    }
-
-    @Override
-    public Set<V> removeAllValues(final V value) {
-        return null;
-    }
-
-    @Override
     public boolean removeMapping(final K key, final V value) {
-        return false;
+        final SlotSet<V> valueSet = keyMap.get(key);
+        final boolean removedValue = valueSet != null && valueSet.remove(value);
+
+        final SlotSet<K> keySet = valueMap.get(value);
+        final boolean removedKey = keySet != null && keySet.remove(key);
+
+        if (removedValue != removedKey) {
+            throw new IllegalStateException();
+        }
+
+        if (removedValue) {
+            if (valueSet.isEmpty()) {
+                keyMap.remove(key);
+            }
+            if (keySet.isEmpty()) {
+                valueMap.remove(value);
+            }
+            entryCount--;
+        }
+
+        return removedValue;
     }
 
     @Override
     public void clear() {
-
+        entryCount = 0;
+        keyMap.clear();
+        valueMap.clear();
     }
 
     @Override
     public Collection<Map.Entry<K, V>> allEntries() {
         return null;
     }
-
-//    @Override
-//    public Collection<Map.Entry<K, V>> entries() {
-//        return null;
-//    }
 
     @Override
     public MultiSet<K> keys() {

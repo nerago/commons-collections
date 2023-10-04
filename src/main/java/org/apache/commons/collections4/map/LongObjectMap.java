@@ -31,8 +31,10 @@ import java.util.function.*;
 import java.util.stream.LongStream;
 import java.util.stream.StreamSupport;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "PublicMethodNotExposedInInterface"})
 public final class LongObjectMap<V> implements Serializable {
+    private static final long serialVersionUID = -8244029886089985815L;
+
     /** The default capacity to use */
     private static final int DEFAULT_CAPACITY = 16;
     /** The default threshold to use */
@@ -374,7 +376,7 @@ public final class LongObjectMap<V> implements Serializable {
     public void putAll(final Map<? extends Long, ? extends V> map) {
         if (checkPutAll(map.size())) {
             for (final Map.Entry<? extends Long, ? extends V> entry : map.entrySet()) {
-                Long key = entry.getKey();
+                final Long key = entry.getKey();
                 Objects.requireNonNull(key);
                 put(key, entry.getValue());
             }
@@ -531,7 +533,7 @@ public final class LongObjectMap<V> implements Serializable {
      * @param action The action to be performed for each entry
      * @throws NullPointerException if the specified action is null
      */
-    public void forEach(ConsumerWithLong<? super V> action) {
+    public void forEach(final ConsumerWithLong<? super V> action) {
         Objects.requireNonNull(action);
         for (final LongHashEntry<V> element : data) {
             LongHashEntry<V> entry = element;
@@ -566,24 +568,6 @@ public final class LongObjectMap<V> implements Serializable {
         return remove(entry.getKey(), entry.getValue());
     }
 
-    @SuppressWarnings("unchecked")
-    public boolean containsEntry(final Object obj) {
-        if (!(obj instanceof Map.Entry)) {
-            return false;
-        }
-        final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
-        return containsEntry((long) entry.getKey(), (V) entry.getValue());
-    }
-
-    @SuppressWarnings("unchecked")
-    public boolean removeEntry(final Object obj) {
-        if (!(obj instanceof Map.Entry)) {
-            return false;
-        }
-        final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
-        return remove((long) entry.getKey(), (V) entry.getValue());
-    }
-
     public LongSet keySet() {
         if (keySet == null) {
             keySet = new KeySet(this);
@@ -606,6 +590,7 @@ public final class LongObjectMap<V> implements Serializable {
      * @param key  the key to get a hash code for
      * @return the hash code
      */
+    @SuppressWarnings("MagicNumber")
     private int hash(final long key) {
         int h = (int) (key ^ (key >>> 32));
         h += ~(h << 9);
@@ -839,7 +824,7 @@ public final class LongObjectMap<V> implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         }
@@ -859,11 +844,13 @@ public final class LongObjectMap<V> implements Serializable {
         return MapUtils.toString(mapIterator());
     }
 
-    private final static class MapAdapter<V> extends AbstractMap<Long, V> implements IterableMap<Long, V> {
+    private static final class MapAdapter<V> extends AbstractMap<Long, V> implements IterableMap<Long, V> {
+        private static final long serialVersionUID = 7665757042811288057L;
+
         private final LongObjectMap<V> parent;
         private EntrySet<V> entrySet;
 
-        public MapAdapter(LongObjectMap<V> parent) {
+        private MapAdapter(final LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1089,7 +1076,7 @@ public final class LongObjectMap<V> implements Serializable {
         @Override
         public Set<Long> keySet() {
             if (parent.keySet == null) {
-                parent.keySet = new KeySet(parent);
+                parent.keySet = new KeySet<>(parent);
             }
             return parent.keySet;
         }
@@ -1108,7 +1095,7 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
-    private final static class LongHashEntry<V> implements Map.Entry<Long, V> {
+    private static final class LongHashEntry<V> implements Map.Entry<Long, V> {
         /** The next entry in the hash chain */
         LongHashEntry<V> next;
         /** The key */
@@ -1134,20 +1121,20 @@ public final class LongObjectMap<V> implements Serializable {
 
         @Override
         public V setValue(final V newValue) {
-            V oldValue = value;
+            final V oldValue = value;
             value = newValue;
             return oldValue;
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             if (this == o) return true;
             if (!(o instanceof Map.Entry))
                 return false;
-            Map.Entry<?, ?> that = (Map.Entry<?, ?>) o;
-            if (!(that.getKey() instanceof Long))
+            final Map.Entry<?, ?> other = (Map.Entry<?, ?>) o;
+            if (!(other.getKey() instanceof Long))
                 return false;
-            return key == (Long) that.getKey() && Objects.equals(value, that.getValue());
+            return key == (Long) other.getKey() && Objects.equals(value, other.getValue());
         }
 
         @Override
@@ -1156,10 +1143,10 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
-    private final static class KeySet<V> extends AbstractSet<Long> implements LongSet {
+    private static final class KeySet<V> extends AbstractSet<Long> implements LongSet {
         private final LongObjectMap<V> parent;
 
-        public KeySet(LongObjectMap<V> parent) {
+        private KeySet(final LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1242,7 +1229,7 @@ public final class LongObjectMap<V> implements Serializable {
 
         @Override
         public Object[] toArray() {
-            Object[] array = new Object[parent.size];
+            final Object[] array = new Object[parent.size];
             int index = 0;
             for (final LongHashEntry<?> element : parent.data) {
                 LongHashEntry<?> entry = element;
@@ -1275,12 +1262,12 @@ public final class LongObjectMap<V> implements Serializable {
         }
 
         @Override
-        public boolean add(Long aLong) {
+        public boolean add(final Long aLong) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean addAll(Collection<? extends Long> c) {
+        public boolean addAll(final Collection<? extends Long> c) {
             throw new UnsupportedOperationException();
         }
 
@@ -1302,7 +1289,7 @@ public final class LongObjectMap<V> implements Serializable {
         public boolean removeIf(final Predicate<? super Long> filter) {
             Objects.requireNonNull(filter);
             boolean changed = false;
-            LongHashEntry<V>[] data = parent.data;
+            final LongHashEntry<V>[] data = parent.data;
             for (int index = data.length - 1; index >= 0; index--) {
                 LongHashEntry<V> entry = data[index];
                 if (entry != null) {
@@ -1369,11 +1356,11 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
-    private final static class EntrySet<V> extends AbstractSet<Map.Entry<Long, V>> {
+    private static final class EntrySet<V> extends AbstractSet<Map.Entry<Long, V>> {
         /** The parent map */
         private final LongObjectMap<V> parent;
 
-        public EntrySet(final LongObjectMap<V> parent) {
+        private EntrySet(final LongObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1387,14 +1374,24 @@ public final class LongObjectMap<V> implements Serializable {
             parent.clear();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public boolean contains(final Object entry) {
-            return parent.containsEntry(entry);
+            if (entry instanceof Map.Entry) {
+                return parent.containsEntry((Map.Entry<Long, V>) entry);
+            } else {
+                return false;
+            }
         }
 
+        @SuppressWarnings("unchecked")
         @Override
-        public boolean remove(final Object obj) {
-            return parent.removeEntry(obj);
+        public boolean remove(final Object entry) {
+            if (entry instanceof Map.Entry) {
+                return parent.removeEntry((Map.Entry<Long, V>) entry);
+            } else {
+                return false;
+            }
         }
 
         @Override
@@ -1408,7 +1405,7 @@ public final class LongObjectMap<V> implements Serializable {
         }
     }
 
-    private final static class Values<V> extends AbstractCollection<V> {
+    private static final class Values<V> extends AbstractCollection<V> {
         /** The parent map */
         private final LongObjectMap<V> parent;
 
@@ -1502,7 +1499,7 @@ public final class LongObjectMap<V> implements Serializable {
             return next != null;
         }
 
-        protected LongHashEntry<V> nextEntry() {
+        LongHashEntry<V> nextEntry() {
             if (next == null) {
                 throw new NoSuchElementException();
             }
@@ -1611,7 +1608,7 @@ public final class LongObjectMap<V> implements Serializable {
 
         protected abstract T newSplit(int nextIndex, int lastIndex, long estimateSize);
 
-        public boolean tryAdvanceEntry(final Consumer<LongHashEntry<V>> action) {
+        boolean tryAdvanceEntry(final Consumer<LongHashEntry<V>> action) {
             if (next != null) {
                 action.accept(next);
                 next = next.next;
@@ -1633,7 +1630,7 @@ public final class LongObjectMap<V> implements Serializable {
         public T trySplit() {
             final int mid = lastIndex + (nextIndex - lastIndex) / 2;
             if (lastIndex < mid && mid < nextIndex) {
-                T split = newSplit(nextIndex, mid + 1, estimateSize >>>= 1);
+                final T split = newSplit(nextIndex, mid + 1, estimateSize >>>= 1);
                 nextIndex = mid;
                 return split;
             }
@@ -1646,10 +1643,10 @@ public final class LongObjectMap<V> implements Serializable {
     }
 
     private final class LongKeySpliterator extends LongBaseSpliterator<LongKeySpliterator> implements Spliterator.OfLong {
-        public LongKeySpliterator() {
+        private LongKeySpliterator() {
         }
 
-        public LongKeySpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+        private LongKeySpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
             super(nextIndex, lastIndex, estimateSize);
         }
 
@@ -1673,10 +1670,10 @@ public final class LongObjectMap<V> implements Serializable {
     }
 
     private final class LongValuesSpliterator extends LongBaseSpliterator<LongValuesSpliterator> implements Spliterator<V> {
-        public LongValuesSpliterator() {
+        private LongValuesSpliterator() {
         }
 
-        public LongValuesSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+        private LongValuesSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
             super(nextIndex, lastIndex, estimateSize);
         }
 
@@ -1700,10 +1697,10 @@ public final class LongObjectMap<V> implements Serializable {
     }
 
     private final class EntrySetSpliterator extends LongBaseSpliterator<EntrySetSpliterator> implements Spliterator<Map.Entry<Long,V>> {
-        public EntrySetSpliterator() {
+        private EntrySetSpliterator() {
         }
 
-        public EntrySetSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
+        private EntrySetSpliterator(final int nextIndex, final int lastIndex, final long estimateSize) {
             super(nextIndex, lastIndex, estimateSize);
         }
 
