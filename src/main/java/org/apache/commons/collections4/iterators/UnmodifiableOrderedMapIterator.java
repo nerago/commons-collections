@@ -31,11 +31,8 @@ import org.apache.commons.collections4.Unmodifiable;
  * @param <V> the type of mapped values
  * @since 3.0
  */
-public final class UnmodifiableOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>,
-        Unmodifiable {
-
-    /** The iterator being decorated */
-    private final OrderedMapIterator<? extends K, ? extends V> iterator;
+public final class UnmodifiableOrderedMapIterator<K, V>
+        extends FixedOrderedMapIterator<K, V> implements Unmodifiable {
 
     /**
      * Decorates the specified iterator such that it cannot be modified.
@@ -47,12 +44,10 @@ public final class UnmodifiableOrderedMapIterator<K, V> implements OrderedMapIte
      * @throws NullPointerException if the iterator is null
      */
     public static <K, V> OrderedMapIterator<K, V> unmodifiableOrderedMapIterator(
-            final OrderedMapIterator<K, ? extends V> iterator) {
+            final OrderedMapIterator<K, V> iterator) {
         Objects.requireNonNull(iterator, "iterator");
         if (iterator instanceof Unmodifiable) {
-            @SuppressWarnings("unchecked") // safe to upcast
-            final OrderedMapIterator<K, V> tmpIterator = (OrderedMapIterator<K, V>) iterator;
-            return tmpIterator;
+            return iterator;
         }
         return new UnmodifiableOrderedMapIterator<>(iterator);
     }
@@ -62,48 +57,13 @@ public final class UnmodifiableOrderedMapIterator<K, V> implements OrderedMapIte
      *
      * @param iterator  the iterator to decorate
      */
-    private UnmodifiableOrderedMapIterator(final OrderedMapIterator<K, ? extends V> iterator) {
-        this.iterator = iterator;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return iterator.hasNext();
-    }
-
-    @Override
-    public K next() {
-        return iterator.next();
-    }
-
-    @Override
-    public boolean hasPrevious() {
-        return iterator.hasPrevious();
-    }
-
-    @Override
-    public K previous() {
-        return iterator.previous();
-    }
-
-    @Override
-    public K getKey() {
-        return iterator.getKey();
-    }
-
-    @Override
-    public V getValue() {
-        return iterator.getValue();
+    private UnmodifiableOrderedMapIterator(final OrderedMapIterator<K, V> iterator) {
+        super(iterator);
     }
 
     @Override
     public V setValue(final V value) {
         throw new UnsupportedOperationException("setValue() is not supported");
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("remove() is not supported");
     }
 
 }

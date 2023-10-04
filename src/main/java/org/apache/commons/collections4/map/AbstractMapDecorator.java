@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.IterableGet;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 
 import java.util.Collection;
@@ -203,6 +205,16 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
     @Override
     public Collection<V> values() {
         return decorated().values();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public MapIterator<K, V> mapIterator() {
+        if (map instanceof IterableGet) {
+            return ((IterableGet<K, V>) map).mapIterator();
+        } else {
+            return super.mapIterator();
+        }
     }
 
     @Override

@@ -31,8 +31,10 @@ import java.util.function.Function;
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
+import org.apache.commons.collections4.iterators.FixedOrderedMapIterator;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -188,6 +190,11 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public boolean remove(final Object key, final Object value) {
         throw new UnsupportedOperationException(FixedSizeMap.EXCEPTION_FIXED);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIterator() {
+        return FixedOrderedMapIterator.fixedOrderedMapIterator(super.mapIterator());
     }
 
     @Override

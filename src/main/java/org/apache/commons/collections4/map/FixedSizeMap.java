@@ -29,6 +29,7 @@ import java.util.function.Function;
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
+import org.apache.commons.collections4.iterators.FixedMapIterator;
 import org.apache.commons.collections4.iterators.UnmodifiableMapIterator;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
@@ -180,8 +181,7 @@ public class FixedSizeMap<K, V>
 
     @Override
     public MapIterator<K, V> mapIterator() {
-        // TODO add to fixes branch
-        return UnmodifiableMapIterator.unmodifiableMapIterator(new EntrySetToMapIteratorAdapter<>(entrySet()));
+        return FixedMapIterator.fixedMapIterator(super.mapIterator());
     }
 
     @Override
@@ -250,8 +250,13 @@ public class FixedSizeMap<K, V>
     @Override
     public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(value);
         if (map.containsKey(key)) {
             final V oldValue = get(key);
+            if (oldValue == null) {
+                put(key, value);
+                return value;
+            }
             final V newValue = remappingFunction.apply(oldValue, value);
             if (newValue != null) {
                 put(key, newValue);

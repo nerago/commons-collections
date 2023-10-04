@@ -16,25 +16,24 @@
  */
 package org.apache.commons.collections4.iterators;
 
+import org.apache.commons.collections4.MapIterator;
+
 import java.util.Objects;
 
-import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.Unmodifiable;
-
 /**
- * Decorates a map iterator such that it cannot be modified.
+ * Decorates a map iterator such that it cannot be modified in ways that change collection size.
  * <p>
  * Attempts to modify it will result in an UnsupportedOperationException.
  * </p>
  *
  * @param <K> the type of keys
  * @param <V> the type of mapped values
- * @since 3.0
+ * @since X.X
  */
-public final class UnmodifiableMapIterator<K, V> extends FixedMapIterator<K, V> implements Unmodifiable {
+public class FixedMapIterator<K, V> extends AbstractMapIteratorDecorator<K, V> {
 
     /**
-     * Decorates the specified iterator such that it cannot be modified.
+     * Decorates the specified iterator such that it cannot be modified in ways that change collection size.
      *
      * @param <K>  the key type
      * @param <V>  the value type
@@ -42,26 +41,22 @@ public final class UnmodifiableMapIterator<K, V> extends FixedMapIterator<K, V> 
      * @return a new unmodifiable map iterator
      * @throws NullPointerException if the iterator is null
      */
-    public static <K, V> MapIterator<K, V> unmodifiableMapIterator(final MapIterator<K, V> iterator) {
+    public static <K, V> MapIterator<K, V> fixedMapIterator(
+            final MapIterator<K, V> iterator) {
         Objects.requireNonNull(iterator, "iterator");
-        if (iterator instanceof Unmodifiable) {
+        if (iterator instanceof FixedMapIterator) {
             return iterator;
         }
-        return new UnmodifiableMapIterator<>(iterator);
+        return new FixedMapIterator<>(iterator);
     }
 
-    /**
-     * Constructor.
-     *
-     * @param iterator  the iterator to decorate
-     */
-    private UnmodifiableMapIterator(final MapIterator<K, V> iterator) {
+    private FixedMapIterator(final MapIterator<K, V> iterator) {
         super(iterator);
     }
 
     @Override
-    public V setValue(final V value) {
-        throw new UnsupportedOperationException("setValue() is not supported");
+    public void remove() {
+        throw new UnsupportedOperationException("remove() is not supported");
     }
 
 }
