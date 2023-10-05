@@ -14,32 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.collections4;
+package org.apache.commons.collections4.iterators;
 
-/**
- * Defines a map that allows bidirectional lookup between key and values
- * and retains both keys and values in sorted order.
- * <p>
- * Implementations should allow a value to be looked up from a key and
- * a key to be looked up from a value with equal performance.
- * </p>
- *
- * @param <K> the type of the keys in the map
- * @param <V> the type of the values in the map
- * @since 3.0
- */
-public interface SortedExtendedBidiMap<K, V> extends SortedBidiMap<K, V>, SortedRangedMap<K, V> {
-    SortedMapRange<V> getValueRange();
+import org.apache.commons.collections4.MapIterator;
+
+import java.util.Iterator;
+
+public abstract class AbstractMapIteratorAdapter<K, V, O> implements Iterator<O> {
+
+    /** The iterator being decorated */
+    private final MapIterator<K, V> iterator;
+
+    protected AbstractMapIteratorAdapter(final MapIterator<K, V> iterator) {
+        this.iterator = iterator;
+    }
 
     @Override
-    SortedExtendedBidiMap<K, V> subMap(K fromKey, K toKey);
+    public boolean hasNext() {
+        return false;
+    }
+
+    protected abstract O transform(K next, V value);
 
     @Override
-    SortedExtendedBidiMap<K, V> headMap(K toKey);
+    public O next() {
+        return transform(iterator.next(), iterator.getValue());
+    }
 
     @Override
-    SortedExtendedBidiMap<K, V> tailMap(K fromKey);
-
-    @Override
-    SortedExtendedBidiMap<V, K> inverseBidiMap();
+    public void remove() {
+        iterator.remove();
+    }
 }

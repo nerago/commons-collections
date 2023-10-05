@@ -180,21 +180,21 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     }
 
     @Override
-    public SortedBoundMap<K, V> headMap(final K toKey) {
+    public SortedRangedMap<K, V> headMap(final K toKey) {
         final NavigableMap<K, V> sub = normalMap().headMap(toKey, false);
         final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).head(toKey, false);
         return new ViewMap<>(this, sub, range);
     }
 
     @Override
-    public SortedBoundMap<K, V> tailMap(final K fromKey) {
+    public SortedRangedMap<K, V> tailMap(final K fromKey) {
         final NavigableMap<K, V> sub = normalMap().tailMap(fromKey, true);
         final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).tail(fromKey, true);
         return new ViewMap<>(this, sub, range);
     }
 
     @Override
-    public SortedBoundMap<K, V> subMap(final K fromKey, final K toKey) {
+    public SortedRangedMap<K, V> subMap(final K fromKey, final K toKey) {
         final NavigableMap<K, V> sub = normalMap().subMap(fromKey, true, toKey, false);
         final SortedMapRange<K> range = SortedMapRange.<K>full(comparator).subRange(fromKey, true, toKey, false);
         return new ViewMap<>(this, sub, range);
@@ -208,7 +208,7 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
     /**
      * Internal sorted map view.
      */
-    protected static class ViewMap<K, V> extends AbstractSortedMapDecorator<K, V> implements SortedBoundMap<K, V> {
+    protected static class ViewMap<K, V> extends AbstractSortedMapDecorator<K, V> implements SortedRangedMap<K, V> {
         private static final long serialVersionUID = -3145985885836970321L;
 
         transient Set<V> values;

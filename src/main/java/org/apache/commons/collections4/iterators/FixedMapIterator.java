@@ -50,7 +50,7 @@ public class FixedMapIterator<K, V> extends AbstractMapIteratorDecorator<K, V> {
         return new FixedMapIterator<>(iterator);
     }
 
-    private FixedMapIterator(final MapIterator<K, V> iterator) {
+    protected FixedMapIterator(final MapIterator<K, V> iterator) {
         super(iterator);
     }
 

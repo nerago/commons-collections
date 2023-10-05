@@ -16,13 +16,14 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.IterableExtendedMap;
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
@@ -37,29 +38,51 @@ import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterableMap<K, V> {
+public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterableMap<K, V> implements IterableExtendedMap<K, V> {
     private static final long serialVersionUID = 4016005260054821088L;
 
     private transient Set<Entry<K, V>> entrySet;
     private transient Set<K> keySet;
     private transient Collection<V> values;
 
-    protected abstract MapSpliterator<K, V> mapSpliterator();
-
-    protected Iterator<Map.Entry<K, V>> entryIterator() {
+    @Override
+    public Iterator<Map.Entry<K, V>> entryIterator() {
         final MapIterator<K, V> mapIterator = mapIterator();
         return new TransformIterator<>(mapIterator, k -> new UnmodifiableMapEntry<>(k, mapIterator.getValue()));
     }
 
     @Override
-    public abstract V getOrDefault(Object key, V defaultValue);
+    public abstract MapIterator<K, V> mapIterator();
 
     @Override
     public final V get(final Object key) {
         return getOrDefault(key, null);
     }
 
-    protected abstract boolean containsEntry(Object key, Object value);
+    @Override
+    public final boolean containsValue(final Object value) {
+        final MapIterator<K, V> mapIterator = mapIterator();
+        while (mapIterator.hasNext()) {
+            mapIterator.next();
+            if (Objects.equals(value, mapIterator.getValue())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean removeValueAsBoolean(final Object value) {
+        final MapIterator<K, V> mapIterator = mapIterator();
+        while (mapIterator.hasNext()) {
+            mapIterator.next();
+            if (Objects.equals(value, mapIterator.getValue())) {
+                mapIterator.remove();
+                return true;
+            }
+        }
+        return false;
+    }
 
     protected abstract V doPut(K key, V value, final boolean addIfAbsent, final boolean updateIfPresent);
 
@@ -127,13 +150,6 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
                 (k, v) -> remappingFunction.apply(v, value), false);
     }
 
-    protected abstract boolean removeAsBoolean(Object key);
-
-    @Override
-    public abstract boolean remove(Object key, Object value);
-
-    protected abstract boolean removeValueAsBoolean(Object value);
-
     @Override
     public int size() {
         return IteratorUtils.size(mapIterator());
@@ -190,23 +206,23 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public final boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         } else if (!(obj instanceof Map)) {
             return false;
         } else {
-            return MapUtils.isEqualMap(mapIterator(), (Map<?, ?>) obj);
+            return MapUtils.isEqualMap(this, (Map<?, ?>) obj);
         }
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return MapUtils.hashCode(mapIterator());
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return MapUtils.toString(mapIterator());
     }
 
@@ -237,7 +253,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
 
         @Override
-        public boolean remove(Object o) {
+        public boolean remove(final Object o) {
             return AbstractIterableMapAlternate.this.removeAsBoolean(o);
         }
 
@@ -319,7 +335,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
 
         @Override
-        public boolean remove(Object o) {
+        public boolean remove(final Object o) {
             return AbstractIterableMapAlternate.this.removeValueAsBoolean(o);
         }
 

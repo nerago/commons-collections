@@ -16,17 +16,23 @@
  */
 package org.apache.commons.collections4;
 
-import java.util.*;
+import java.util.SortedMap;
 
-public interface SortedBoundMap<K, V> extends SortedMap<K, V> {
-    @Override
-    SortedBoundMap<K, V> subMap(K fromKey, K toKey);
-
-    @Override
-    SortedBoundMap<K, V> headMap(K toKey);
+public interface SortedRangedMap<K, V> extends SortedMap<K, V> {
+    SortedRangedMap<K, V> subMap(SortedMapRange<K> range);
 
     @Override
-    SortedBoundMap<K, V> tailMap(K fromKey);
+    SortedRangedMap<K, V> subMap(K fromKey, K toKey);
 
+    @Override
+    SortedRangedMap<K, V> headMap(K toKey);
+
+    @Override
+    SortedRangedMap<K, V> tailMap(K fromKey);
+
+    /**
+     * Range of keys included in this map instance (i.e. full map or sub map)
+     * @return key range
+     */
     SortedMapRange<K> getKeyRange();
 }
