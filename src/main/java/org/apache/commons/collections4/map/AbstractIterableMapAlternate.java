@@ -84,8 +84,25 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         return false;
     }
 
+    /**
+     * Common put function to cover public methods {@link #put}, {@link #putIfAbsent}, {@link #replace(Object, Object)}.
+     * @param key key selects entry in question
+     * @param value new value to add/update as needed
+     * @param addIfAbsent if mapping should be added when absent from the map
+     * @param updateIfPresent if entry should have new value updated when present in map
+     * @return old value of the entry or null if it was absent
+     */
     protected abstract V doPut(K key, V value, final boolean addIfAbsent, final boolean updateIfPresent);
 
+    /**
+     * Common put function to cover functional public methods {@link #compute}, {@link #computeIfPresent}, {@link #computeIfAbsent},
+     * {@link #merge}, {@link #replace(Object, Object, Object)}.
+     * @param key key selects entry in question
+     * @param absentFunc function to compute initial value when may need adding to map, null may mean skip add
+     * @param presentFunc function to compute updated value when may present in map, null may mean delete entry
+     * @param saveNulls should a null value from absentFunc/presentFunc be persisted (true) or treated as skip/delete (false)
+     * @return new value of entry as persisted after function
+     */
     protected abstract V doPut(final K key,
                      final Function<? super K, ? extends V> absentFunc,
                      final BiFunction<? super K, ? super V, ? extends V> presentFunc,

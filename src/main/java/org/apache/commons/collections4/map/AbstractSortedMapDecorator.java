@@ -27,6 +27,7 @@ import java.util.SortedMap;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedMap;
 import org.apache.commons.collections4.iterators.ListIteratorWrapper;
 
 /**
@@ -209,8 +210,13 @@ public abstract class AbstractSortedMapDecorator<K, V>
     static class BasicSortedMapDecorator<K, V> extends AbstractSortedMapDecorator<K, V> {
         private static final long serialVersionUID = -6584599215482864814L;
 
-        public BasicSortedMapDecorator(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
+        BasicSortedMapDecorator(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
             super(subMap, keyRange);
+        }
+
+        @Override
+        public SortedRangedMap<K, V> subMap(final SortedMapRange<K> range) {
+            return decorateDerived(range.apply(decorated()), range);
         }
     }
 }

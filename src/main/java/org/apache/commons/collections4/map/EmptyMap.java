@@ -1,0 +1,349 @@
+package org.apache.commons.collections4.map;
+
+import org.apache.commons.collections4.IterableExtendedMap;
+import org.apache.commons.collections4.NavigableBoundMap;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedExtendedBidiMap;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedMap;
+import org.apache.commons.collections4.iterators.EmptyIterator;
+import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
+import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+public class EmptyMap<K, V> implements IterableExtendedMap<K, V>,
+        NavigableBoundMap<K, V>,
+        SortedExtendedBidiMap<K, V> {
+
+    private static final EmptyMap<?, ?> instance = new EmptyMap<>();
+
+    @SuppressWarnings("unchecked")
+    public static <V, K> EmptyMap<K,V> emptyMap() {
+        return (EmptyMap<K, V>) instance;
+    }
+
+    @Override
+    public int size() {
+        return 0;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return true;
+    }
+
+    @Override
+    public boolean containsKey(final Object key) {
+        return false;
+    }
+
+    @Override
+    public boolean containsValue(final Object value) {
+        return false;
+    }
+
+    @Override
+    public V get(final Object key) {
+        return null;
+    }
+
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        return defaultValue;
+    }
+
+    @Override
+    public boolean containsEntry(final Object key, final Object value) {
+        return false;
+    }
+
+    @Override
+    public K getKey(final Object value) {
+        return null;
+    }
+
+    @Override
+    public K getKeyOrDefault(final Object value, final K defaultKey) {
+        return defaultKey;
+    }
+
+    @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+    }
+
+    @Override
+    public V put(final K key, final V value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V replace(final K key, final V value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean removeAsBoolean(final Object key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean removeValueAsBoolean(final Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V remove(final Object key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void putAll(final Map<? extends K, ? extends V> m) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public K removeValue(final Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public K firstKey() {
+        return null;
+    }
+
+    @Override
+    public K lastKey() {
+        return null;
+    }
+
+    @Override
+    public K nextKey(final K key) {
+        return null;
+    }
+
+    @Override
+    public K previousKey(final K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> lowerEntry(final K key) {
+        return null;
+    }
+
+    @Override
+    public K lowerKey(final K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> floorEntry(final K key) {
+        return null;
+    }
+
+    @Override
+    public K floorKey(final K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> ceilingEntry(final K key) {
+        return null;
+    }
+
+    @Override
+    public K ceilingKey(final K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> higherEntry(final K key) {
+        return null;
+    }
+
+    @Override
+    public K higherKey(final K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> firstEntry() {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> lastEntry() {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> pollFirstEntry() {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> pollLastEntry() {
+        return null;
+    }
+
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return SortedMapRange.full(null);
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return SortedMapRange.full(null);
+    }
+
+    @Override
+    public Comparator<? super K> comparator() {
+        return null;
+    }
+
+    @Override
+    public Comparator<? super V> valueComparator() {
+        return null;
+    }
+
+    @Override
+    public NavigableBoundMap<K, V> subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
+        return this;
+    }
+
+    @Override
+    public NavigableBoundMap<K, V> headMap(final K toKey, final boolean inclusive) {
+        return this;
+    }
+
+    @Override
+    public NavigableBoundMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
+        return this;
+    }
+
+    @Override
+    public SortedRangedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return this;
+    }
+
+    @Override
+    public EmptyMap<K, V> subMap(final K fromKey, final K toKey) {
+        return this;
+    }
+
+    @Override
+    public EmptyMap<K, V> headMap(final K toKey) {
+        return this;
+    }
+
+    @Override
+    public EmptyMap<K, V> tailMap(final K fromKey) {
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public EmptyMap<V, K> inverseBidiMap() {
+        return (EmptyMap<V, K>) this;
+    }
+
+    @Override
+    public EmptyMap<K, V> descendingMap() {
+        return this;
+    }
+
+    @Override
+    public NavigableSet<K> navigableKeySet() {
+        return Collections.emptyNavigableSet();
+    }
+
+    @Override
+    public NavigableSet<K> descendingKeySet() {
+        return Collections.emptyNavigableSet();
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<V> values() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIterator() {
+        return EmptyOrderedMapIterator.emptyOrderedMapIterator();
+    }
+
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        return EmptyMapSpliterator.emptyMapSpliterator();
+    }
+
+    @Override
+    public Iterator<Entry<K, V>> entryIterator() {
+        return EmptyIterator.emptyIterator();
+    }
+}

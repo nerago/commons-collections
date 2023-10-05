@@ -19,6 +19,7 @@ package org.apache.commons.collections4.map;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Nested;
 
@@ -31,6 +32,9 @@ public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSorted
         super(testName);
     }
 
+    @Override
+    public abstract IterableSortedMap<K, V> makeObject();
+
     @Nested
     public class NestedIterableTests extends AbstractIterableMapTest<K, V> {
         public NestedIterableTests() {
@@ -39,7 +43,7 @@ public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSorted
 
         @Override
         public IterableMap<K, V> makeObject() {
-            return (IterableMap<K, V>) AbstractIterableSortedMapTest.this.makeObject();
+            return AbstractIterableSortedMapTest.this.makeObject();
         }
 
         @Override

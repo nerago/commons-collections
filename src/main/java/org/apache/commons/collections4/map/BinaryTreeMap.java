@@ -33,7 +33,6 @@ import org.apache.commons.collections4.spliterators.MapSpliterator;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -63,19 +62,20 @@ import java.util.function.Function;
  * @param <V> the type of the values in this map
  * @since X.X
  */
-@SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
+@SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "OverlyComplexClass"})
 public final class BinaryTreeMap<K extends Comparable<K>, V>
         extends AbstractIterableSortedMap<K, V> {
 
     private static final long serialVersionUID = 5398917388048351226L;
     
-    private transient Node<K, V> rootNodeKey;
+    private transient Node<K, V> rootNode;
     private transient int nodeCount;
     private transient int modifications;
 
     /**
      * Constructs a new empty TreeBidiMap.
      */
+    @SuppressWarnings("WeakerAccess")
     public BinaryTreeMap() {
     }
 
@@ -140,7 +140,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      */
     @Override
     public boolean containsEntry(final Object key, final Object value) {
-        checkValue(value);
         final Node<K, V> entry = lookupKey(checkKey(key));
         if (entry != null) {
             return Objects.equals(entry.getValue(), value);
@@ -156,26 +155,115 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     
     @Override
     protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
-        checkKeyAndValue(key, value);
-        return doPutKeyFirst(key, value, addIfAbsent, updateIfPresent);
+        checkKey(key);
+
+        Node<K, V> node = rootNode;
+        if (node == null) {
+            if (addIfAbsent) {
+                addAsRoot(key, value);
+            }
+            return null;
+        }
+
+        while (true) {
+            final int cmp = key.compareTo(node.getKey());
+            if (cmp == 0) {
+                final V oldValue = node.value;
+                if (updateIfPresent && !Objects.equals(oldValue, value)) {
+                    updateValue(node, value);
+                }
+                return oldValue;
+            } else if (cmp < 0) {
+                if (node.leftNode == null) {
+                    if (addIfAbsent) {
+                        addOnLeft(key, value, node);
+                    }
+                    return null;
+                }
+                node = node.leftNode;
+            } else { // cmp > 0
+                if (node.rightNode == null) {
+                    if (addIfAbsent) {
+                        addOnRight(key, value, node);
+                    }
+                    return null;
+                }
+                node = node.rightNode;
+            }
+        }
     }
 
     @Override
-    protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
-        return doPutKeyFirst(key, absentFunc, presentFunc);
-    }
+    protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc,
+                                   final BiFunction<? super K, ? super V, ? extends V> presentFunc,
+                                   final boolean saveNulls) {
+        checkKey(key);
+        final int expectedModifications = modifications;
 
-    /**
-     * Puts all the mappings from the specified map into this map.
-     * <p>
-     * All keys and values must implement {@code Comparable}.
-     *
-     * @param map the map to copy from
-     */
-    @Override
-    public void putAll(final Map<? extends K, ? extends V> map) {
-        for (final Entry<? extends K, ? extends V> e : map.entrySet()) {
-            put(e.getKey(), e.getValue());
+        Node<K, V> node = rootNode;
+        if (node == null) {
+            // map is empty
+            if (absentFunc != null) {
+                final V newValue = absentFunc.apply(key);
+                if (expectedModifications != modifications) {
+                    throw new ConcurrentModificationException();
+                } else if (newValue != null || saveNulls) {
+                    addAsRoot(key, newValue);
+                    return newValue;
+                }
+            }
+            return null;
+        }
+
+        while (true) {
+            final int cmp = key.compareTo(node.getKey());
+            if (cmp == 0) {
+                final V oldValue = node.getValue();
+                if (presentFunc != null) {
+                    final V newValue = presentFunc.apply(key, oldValue);
+                    if (expectedModifications != modifications) {
+                        throw new ConcurrentModificationException();
+                    } else if (newValue == null && !saveNulls) {
+                        doRedBlackDelete(node);
+                        return null;
+                    } else if (Objects.equals(oldValue, newValue)) {
+                        return oldValue;
+                    } else {
+                        updateValue(node, newValue);
+                        return newValue;
+                    }
+                } else {
+                    return oldValue;
+                }
+            } else if (cmp < 0) {
+                if (node.leftNode == null) {
+                    if (absentFunc != null) {
+                        final V newValue = absentFunc.apply(key);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newValue != null || saveNulls) {
+                            addOnLeft(key, newValue, node);
+                            return newValue;
+                        }
+                    }
+                    return null;
+                }
+                node = node.leftNode;
+            } else { // cmp > 0
+                if (node.rightNode == null) {
+                    if (absentFunc != null) {
+                        final V newValue = absentFunc.apply(key);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newValue != null || saveNulls) {
+                            addOnRight(key, newValue, node);
+                            return newValue;
+                        }
+                    }
+                    return null;
+                }
+                node = node.rightNode;
+            }
         }
     }
 
@@ -240,10 +328,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      */
     @Override
     public void clear() {
-        modify();
-
         nodeCount = 0;
-        rootNodeKey = null;
+        rootNode = null;
+        modify();
     }
 
     /**
@@ -254,10 +341,11 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      */
     @Override
     public K firstKey() {
-        if (nodeCount == 0) {
+        final Node<K, V> node = rootNode;
+        if (node == null) {
             throw new NoSuchElementException("Map is empty");
         }
-        return leastNodeKey(rootNodeKey).getKey();
+        return leastNode(node).getKey();
     }
 
     /**
@@ -268,10 +356,11 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      */
     @Override
     public K lastKey() {
-        if (nodeCount == 0) {
+        final Node<K, V> node = rootNode;
+        if (node == null) {
             throw new NoSuchElementException("Map is empty");
         }
-        return greatestNodeKey(rootNodeKey).getKey();
+        return greatestNode(node).getKey();
     }
 
     /**
@@ -285,7 +374,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     @Override
     public K nextKey(final K key) {
         checkKey(key);
-        final Node<K, V> node = lookupKeyHigher(key, false);
+        final Node<K, V> node = lookupHigher(key, false);
         return node == null ? null : node.getKey();
     }
 
@@ -300,14 +389,14 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     @Override
     public K previousKey(final K key) {
         checkKey(key);
-        final Node<K, V> node = lookupKeyLower(key, false);
+        final Node<K, V> node = lookupLower(key, false);
         return node == null ? null : node.getKey();
     }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return isEmpty() ? EmptyOrderedMapIterator.emptyOrderedMapIterator()
-                         : new MapIteratorKeyByKey();
+                         : new TreeMapIterator();
     }
 
     @Override
@@ -322,205 +411,28 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                          : new KeyMapSpliterator();
     }
 
-    /**
-     * Puts logic.
-     *
-     * @param key   the key, always the main map key
-     * @param value the value, always the main map value
-     */
-    private V doPutKeyFirst(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
-        Node<K, V> node = rootNodeKey;
-        if (node == null) {
-            if (addIfAbsent) {
-                addAsRoot(key, value);
-            }
-            return null;
-        }
-
-        // find key position
-        final Node<K, V> keyNode;
-        V oldValue = null;
-        while (true) {
-            final int cmp = key.compareTo(node.getKey());
-            if (cmp == 0) {
-                oldValue = node.value;
-                if (!updateIfPresent || Objects.equals(oldValue, value))
-                    return oldValue;
-                updateValue(node, value);
-                keyNode = node;
-                break;
-            } else if (cmp < 0) {
-                if (node.keyLeftNode == null) {
-                    if (!addIfAbsent)
-                        return null;
-                    keyNode = addOnLeftKey(key, value, node);
-                    break;
-                }
-                node = node.keyLeftNode;
-            } else { // cmp > 0
-                if (node.keyRightNode == null) {
-                    if (!addIfAbsent)
-                        return null;
-                    keyNode = addOnRightKey(key, value, node);
-                    break;
-                }
-                node = node.keyRightNode;
-            }
-        }
-
-        finishPutKeyFirst(key, value, keyNode);
-
-        return oldValue;
-    }
-
-    private V doPutKeyFirst(final K key,
-                            final Function<? super K, ? extends V> absentFunc,
-                            final BiFunction<? super K, ? super V, ? extends V> presentFunc) {
-        final int expectedModifications = modifications;
-
-        Node<K, V> node = rootNodeKey;
-        if (node == null) {
-            // map is empty
-            if (absentFunc != null) {
-                final V value = absentFunc.apply(key);
-                if (expectedModifications != modifications) {
-                    throw new ConcurrentModificationException();
-                }
-                if (value != null) {
-                    checkValue(value);
-                    addAsRoot(key, value);
-                    return value;
-                }
-            }
-            return null;
-        }
-
-        // find key position
-        final Node<K, V> keyNode;
-        final V newValue;
-        while (true) {
-            final int cmp = key.compareTo(node.getKey());
-            if (cmp == 0) {
-                final V oldValue = node.getValue();
-                if (presentFunc != null) {
-                    newValue = presentFunc.apply(key, oldValue);
-                    if (expectedModifications != modifications) {
-                        throw new ConcurrentModificationException();
-                    } else if (newValue == null) {
-                        doRedBlackDelete(node);
-                        return null;
-                    } else if (Objects.equals(oldValue, newValue)) {
-                        return oldValue;
-                    } else {
-                        checkValue(newValue);
-                        updateValue(node, newValue);
-                        keyNode = node;
-                        break;
-                    }
-                }
-                return oldValue;
-            } else if (cmp < 0) {
-                if (node.keyLeftNode == null) {
-                    if (absentFunc != null) {
-                        newValue = absentFunc.apply(key);
-                        if (expectedModifications != modifications) {
-                            throw new ConcurrentModificationException();
-                        } else if (newValue != null) {
-                            checkValue(newValue);
-                            keyNode = addOnLeftKey(key, newValue, node);
-                            break;
-                        }
-                    }
-                    return null;
-                }
-                node = node.keyLeftNode;
-            } else { // cmp > 0
-                if (node.keyRightNode == null) {
-                    if (absentFunc != null) {
-                        newValue = absentFunc.apply(key);
-                        if (expectedModifications != modifications) {
-                            throw new ConcurrentModificationException();
-                        } else if (newValue != null) {
-                            checkValue(newValue);
-                            keyNode = addOnRightKey(key, newValue, node);
-                            break;
-                        }
-                    }
-                    return null;
-                }
-                node = node.keyRightNode;
-            }
-        }
-
-        finishPutKeyFirst(key, newValue, keyNode);
-
-        return newValue;
-    }
-
-    private void finishPutKeyFirst(final K key, final V value, final Node<K, V> keyNode) {
-        Node<K, V> node = rootNodeValue;
-        if (node == null) {
-            rootNodeValue = keyNode;
-            keyNode.valueParentNode = null;
-            return;
-        }
-
-        while (true) {
-            final int cmp = value.compareTo(node.getValue());
-
-            if (cmp == 0) {
-                // replace existing value node (assume different key)
-                assert !Objects.equals(node.key, key);
-                keyNode.copyColorValue(node);
-                replaceNodeValue(node, keyNode, true);
-                doRedBlackDeleteKey(node);
-                shrink();
-                break;
-            } else if (cmp < 0) {
-                if (node.valueLeftNode == null) {
-                    insertOnLeftValue(node, keyNode);
-                    break;
-                }
-                node = node.valueLeftNode;
-            } else { // cmp > 0
-                if (node.valueRightNode == null) {
-                    insertOnRightValue(node, keyNode);
-                    break;
-                }
-                node = node.valueRightNode;
-            }
-        }
-    }
-
     private void addAsRoot(final K key, final V value) {
-        final Node<K, V> root = new Node<>(key, value);
-        rootNodeKey = root;
-        rootNodeValue = root;
+        rootNode = new Node<>(key, value);
         grow();
     }
 
-    private Node<K, V> addOnLeftKey(final K key, final V value, final Node<K, V> parent) {
+    private void addOnLeft(final K key, final V value, final Node<K, V> parent) {
         final Node<K, V> node = new Node<>(key, value);
-        parent.keyLeftNode = node;
-        node.keyParentNode = parent;
-        doRedBlackInsertKey(node);
+        parent.leftNode = node;
+        node.parentNode = parent;
+        doRedBlackInsert(node);
         grow();
-        return node;
     }
 
-    private Node<K, V> addOnRightKey(final K key, final V value, final Node<K, V> parent) {
+    private void addOnRight(final K key, final V value, final Node<K, V> parent) {
         final Node<K, V> node = new Node<>(key, value);
-        parent.keyRightNode = node;
-        node.keyParentNode = parent;
-        doRedBlackInsertKey(node);
+        parent.rightNode = node;
+        node.parentNode = parent;
+        doRedBlackInsert(node);
         grow();
-        return node;
     }
 
     private void updateValue(final Node<K, V> node, final V value) {
-        // remove from value tree
-        doRedBlackDeleteValue(node);
-
         // update value
         node.value = value;
         node.calculatedHashCode = false;
@@ -528,7 +440,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     private Node<K, V> lookupKey(final K key) {
-        Node<K, V> node = rootNodeKey;
+        Node<K, V> node = rootNode;
 
         while (node != null) {
             final K result = node.getKey();
@@ -536,17 +448,17 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             if (cmp == 0) {
                 return node;
             } else if (cmp < 0) {
-                node = node.keyLeftNode;
+                node = node.leftNode;
             } else {
-                node = node.keyRightNode;
+                node = node.rightNode;
             }
         }
 
         return null;
     }
 
-    private Node<K, V> lookupKeyHigher(final K key, final boolean includeEqual) {
-        Node<K, V> node = rootNodeKey, higher = null;
+    private Node<K, V> lookupHigher(final K key, final boolean includeEqual) {
+        Node<K, V> node = rootNode, higher = null;
 
         while (node != null) {
             final int cmp = node.getKey().compareTo(key);
@@ -554,17 +466,17 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                 return node;
             } else if (cmp > 0) {
                 higher = node;
-                node = node.keyLeftNode;
+                node = node.leftNode;
             } else {
-                node = node.keyRightNode;
+                node = node.rightNode;
             }
         }
 
         return higher;
     }
 
-    private Node<K, V> lookupKeyLower(final K key, final boolean includeEqual) {
-        Node<K, V> node = rootNodeKey, lower = null;
+    private Node<K, V> lookupLower(final K key, final boolean includeEqual) {
+        Node<K, V> node = rootNode, lower = null;
 
         while (node != null) {
             final int cmp = node.getKey().compareTo(key);
@@ -572,9 +484,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                 return node;
             } else if (cmp < 0) {
                 lower = node;
-                node = node.keyRightNode;
+                node = node.rightNode;
             } else {
-                node = node.keyLeftNode;
+                node = node.leftNode;
             }
         }
 
@@ -587,21 +499,21 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @param node the node to be searched from
      * @return the specified node
      */
-    private Node<K, V> nextSmallerKey(final Node<K, V> node) {
+    private Node<K, V> nextSmaller(final Node<K, V> node) {
         if (node == null) {
             return null;
-        } else if (node.keyLeftNode != null) {
-            return greatestNodeKey(node.keyLeftNode);
+        } else if (node.leftNode != null) {
+            return greatestNode(node.leftNode);
         } else {
-            Node<K, V> parent = node.keyParentNode;
+            Node<K, V> parent = node.parentNode;
             Node<K, V> child = node;
 
             while (parent != null) {
-                if (child != parent.keyLeftNode) {
+                if (child != parent.leftNode) {
                     break;
                 } else {
                     child = parent;
-                    parent = parent.keyParentNode;
+                    parent = parent.parentNode;
                 }
             }
             return parent;
@@ -614,20 +526,20 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @param node the node to be searched from
      * @return the specified node
      */
-    private Node<K, V> nextGreaterKey(final Node<K, V> node) {
+    private Node<K, V> nextGreater(final Node<K, V> node) {
         if (node == null) {
             return null;
-        } else if (node.keyRightNode != null) {
-            return leastNodeKey(node.keyRightNode);
+        } else if (node.rightNode != null) {
+            return leastNode(node.rightNode);
         } else {
-            Node<K, V> parent = node.keyParentNode;
+            Node<K, V> parent = node.parentNode;
             Node<K, V> child = node;
 
             while (parent != null) {
-                if (child != parent.keyRightNode)
+                if (child != parent.rightNode)
                     break;
                 child = parent;
-                parent = parent.keyParentNode;
+                parent = parent.parentNode;
             }
 
             return parent;
@@ -642,11 +554,11 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @return the smallest node, from the specified node, in the
      * specified mapping
      */
-    private Node<K, V> leastNodeKey(final Node<K, V> node) {
+    private Node<K, V> leastNode(final Node<K, V> node) {
         Node<K, V> rval = node;
         if (rval != null) {
-            while (rval.keyLeftNode != null) {
-                rval = rval.keyLeftNode;
+            while (rval.leftNode != null) {
+                rval = rval.leftNode;
             }
         }
         return rval;
@@ -658,11 +570,11 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @param node the node from which we will start searching
      * @return the greatest node, from the specified node
      */
-    private Node<K, V> greatestNodeKey(final Node<K, V> node) {
+    private Node<K, V> greatestNode(final Node<K, V> node) {
         Node<K, V> rval = node;
         if (rval != null) {
-            while (rval.keyRightNode != null) {
-                rval = rval.keyRightNode;
+            while (rval.rightNode != null) {
+                rval = rval.rightNode;
             }
         }
         return rval;
@@ -673,29 +585,29 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      *
      * @param node the node to be rotated
      */
-    private void rotateLeftKey(final Node<K, V> node) {
-        final Node<K, V> rightChild = node.keyRightNode;
-        node.keyRightNode = rightChild.keyLeftNode;
+    private void rotateLeft(final Node<K, V> node) {
+        final Node<K, V> rightChild = node.rightNode;
+        node.rightNode = rightChild.leftNode;
 
-        if (rightChild.keyLeftNode != null) {
-            rightChild.keyLeftNode.keyParentNode = node;
+        if (rightChild.leftNode != null) {
+            rightChild.leftNode.parentNode = node;
         }
-        rightChild.keyParentNode = node.keyParentNode;
+        rightChild.parentNode = node.parentNode;
 
-        final Node<K, V> parent = node.keyParentNode;
+        final Node<K, V> parent = node.parentNode;
         if (parent == null) {
             // node was the root ... now its right child is the root
-            rootNodeKey = rightChild;
+            rootNode = rightChild;
         } else {
-            if (parent.keyLeftNode == node) {
-                parent.keyLeftNode = rightChild;
+            if (parent.leftNode == node) {
+                parent.leftNode = rightChild;
             } else {
-                parent.keyRightNode = rightChild;
+                parent.rightNode = rightChild;
             }
         }
 
-        rightChild.keyLeftNode = node;
-        node.keyParentNode = rightChild;
+        rightChild.leftNode = node;
+        node.parentNode = rightChild;
     }
 
     /**
@@ -703,29 +615,30 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      *
      * @param node the node to be rotated
      */
-    private void rotateRightKey(final Node<K, V> node) {
-        final Node<K, V> leftChild = node.keyLeftNode;
-        node.keyLeftNode = leftChild.keyRightNode;
-        if (leftChild.keyRightNode != null) {
-            final Node<K, V> kvNode = leftChild.keyRightNode;
-            kvNode.keyParentNode = node;
-        }
-        leftChild.keyParentNode = node.keyParentNode;
+    private void rotateRight(final Node<K, V> node) {
+        final Node<K, V> leftChild = node.leftNode;
+        node.leftNode = leftChild.rightNode;
 
-        final Node<K, V> parent = node.keyParentNode;
+        if (leftChild.rightNode != null) {
+            final Node<K, V> kvNode = leftChild.rightNode;
+            kvNode.parentNode = node;
+        }
+        leftChild.parentNode = node.parentNode;
+
+        final Node<K, V> parent = node.parentNode;
         if (parent == null) {
             // node was the root ... now its left child is the root
-            rootNodeKey = leftChild;
+            rootNode = leftChild;
         } else {
-            if (parent.keyRightNode == node) {
-                parent.keyRightNode = leftChild;
+            if (parent.rightNode == node) {
+                parent.rightNode = leftChild;
             } else {
-                parent.keyLeftNode = leftChild;
+                parent.leftNode = leftChild;
             }
         }
 
-        leftChild.keyRightNode = node;
-        node.keyParentNode = leftChild;
+        leftChild.rightNode = node;
+        node.parentNode = leftChild;
     }
 
     /**
@@ -734,17 +647,17 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      *
      * @param insertedNode the node to be inserted
      */
-    private void doRedBlackInsertKey(final Node<K, V> insertedNode) {
+    private void doRedBlackInsert(final Node<K, V> insertedNode) {
         Node<K, V> currentNode = insertedNode;
         if (currentNode != null) {
             currentNode.setRed();
         }
 
-        while (currentNode != null && currentNode != rootNodeKey && currentNode.keyParentNode != null && currentNode.keyParentNode.isRed()) {
-            final Node<K, V> parent = currentNode.keyParentNode;
-            final Node<K, V> grandParent = parent.keyParentNode;
-            if (parent.keyLeftNode == currentNode) {
-                final Node<K, V> grandParentRight = grandParent != null ? grandParent.keyRightNode : null;
+        while (currentNode != null && currentNode != rootNode && currentNode.parentNode != null && currentNode.parentNode.isRed()) {
+            final Node<K, V> parent = currentNode.parentNode;
+            final Node<K, V> grandParent = parent.parentNode;
+            if (parent.leftNode == currentNode) {
+                final Node<K, V> grandParentRight = grandParent != null ? grandParent.rightNode : null;
 
                 if (grandParentRight != null && grandParentRight.isRed()) {
                     parent.setBlack();
@@ -755,12 +668,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     parent.setBlack();
                     if (grandParent != null) {
                         grandParent.setRed();
-                        rotateRightKey(grandParent);
+                        rotateRight(grandParent);
                     }
                 }
             } else {
                 // just like clause above, except swap left for right
-                final Node<K, V> grandParentLeft = grandParent != null ? grandParent.keyLeftNode : null;
+                final Node<K, V> grandParentLeft = grandParent != null ? grandParent.leftNode : null;
 
                 if (grandParentLeft != null && grandParentLeft.isRed()) {
                     parent.setBlack();
@@ -771,14 +684,14 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     parent.setBlack();
                     if (grandParent != null) {
                         grandParent.setRed();
-                        rotateLeftKey(grandParent);
+                        rotateLeft(grandParent);
                     }
                 }
             }
         }
 
-        if (rootNodeKey != null) {
-            rootNodeKey.setBlack();
+        if (rootNode != null) {
+            rootNode.setBlack();
         }
     }
 
@@ -789,50 +702,46 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @param deletedNode the node to be deleted
      */
     private void doRedBlackDelete(final Node<K, V> deletedNode) {
-        doRedBlackDeleteKey(deletedNode);
-        doRedBlackDeleteValue(deletedNode);
-        shrink();
-    }
-
-    private void doRedBlackDeleteKey(final Node<K, V> deletedNode) {
         // if deleted node has both left and children, swap with
         // the next greater node
-        if (deletedNode.keyLeftNode != null && deletedNode.keyRightNode != null) {
-            swapPositionKey(nextGreaterKey(deletedNode), deletedNode);
+        if (deletedNode.leftNode != null && deletedNode.rightNode != null) {
+            swapPosition(nextGreater(deletedNode), deletedNode);
         }
 
         final Node<K, V> replacement;
-        if (deletedNode.keyLeftNode != null) {
-            replacement = deletedNode.keyLeftNode;
+        if (deletedNode.leftNode != null) {
+            replacement = deletedNode.leftNode;
         } else {
-            replacement = deletedNode.keyRightNode;
+            replacement = deletedNode.rightNode;
         }
 
         if (replacement != null) {
-            replaceNodeKey(deletedNode, replacement, false);
+            replaceNode(deletedNode, replacement);
         } else {
             // replacement is null
-            if (deletedNode.keyParentNode == null) {
+            if (deletedNode.parentNode == null) {
                 // empty tree
-                rootNodeKey = null;
+                rootNode = null;
             } else {
                 // deleted node had no children
                 if (deletedNode.isBlack()) {
-                    doRedBlackDeleteFixupKey(deletedNode);
+                    doRedBlackDeleteFixup(deletedNode);
                 }
 
-                if (deletedNode.keyParentNode != null) {
-                    final Node<K, V> parentNode = deletedNode.keyParentNode;
-                    if (deletedNode == parentNode.keyLeftNode) {
-                        parentNode.keyLeftNode = null;
+                if (deletedNode.parentNode != null) {
+                    final Node<K, V> parentNode = deletedNode.parentNode;
+                    if (deletedNode == parentNode.leftNode) {
+                        parentNode.leftNode = null;
                     } else {
-                        parentNode.keyRightNode = null;
+                        parentNode.rightNode = null;
                     }
 
-                    deletedNode.keyParentNode = null;
+                    deletedNode.parentNode = null;
                 }
             }
         }
+
+        shrink();
     }
 
     /**
@@ -843,15 +752,15 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      *
      * @param replacementNode the node being replaced
      */
-    private void doRedBlackDeleteFixupKey(final Node<K, V> replacementNode) {
+    private void doRedBlackDeleteFixup(final Node<K, V> replacementNode) {
         Node<K, V> currentNode = replacementNode;
 
-        while (currentNode != rootNodeKey && currentNode != null && currentNode.keyParentNode != null) {
+        while (currentNode != rootNode && currentNode != null && currentNode.parentNode != null) {
             if (!currentNode.isBlack()) break;
-            Node<K, V> parent = currentNode.keyParentNode;
-            final boolean isLeftChild = parent.keyLeftNode == currentNode;
+            Node<K, V> parent = currentNode.parentNode;
+            final boolean isLeftChild = parent.leftNode == currentNode;
             if (isLeftChild) {
-                Node<K, V> siblingNode = parent.keyRightNode;
+                Node<K, V> siblingNode = parent.rightNode;
 
                 if (siblingNode == null) {
                     currentNode = parent;
@@ -861,9 +770,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                 if (siblingNode.isRed()) {
                     siblingNode.setBlack();
                     parent.setRed();
-                    rotateLeftKey(parent);
-                    parent = currentNode.keyParentNode;
-                    siblingNode = parent.keyRightNode;
+                    rotateLeft(parent);
+                    parent = currentNode.parentNode;
+                    siblingNode = parent.rightNode;
                 }
 
                 if (siblingNode == null) {
@@ -871,8 +780,8 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     continue;
                 }
 
-                final Node<K, V> siblingLeft = siblingNode.keyLeftNode;
-                final Node<K, V> siblingRight = siblingNode.keyRightNode;
+                final Node<K, V> siblingLeft = siblingNode.leftNode;
+                final Node<K, V> siblingRight = siblingNode.rightNode;
                 if ((siblingLeft == null || siblingLeft.isBlack()) && (siblingRight == null || siblingRight.isBlack())) {
                     siblingNode.setRed();
                     currentNode = parent;
@@ -882,9 +791,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                             siblingLeft.setBlack();
                         }
                         siblingNode.setRed();
-                        rotateRightKey(siblingNode);
-                        parent = currentNode.keyParentNode;
-                        siblingNode = parent.keyRightNode;
+                        rotateRight(siblingNode);
+                        parent = currentNode.parentNode;
+                        siblingNode = parent.rightNode;
                     }
 
                     if (siblingNode != null) {
@@ -894,11 +803,11 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     if (siblingRight != null) {
                         siblingRight.setBlack();
                     }
-                    rotateLeftKey(parent);
+                    rotateLeft(parent);
                     break;
                 }
             } else {
-                Node<K, V> siblingNode = parent.keyLeftNode;
+                Node<K, V> siblingNode = parent.leftNode;
 
                 if (siblingNode == null) {
                     currentNode = parent;
@@ -908,10 +817,10 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                 if (siblingNode.isRed()) {
                     siblingNode.setBlack();
                     parent.setRed();
-                    rotateRightKey(parent);
+                    rotateRight(parent);
 
                     final Node<K, V> result;
-                    result = parent.keyLeftNode;
+                    result = parent.leftNode;
                     siblingNode = result;
                 }
 
@@ -920,8 +829,8 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     continue;
                 }
 
-                final Node<K, V> siblingLeft = siblingNode.keyLeftNode;
-                final Node<K, V> siblingRight = siblingNode.keyRightNode;
+                final Node<K, V> siblingLeft = siblingNode.leftNode;
+                final Node<K, V> siblingRight = siblingNode.rightNode;
                 if ((siblingLeft == null || siblingLeft.isBlack()) && (siblingRight == null || siblingRight.isBlack())) {
                     siblingNode.setRed();
                     currentNode = parent;
@@ -931,9 +840,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                             siblingRight.setBlack();
                         }
                         siblingNode.setRed();
-                        rotateLeftKey(siblingNode);
-                        parent = currentNode.keyParentNode;
-                        siblingNode = parent.keyLeftNode;
+                        rotateLeft(siblingNode);
+                        parent = currentNode.parentNode;
+                        siblingNode = parent.leftNode;
                     }
 
                     if (siblingNode != null) {
@@ -943,7 +852,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     if (siblingLeft != null) {
                         siblingLeft.setBlack();
                     }
-                    rotateRightKey(parent);
+                    rotateRight(parent);
                     break;
                 }
             }
@@ -954,38 +863,26 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
     }
 
-    private void replaceNodeKey(final Node<K, V> previous, final Node<K, V> replacement, final boolean keepChildren) {
-        final Node<K, V> parentNode = previous.keyParentNode;
-        replacement.keyParentNode = parentNode;
+    private void replaceNode(final Node<K, V> previous, final Node<K, V> replacement) {
+        final Node<K, V> parentNode = previous.parentNode;
+        replacement.parentNode = parentNode;
 
         if (parentNode == null) {
-            rootNodeKey = replacement;
+            rootNode = replacement;
         } else {
-            if (previous == parentNode.keyLeftNode) {
-                parentNode.keyLeftNode = replacement;
+            if (previous == parentNode.leftNode) {
+                parentNode.leftNode = replacement;
             } else {
-                parentNode.keyRightNode = replacement;
+                parentNode.rightNode = replacement;
             }
         }
 
-        if (keepChildren) {
-            if (previous.keyLeftNode != null) {
-                replacement.keyLeftNode = previous.keyLeftNode;
-                replacement.keyLeftNode.keyParentNode = replacement;
-            }
-
-            if (previous.keyRightNode != null) {
-                replacement.keyRightNode = previous.keyRightNode;
-                replacement.keyRightNode.keyParentNode = replacement;
-            }
-        }
-
-        previous.keyLeftNode = null;
-        previous.keyRightNode = null;
-        previous.keyParentNode = null;
+        previous.leftNode = null;
+        previous.rightNode = null;
+        previous.parentNode = null;
 
         if (previous.isBlack()) {
-            doRedBlackDeleteFixupKey(replacement);
+            doRedBlackDeleteFixup(replacement);
         }
     }
 
@@ -997,113 +894,113 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @param a one node
      * @param b another node
      */
-    private void swapPositionKey(final Node<K, V> a, final Node<K, V> b) {
+    private void swapPosition(final Node<K, V> a, final Node<K, V> b) {
         // Save initial values.
-        final Node<K, V> aParent = a.keyParentNode;
-        final Node<K, V> aLeftChild = a.keyLeftNode;
-        final Node<K, V> aRightChild = a.keyRightNode;
-        final Node<K, V> bParent = b.keyParentNode;
-        final Node<K, V> bLeftChild = b.keyLeftNode;
-        final Node<K, V> bRightChild = b.keyRightNode;
+        final Node<K, V> aParent = a.parentNode;
+        final Node<K, V> aLeftChild = a.leftNode;
+        final Node<K, V> aRightChild = a.rightNode;
+        final Node<K, V> bParent = b.parentNode;
+        final Node<K, V> bLeftChild = b.leftNode;
+        final Node<K, V> bRightChild = b.rightNode;
 
         if (a == bParent) {
-            a.keyParentNode = b;
-            b.keyParentNode = aParent;
+            a.parentNode = b;
+            b.parentNode = aParent;
             if (aParent != null) {
-                if (a == aParent.keyLeftNode)
-                    aParent.keyLeftNode = b;
+                if (a == aParent.leftNode)
+                    aParent.leftNode = b;
                 else
-                    aParent.keyRightNode = b;
+                    aParent.rightNode = b;
             }
-            a.keyLeftNode = bLeftChild;
-            a.keyRightNode = bRightChild;
+            a.leftNode = bLeftChild;
+            a.rightNode = bRightChild;
             if (b == aLeftChild) {
-                b.keyLeftNode = a;
-                b.keyRightNode = aRightChild;
+                b.leftNode = a;
+                b.rightNode = aRightChild;
             } else {
-                b.keyLeftNode = aLeftChild;
-                b.keyRightNode = a;
+                b.leftNode = aLeftChild;
+                b.rightNode = a;
             }
         } else if (b == aParent) {
-            a.keyParentNode = bParent;
-            b.keyParentNode = a;
+            a.parentNode = bParent;
+            b.parentNode = a;
             if (bParent != null) {
-                if (b == bParent.keyLeftNode)
-                    bParent.keyLeftNode = a;
+                if (b == bParent.leftNode)
+                    bParent.leftNode = a;
                 else
-                    bParent.keyRightNode = a;
+                    bParent.rightNode = a;
             }
             if (a == bLeftChild) {
-                a.keyLeftNode = b;
-                a.keyRightNode = bRightChild;
+                a.leftNode = b;
+                a.rightNode = bRightChild;
             } else {
-                a.keyRightNode = b;
-                a.keyLeftNode = bLeftChild;
+                a.rightNode = b;
+                a.leftNode = bLeftChild;
             }
-            b.keyLeftNode = aLeftChild;
-            b.keyRightNode = aRightChild;
+            b.leftNode = aLeftChild;
+            b.rightNode = aRightChild;
         } else if (aParent != null && bParent != null) {
-            a.keyParentNode = bParent;
-            b.keyParentNode = aParent;
-            if (a == aParent.keyLeftNode)
-                aParent.keyLeftNode = b;
+            a.parentNode = bParent;
+            b.parentNode = aParent;
+            if (a == aParent.leftNode)
+                aParent.leftNode = b;
             else
-                aParent.keyRightNode = b;
-            if (b == bParent.keyLeftNode)
-                bParent.keyLeftNode = a;
+                aParent.rightNode = b;
+            if (b == bParent.leftNode)
+                bParent.leftNode = a;
             else
-                bParent.keyRightNode = a;
-            a.keyLeftNode = bLeftChild;
-            a.keyRightNode = bRightChild;
-            b.keyLeftNode = aLeftChild;
-            b.keyRightNode = aRightChild;
+                bParent.rightNode = a;
+            a.leftNode = bLeftChild;
+            a.rightNode = bRightChild;
+            b.leftNode = aLeftChild;
+            b.rightNode = aRightChild;
         } else if (aParent != null) {
-            a.keyParentNode = null;
-            b.keyParentNode = aParent;
-            if (a == aParent.keyLeftNode)
-                aParent.keyLeftNode = b;
+            a.parentNode = null;
+            b.parentNode = aParent;
+            if (a == aParent.leftNode)
+                aParent.leftNode = b;
             else
-                aParent.keyRightNode = b;
-            a.keyLeftNode = bLeftChild;
-            a.keyRightNode = bRightChild;
-            b.keyLeftNode = aLeftChild;
-            b.keyRightNode = aRightChild;
+                aParent.rightNode = b;
+            a.leftNode = bLeftChild;
+            a.rightNode = bRightChild;
+            b.leftNode = aLeftChild;
+            b.rightNode = aRightChild;
         } else if (bParent != null) {
-            a.keyParentNode = bParent;
-            b.keyParentNode = null;
-            if (b == bParent.keyLeftNode) {
-                bParent.keyLeftNode = a;
+            a.parentNode = bParent;
+            b.parentNode = null;
+            if (b == bParent.leftNode) {
+                bParent.leftNode = a;
             } else {
-                bParent.keyRightNode = a;
+                bParent.rightNode = a;
             }
-            a.keyLeftNode = bLeftChild;
-            a.keyRightNode = bRightChild;
-            b.keyLeftNode = aLeftChild;
-            b.keyRightNode = aRightChild;
+            a.leftNode = bLeftChild;
+            a.rightNode = bRightChild;
+            b.leftNode = aLeftChild;
+            b.rightNode = aRightChild;
         } else {
-            a.keyLeftNode = bLeftChild;
-            a.keyRightNode = bRightChild;
-            b.keyLeftNode = aLeftChild;
-            b.keyRightNode = aRightChild;
+            a.leftNode = bLeftChild;
+            a.rightNode = bRightChild;
+            b.leftNode = aLeftChild;
+            b.rightNode = aRightChild;
         }
 
         // Fix children's parent pointers
-        if (a.keyLeftNode != null)
-            a.keyLeftNode.keyParentNode = a;
-        if (a.keyRightNode != null)
-            a.keyRightNode.keyParentNode = a;
-        if (b.keyLeftNode != null)
-            b.keyLeftNode.keyParentNode = b;
-        if (b.keyRightNode != null)
-            b.keyRightNode.keyParentNode = b;
+        if (a.leftNode != null)
+            a.leftNode.parentNode = a;
+        if (a.rightNode != null)
+            a.rightNode.parentNode = a;
+        if (b.leftNode != null)
+            b.leftNode.parentNode = b;
+        if (b.rightNode != null)
+            b.rightNode.parentNode = b;
 
         a.swapColors(b);
 
         // Check if root changed
-        if (rootNodeKey == a)
-            rootNodeKey = b;
-        else if (rootNodeKey == b)
-            rootNodeKey = a;
+        if (rootNode == a)
+            rootNode = b;
+        else if (rootNode == b)
+            rootNode = a;
     }
 
     /**
@@ -1121,37 +1018,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             throw new ClassCastException("key must be Comparable");
         }
         return (K) key;
-    }
-
-    /**
-     * Checks a value for validity (non-null and implements Comparable)
-     *
-     * @param value the value to be checked
-     * @return value cast as type V
-     * @throws NullPointerException if value is null
-     * @throws ClassCastException   if value is not Comparable or castable to V
-     */
-    @SuppressWarnings("unchecked")
-    private V checkValue(final Object value) {
-        Objects.requireNonNull(value, "value");
-        if (!(value instanceof Comparable)) {
-            throw new ClassCastException("key must be Comparable");
-        }
-        return (V) value;
-    }
-
-    /**
-     * Checks a key and a value for validity (non-null and implements
-     * Comparable)
-     *
-     * @param key   the key to be checked
-     * @param value the value to be checked
-     * @throws NullPointerException if key or value is null
-     * @throws ClassCastException   if key or value is not Comparable
-     */
-    private void checkKeyAndValue(final Object key, final Object value) {
-        checkKey(key);
-        checkValue(value);
     }
 
     /**
@@ -1221,8 +1087,8 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     private Node<K, V> firstEntryInRange(final SortedMapRange<K> keyRange) {
-        final Node<K, V> candidate = keyRange.hasFrom() ? lookupKeyHigher(keyRange.getFromKey(), keyRange.isFromInclusive())
-                : leastNodeKey(rootNodeKey);
+        final Node<K, V> candidate = keyRange.hasFrom() ? lookupHigher(keyRange.getFromKey(), keyRange.isFromInclusive())
+                : leastNode(rootNode);
         if (keyRange.inRange(candidate.getKey())) {
             return candidate;
         } else {
@@ -1231,8 +1097,8 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     private Node<K, V> lastEntryInRange(final SortedMapRange<K> keyRange) {
-        final Node<K, V> candidate = keyRange.hasTo() ? lookupKeyLower(keyRange.getToKey(), keyRange.isToInclusive())
-                : greatestNodeKey(rootNodeKey);
+        final Node<K, V> candidate = keyRange.hasTo() ? lookupLower(keyRange.getToKey(), keyRange.isToInclusive())
+                : greatestNode(rootNode);
         if (keyRange.inRange(candidate.getKey())) {
             return candidate;
         } else {
@@ -1241,194 +1107,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     /**
-     * A view of this map.
-     */
-    private abstract class View<E> extends AbstractSet<E> {
-        @Override
-        public final int size() {
-            return BinaryTreeMap.this.size();
-        }
-
-        @Override
-        public final void clear() {
-            BinaryTreeMap.this.clear();
-        }
-    }
-
-    private abstract class KeyView extends View<K> {
-        @Override
-        public final boolean contains(final Object obj) {
-            return lookupKey(checkKey(obj)) != null;
-        }
-
-        @Override
-        public final boolean remove(final Object o) {
-            V result = null;
-            final Node<K, V> node = lookupKey(checkKey(o));
-            if (node != null) {
-                doRedBlackDelete(node);
-                result = node.getValue();
-            }
-            return result != null;
-        }
-    }
-
-//    private final class KeyViewByKeys extends KeyView {
-//        @Override
-//        public Iterator<K> iterator() {
-//            return new MapIteratorKeyByKey();
-//        }
-//
-//        @Override
-//        public Spliterator<K> spliterator() {
-//            return new SpliteratorKeyByKey();
-//        }
-//    }
-//
-//    private final class KeyViewByValue extends View<K> {
-//        @Override
-//        public Iterator<K> iterator() {
-//            return new MapIteratorKeyByValue();
-//        }
-//
-//        @Override
-//        public Spliterator<K> spliterator() {
-//            return new SpliteratorKeyByValue();
-//        }
-//    }
-//
-//    private abstract class ValueView extends View<V> {
-//        @Override
-//        public final boolean contains(final Object obj) {
-//            return lookupValue(checkValue(obj)) != null;
-//        }
-//
-//        @Override
-//        public final boolean remove(final Object obj) {
-//            K result = null;
-//            final Node<K, V> node = lookupValue(checkValue(obj));
-//            if (node != null) {
-//                doRedBlackDelete(node);
-//                result = node.getKey();
-//            }
-//            return result != null;
-//        }
-//    }
-//
-//    private final class ValueViewByKey extends ValueView {
-//        @Override
-//        public Iterator<V> iterator() {
-//            return new MapIteratorValueByKey();
-//        }
-//
-//        @Override
-//        public Spliterator<V> spliterator() {
-//            return new SpliteratorValueByKey();
-//        }
-//    }
-//
-//    private final class ValueViewByValue extends ValueView {
-//        @Override
-//        public Iterator<V> iterator() {
-//            return new MapIteratorValueByValue();
-//        }
-//
-//        @Override
-//        public Spliterator<V> spliterator() {
-//            return new SpliteratorValueByValue();
-//        }
-//    }
-
-    /**
-     * A view of this map.
-     */
-//    private final class EntryView extends View<Entry<K, V>> {
-//        @Override
-//        public boolean contains(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getKey());
-//            final V value = checkValue(entry.getValue());
-//            final Node<K, V> node = lookupKey(key);
-//            return node != null && node.getValue().equals(value);
-//        }
-//
-//        @Override
-//        public boolean remove(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getKey());
-//            final V value = checkValue(entry.getValue());
-//            final Node<K, V> node = lookupKey(key);
-//            if (node != null && node.getValue().equals(value)) {
-//                doRedBlackDelete(node);
-//                return true;
-//            }
-//            return false;
-//        }
-//
-//        @Override
-//        public Iterator<Entry<K, V>> iterator() {
-//            return new EntryIteratorStandardByKey();
-//        }
-//
-//        @Override
-//        public Spliterator<Entry<K, V>> spliterator() {
-//            return new SpliteratorEntryByKey();
-//        }
-//    }
-
-    /**
-     * A view of this map.
-     */
-//    private final class InverseEntryView extends View<Entry<V, K>> {
-//        @Override
-//        public boolean contains(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getValue());
-//            final V value = checkValue(entry.getKey());
-//            final Node<K, V> node = lookupValue(value);
-//            return node != null && node.getKey().equals(key);
-//        }
-//
-//        @Override
-//        public boolean remove(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getValue());
-//            final V value = checkValue(entry.getKey());
-//            final Node<K, V> node = lookupValue(value);
-//            if (node != null && node.getKey().equals(key)) {
-//                doRedBlackDelete(node);
-//                return true;
-//            }
-//            return false;
-//        }
-//
-//        @Override
-//        public Iterator<Entry<V, K>> iterator() {
-//            return new EntryIteratorInvertedByValue();
-//        }
-//
-//        @Override
-//        public Spliterator<Entry<V, K>> spliterator() {
-//            return new SpliteratorEntryInvertedByValue();
-//        }
-//    }
-
-    /**
      * Base class for all iterators.
      */
-    abstract class BaseIterator {
+    abstract class IteratorBase {
         /**
          * The last node returned by the iterator.
          */
@@ -1449,12 +1130,16 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         /**
          * Constructor.
          */
-        BaseIterator() {
+        IteratorBase() {
             expectedModifications = modifications;
             reset();
         }
 
-        protected abstract void reset();
+        public final void reset() {
+            nextNode = leastNode(rootNode);
+            lastReturnedNode = null;
+            previousNode = null;
+        }
 
         public final boolean hasNext() {
             return nextNode != null;
@@ -1477,17 +1162,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                         "Iterator getValue() can only be called after next() and before remove()");
             }
         }
-    }
-
-    /**
-     * Intermediate iterator class ordering results by key.
-     */
-    abstract class IteratorByKey extends BaseIterator {
-        public final void reset() {
-            nextNode = leastNodeKey(rootNodeKey);
-            lastReturnedNode = null;
-            previousNode = null;
-        }
 
         final Node<K, V> navigateNext() {
             if (nextNode == null) {
@@ -1498,7 +1172,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             }
             lastReturnedNode = nextNode;
             previousNode = nextNode;
-            nextNode = nextGreaterKey(nextNode);
+            nextNode = nextGreater(nextNode);
             return lastReturnedNode;
         }
 
@@ -1511,7 +1185,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             }
             lastReturnedNode = previousNode;
             nextNode = previousNode;
-            previousNode = nextSmallerKey(lastReturnedNode);
+            previousNode = nextSmaller(lastReturnedNode);
             return lastReturnedNode;
         }
 
@@ -1527,16 +1201,16 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             if (lastReturnedNode == previousNode) {
                 // most recent was navigateNext
                 if (nextNode == null) {
-                    previousNode = greatestNodeKey(rootNodeKey);
+                    previousNode = greatestNode(rootNode);
                 } else {
-                    previousNode = nextSmallerKey(nextNode);
+                    previousNode = nextSmaller(nextNode);
                 }
             } else {
                 // most recent was navigatePrevious
                 if (previousNode == null) {
-                    nextNode = leastNodeKey(rootNodeKey);
+                    nextNode = leastNode(rootNode);
                 } else {
-                    nextNode = nextGreaterKey(previousNode);
+                    nextNode = nextGreater(previousNode);
                 }
             }
             lastReturnedNode = null;
@@ -1546,7 +1220,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     /**
      * An iterator over the map.
      */
-    private final class MapIteratorKeyByKey extends IteratorByKey implements OrderedMapIterator<K, V> {
+    private final class TreeMapIterator extends IteratorBase implements OrderedMapIterator<K, V>, ResettableIterator<K> {
         @Override
         public K getKey() {
             checkCanGetKey();
@@ -1561,7 +1235,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         @Override
         public V setValue(final V obj) {
-            throw new UnsupportedOperationException();
+            if (lastReturnedNode == null) {
+                throw new IllegalStateException();
+            }
         }
 
         @Override
@@ -1576,41 +1252,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     /**
-     * An iterator over the map.
-     */
-    private final class MapIteratorValueByKey extends IteratorByKey implements OrderedMapIterator<V, K> {
-        @Override
-        public V getKey() {
-            checkCanGetKey();
-            return lastReturnedNode.getValue();
-        }
-
-        @Override
-        public K getValue() {
-            checkCanGetValue();
-            return lastReturnedNode.getKey();
-        }
-
-        @Override
-        public K setValue(final K obj) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public V next() {
-            return navigateNext().getValue();
-        }
-
-        @Override
-        public V previous() {
-            return navigatePrevious().getValue();
-        }
-    }
-
-    /**
      * An iterator over the map entries.
      */
-    private final class EntryIteratorStandardByKey extends IteratorByKey implements OrderedIterator<Entry<K, V>>, ResettableIterator<Entry<K, V>> {
+    private final class EntryIteratorStandardByKey extends IteratorBase implements OrderedIterator<Entry<K, V>>, ResettableIterator<Entry<K, V>> {
         @Override
         public Entry<K, V> next() {
             return navigateNext().copyEntryUnmodifiable();
@@ -1631,9 +1275,9 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         private final K key;
         private V value;
-        private Node<K, V> keyLeftNode;
-        private Node<K, V> keyRightNode;
-        private Node<K, V> keyParentNode;
+        private Node<K, V> leftNode;
+        private Node<K, V> rightNode;
+        private Node<K, V> parentNode;
         private int hashCodeValue;
         private boolean calculatedHashCode;
         private boolean colorFlag;
@@ -1755,7 +1399,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
     }
 
-    private class TreeSubMap extends AbstractIterableMapAlternate<K, V> implements IterableSortedMap<K, V> {
+    private class TreeSubMap extends AbstractIterableSortedMap<K, V> {
         private static final long serialVersionUID = 7793720431038658603L;
         private final SortedMapRange<K> keyRange;
 
@@ -1780,18 +1424,23 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        protected Iterator<Entry<K, V>> entryIterator() {
+        public Iterator<Entry<K, V>> entryIterator() {
             return null; // TODO
         }
 
         @Override
         public OrderedMapIterator<K, V> mapIterator() {
             // TODO
-            return new MapIteratorKeyByKey();
+            return new TreeMapIterator();
         }
 
         @Override
-        protected MapSpliterator<K, V> mapSpliterator() {
+        public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+            return null;
+        }
+
+        @Override
+        public MapSpliterator<K, V> mapSpliterator() {
             return new KeyRangeMapSpliterator(keyRange);
         }
 
@@ -1808,57 +1457,13 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        protected boolean containsEntry(final Object keyObject, final Object valueObject) {
+        public boolean containsEntry(final Object keyObject, final Object value) {
             final K key = checkKey(keyObject);
-            final V value = checkValue(valueObject);
             if (keyRange.inRange(key)) {
                 final Node<K, V> node = lookupKey(key);
                 if (node != null) {
                     return Objects.equals(node.value, value);
                 }
-            }
-            return false;
-        }
-
-        @Override
-        public boolean containsValue(final Object valueObject) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
-            if (node != null) {
-                return keyRange.inRange(node.key);
-            } else {
-                return false;
-            }
-        }
-
-        @Override
-        public K getKeyOrDefault(final Object valueObject, final K defaultKey) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
-            if (node != null && keyRange.inRange(node.key)) {
-                return node.key;
-            }
-            return defaultKey;
-        }
-
-        @Override
-        public K removeValue(final Object valueObject) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
-            if (node != null && keyRange.inRange(node.key)) {
-                doRedBlackDelete(node);
-                return node.key;
-            }
-            return null;
-        }
-
-        @Override
-        protected boolean removeValueAsBoolean(final Object valueObject) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
-            if (node != null && keyRange.inRange(node.key)) {
-                doRedBlackDelete(node);
-                return true;
             }
             return false;
         }
@@ -1882,7 +1487,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        protected boolean removeAsBoolean(final Object keyObject) {
+        public boolean removeAsBoolean(final Object keyObject) {
             final K key = checkKey(keyObject);
             if (keyRange.inRange(key)) {
                 return BinaryTreeMap.this.removeAsBoolean(keyObject);
@@ -1910,14 +1515,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             BinaryTreeMap.this.putAll(m);
         }
 
-        private Entry<K, V> nextEntry(final K key) {
-            return lookupKeyHigher(key, false);
-        }
-
-        private Entry<K, V> previousEntry(final K key) {
-            return lookupKeyLower(key, false);
-        }
-
         @Override
         public K firstKey() {
             return getKeyNullSafe(firstEntryInRange(keyRange));
@@ -1930,12 +1527,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         @Override
         public K nextKey(final K key) {
-            return getKeyNullSafe(nextEntry(key));
+            return getKeyNullSafe(lookupHigher(key, false));
         }
 
         @Override
         public K previousKey(final K key) {
-            return getKeyNullSafe(previousEntry(key));
+            return getKeyNullSafe(lookupLower(key, false));
         }
 
         @Override
@@ -1946,26 +1543,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public SortedMapRange<K> getKeyRange() {
             return keyRange;
-        }
-
-        @Override
-        public SortedMapRange<V> getValueRange() {
-            return SortedMapRange.full(null);
-        }
-
-        @Override
-        public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-            return new TreeSubMap(keyRange.subRange(fromKey, toKey));
-        }
-
-        @Override
-        public IterableSortedMap<K, V> headMap(final K toKey) {
-            return new TreeSubMap(keyRange.head(toKey));
-        }
-
-        @Override
-        public IterableSortedMap<K, V> tailMap(final K fromKey) {
-            return new TreeSubMap(keyRange.tail(fromKey));
         }
     }
 
@@ -1991,37 +1568,37 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         @Override
         protected Node<K, V> rootNode() {
-            return rootNodeKey;
+            return rootNode;
         }
 
         @Override
         protected Node<K, V> getLeft(final Node<K, V> node) {
-            return node.keyLeftNode;
+            return node.leftNode;
         }
 
         @Override
         protected Node<K, V> getRight(final Node<K, V> node) {
-            return node.keyRightNode;
+            return node.rightNode;
         }
 
         @Override
         protected Node<K, V> nextLower(final Node<K, V> node) {
-            return nextSmallerKey(node);
+            return nextSmaller(node);
         }
 
         @Override
         protected Node<K, V> nextGreater(final Node<K, V> node) {
-            return nextGreaterKey(node);
+            return BinaryTreeMap.this.nextGreater(node);
         }
 
         @Override
         protected Node<K, V> subTreeLowest(final Node<K, V> node) {
-            return leastNodeKey(node);
+            return leastNode(node);
         }
 
         @Override
         protected Node<K, V> subTreeGreatest(final Node<K, V> node) {
-            return greatestNodeKey(node);
+            return greatestNode(node);
         }
 
         @Override
@@ -2058,37 +1635,37 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         @Override
         protected Node<K, V> rootNode() {
-            return rootNodeKey;
+            return rootNode;
         }
 
         @Override
         protected Node<K, V> getLeft(final Node<K, V> node) {
-            return node.keyLeftNode;
+            return node.leftNode;
         }
 
         @Override
         protected Node<K, V> getRight(final Node<K, V> node) {
-            return node.keyRightNode;
+            return node.rightNode;
         }
 
         @Override
         protected Node<K, V> nextLower(final Node<K, V> node) {
-            return nextSmallerKey(node);
+            return nextSmaller(node);
         }
 
         @Override
         protected Node<K, V> nextGreater(final Node<K, V> node) {
-            return nextGreaterKey(node);
+            return BinaryTreeMap.this.nextGreater(node);
         }
 
         @Override
         protected Node<K, V> subTreeLowest(final Node<K, V> node) {
-            return leastNodeKey(node);
+            return leastNode(node);
         }
 
         @Override
         protected Node<K, V> subTreeGreatest(final Node<K, V> node) {
-            return greatestNodeKey(node);
+            return greatestNode(node);
         }
 
         @Override

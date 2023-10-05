@@ -16,11 +16,15 @@
  */
 package org.apache.commons.collections4;
 
+import org.apache.commons.collections4.iterators.EmptyMapIterator;
+import org.apache.commons.collections4.map.EmptyMap;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NoSuchElementException;
+import java.util.SortedMap;
 
 public final class SortedMapRange<K> implements Serializable {
     private static final long serialVersionUID = 5904683499000042719L;
@@ -261,5 +265,37 @@ public final class SortedMapRange<K> implements Serializable {
             throw new NoSuchElementException();
         }
         return key;
+    }
+
+    public <V> NavigableMap<K, V> apply(final NavigableMap<K, V> map) {
+        if (fromKey != null && toKey != null) {
+            return map.subMap(fromKey, fromInclusive, toKey, toInclusive);
+        } else if (fromKey != null) {
+            return map.tailMap(fromKey, fromInclusive);
+        } else if (toKey != null) {
+            return map.headMap(toKey, toInclusive);
+        } else if (isFull()) {
+            return map;
+        } else {
+            return EmptyMap.emptyMap();
+        }
+    }
+
+    public <V> SortedMap<K, V> apply(final SortedMap<K, V> map) {
+        if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
+            return map.subMap(fromKey, toKey);
+        } else if (fromKey != null && fromInclusive && toKey == null) {
+            return map.tailMap(fromKey);
+        } else if (fromKey == null && toKey != null && !toInclusive) {
+            return map.headMap(toKey);
+        } else if (map instanceof NavigableMap) {
+            return apply((NavigableMap<K, V>) map);
+        } else if (isFull()) {
+            return map;
+        } else if (isEmpty()) {
+            return EmptyMap.emptyMap();
+        } else {
+            throw new IllegalArgumentException("range is not applicable to basic SortedMap");
+        }
     }
 }
