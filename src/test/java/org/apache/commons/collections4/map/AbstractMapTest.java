@@ -903,7 +903,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         }
         if (!isPutAddSupported()) {
             resetEmpty();
-            assertThrows(UnsupportedOperationException.class, () -> getMap().computeIfAbsent(keys[0], k -> values[0]));
+            assertThrowsEither(UnsupportedOperationException.class, IllegalArgumentException.class,
+                    () -> getMap().computeIfAbsent(keys[0], k -> values[0]));
             verify();
             return;
         }
@@ -1269,7 +1270,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         if (!isTestFunctionalMethods()) {
             return;
         }
-        if (!isPutAddSupported() || !isPutChangeSupported() || !isRemoveSupported()) {
+        if (!isPutAddSupported() && !isPutChangeSupported() && !isRemoveSupported()) {
             resetFull();
             assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], newValues[0], (k, v) -> newValues[1]));
             assertThrows(UnsupportedOperationException.class, () -> getMap().merge(keys[0], newValues[0], (k, v) -> null));

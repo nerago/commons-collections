@@ -244,9 +244,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      */
     @Override
     public boolean removeIf(final Predicate<? super C> filter) {
-        if (Objects.isNull(filter)) {
-            return false;
-        }
+        Objects.requireNonNull(filter);
         boolean changed = false;
         final Iterator<C> it = iterator();
         while (it.hasNext()) {

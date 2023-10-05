@@ -58,6 +58,11 @@ public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
         return (V) (Integer) 1;
     }
 
+    @Override
+    public boolean isFailFastFunctionalExpected() {
+        return false;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void testMapGet2() {

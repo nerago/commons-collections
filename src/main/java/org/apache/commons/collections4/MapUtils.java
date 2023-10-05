@@ -1982,16 +1982,16 @@ public class MapUtils {
         return isEqualMap(map1.mapIterator(), map2);
     }
 
-    public static boolean isEqualMap(final MapIterator<?, ?> mapIterator, final Map<?,?> map2) {
+    public static boolean isEqualMap(final MapIterator<?, ?> mapIterator, final Map<?,?> otherMap) {
         while (mapIterator.hasNext()) {
             final Object key = mapIterator.next();
             final Object value = mapIterator.getValue();
             if (value == null) {
-                if (map2.get(key) != null || !map2.containsKey(key)) {
+                if (otherMap.get(key) != null || !otherMap.containsKey(key)) {
                     return false;
                 }
             } else {
-                if (!value.equals(map2.get(key))) {
+                if (!value.equals(otherMap.get(key))) {
                     return false;
                 }
             }
@@ -2002,7 +2002,7 @@ public class MapUtils {
     public static <K, V> int hashCode(final MapIterator<? extends K, ? extends V> mapIterator) {
         int total = 0;
         while (mapIterator.hasNext()) {
-            Object key = mapIterator.next(), value = mapIterator.getValue();
+            final Object key = mapIterator.next(), value = mapIterator.getValue();
             total += (key == null ? 0 : key.hashCode()) ^
                      (value == null ? 0 : value.hashCode());
         }
