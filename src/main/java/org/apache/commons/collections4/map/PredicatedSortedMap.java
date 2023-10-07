@@ -20,7 +20,6 @@ import java.util.Comparator;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.SortedMapRange;
@@ -133,21 +132,8 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements It
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        final SortedMap<K, V> map = getSortedMap().subMap(fromKey, toKey);
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, keyRange.subRange(fromKey, toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> headMap(final K toKey) {
-        final SortedMap<K, V> map = getSortedMap().headMap(toKey);
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, keyRange.head(toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> tailMap(final K fromKey) {
-        final SortedMap<K, V> map = getSortedMap().tailMap(fromKey);
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, keyRange.tail(fromKey));
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new PredicatedSortedMap<>(range.applyToMap(getSortedMap()), keyPredicate, valuePredicate, range);
     }
 
     @Override

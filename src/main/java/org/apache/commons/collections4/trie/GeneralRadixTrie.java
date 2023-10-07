@@ -429,17 +429,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(K fromKey, K toKey) {
-        return null;
-    }
-
-    @Override
-    public IterableSortedMap<K, V> headMap(K toKey) {
-        return null;
-    }
-
-    @Override
-    public IterableSortedMap<K, V> tailMap(K fromKey) {
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
         return null;
     }
 

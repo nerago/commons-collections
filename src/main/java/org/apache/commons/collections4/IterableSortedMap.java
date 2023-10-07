@@ -28,11 +28,20 @@ import java.util.SortedMap;
  */
 public interface IterableSortedMap<K, V> extends SortedRangedMap<K, V>, OrderedMap<K, V> {
     @Override
-    IterableSortedMap<K, V> subMap(K fromKey, K toKey);
+    IterableSortedMap<K, V> subMap(SortedMapRange<K> range);
 
     @Override
-    IterableSortedMap<K, V> headMap(K toKey);
+    default IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return subMap(getKeyRange().subRange(fromKey, toKey));
+    }
 
     @Override
-    IterableSortedMap<K, V> tailMap(K fromKey);
+    default IterableSortedMap<K, V> headMap(final K toKey) {
+        return subMap(getKeyRange().head(toKey));
+    }
+
+    @Override
+    default IterableSortedMap<K, V> tailMap(final K fromKey) {
+        return subMap(getKeyRange().tail(fromKey));
+    }
 }

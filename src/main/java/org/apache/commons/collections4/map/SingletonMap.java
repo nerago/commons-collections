@@ -604,21 +604,6 @@ public class SingletonMap<K, V> implements IterableExtendedMap<K, V>, NavigableR
     }
 
     @Override
-    public NavigableRangedMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-        return null;
-    }
-
-    @Override
-    public NavigableRangedMap<K, V> headMap(K toKey, boolean inclusive) {
-        return null;
-    }
-
-    @Override
-    public NavigableRangedMap<K, V> tailMap(K fromKey, boolean inclusive) {
-        return null;
-    }
-
-    @Override
     public SortedMapRange<V> getValueRange() {
         return null;
     }

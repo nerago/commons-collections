@@ -1032,18 +1032,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
     }
 
     @Override
-    public IterableSortedMap<K, V> headMap(final K toKey) {
-        return new BoundedRangeMap(getKeyRange().head(toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return new BoundedRangeMap(getKeyRange().subRange(fromKey, toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> tailMap(final K fromKey) {
-        return new BoundedRangeMap(getKeyRange().tail(fromKey));
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new BoundedRangeMap(range);
     }
 
     /**
@@ -2238,7 +2228,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
      * A range view of the {@link org.apache.commons.collections4.Trie}.
      */
     private abstract class RangeMap extends AbstractMap<K, V>
-            implements SortedMap<K, V> {
+            implements IterableSortedMap<K, V> {
 
         protected SortedMapRange<K> keyRange;
 
@@ -2320,18 +2310,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         @Override
-        public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-            return createRangeMap(keyRange.subRange(fromKey, toKey));
-        }
-
-        @Override
-        public IterableSortedMap<K, V> headMap(final K toKey) {
-            return createRangeMap(keyRange.head(toKey));
-        }
-
-        @Override
-        public IterableSortedMap<K, V> tailMap(final K fromKey) {
-            return createRangeMap(keyRange.tail(fromKey));
+        public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+            return createRangeMap(range);
         }
     }
 

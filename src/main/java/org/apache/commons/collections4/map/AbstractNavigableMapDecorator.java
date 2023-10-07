@@ -17,7 +17,7 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.IterableSortedMap;
-import org.apache.commons.collections4.NavigableBoundMap;
+import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.*;
@@ -42,7 +42,7 @@ import java.util.*;
  */
 public abstract class AbstractNavigableMapDecorator<K, V>
         extends AbstractSortedMapDecorator<K, V>
-        implements NavigableBoundMap<K, V> {
+        implements NavigableRangedMap<K, V> {
 
     private static final long serialVersionUID = 7643981107509930313L;
 
@@ -78,7 +78,7 @@ public abstract class AbstractNavigableMapDecorator<K, V>
         return decorateDerived((NavigableMap<K, V>) subMap, keyRange);
     }
 
-    protected abstract NavigableBoundMap<K, V> decorateDerived(NavigableMap<K, V> subMap, SortedMapRange<K> keyRange);
+    protected abstract NavigableRangedMap<K, V> decorateDerived(NavigableMap<K, V> subMap, SortedMapRange<K> keyRange);
 
     @Override
     public K nextKey(final K key) {

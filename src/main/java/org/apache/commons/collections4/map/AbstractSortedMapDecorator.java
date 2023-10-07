@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +26,7 @@ import java.util.SortedMap;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.SortedRangedMap;
+import org.apache.commons.collections4.SortedMapUtils;
 import org.apache.commons.collections4.iterators.ListIteratorWrapper;
 
 /**
@@ -122,37 +121,18 @@ public abstract class AbstractSortedMapDecorator<K, V>
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return decorateDerived(decorated().subMap(fromKey, toKey), getKeyRange().subRange(fromKey, toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> headMap(final K toKey) {
-        return decorateDerived(decorated().headMap(toKey), getKeyRange().head(toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> tailMap(final K fromKey) {
-        return decorateDerived(decorated().tailMap(fromKey), getKeyRange().tail(fromKey));
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return decorateDerived(range.applyToMap(decorated()), range);
     }
 
     @Override
     public K previousKey(final K key) {
-        if (key == null)
-            return null;
-        final SortedMap<K, V> headMap = headMap(key);
-        return headMap.isEmpty() ? null : headMap.lastKey();
+        return SortedMapUtils.previousKey(decorated(), key);
     }
 
     @Override
     public K nextKey(final K key) {
-        if (key == null)
-            return null;
-        final Iterator<K> it = tailMap(key).keySet().iterator();
-        if (!it.hasNext())
-            return null;
-        it.next();
-        return it.hasNext() ? it.next() : null;
+        return SortedMapUtils.nextKey(this, key);
     }
 
     /**
@@ -212,11 +192,6 @@ public abstract class AbstractSortedMapDecorator<K, V>
 
         BasicSortedMapDecorator(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
             super(subMap, keyRange);
-        }
-
-        @Override
-        public SortedRangedMap<K, V> subMap(final SortedMapRange<K> range) {
-            return decorateDerived(range.apply(decorated()), range);
         }
     }
 }

@@ -32,13 +32,22 @@ public interface SortedExtendedBidiMap<K, V> extends SortedBidiMap<K, V>, Sorted
     SortedMapRange<V> getValueRange();
 
     @Override
-    SortedExtendedBidiMap<K, V> subMap(K fromKey, K toKey);
+    default SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
+        return subMap(getKeyRange().subRange(fromKey, toKey));
+    }
 
     @Override
-    SortedExtendedBidiMap<K, V> headMap(K toKey);
+    default SortedExtendedBidiMap<K, V> headMap(final K toKey) {
+        return subMap(getKeyRange().head(toKey));
+    }
 
     @Override
-    SortedExtendedBidiMap<K, V> tailMap(K fromKey);
+    default SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
+        return subMap(getKeyRange().tail(fromKey));
+    }
+
+    @Override
+    SortedExtendedBidiMap<K, V> subMap(SortedMapRange<K> range);
 
     @Override
     SortedExtendedBidiMap<V, K> inverseBidiMap();

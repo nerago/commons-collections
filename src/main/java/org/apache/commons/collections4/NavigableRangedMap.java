@@ -18,28 +18,37 @@ package org.apache.commons.collections4;
 
 import java.util.NavigableMap;
 
-public interface NavigableBoundMap<K, V> extends NavigableMap<K, V>, IterableSortedMap<K, V> {
+public interface NavigableRangedMap<K, V> extends NavigableMap<K, V>, IterableSortedMap<K, V> {
     @Override
-    NavigableBoundMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive);
+    NavigableRangedMap<K, V> subMap(final SortedMapRange<K> range);
 
     @Override
-    NavigableBoundMap<K, V> headMap(K toKey, boolean inclusive);
+    default NavigableRangedMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+        return subMap(getKeyRange().subRange(fromKey, fromInclusive, toKey, toInclusive));
+    }
 
     @Override
-    NavigableBoundMap<K, V> tailMap(K fromKey, boolean inclusive);
+    default NavigableRangedMap<K, V> headMap(final K toKey, boolean inclusive) {
+        return subMap(getKeyRange().head(toKey, inclusive));
+    }
 
     @Override
-    default NavigableBoundMap<K, V> subMap(final K fromKey, final K toKey) {
+    default NavigableRangedMap<K, V> tailMap(final K fromKey, boolean inclusive) {
+        return subMap(getKeyRange().tail(fromKey, inclusive));
+    }
+
+    @Override
+    default NavigableRangedMap<K, V> subMap(final K fromKey, final K toKey) {
         return subMap(fromKey, true, toKey, false);
     }
 
     @Override
-    default NavigableBoundMap<K, V> headMap(final K toKey) {
+    default NavigableRangedMap<K, V> headMap(final K toKey) {
         return headMap(toKey, false);
     }
 
     @Override
-    default NavigableBoundMap<K, V> tailMap(final K fromKey) {
+    default NavigableRangedMap<K, V> tailMap(final K fromKey) {
         return tailMap(fromKey, true);
     }
 }

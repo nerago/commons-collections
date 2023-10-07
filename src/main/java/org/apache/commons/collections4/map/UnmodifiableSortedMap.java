@@ -74,7 +74,7 @@ public final class UnmodifiableSortedMap<K, V>
             final IterableSortedMap<K, V> tmpMap = (IterableSortedMap<K, V>) map;
             return tmpMap;
         }
-        return new UnmodifiableSortedMap<>(map, SortedMapRange.full(map.comparator()));
+        return new UnmodifiableSortedMap<>(map, map.getKeyRange());
     }
 
     /**

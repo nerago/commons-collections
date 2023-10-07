@@ -244,18 +244,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    public SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
-        return new TreeBidiSubMap(getKeyRange().subRange(fromKey, toKey));
-    }
-
-    @Override
-    public SortedExtendedBidiMap<K, V> headMap(final K toKey) {
-        return new TreeBidiSubMap(getKeyRange().head(toKey));
-    }
-
-    @Override
-    public SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
-        return new TreeBidiSubMap(getKeyRange().tail(fromKey));
+    public SortedExtendedBidiMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new TreeBidiSubMap(range);
     }
 
     /**
@@ -2759,17 +2749,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public SortedExtendedBidiMap<V, K> subMap(final V fromKey, final V toKey) {
-            throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
-        }
-
-        @Override
-        public SortedExtendedBidiMap<V, K> headMap(final V toKey) {
-            throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
-        }
-
-        @Override
-        public SortedExtendedBidiMap<V, K> tailMap(final V fromKey) {
+        public SortedExtendedBidiMap<V, K> subMap(final SortedMapRange<V> range) {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
 
@@ -3201,18 +3181,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
-            return new TreeBidiSubMap(keyRange.subRange(fromKey, toKey));
-        }
-
-        @Override
-        public SortedExtendedBidiMap<K, V> headMap(final K toKey) {
-            return new TreeBidiSubMap(keyRange.head(toKey));
-        }
-
-        @Override
-        public SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
-            return new TreeBidiSubMap(keyRange.tail(fromKey));
+        public SortedExtendedBidiMap<K, V> subMap(final SortedMapRange<K> range) {
+            return new TreeBidiSubMap(range);
         }
 
         @Override

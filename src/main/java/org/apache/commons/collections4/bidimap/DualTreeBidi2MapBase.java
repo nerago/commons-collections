@@ -531,18 +531,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public DualTreeBidi2MapBase<K, V> subMap(final K fromKey, final K toKey) {
-        return (DualTreeBidi2MapBase<K, V>) super.subMap(fromKey, toKey);
-    }
-
-    @Override
-    public DualTreeBidi2MapBase<K, V> headMap(final K toKey) {
-        return (DualTreeBidi2MapBase<K, V>) super.headMap(toKey);
-    }
-
-    @Override
-    public DualTreeBidi2MapBase<K, V> tailMap(final K fromKey) {
-        return (DualTreeBidi2MapBase<K, V>) super.tailMap(fromKey);
+    public DualTreeBidi2MapBase<K, V> subMap(final SortedMapRange<K> range) {
+        return (DualTreeBidi2MapBase<K, V>) super.subMap(range);
     }
 
     protected boolean updateValueMapDuringKeyMapIteration(final K key, final V oldValue, final V newValue) {

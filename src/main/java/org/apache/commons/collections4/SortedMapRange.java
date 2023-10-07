@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import org.apache.commons.collections4.iterators.EmptyMapIterator;
 import org.apache.commons.collections4.map.EmptyMap;
 
 import java.io.Serializable;
@@ -267,7 +266,7 @@ public final class SortedMapRange<K> implements Serializable {
         return key;
     }
 
-    public <V> NavigableMap<K, V> apply(final NavigableMap<K, V> map) {
+    public <V> NavigableMap<K, V> applyToNavMap(final NavigableMap<K, V> map) {
         if (fromKey != null && toKey != null) {
             return map.subMap(fromKey, fromInclusive, toKey, toInclusive);
         } else if (fromKey != null) {
@@ -281,7 +280,8 @@ public final class SortedMapRange<K> implements Serializable {
         }
     }
 
-    public <V, T extends SortedMap<K, V>> T apply(final T map) {
+    @SuppressWarnings("unchecked")
+    public <V, T extends SortedMap<K, V>> T applyToMap(final T map) {
         if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
             return (T) map.subMap(fromKey, toKey);
         } else if (fromKey != null && fromInclusive && toKey == null) {
@@ -289,7 +289,7 @@ public final class SortedMapRange<K> implements Serializable {
         } else if (fromKey == null && toKey != null && !toInclusive) {
             return (T) map.headMap(toKey);
         } else if (map instanceof NavigableMap) {
-            return (T) apply((NavigableMap<K, V>) map);
+            return (T) applyToNavMap((NavigableMap<K, V>) map);
         } else if (isFull()) {
             return map;
         } else if (isEmpty()) {

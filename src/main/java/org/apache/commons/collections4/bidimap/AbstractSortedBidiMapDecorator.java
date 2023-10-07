@@ -84,18 +84,8 @@ public abstract class AbstractSortedBidiMapDecorator<K, V>
     }
 
     @Override
-    public SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
-        return decorateDerived(decorated().subMap(fromKey, toKey));
-    }
-
-    @Override
-    public SortedExtendedBidiMap<K, V> headMap(final K toKey) {
-        return decorateDerived(decorated().headMap(toKey));
-    }
-
-    @Override
-    public SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
-        return decorateDerived(decorated().tailMap(fromKey));
+    public SortedExtendedBidiMap<K, V> subMap(final SortedMapRange<K> range) {
+        return decorateDerived(range.applyToMap(decorated()));
     }
 
     @Override

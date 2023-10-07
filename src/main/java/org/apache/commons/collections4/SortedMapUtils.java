@@ -9,6 +9,10 @@ import java.util.SortedMap;
 public final class SortedMapUtils {
     @SuppressWarnings("unchecked")
     public static <K, V> K nextKey(final SortedMap<K, V> map, final K key) throws IllegalArgumentException {
+        if (key == null) {
+            return null;
+        }
+
         if (map instanceof NavigableMap) {
             return ((NavigableMap<K, V>) map).higherKey(key);
         } else if (map instanceof OrderedMap) {
@@ -21,7 +25,7 @@ public final class SortedMapUtils {
             }
 
             final K next = iter.next();
-            if (!Objects.equals(next, key)) {
+            if (!Objects.equals(next, key)) { // todo original doesn't have this check
                 return next;
             }
 
@@ -35,17 +39,17 @@ public final class SortedMapUtils {
 
     @SuppressWarnings("unchecked")
     public static <K, V> K previousKey(final SortedMap<K,V> map, final K key) {
+        if (key == null) {
+            return null;
+        }
+
         if (map instanceof NavigableMap) {
             return ((NavigableMap<K, V>) map).lowerKey(key);
         } else if (map instanceof OrderedMap) {
             return ((OrderedMap<K, V>) map).previousKey(key);
         } else {
-            final SortedMap<K, V> head = map.headMap(key);
-            if (head.isEmpty()) {
-                return null;
-            } else {
-                return head.lastKey();
-            }
+            final SortedMap<K, V> headMap = map.headMap(key);
+            return headMap.isEmpty() ? null : headMap.lastKey();
         }
     }
 

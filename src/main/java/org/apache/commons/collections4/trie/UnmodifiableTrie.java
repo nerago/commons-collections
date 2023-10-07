@@ -201,13 +201,8 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return UnmodifiableSortedMap.unmodifiableSortedMap(delegate.subMap(fromKey, toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> tailMap(final K fromKey) {
-        return UnmodifiableSortedMap.unmodifiableSortedMap(delegate.tailMap(fromKey));
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return UnmodifiableSortedMap.unmodifiableSortedMap(range.applyToMap(delegate));
     }
 
     @Override

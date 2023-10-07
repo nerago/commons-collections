@@ -17,16 +17,13 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
-import org.apache.commons.collections4.SortedRangedMap;
 import org.apache.commons.collections4.Transformer;
 
 /**
@@ -166,21 +163,8 @@ public class TransformedSortedMap<K, V>
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        final SortedMap<K, V> map = getSortedMap().subMap(fromKey, toKey);
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, keyRange.subRange(fromKey, toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> headMap(final K toKey) {
-        final SortedMap<K, V> map = getSortedMap().headMap(toKey);
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, keyRange.head(toKey));
-    }
-
-    @Override
-    public IterableSortedMap<K, V> tailMap(final K fromKey) {
-        final SortedMap<K, V> map = getSortedMap().tailMap(fromKey);
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, keyRange.tail(fromKey));
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new TransformedSortedMap<>(range.applyToMap(getSortedMap()), keyTransformer, valueTransformer, range);
     }
 
     @Override
