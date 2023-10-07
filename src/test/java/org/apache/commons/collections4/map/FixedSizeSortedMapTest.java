@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableSortedMap;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -34,7 +35,7 @@ public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<
     }
 
     @Override
-    public SortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V> makeObject() {
         return FixedSizeSortedMap.fixedSizeSortedMap(new TreeMap<K, V>());
     }
 

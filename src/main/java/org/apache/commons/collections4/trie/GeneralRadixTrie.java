@@ -159,26 +159,12 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected boolean containsEntry(final Object key, final Object valueObject) {
+    public boolean containsEntry(final Object key, final Object valueObject) {
         if (!(key instanceof Comparable<?>))
             return false;
         final V value = castValue(valueObject);
         final TEntry<K, V> entry = getEntry(castKey(key));
         return entry != null && valueEquals(value, entry.getValue());
-    }
-
-    @Override
-    public boolean containsValue(final Object valueObject) {
-        if (!(valueObject instanceof Comparable<?>))
-            return false;
-        final V value = castValue(valueObject);
-        TEntry<K, V> entry = firstEntry();
-        while (entry != null) {
-            if (valueEquals(value, entry.getValue()))
-                return true;
-            entry = entry.next();
-        }
-        return false;
     }
 
     @Override
@@ -345,19 +331,13 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected boolean removeAsBoolean(Object key) {
+    public boolean removeAsBoolean(Object key) {
         // TODO
         return false;
     }
 
     @Override
     public boolean remove(Object key, Object value) {
-        // TODO
-        return false;
-    }
-
-    @Override
-    protected boolean removeValueAsBoolean(Object value) {
         // TODO
         return false;
     }
@@ -484,18 +464,13 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected MapSpliterator<K, V> mapSpliterator() {
+    public MapSpliterator<K, V> mapSpliterator() {
         return null;
     }
 
     @Override
     public Comparator<? super K> comparator() {
         return keyAnalyzer;
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
     }
 
     private TEntry<K, V> getEntry(K key) {
@@ -1037,7 +1012,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public boolean contains(Object value) {
+        public boolean contains(final Object value) {
             return parent.containsValue(value);
         }
 

@@ -1234,10 +1234,11 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        public V setValue(final V obj) {
+        public V setValue(final V value) {
             if (lastReturnedNode == null) {
                 throw new IllegalStateException();
             }
+            return lastReturnedNode.setValue(value);
         }
 
         @Override
@@ -1347,15 +1348,16 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         /**
-         * Optional operation that is not permitted in this implementation.
+         * Sets the value.
          *
-         * @param ignored this parameter is ignored.
-         * @return does not return
-         * @throws UnsupportedOperationException always
+         * @param newValue new value replacing contents
+         * @return old value
          */
         @Override
-        public V setValue(final V ignored) throws UnsupportedOperationException {
-            throw new UnsupportedOperationException("Map.Entry.setValue is not supported");
+        public V setValue(final V newValue) throws UnsupportedOperationException {
+            final V oldValue = value;
+            value = newValue;
+            return oldValue;
         }
 
         boolean isKeyLessThanOrEqual(final Node<K, V> other) {

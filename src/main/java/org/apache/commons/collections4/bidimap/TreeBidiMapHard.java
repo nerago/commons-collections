@@ -152,21 +152,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
-     * Checks whether this map contains a mapping for the specified value.
-     * <p>
-     * The value must implement {@code Comparable}.
-     *
-     * @param value value whose presence in this map is to be tested
-     * @return true if this map contains a mapping for the specified value
-     * @throws ClassCastException   if the value is of an inappropriate type
-     * @throws NullPointerException if the value is null
-     */
-    @Override
-    public boolean containsValue(final Object value) {
-        return lookupValue(checkValue(value)) != null;
-    }
-
-    /**
      * Checks whether this map contains a mapping between the specified key and value.
      * <p>
      * The key and value must implement {@code Comparable}.
@@ -178,7 +163,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @throws NullPointerException if the key is null
      */
     @Override
-    protected boolean containsEntry(final Object key, final Object value) {
+    public boolean containsEntry(final Object key, final Object value) {
         checkValue(value);
         final Node<K, V> entry = lookupKey(checkKey(key));
         if (entry != null) {
@@ -188,12 +173,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    protected Iterator<Entry<K, V>> entryIterator() {
+    public Iterator<Entry<K, V>> entryIterator() {
         return new EntryIteratorStandardByKey();
     }
 
     @Override
-    protected MapSpliterator<K, V> mapSpliterator() {
+    public MapSpliterator<K, V> mapSpliterator() {
         return new KeyMapSpliterator();
     }
 
@@ -295,7 +280,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    protected boolean removeAsBoolean(final Object key) {
+    public boolean removeAsBoolean(final Object key) {
         final Node<K, V> node = lookupKey(checkKey(key));
         if (node == null) {
             return false;
@@ -359,7 +344,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    protected boolean removeValueAsBoolean(final Object value) {
+    public boolean removeValueAsBoolean(final Object value) {
         final Node<K, V> node = lookupValue(checkValue(value));
         if (node == null) {
             return false;
@@ -499,87 +484,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             inverse = new Inverse();
         }
         return inverse;
-    }
-
-    /**
-     * Compares for equals as per the API.
-     *
-     * @param obj the object to compare to
-     * @return true if equal
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof Map)) {
-            return false;
-        }
-        final Map<?, ?> other = (Map<?, ?>) obj;
-        if (other.size() != size()) {
-            return false;
-        }
-
-        if (nodeCount > 0) {
-            try {
-                final MapIterator<?, ?> it = new MapIteratorKeyByKey();
-                while (it.hasNext()) {
-                    final Object key = it.next();
-                    final Object value = it.getValue();
-                    if (!value.equals(other.get(key))) {
-                        return false;
-                    }
-                }
-            } catch (final ClassCastException | NullPointerException ex) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Gets the hash code value for this map as per the API.
-     *
-     * @return the hash code value for this map
-     */
-    @Override
-    public int hashCode() {
-        int total = 0;
-        if (nodeCount > 0) {
-            final MapIterator<?, ?> it = new MapIteratorKeyByKey();
-            while (it.hasNext()) {
-                final Object key = it.next();
-                final Object value = it.getValue();
-                total += key.hashCode() ^ value.hashCode();
-            }
-        }
-        return total;
-    }
-
-    /**
-     * Returns a string version of this Map in standard format.
-     *
-     * @return a standard format string version of the map
-     */
-    @Override
-    public String toString() {
-        if (nodeCount == 0) {
-            return "{}";
-        }
-
-        final StringBuilder buf = new StringBuilder(nodeCount * 32);
-        buf.append('{');
-
-        Node<K, V> node = leastNodeKey(rootNodeKey);
-        buf.append(node.getKey()).append('=').append(node.getValue());
-        node = nextGreaterKey(node);
-        while (node != null) {
-            buf.append(", ").append(node.getKey()).append('=').append(node.getValue());
-            node = nextGreaterKey(node);
-        }
-
-        buf.append('}');
-        return buf.toString();
     }
 
     /**
@@ -2737,12 +2641,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public boolean containsValue(final Object value) {
-            return TreeBidiMapHard.this.containsKey(value);
-        }
-
-        @Override
-        protected boolean containsEntry(final Object key, final Object value) {
+        public boolean containsEntry(final Object key, final Object value) {
             return TreeBidiMapHard.this.containsEntry(value, key);
         }
 
@@ -2796,7 +2695,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected boolean removeAsBoolean(final Object value) {
+        public boolean removeAsBoolean(final Object value) {
             return TreeBidiMapHard.this.removeValueAsBoolean(value);
         }
 
@@ -2806,7 +2705,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected boolean removeValueAsBoolean(final Object value) {
+        public boolean removeValueAsBoolean(final Object value) {
             return TreeBidiMapHard.this.removeAsBoolean(value);
         }
 
@@ -2824,13 +2723,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected MapSpliterator<V, K> mapSpliterator() {
+        public MapSpliterator<V, K> mapSpliterator() {
             // TODO
             return null;
         }
 
         @Override
-        protected Iterator<Entry<V, K>> entryIterator() {
+        public Iterator<Entry<V, K>> entryIterator() {
             return super.entryIterator(); // TODO
         }
 
@@ -2872,71 +2771,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public SortedExtendedBidiMap<V, K> tailMap(final V fromKey) {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == TreeBidiMapHard.this) {
-                return true;
-            }
-            if (!(obj instanceof Map)) {
-                return false;
-            }
-            final Map<?, ?> other = (Map<?, ?>) obj;
-            if (other.size() != TreeBidiMapHard.this.size()) {
-                return false;
-            }
-
-            if (nodeCount > 0) {
-                try {
-                    final MapIterator<?, ?> it = new MapIteratorValueByValue();
-                    while (it.hasNext()) {
-                        final Object key = it.next();
-                        final Object value = it.getValue();
-                        if (!value.equals(other.get(key))) {
-                            return false;
-                        }
-                    }
-                } catch (final ClassCastException | NullPointerException ex) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int total = 0;
-            if (nodeCount > 0) {
-                final MapIterator<?, ?> it = new MapIteratorKeyByValue();
-                while (it.hasNext()) {
-                    final Object key = it.next();
-                    final Object value = it.getValue();
-                    total += key.hashCode() ^ value.hashCode();
-                }
-            }
-            return total;
-        }
-
-        @Override
-        public String toString() {
-            if (nodeCount == 0) {
-                return "{}";
-            }
-
-            final StringBuilder buf = new StringBuilder(nodeCount * 32);
-            buf.append('{');
-
-            Node<K, V> node = leastNodeKey(rootNodeValue);
-            buf.append(node.getValue()).append('=').append(node.getKey());
-            node = nextGreaterValue(node);
-            while (node != null) {
-                buf.append(", ").append(node.getValue()).append('=').append(node.getKey());
-                node = nextGreaterValue(node);
-            }
-
-            buf.append('}');
-            return buf.toString();
         }
 
         private Node<K, V> lookupValueHigher(final V value) {
@@ -3210,7 +3044,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected Iterator<Entry<K, V>> entryIterator() {
+        public Iterator<Entry<K, V>> entryIterator() {
             return null; // TODO
         }
 
@@ -3221,7 +3055,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected MapSpliterator<K, V> mapSpliterator() {
+        public MapSpliterator<K, V> mapSpliterator() {
             return new KeyRangeMapSpliterator(keyRange);
         }
 
@@ -3238,7 +3072,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected boolean containsEntry(final Object keyObject, final Object valueObject) {
+        public boolean containsEntry(final Object keyObject, final Object valueObject) {
             final K key = checkKey(keyObject);
             final V value = checkValue(valueObject);
             if (keyRange.inRange(key)) {
@@ -3248,17 +3082,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 }
             }
             return false;
-        }
-
-        @Override
-        public boolean containsValue(final Object valueObject) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
-            if (node != null) {
-                return keyRange.inRange(node.key);
-            } else {
-                return false;
-            }
         }
 
         @Override
@@ -3283,17 +3106,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected boolean removeValueAsBoolean(final Object valueObject) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
-            if (node != null && keyRange.inRange(node.key)) {
-                doRedBlackDelete(node);
-                return true;
-            }
-            return false;
-        }
-
-        @Override
         public V remove(final Object keyObject) {
             final K key = checkKey(keyObject);
             if (keyRange.inRange(key)) {
@@ -3312,7 +3124,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        protected boolean removeAsBoolean(final Object keyObject) {
+        public boolean removeAsBoolean(final Object keyObject) {
             final K key = checkKey(keyObject);
             if (keyRange.inRange(key)) {
                 return TreeBidiMapHard.this.removeAsBoolean(keyObject);

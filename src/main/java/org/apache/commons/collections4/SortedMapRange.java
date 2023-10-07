@@ -281,19 +281,19 @@ public final class SortedMapRange<K> implements Serializable {
         }
     }
 
-    public <V> SortedMap<K, V> apply(final SortedMap<K, V> map) {
+    public <V, T extends SortedMap<K, V>> T apply(final T map) {
         if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
-            return map.subMap(fromKey, toKey);
+            return (T) map.subMap(fromKey, toKey);
         } else if (fromKey != null && fromInclusive && toKey == null) {
-            return map.tailMap(fromKey);
+            return (T) map.tailMap(fromKey);
         } else if (fromKey == null && toKey != null && !toInclusive) {
-            return map.headMap(toKey);
+            return (T) map.headMap(toKey);
         } else if (map instanceof NavigableMap) {
-            return apply((NavigableMap<K, V>) map);
+            return (T) apply((NavigableMap<K, V>) map);
         } else if (isFull()) {
             return map;
         } else if (isEmpty()) {
-            return EmptyMap.emptyMap();
+            return (T) EmptyMap.emptyMap();
         } else {
             throw new IllegalArgumentException("range is not applicable to basic SortedMap");
         }

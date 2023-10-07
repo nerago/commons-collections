@@ -64,12 +64,7 @@ public final class UnmodifiableSortedMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> SortedMap<K, V> unmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
-        if (map instanceof Unmodifiable) {
-            @SuppressWarnings("unchecked") // safe to upcast
-            final SortedMap<K, V> tmpMap = (SortedMap<K, V>) map;
-            return tmpMap;
-        }
+    public static <K, V> IterableSortedMap<K, V> unmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
         return new UnmodifiableSortedMap<>(map, SortedMapRange.full(map.comparator()));
     }
 

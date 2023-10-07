@@ -27,6 +27,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.collections4.collection.TransformedCollectionTest;
@@ -46,7 +47,7 @@ public class TransformedSortedMapTest<K, V> extends AbstractIterableSortedMapTes
 
     @Override
     @SuppressWarnings("unchecked")
-    public SortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V> makeObject() {
         return TransformedSortedMap.transformingSortedMap(new TreeMap<K, V>(),
                 (Transformer<? super K, ? extends K>) TransformerUtils.nopTransformer(),
                 (Transformer<? super V, ? extends V>) TransformerUtils.nopTransformer());

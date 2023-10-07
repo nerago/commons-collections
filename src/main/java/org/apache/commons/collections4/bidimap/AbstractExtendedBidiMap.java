@@ -37,9 +37,7 @@ public abstract class AbstractExtendedBidiMap<K, V> extends AbstractIterableMapA
     }
 
     @Override
-    public OrderedMapIterator<K, V> mapIterator() {
-        return (OrderedMapIterator<K, V>) super.mapIterator();
-    }
+    public abstract OrderedMapIterator<K, V> mapIterator();
 
     @Override
     protected Set<V> createValuesCollection() {

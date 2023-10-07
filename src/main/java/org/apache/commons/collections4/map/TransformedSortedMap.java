@@ -17,9 +17,16 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 
+import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedMapUtils;
+import org.apache.commons.collections4.SortedRangedMap;
 import org.apache.commons.collections4.Transformer;
 
 /**
@@ -47,10 +54,11 @@ import org.apache.commons.collections4.Transformer;
  */
 public class TransformedSortedMap<K, V>
         extends TransformedMap<K, V>
-        implements SortedMap<K, V> {
+        implements IterableSortedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = -8751771676410385778L;
+    private final SortedMapRange<K> keyRange;
 
     /**
      * Factory method to create a transforming sorted map.
@@ -70,7 +78,7 @@ public class TransformedSortedMap<K, V>
     public static <K, V> TransformedSortedMap<K, V> transformingSortedMap(final SortedMap<K, V> map,
             final Transformer<? super K, ? extends K> keyTransformer,
             final Transformer<? super V, ? extends V> valueTransformer) {
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer);
+        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, SortedMapRange.full(map.comparator()));
     }
 
     /**
@@ -95,7 +103,7 @@ public class TransformedSortedMap<K, V>
             final Transformer<? super V, ? extends V> valueTransformer) {
 
         final TransformedSortedMap<K, V> decorated =
-                new TransformedSortedMap<>(map, keyTransformer, valueTransformer);
+                new TransformedSortedMap<>(map, keyTransformer, valueTransformer, SortedMapRange.full(map.comparator()));
         if (!map.isEmpty()) {
             final Map<K, V> transformed = decorated.transformMap(map);
             decorated.clear();
@@ -117,8 +125,10 @@ public class TransformedSortedMap<K, V>
      */
     protected TransformedSortedMap(final SortedMap<K, V> map,
             final Transformer<? super K, ? extends K> keyTransformer,
-            final Transformer<? super V, ? extends V> valueTransformer) {
+            final Transformer<? super V, ? extends V> valueTransformer,
+            final SortedMapRange<K> keyRange) {
         super(map, keyTransformer, valueTransformer);
+        this.keyRange = keyRange;
     }
 
     /**
@@ -141,26 +151,45 @@ public class TransformedSortedMap<K, V>
     }
 
     @Override
+    public K nextKey(final K key) {
+        return SortedMapUtils.nextKey(getSortedMap(), key);
+    }
+
+    @Override
+    public K previousKey(final K key) {
+        return SortedMapUtils.previousKey(getSortedMap(), key);
+    }
+
+    @Override
     public Comparator<? super K> comparator() {
         return getSortedMap().comparator();
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
         final SortedMap<K, V> map = getSortedMap().subMap(fromKey, toKey);
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer);
+        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, keyRange.subRange(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
+    public IterableSortedMap<K, V> headMap(final K toKey) {
         final SortedMap<K, V> map = getSortedMap().headMap(toKey);
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer);
+        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, keyRange.head(toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
+    public IterableSortedMap<K, V> tailMap(final K fromKey) {
         final SortedMap<K, V> map = getSortedMap().tailMap(fromKey);
-        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer);
+        return new TransformedSortedMap<>(map, keyTransformer, valueTransformer, keyRange.tail(fromKey));
     }
 
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return keyRange;
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIterator() {
+        return (OrderedMapIterator<K, V>) super.mapIterator();
+    }
 }

@@ -24,6 +24,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +41,7 @@ public class UnmodifiableSortedMapTest<K, V> extends AbstractIterableSortedMapTe
     }
 
     @Override
-    public SortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V> makeObject() {
         return UnmodifiableSortedMap.unmodifiableSortedMap(new TreeMap<K, V>());
     }
 
