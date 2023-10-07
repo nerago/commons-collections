@@ -19,16 +19,22 @@ package org.apache.commons.collections4.map;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
+import org.apache.commons.collections4.IterableExtendedMap;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.OrderedMap;
+import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 import org.apache.commons.collections4.keyvalue.TiedMapEntry;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
+import org.apache.commons.collections4.spliterators.SingletonMapSpliterator;
 import org.apache.commons.collections4.spliterators.SingletonSpliterator;
 
 /**
@@ -58,8 +64,8 @@ import org.apache.commons.collections4.spliterators.SingletonSpliterator;
  * @param <V> the type of the values in this map
  * @since 3.1
  */
-public class SingletonMap<K, V>
-        implements OrderedMap<K, V>, IterableSortedMap<K, V>, BoundedMap<K, V>, KeyValue<K, V>, Cloneable {
+public class SingletonMap<K, V> implements IterableExtendedMap<K, V>, NavigableRangedMap<K, V>, SortedExtendedBidiMap<K, V>,
+        BoundedMap<K, V>, Trie<K, V>, KeyValue<K, V>, Map.Entry<K, V>, Cloneable {
 
     /** Serialization version */
     private static final long serialVersionUID = -8931271118676803261L;
@@ -150,6 +156,7 @@ public class SingletonMap<K, V>
      * @param value  the new value to set
      * @return the old value
      */
+    @Override
     public V setValue(final V value) {
         final V old = this.value;
         this.value = value;
@@ -190,6 +197,14 @@ public class SingletonMap<K, V>
             return value;
         }
         return null;
+    }
+
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        if (isEqualKey(key)) {
+            return value;
+        }
+        return defaultValue;
     }
 
     /**
@@ -234,6 +249,17 @@ public class SingletonMap<K, V>
         return isEqualValue(value);
     }
 
+    @Override
+    public boolean containsEntry(final Object key, final Object value) {
+        return isEqualKey(key) && isEqualValue(value);
+    }
+
+    @Override
+    public Iterator<Entry<K, V>> entryIterator() {
+        return null;
+    }
+
+
     /**
      * Puts a key-value mapping into this map where the key must match the existing key.
      * <p>
@@ -251,6 +277,46 @@ public class SingletonMap<K, V>
             return setValue(value);
         }
         throw new IllegalArgumentException("Cannot put new key/value pair - Map is fixed size singleton");
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        return null;
+    }
+
+    @Override
+    public V replace(K key, V value) {
+        return null;
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        return false;
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        return null;
+    }
+
+    @Override
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return null;
+    }
+
+    @Override
+    public K getKey(Object value) {
+        return null;
+    }
+
+    @Override
+    public K getKeyOrDefault(Object value, K defaultKey) {
+        return null;
+    }
+
+    @Override
+    public K removeValue(Object value) {
+        return null;
     }
 
     /**
@@ -316,6 +382,21 @@ public class SingletonMap<K, V>
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public boolean removeAsBoolean(Object key) {
+        return false;
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+        return false;
+    }
+
+    @Override
+    public boolean removeValueAsBoolean(Object value) {
+        return false;
+    }
+
     /**
      * Gets the entrySet view of the map.
      * Changes made via {@code setValue} affect this map.
@@ -349,7 +430,7 @@ public class SingletonMap<K, V>
      * @return the values view
      */
     @Override
-    public Collection<V> values() {
+    public Set<V> values() {
         return new SingletonValues<>(this);
     }
 
@@ -359,6 +440,11 @@ public class SingletonMap<K, V>
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new SingletonMapIterator<>(this);
+    }
+
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        return new SingletonMapSpliterator<>(key, value);
     }
 
     /**
@@ -443,18 +529,113 @@ public class SingletonMap<K, V>
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return subMap(getKeyRange().subRange(fromKey, toKey));
+    public Entry<K, V> lowerEntry(K key) {
+        return null;
     }
 
     @Override
-    public IterableSortedMap<K, V> headMap(final K toKey) {
-        return subMap(getKeyRange().head(toKey));
+    public K lowerKey(K key) {
+        return null;
     }
 
     @Override
-    public IterableSortedMap<K, V> tailMap(final K fromKey) {
-        return subMap(getKeyRange().tail(fromKey));
+    public Entry<K, V> floorEntry(K key) {
+        return null;
+    }
+
+    @Override
+    public K floorKey(K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> ceilingEntry(K key) {
+        return null;
+    }
+
+    @Override
+    public K ceilingKey(K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> higherEntry(K key) {
+        return null;
+    }
+
+    @Override
+    public K higherKey(K key) {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> firstEntry() {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> lastEntry() {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> pollFirstEntry() {
+        return null;
+    }
+
+    @Override
+    public Entry<K, V> pollLastEntry() {
+        return null;
+    }
+
+    @Override
+    public NavigableMap<K, V> descendingMap() {
+        return null;
+    }
+
+    @Override
+    public NavigableSet<K> navigableKeySet() {
+        return null;
+    }
+
+    @Override
+    public NavigableSet<K> descendingKeySet() {
+        return null;
+    }
+
+    @Override
+    public NavigableRangedMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+        return null;
+    }
+
+    @Override
+    public NavigableRangedMap<K, V> headMap(K toKey, boolean inclusive) {
+        return null;
+    }
+
+    @Override
+    public NavigableRangedMap<K, V> tailMap(K fromKey, boolean inclusive) {
+        return null;
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return null;
+    }
+
+    @Override
+    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
+        return null;
+    }
+
+    @Override
+    public Comparator<? super V> valueComparator() {
+        return null;
+    }
+
+    @Override
+    public SortedMap<K, V> prefixMap(K key) {
+        return null;
     }
 
     /**

@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
@@ -1766,6 +1767,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         assertEquals(confirmed.getClass(), map.getClass(), "serialized test data doesn't produce same type");
         views();
         verify();
+    }
+
+    @Test
+    @Override
+    public void testCanonicalFullCollectionExists() {
+        if (supportsFullCollections() && isTestSerialization() && !skipSerializedCanonicalTests()) {
+            final Object object = makeFullMap();
+            if (object instanceof Serializable) {
+                final String name = getCanonicalFullCollectionName(object);
+                assertTrue(
+                        new File(name).exists(),
+                        "Canonical full collection (" + name + ") is not in SCM");
+            }
+        }
     }
 
     /**

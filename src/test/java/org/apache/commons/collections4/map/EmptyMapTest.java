@@ -115,7 +115,7 @@ public class EmptyMapTest extends AbstractObjectTest {
             assertNotNull(em, "failure in test: makeEmptyMap must return a non-null map.");
 
             // empty map override
-            assertSame(em, em2, "failure in test: EmptyMap.makeEmptyMap must return a the same map " +
+            assertSame(em, em2, "failure in test: EmptyMap.makeEmptyMap must return the same map " +
                     "with each invocation.");
 
             final Map<?, ?> fm = makeFullMap();

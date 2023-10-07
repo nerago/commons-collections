@@ -168,52 +168,28 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         verify();
     }
 
-    //    public BulkTest bulkTestMapIterator() {
-//        return new TestFlatMapIterator();
-//    }
-//
-//    public class TestFlatMapIterator extends AbstractTestOrderedMapIterator {
-//        public TestFlatMapIterator() {
-//            super("TestFlatMapIterator");
-//        }
-//
-//        public Object[] addSetValues() {
-//            return TestSingletonMap.this.getNewSampleValues();
-//        }
-//
-//        public boolean supportsRemove() {
-//            return TestSingletonMap.this.isRemoveSupported();
-//        }
-//
-//        public boolean supportsSetValue() {
-//            return TestSingletonMap.this.isSetValueSupported();
-//        }
-//
-//        public MapIterator makeEmptyMapIterator() {
-//            resetEmpty();
-//            return ((Flat3Map) TestSingletonMap.this.map).mapIterator();
-//        }
-//
-//        public MapIterator makeFullMapIterator() {
-//            resetFull();
-//            return ((Flat3Map) TestSingletonMap.this.map).mapIterator();
-//        }
-//
-//        public Map getMap() {
-//            // assumes makeFullMapIterator() called first
-//            return TestSingletonMap.this.map;
-//        }
-//
-//        public Map getConfirmedMap() {
-//            // assumes makeFullMapIterator() called first
-//            return TestSingletonMap.this.confirmed;
-//        }
-//
-//        public void verify() {
-//            super.verify();
-//            TestSingletonMap.this.verify();
-//        }
-//    }
+    @Override
+    @Test
+    public void testMakeMap() {
+        super.testMakeMap();final Map<?, ?> em = makeObject();
+        assertNotNull(em, "failure in test: makeEmptyMap must return a non-null map.");
+
+        final Map<?, ?> em2 = makeObject();
+        assertNotNull(em, "failure in test: makeEmptyMap must return a non-null map.");
+
+        // empty map override
+        assertSame(em, em2, "failure in test: EmptyMap.makeEmptyMap must return the same map " +
+                "with each invocation.");
+
+        final Map<?, ?> fm = makeFullMap();
+        assertNotNull(fm, "failure in test: makeFullMap must return a non-null map.");
+
+        final Map<?, ?> fm2 = makeFullMap();
+        assertNotNull(fm2, "failure in test: makeFullMap must return a non-null map.");
+
+        assertNotSame(fm, fm2, "failure in test: makeFullMap must return a new map " +
+                "with each invocation.");
+    }
 
     @Override
     public String getCompatibilityVersion() {

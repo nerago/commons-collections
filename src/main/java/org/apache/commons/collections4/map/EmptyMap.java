@@ -1,11 +1,13 @@
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.IterableExtendedMap;
-import org.apache.commons.collections4.NavigableBoundMap;
+import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedMap;
+import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
@@ -17,13 +19,24 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class EmptyMap<K, V> implements IterableExtendedMap<K, V>,
-        NavigableBoundMap<K, V>,
-        SortedExtendedBidiMap<K, V> {
+/**
+ * A {@code Map} implementation that holds no items and is always empty.
+ * Unlike standard JDK empty map this also implements all the other interfaces defined in commons collections.
+ * <p>
+ * If trying to modify the map, an UnsupportedOperationException is thrown.
+ * @param <K> the type of the keys in this map (if it could have any)
+ * @param <V> the type of the values in this map (if it could have any)
+ * @since X.X
+ */
+public class EmptyMap<K, V> implements IterableExtendedMap<K, V>, NavigableRangedMap<K, V>,
+        SortedExtendedBidiMap<K, V>, BoundedMap<K, V>, Trie<K, V> {
+
+    private static final long serialVersionUID = -5239565925081890488L;
 
     private static final EmptyMap<?, ?> instance = new EmptyMap<>();
 
@@ -38,7 +51,17 @@ public class EmptyMap<K, V> implements IterableExtendedMap<K, V>,
     }
 
     @Override
+    public int maxSize() {
+        return 0;
+    }
+
+    @Override
     public boolean isEmpty() {
+        return true;
+    }
+
+    @Override
+    public boolean isFull() {
         return true;
     }
 
@@ -262,17 +285,17 @@ public class EmptyMap<K, V> implements IterableExtendedMap<K, V>,
     }
 
     @Override
-    public NavigableBoundMap<K, V> subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
+    public NavigableRangedMap<K, V> subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
         return this;
     }
 
     @Override
-    public NavigableBoundMap<K, V> headMap(final K toKey, final boolean inclusive) {
+    public NavigableRangedMap<K, V> headMap(final K toKey, final boolean inclusive) {
         return this;
     }
 
     @Override
-    public NavigableBoundMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
+    public NavigableRangedMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
         return this;
     }
 
@@ -293,6 +316,11 @@ public class EmptyMap<K, V> implements IterableExtendedMap<K, V>,
 
     @Override
     public EmptyMap<K, V> tailMap(final K fromKey) {
+        return this;
+    }
+
+    @Override
+    public SortedMap<K, V> prefixMap(final K key) {
         return this;
     }
 
