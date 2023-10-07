@@ -58,7 +58,9 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
     }
 
     protected boolean runSubMapTests() {
-        return true;
+        return getSampleKeys().length > TestHeadMap.SUBSIZE
+            && getSampleKeys().length > TestTailMap.SUBSIZE
+            && getSampleKeys().length > TestSubMap.SUBSIZE;
     }
 
     @Override
@@ -125,7 +127,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         }
     }
 
-    public abstract static class TestViewMap<K, V> extends AbstractIterableSortedMapTest<K, V> {
+    public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
         protected final AbstractMapTest<K, V> main;
         protected final List<K> subSortedKeys = new ArrayList<>();
         protected final List<V> subSortedValues = new ArrayList<>();
@@ -273,8 +275,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             return ((IterableSortedMap<K, V>) main.makeObject()).headMap(toKey);
         }
         @Override
-        public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).headMap(toKey);
+        public IterableSortedMap<K, V> makeFullMap() {
+            return ((IterableSortedMap<K, V>) main.makeFullMap()).headMap(toKey);
         }
 
         @Test

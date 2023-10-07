@@ -35,6 +35,11 @@ public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSorted
     @Override
     public abstract IterableSortedMap<K, V> makeObject();
 
+    @Override
+    public IterableSortedMap<K, V> makeFullMap() {
+        return (IterableSortedMap<K, V>) super.makeFullMap();
+    }
+
     @Nested
     public class NestedIterableTests extends AbstractIterableMapTest<K, V> {
         public NestedIterableTests() {
@@ -44,6 +49,10 @@ public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSorted
         @Override
         public IterableMap<K, V> makeObject() {
             return AbstractIterableSortedMapTest.this.makeObject();
+        }
+        @Override
+        public IterableMap<K, V> makeFullMap() {
+            return AbstractIterableSortedMapTest.this.makeFullMap();
         }
 
         @Override
@@ -86,6 +95,14 @@ public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSorted
         @Override
         public boolean isRemoveSupported() {
             return AbstractIterableSortedMapTest.this.isRemoveSupported();
+        }
+        @Override
+        public boolean isCopyConstructorCheckable() {
+            return AbstractIterableSortedMapTest.this.isCopyConstructorCheckable();
+        }
+        @Override
+        public boolean isTestSerialization() {
+            return AbstractIterableSortedMapTest.this.isTestSerialization();
         }
     }
 

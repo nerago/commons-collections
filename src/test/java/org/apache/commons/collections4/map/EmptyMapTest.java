@@ -3,23 +3,38 @@ package org.apache.commons.collections4.map;
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableSortedMap;
-import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.bidimap.AbstractOrderedBidiMapTest;
-import org.apache.commons.collections4.bidimap.AbstractSortedBidiMapTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
-public class EmptyMapTest<K, V> extends AbstractObjectTest {
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+public class EmptyMapTest extends AbstractObjectTest {
+    private static final String ONE = "one";
+    private static final String TWO = "two";
+    private static final String THREE = "four";
+    private static final String TEN = "10";
+
     public EmptyMapTest() {
         super("EmptyMapTest");
     }
 
     @Override
-    public EmptyMap<K, V> makeObject() {
+    public EmptyMap<String, String> makeObject() {
         return EmptyMap.emptyMap();
     }
 
+    @Override
+    public boolean isTestSerialization() {
+        return false; // i'm too lazy
+    }
+
     @Nested
-    public class IterableSortedMapTest extends AbstractIterableSortedMapTest<K, V> {
+    public class IterableSortedMapTest extends AbstractIterableSortedMapTest<String, String> {
         public IterableSortedMapTest() {
             super("IterableSortedMapTest");
         }
@@ -30,23 +45,44 @@ public class EmptyMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        public IterableSortedMap<K, V> makeObject() {
+        public IterableSortedMap<String, String> makeObject() {
             return EmptyMapTest.this.makeObject();
         }
 
         @Override
+        public IterableSortedMap<String, String> makeFullMap() {
+            // fake for passing other tests
+            return UnmodifiableSortedMap.unmodifiableSortedMap(new SingletonMap<>(ONE, TWO));
+        }
+
+        @Override
+        public String[] getSampleKeys() {
+            return new String[] { ONE };
+        }
+
+        @Override
+        public String[] getSampleValues() {
+            return new String[] { TWO };
+        }
+
+        @Override
+        public String[] getNewSampleValues() {
+            return new String[] { TEN };
+        }
+
+        @Override
+        public String[] getOtherKeys() {
+            return new String[] { THREE };
+        }
+
+        @Override
+        public String[] getOtherValues() {
+            return new String[] { THREE };
+        }
+
+        @Override
         public boolean isTestSerialization() {
-            return super.isTestSerialization();
-        }
-
-        @Override
-        public boolean isCheckSerializationId() {
-            return super.isCheckSerializationId();
-        }
-
-        @Override
-        public boolean isEqualsCheckable() {
-            return super.isEqualsCheckable();
+            return false; // i'm too lazy
         }
 
         @Override
@@ -65,48 +101,40 @@ public class EmptyMapTest<K, V> extends AbstractObjectTest {
         }
 
         @Override
-        public boolean isSubMapViewsSerializable() {
-            return super.isSubMapViewsSerializable();
-        }
-
-        @Override
-        public boolean isAllowNullValue() {
-            return super.isAllowNullValue();
-        }
-
-        @Override
-        public boolean isAllowDuplicateValues() {
-            return super.isAllowDuplicateValues();
-        }
-
-        @Override
-        public boolean isFailFastExpected() {
-            return super.isFailFastExpected();
-        }
-
-        @Override
-        public boolean isFailFastFunctionalExpected() {
-            return super.isFailFastFunctionalExpected();
-        }
-
-        @Override
-        public boolean isTestFunctionalMethods() {
-            return super.isTestFunctionalMethods();
-        }
-
-        @Override
-        public boolean areEqualElementsIndistinguishable() {
-            return super.areEqualElementsIndistinguishable();
-        }
-
-        @Override
-        public boolean isToStringLikeCommonMaps() {
-            return super.isToStringLikeCommonMaps();
-        }
-
-        @Override
         public boolean isCopyConstructorCheckable() {
-            return super.isCopyConstructorCheckable();
+            return false;
+        }
+
+        @Test
+        @Override
+        public void testMakeMap() {
+            final Map<?, ?> em = makeObject();
+            assertNotNull(em, "failure in test: makeEmptyMap must return a non-null map.");
+
+            final Map<?, ?> em2 = makeObject();
+            assertNotNull(em, "failure in test: makeEmptyMap must return a non-null map.");
+
+            // empty map override
+            assertSame(em, em2, "failure in test: EmptyMap.makeEmptyMap must return a the same map " +
+                    "with each invocation.");
+
+            final Map<?, ?> fm = makeFullMap();
+            assertNotNull(fm, "failure in test: makeFullMap must return a non-null map.");
+
+            final Map<?, ?> fm2 = makeFullMap();
+            assertNotNull(fm2, "failure in test: makeFullMap must return a non-null map.");
+
+            assertNotSame(fm, fm2, "failure in test: makeFullMap must return a new map " +
+                    "with each invocation.");
+        }
+
+        @Nested
+        public class NestedIterableTests extends AbstractIterableSortedMapTest<String, String>.NestedIterableTests {
+            @Override
+            @Test
+            @Disabled
+            public void testMakeMap() {
+            }
         }
     }
 

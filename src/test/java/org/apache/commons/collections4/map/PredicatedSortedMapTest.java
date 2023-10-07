@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.junit.jupiter.api.Test;
@@ -61,13 +62,13 @@ public class PredicatedSortedMapTest<K, V> extends AbstractIterableSortedMapTest
         super(PredicatedSortedMapTest.class.getSimpleName());
     }
 
-    protected SortedMap<K, V> decorateMap(final SortedMap<K, V> map, final Predicate<? super K> keyPredicate,
+    protected IterableSortedMap<K, V> decorateMap(final SortedMap<K, V> map, final Predicate<? super K> keyPredicate,
         final Predicate<? super V> valuePredicate) {
         return PredicatedSortedMap.predicatedSortedMap(map, keyPredicate, valuePredicate);
     }
 
     @Override
-    public SortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V> makeObject() {
         return decorateMap(new TreeMap<K, V>(), truePredicate, truePredicate);
     }
 

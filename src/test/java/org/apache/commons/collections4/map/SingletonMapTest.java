@@ -46,8 +46,8 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Override
     public OrderedMap<K, V> makeObject() {
         // need an empty singleton map, but that's not possible
-        // use a ridiculous fake instead to make the tests pass
-        return FixedSizeSortedMap.fixedSizeSortedMap(new TreeMap<>());
+        // instead test our EmptyMap class
+        return EmptyMap.emptyMap();
     }
 
     @Override

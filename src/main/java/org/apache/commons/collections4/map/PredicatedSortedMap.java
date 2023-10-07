@@ -19,7 +19,12 @@ package org.apache.commons.collections4.map;
 import java.util.Comparator;
 import java.util.SortedMap;
 
+import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedMapUtils;
 
 /**
  * Decorates another {@code SortedMap} to validate that additions
@@ -53,10 +58,11 @@ import org.apache.commons.collections4.Predicate;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements SortedMap<K, V> {
+public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements IterableSortedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 3359846175935304332L;
+    private final SortedMapRange<K> keyRange;
 
     /**
      * Factory method to create a predicated (validating) sorted map.
@@ -75,7 +81,7 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements So
      */
     public static <K, V> PredicatedSortedMap<K, V> predicatedSortedMap(final SortedMap<K, V> map,
             final Predicate<? super K> keyPredicate, final Predicate<? super V> valuePredicate) {
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate);
+        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, SortedMapRange.full(map.comparator()));
     }
 
     /**
@@ -87,8 +93,9 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements So
      * @throws NullPointerException if the map is null
      */
     protected PredicatedSortedMap(final SortedMap<K, V> map, final Predicate<? super K> keyPredicate,
-            final Predicate<? super V> valuePredicate) {
+                                  final Predicate<? super V> valuePredicate, final SortedMapRange<K> keyRange) {
         super(map, keyPredicate, valuePredicate);
+        this.keyRange = keyRange;
     }
 
     /**
@@ -111,26 +118,45 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements So
     }
 
     @Override
+    public K nextKey(final K key) {
+        return SortedMapUtils.nextKey(getSortedMap(), key);
+    }
+
+    @Override
+    public K previousKey(final K key) {
+        return SortedMapUtils.previousKey(getSortedMap(), key);
+    }
+
+    @Override
     public Comparator<? super K> comparator() {
         return getSortedMap().comparator();
     }
 
     @Override
-    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
         final SortedMap<K, V> map = getSortedMap().subMap(fromKey, toKey);
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate);
+        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, keyRange.subRange(fromKey, toKey));
     }
 
     @Override
-    public SortedMap<K, V> headMap(final K toKey) {
+    public IterableSortedMap<K, V> headMap(final K toKey) {
         final SortedMap<K, V> map = getSortedMap().headMap(toKey);
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate);
+        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, keyRange.head(toKey));
     }
 
     @Override
-    public SortedMap<K, V> tailMap(final K fromKey) {
+    public IterableSortedMap<K, V> tailMap(final K fromKey) {
         final SortedMap<K, V> map = getSortedMap().tailMap(fromKey);
-        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate);
+        return new PredicatedSortedMap<>(map, keyPredicate, valuePredicate, keyRange.tail(fromKey));
     }
 
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return keyRange;
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> mapIterator() {
+        return (OrderedMapIterator<K, V>) super.mapIterator();
+    }
 }

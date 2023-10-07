@@ -16,7 +16,12 @@
  */
 package org.apache.commons.collections4;
 
+import org.junit.jupiter.api.function.Executable;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public final class TestUtils {
 
@@ -76,5 +83,65 @@ public final class TestUtils {
      */
     public static void assertSameAfterSerialization(final Object o) {
         assertSameAfterSerialization(null, o);
+    }
+
+    public static <E> void assertThrowsOptional(final Class<E> e, final Executable executable, final String message) {
+        try {
+            executable.execute();
+        } catch (final Throwable throwable) {
+            if (e.isInstance(throwable)) {
+                return;
+            }
+
+            fail(message + " - Unexpected exception type thrown", throwable);
+        }
+    }
+
+    public static <E> void assertThrowsOrNull(final Class<E> e, final Supplier<Object> executable, final String message) {
+        try {
+            assertNull(executable.get());
+        } catch (final Throwable throwable) {
+            if (!e.isInstance(throwable)) {
+                fail(message + " - Unexpected exception type thrown", throwable);
+            }
+        }
+    }
+
+    public static <E> void assertThrowsOrFalse(final Class<E> e, final BooleanSupplier executable, final String message) {
+        try {
+            assertFalse(executable.getAsBoolean());
+        } catch (final Throwable throwable) {
+            if (!e.isInstance(throwable)) {
+                fail(message + " - Unexpected exception type thrown", throwable);
+            }
+        }
+    }
+
+    public static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable) {
+        try {
+            executable.execute();
+        } catch (final Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            fail("Unexpected exception type thrown", throwable);
+        }
+
+        fail("Expected exception to be thrown, but nothing was thrown.");
+    }
+
+    public static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
+        try {
+            executable.execute();
+        } catch (final Throwable throwable) {
+            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
+                return;
+            }
+
+            fail(message + " - Unexpected exception type thrown", throwable);
+        }
+
+        fail(message + " - Expected exception to be thrown, but nothing was thrown.");
     }
 }

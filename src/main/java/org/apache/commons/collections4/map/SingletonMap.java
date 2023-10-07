@@ -19,16 +19,16 @@ package org.apache.commons.collections4.map;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 import org.apache.commons.collections4.keyvalue.TiedMapEntry;
-import org.apache.commons.collections4.spliterators.SingletonMapSpliterator;
 import org.apache.commons.collections4.spliterators.SingletonSpliterator;
 
 /**
@@ -59,7 +59,7 @@ import org.apache.commons.collections4.spliterators.SingletonSpliterator;
  * @since 3.1
  */
 public class SingletonMap<K, V>
-        implements OrderedMap<K, V>, BoundedMap<K, V>, KeyValue<K, V>, Serializable, Cloneable {
+        implements OrderedMap<K, V>, IterableSortedMap<K, V>, BoundedMap<K, V>, KeyValue<K, V>, Cloneable {
 
     /** Serialization version */
     private static final long serialVersionUID = -8931271118676803261L;
@@ -421,6 +421,40 @@ public class SingletonMap<K, V>
      */
     protected boolean isEqualValue(final Object value) {
         return value == null ? getValue() == null : value.equals(getValue());
+    }
+
+    @Override
+    public Comparator<? super K> comparator() {
+        return null;
+    }
+
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return SortedMapRange.full(comparator());
+    }
+
+    @Override
+    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        if (range.inRange(this.key)) {
+            return this;
+        } else {
+            return EmptyMap.emptyMap();
+        }
+    }
+
+    @Override
+    public IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return subMap(getKeyRange().subRange(fromKey, toKey));
+    }
+
+    @Override
+    public IterableSortedMap<K, V> headMap(final K toKey) {
+        return subMap(getKeyRange().head(toKey));
+    }
+
+    @Override
+    public IterableSortedMap<K, V> tailMap(final K fromKey) {
+        return subMap(getKeyRange().tail(fromKey));
     }
 
     /**

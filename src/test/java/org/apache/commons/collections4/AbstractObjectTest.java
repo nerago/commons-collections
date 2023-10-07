@@ -33,13 +33,10 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 import org.junit.platform.commons.util.ReflectionUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Abstract test class for {@link java.lang.Object} methods and contracts.
@@ -357,34 +354,6 @@ public abstract class AbstractObjectTest extends BulkTest {
     private void writeExternalFormToStream(final Serializable o, final OutputStream stream) throws IOException {
         final ObjectOutputStream oStream = new ObjectOutputStream(stream);
         oStream.writeObject(o);
-    }
-
-    protected  <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable) {
-        try {
-            executable.execute();
-        } catch (Throwable throwable) {
-            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
-                return;
-            }
-
-            fail("Unexpected exception type thrown", throwable);
-        }
-
-        fail("Expected exception to be thrown, but nothing was thrown.");
-    }
-
-    protected  <E1, E2> void assertThrowsEither(Class<E1> e1, Class<E2> e2, Executable executable, String message) {
-        try {
-            executable.execute();
-        } catch (Throwable throwable) {
-            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
-                return;
-            }
-
-            fail(message + " - Unexpected exception type thrown", throwable);
-        }
-
-        fail(message + " - Expected exception to be thrown, but nothing was thrown.");
     }
 
     static final Map<Long, Class<?>> serializationIds = new HashMap<>();

@@ -16,11 +16,28 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
@@ -33,6 +50,10 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
+import static org.apache.commons.collections4.TestUtils.assertThrowsOptional;
+import static org.apache.commons.collections4.TestUtils.assertThrowsOrFalse;
+import static org.apache.commons.collections4.TestUtils.assertThrowsOrNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -380,7 +401,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     /**
      * Return a new {@link Collection} to be used for testing with contents of a shallow copy of parameter.
-     * See {@link #isCopyConstructorSupported}
+     * See {@link #isCopyConstructorCheckable()}
      */
     @SuppressWarnings("unchecked")
     public Collection<E> makeObjectCopy(Collection<E> orig) {
@@ -1252,18 +1273,63 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  operations raise an UnsupportedOperationException.
      */
     @Test
-    public void testUnsupportedRemove() {
+    public void testUnsupportedRemoveEmpty() {
         if (isRemoveSupported()) {
             return;
         }
 
+        final E element = getFullElements()[0];
+        final Collection<E> elementCollection = Collections.singleton(element);
+
         resetEmpty();
+        assertThrowsOptional(UnsupportedOperationException.class, () -> getCollection().clear(),
+                "clear should raise UnsupportedOperationException or do nothing");
+        verify();
+
+        assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().remove(element),
+                "remove should raise UnsupportedOperationException or do nothing");
+        verify();
+
+        assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().removeIf(e -> true),
+                "removeIf should raise UnsupportedOperationException or do nothing");
+        verify();
+
+        assertThrowsEither(UnsupportedOperationException.class, NullPointerException.class, () -> getCollection().removeAll(null),
+                "removeAll should raise UnsupportedOperationException or NullPointerException");
+        verify();
+        assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().removeAll(elementCollection),
+                "removeAll should raise UnsupportedOperationException or do nothing");
+        verify();
+
+        assertThrowsEither(UnsupportedOperationException.class, NullPointerException.class, () -> getCollection().retainAll(null),
+                "retainAll should raise UnsupportedOperationException or NullPointerException");
+        verify();
+        assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().retainAll(elementCollection),
+                "retainAll should raise UnsupportedOperationException or do nothing");
+        verify();
+    }
+
+    @Test
+    public void testUnsupportedRemoveFull() {
+        if (isRemoveSupported()) {
+            return;
+        }
+
+        final E element = getFullElements()[0];
+        final Collection<E> elementCollection = Collections.singleton(element);
+        final E other = getOtherElements()[0];
+        final Collection<E> otherCollection = Collections.singleton(other);
+
+        resetFull();
         assertThrows(UnsupportedOperationException.class, () -> getCollection().clear(),
                 "clear should raise UnsupportedOperationException");
         verify();
 
         if (!isRemoveElementSupported()) {
-            assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(null),
+            assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().remove(other),
+                    "remove should raise UnsupportedOperationException or do nothing");
+            verify();
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(element),
                     "remove should raise UnsupportedOperationException");
             verify();
         }
@@ -1272,15 +1338,26 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
                 "removeIf should raise UnsupportedOperationException");
         verify();
 
-        assertThrows(UnsupportedOperationException.class, () -> getCollection().removeAll(null),
+        assertThrowsEither(UnsupportedOperationException.class, NullPointerException.class, () -> getCollection().removeAll(null),
+                "removeAll should raise UnsupportedOperationException or NullPointerException");
+        verify();
+        assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().removeAll(otherCollection),
+                "removeAll should raise UnsupportedOperationException or do nothing");
+        verify();
+        assertThrows(UnsupportedOperationException.class, () -> getCollection().removeAll(elementCollection),
                 "removeAll should raise UnsupportedOperationException");
         verify();
 
-        assertThrows(UnsupportedOperationException.class, () -> getCollection().retainAll(null),
+        assertThrowsEither(UnsupportedOperationException.class, NullPointerException.class, () -> getCollection().retainAll(null),
+                "retainAll should raise UnsupportedOperationException or NullPointerException");
+        verify();
+        assertThrowsOrFalse(UnsupportedOperationException.class, () -> getCollection().retainAll(elementCollection),
+                "retainAll should raise UnsupportedOperationException or do nothing");
+        verify();
+        assertThrows(UnsupportedOperationException.class, () -> getCollection().retainAll(otherCollection),
                 "retainAll should raise UnsupportedOperationException");
         verify();
 
-        resetFull();
         final Iterator<E> iterator = getCollection().iterator();
         iterator.next();
         assertThrows(UnsupportedOperationException.class, () -> iterator.remove(),

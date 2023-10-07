@@ -66,7 +66,7 @@ public class UnmodifiableSortedMapTest<K, V> extends AbstractIterableSortedMapTe
     }
 
     @Override
-    public SortedMap<K, V> makeFullMap() {
+    public IterableSortedMap<K, V> makeFullMap() {
         final SortedMap<K, V> m = new TreeMap<>();
         addSampleMappings(m);
         return UnmodifiableSortedMap.unmodifiableSortedMap(m);
