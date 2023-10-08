@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -47,22 +46,28 @@ import org.apache.commons.collections4.map.EntrySetUtil;
  * @see DualTreeBidiMap
  * @since 3.0
  */
-public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
+public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualBidiMap<K, V, RegularMap, InverseMap, InternalNormalMap, InternalReverseMap>,
+                                                InverseMap extends AbstractDualBidiMap<V, K, InverseMap, RegularMap, InternalReverseMap, InternalNormalMap>,
+                                                InternalNormalMap extends Map<K, V>,
+                                                InternalReverseMap extends Map<V, K>>
+        implements BidiMap<K, V, RegularMap, InverseMap> {
+
+    private static final long serialVersionUID = -1349826221174067824L;
 
     /**
      * Normal delegate map.
      */
-    transient Map<K, V> normalMap;
+    transient InternalNormalMap normalMap;
 
     /**
      * Reverse delegate map.
      */
-    transient Map<V, K> reverseMap;
+    transient InternalReverseMap reverseMap;
 
     /**
      * Inverse view of this map.
      */
-    transient BidiMap<V, K> inverseBidiMap;
+    transient InverseMap inverseBidiMap;
 
     /**
      * View of the keys.
@@ -103,7 +108,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
      * @param reverseMap  the reverse direction map
      * @since 3.1
      */
-    protected AbstractDualBidiMap(final Map<K, V> normalMap, final Map<V, K> reverseMap) {
+    protected AbstractDualBidiMap(final InternalNormalMap normalMap, final InternalReverseMap reverseMap) {
         this.normalMap = normalMap;
         this.reverseMap = reverseMap;
     }
@@ -116,8 +121,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
      * @param reverseMap  the reverse direction map
      * @param inverseBidiMap  the inverse BidiMap
      */
-    protected AbstractDualBidiMap(final Map<K, V> normalMap, final Map<V, K> reverseMap,
-                                  final BidiMap<V, K> inverseBidiMap) {
+    protected AbstractDualBidiMap(final InternalNormalMap normalMap,
+                                  final InternalReverseMap reverseMap,
+                                  final InverseMap inverseBidiMap) {
         this.normalMap = normalMap;
         this.reverseMap = reverseMap;
         this.inverseBidiMap = inverseBidiMap;
@@ -126,12 +132,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * Creates a new instance of the subclass.
      *
-     * @param normalMap  the normal direction map
-     * @param reverseMap  the reverse direction map
-     * @param inverseMap  this map, which is the inverse in the new map
      * @return the bidi map
      */
-    protected abstract BidiMap<V, K> createBidiMap(Map<V, K> normalMap, Map<K, V> reverseMap, BidiMap<K, V> inverseMap);
+    protected abstract InverseMap createInverseBidiMap();
 
     // Map delegation
 
@@ -411,7 +414,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     }
 
     @Override
-    public K getKeyOrDefault(Object value, K defaultKey) {
+    public K getKeyOrDefault(final Object value, final K defaultKey) {
         return reverseMap.getOrDefault(value, defaultKey);
     }
 
@@ -426,9 +429,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     }
 
     @Override
-    public BidiMap<V, K> inverseBidiMap() {
+    public InverseMap inverseBidiMap() {
         if (inverseBidiMap == null) {
-            inverseBidiMap = createBidiMap(reverseMap, normalMap, this);
+            inverseBidiMap = createInverseBidiMap();
         }
         return inverseBidiMap;
     }
@@ -525,7 +528,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
         private static final long serialVersionUID = 4621510560119690639L;
 
         /** The parent map */
-        protected final AbstractDualBidiMap<K, V> parent;
+        protected final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent;
 
         /**
          * Constructor.
@@ -533,7 +536,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * @param coll  the collection view being decorated
          * @param parent  the parent BidiMap
          */
-        protected View(final Collection<E> coll, final AbstractDualBidiMap<K, V> parent) {
+        protected View(final Collection<E> coll, final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
             super(coll);
             this.parent = parent;
         }
@@ -620,7 +623,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * Inner class KeySet.
      */
-    protected static class KeySet<K> extends View<K, Object, K> implements Set<K> {
+    protected static class KeySet<K, V> extends View<K, V, K> implements Set<K> {
 
         /** Serialization version */
         private static final long serialVersionUID = -7107935777385040694L;
@@ -631,8 +634,8 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * @param parent  the parent BidiMap
          */
         @SuppressWarnings("unchecked")
-        protected KeySet(final AbstractDualBidiMap<K, ?> parent) {
-            super(parent.normalMap.keySet(), (AbstractDualBidiMap<K, Object>) parent);
+        protected KeySet(final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
+            super(parent.normalMap.keySet(), parent);
         }
 
         @Override
@@ -662,7 +665,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     protected static class KeySetIterator<K> extends AbstractIteratorDecorator<K> {
 
         /** The parent map */
-        protected final AbstractDualBidiMap<K, ?> parent;
+        protected final AbstractDualBidiMap<K, ?, ?, ?, ?, ?> parent;
 
         /** The last returned key */
         protected K lastKey;
@@ -675,7 +678,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * @param iterator  the iterator to decorate
          * @param parent  the parent map
          */
-        protected KeySetIterator(final Iterator<K> iterator, final AbstractDualBidiMap<K, ?> parent) {
+        protected KeySetIterator(final Iterator<K> iterator, final AbstractDualBidiMap<K, ?, ?, ?, ?, ?> parent) {
             super(iterator);
             this.parent = parent;
         }
@@ -703,7 +706,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     /**
      * Inner class Values.
      */
-    protected static class Values<V> extends View<Object, V, V> implements Set<V> {
+    protected static class Values<K, V> extends View<K, V, V> implements Set<V> {
 
         /** Serialization version */
         private static final long serialVersionUID = 4023777119829639864L;
@@ -714,8 +717,8 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * @param parent  the parent BidiMap
          */
         @SuppressWarnings("unchecked")
-        protected Values(final AbstractDualBidiMap<?, V> parent) {
-            super(parent.normalMap.values(), (AbstractDualBidiMap<Object, V>) parent);
+        protected Values(final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
+            super(parent.normalMap.values(), parent);
         }
 
         @Override
@@ -745,7 +748,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     protected static class ValuesIterator<V> extends AbstractIteratorDecorator<V> {
 
         /** The parent map */
-        protected final AbstractDualBidiMap<Object, V> parent;
+        protected final AbstractDualBidiMap<Object, V, ?, ?, ?, ?> parent;
 
         /** The last returned value */
         protected V lastValue;
@@ -759,9 +762,9 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * @param parent  the parent map
          */
         @SuppressWarnings("unchecked")
-        protected ValuesIterator(final Iterator<V> iterator, final AbstractDualBidiMap<?, V> parent) {
+        protected ValuesIterator(final Iterator<V> iterator, final AbstractDualBidiMap<?, V, ?, ?, ?, ?> parent) {
             super(iterator);
-            this.parent = (AbstractDualBidiMap<Object, V>) parent;
+            this.parent = (AbstractDualBidiMap<Object, V, ?, ?, ?, ?>) parent;
         }
 
         @Override
@@ -796,7 +799,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          *
          * @param parent  the parent BidiMap
          */
-        protected EntrySet(final AbstractDualBidiMap<K, V> parent) {
+        protected EntrySet(final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
             super(parent.normalMap.entrySet(), parent);
         }
 
@@ -815,12 +818,12 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
         }
 
         @Override
-        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+        public boolean removeIf(final Predicate<? super Entry<K, V>> filter) {
             return super.removeIf(entry -> filter.test(new UnmodifiableMapEntry<>(entry)));
         }
 
         @Override
-        public void forEach(Consumer<? super Entry<K, V>> action) {
+        public void forEach(final Consumer<? super Entry<K, V>> action) {
             super.forEach(entry -> action.accept(new UnmodifiableMapEntry<>(entry)));
         }
 
@@ -843,7 +846,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     protected static class EntrySetIterator<K, V> extends AbstractIteratorDecorator<Map.Entry<K, V>> {
 
         /** The parent map */
-        protected final AbstractDualBidiMap<K, V> parent;
+        protected final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent;
 
         /** The last returned entry */
         protected Map.Entry<K, V> last;
@@ -856,7 +859,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * @param iterator  the iterator to decorate
          * @param parent  the parent map
          */
-        protected EntrySetIterator(final Iterator<Map.Entry<K, V>> iterator, final AbstractDualBidiMap<K, V> parent) {
+        protected EntrySetIterator(final Iterator<Map.Entry<K, V>> iterator, final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
             super(iterator);
             this.parent = parent;
         }
@@ -888,14 +891,14 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     protected static class MapEntry<K, V> extends AbstractMapEntryDecorator<K, V> {
 
         /** The parent map */
-        protected final AbstractDualBidiMap<K, V> parent;
+        protected final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent;
 
         /**
          * Constructor.
          * @param entry  the entry to decorate
          * @param parent  the parent map
          */
-        protected MapEntry(final Map.Entry<K, V> entry, final AbstractDualBidiMap<K, V> parent) {
+        protected MapEntry(final Map.Entry<K, V> entry, final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
             super(entry);
             this.parent = parent;
         }
@@ -919,7 +922,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
     protected static class BidiMapIterator<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
 
         /** The parent map */
-        protected final AbstractDualBidiMap<K, V> parent;
+        protected final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent;
 
         /** The iterator being wrapped */
         protected Iterator<Map.Entry<K, V>> iterator;
@@ -934,7 +937,7 @@ public abstract class AbstractDualBidiMap<K, V> implements BidiMap<K, V> {
          * Constructor.
          * @param parent  the parent map
          */
-        protected BidiMapIterator(final AbstractDualBidiMap<K, V> parent) {
+        protected BidiMapIterator(final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
             this.parent = parent;
             this.iterator = parent.normalMap.entrySet().iterator();
         }

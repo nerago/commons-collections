@@ -28,27 +28,12 @@ package org.apache.commons.collections4;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public interface SortedExtendedBidiMap<K, V> extends SortedBidiMap<K, V>, SortedRangedMap<K, V> {
+public interface SortedExtendedBidiMap<K, V,
+                                       RegularMap extends SortedBidiMap<K, V, RegularMap, InverseMap>,
+                                       InverseMap extends SortedBidiMap<V, K, InverseMap, RegularMap>>
+        extends SortedBidiMap<K, V, RegularMap, InverseMap>, SortedRangedMap<K, V, RegularMap> {
     SortedMapRange<V> getValueRange();
 
-    @Override
-    default SortedExtendedBidiMap<K, V> subMap(final K fromKey, final K toKey) {
-        return subMap(getKeyRange().subRange(fromKey, toKey));
+    interface Common<K, V> extends SortedExtendedBidiMap<K, V, Common<K, V>, Common<V, K>> {
     }
-
-    @Override
-    default SortedExtendedBidiMap<K, V> headMap(final K toKey) {
-        return subMap(getKeyRange().head(toKey));
-    }
-
-    @Override
-    default SortedExtendedBidiMap<K, V> tailMap(final K fromKey) {
-        return subMap(getKeyRange().tail(fromKey));
-    }
-
-    @Override
-    SortedExtendedBidiMap<K, V> subMap(SortedMapRange<K> range);
-
-    @Override
-    SortedExtendedBidiMap<V, K> inverseBidiMap();
 }

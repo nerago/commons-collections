@@ -29,24 +29,9 @@ package org.apache.commons.collections4;
  *
  * @since 3.0
  */
-public interface OrderedBidiMap<K, V> extends BidiMap<K, V>, OrderedMap<K, V> {
-
-    /**
-     * Gets a view of this map where the keys and values are reversed.
-     * <p>
-     * Changes to one map will be visible in the other and vice versa.
-     * This enables both directions of the map to be accessed equally.
-     * <p>
-     * Implementations should seek to avoid creating a new object every time this
-     * method is called. See {@code AbstractMap.values()} etc. Calling this
-     * method on the inverse map should return the original.
-     * <p>
-     * Implementations must return an {@code OrderedBidiMap} instance,
-     * usually by forwarding to {@code inverseOrderedBidiMap()}.
-     *
-     * @return an inverted bidirectional map
-     */
-    @Override
-    OrderedBidiMap<V, K> inverseBidiMap();
+public interface OrderedBidiMap<K, V, RegularMap extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
+                                      InverseMap extends OrderedBidiMap<V, K, InverseMap, RegularMap>>
+        extends BidiMap<K, V, RegularMap, InverseMap>,
+                OrderedMap<K, V> {
 
 }

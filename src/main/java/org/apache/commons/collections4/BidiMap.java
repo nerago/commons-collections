@@ -43,7 +43,9 @@ import java.util.Set;
  *
  * @since 3.0
  */
-public interface BidiMap<K, V> extends IterableMap<K, V> {
+public interface BidiMap<K, V, RegularMap extends BidiMap<K, V, RegularMap, InverseMap>,
+                               InverseMap extends BidiMap<V, K, InverseMap, RegularMap>>
+        extends IterableMap<K, V> {
 
     /**
      * Puts the key-value pair into the map, replacing any previous pair.
@@ -153,7 +155,7 @@ public interface BidiMap<K, V> extends IterableMap<K, V> {
      *
      * @return an inverted bidirectional map
      */
-    BidiMap<V, K> inverseBidiMap();
+    InverseMap inverseBidiMap();
 
     /**
      * Returns a {@link Set} view of the values contained in this map.

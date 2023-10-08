@@ -21,9 +21,11 @@ import java.util.SortedMap;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
 
 /**
  * Decorates another {@code SortedMap} to create objects in the map on demand.
@@ -66,10 +68,11 @@ import org.apache.commons.collections4.Transformer;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSortedMap<K, V> {
+public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSortedMap<K, V, LazySortedMap<K, V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 2715322183617658933L;
+    private SortedMapRange<K> keyRange;
 
     /**
      * Factory method to create a lazily instantiated sorted map.
@@ -112,6 +115,7 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
      */
     protected LazySortedMap(final SortedMap<K, V> map, final Factory<? extends V> factory) {
         super(map, factory);
+        this.keyRange = SortedMapRange.full(map.comparator());
     }
 
     /**
@@ -123,6 +127,12 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
      */
     protected LazySortedMap(final SortedMap<K, V> map, final Transformer<? super K, ? extends V> factory) {
         super(map, factory);
+        this.keyRange = SortedMapRange.full(map.comparator());
+    }
+
+    protected LazySortedMap(final SortedMap<K, V> map, final Transformer<? super K, ? extends V> factory, final SortedMapRange<K> keyRange) {
+        super(map, factory);
+        this.keyRange = keyRange;
     }
 
     /**
@@ -160,20 +170,17 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-        return new LazySortedSubMap<>(range.applyToMap(getSortedMap()), range, factory);
+    public OrderedMapIterator<K, V> mapIterator() {
+        return SortedMapOrderedMapIterator.sortedMapIterator(getSortedMap());
     }
 
     @Override
-    public SortedMapRange<K> getKeyRange() {
-        return null;
+    public LazySortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new LazySortedMap<>(range.applyToMap(getSortedMap()), factory, range);
     }
-
-    private static class LazySortedSubMap<K, V> extends LazySortedMap<K, V> {
-        private static final long serialVersionUID = 8913223218411208265L;
-
-        public LazySortedSubMap(final SortedMap<K, V> map, final SortedMapRange<K> range, final Transformer<? super K, ? extends V> factory) {
-            super(map, factory);
-        }
+    
+    @Override
+    public SortedMapRange<K> getKeyRange() {
+        return keyRange;
     }
 }

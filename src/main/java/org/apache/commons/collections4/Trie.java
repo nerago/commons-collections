@@ -26,7 +26,7 @@ import java.util.SortedMap;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public interface Trie<K, V> extends IterableSortedMap<K, V> {
+public interface Trie<K, V> extends IterableSortedMap<K, V, Trie<K, V>> {
 
     /**
      * Returns a view of this {@link Trie} of all elements that are prefixed
@@ -43,6 +43,6 @@ public interface Trie<K, V> extends IterableSortedMap<K, V> {
      * @return a {@link SortedMap} view of this {@link Trie} with all elements whose
      *   key is prefixed by the search key
      */
-    SortedMap<K, V> prefixMap(K key);
+    Trie<K, V> prefixMap(K key);
 
 }

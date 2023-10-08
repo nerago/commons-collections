@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4;
 
+import java.util.Iterator;
 import java.util.SortedMap;
 
 /**
@@ -26,22 +27,7 @@ import java.util.SortedMap;
  *
  * @since 4.0
  */
-public interface IterableSortedMap<K, V> extends SortedRangedMap<K, V>, OrderedMap<K, V> {
-    @Override
-    IterableSortedMap<K, V> subMap(SortedMapRange<K> range);
+public interface IterableSortedMap<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+        extends SortedRangedMap<K, V, SubMap>, OrderedMap<K, V> {
 
-    @Override
-    default IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return subMap(getKeyRange().subRange(fromKey, toKey));
-    }
-
-    @Override
-    default IterableSortedMap<K, V> headMap(final K toKey) {
-        return subMap(getKeyRange().head(toKey));
-    }
-
-    @Override
-    default IterableSortedMap<K, V> tailMap(final K fromKey) {
-        return subMap(getKeyRange().tail(fromKey));
-    }
 }

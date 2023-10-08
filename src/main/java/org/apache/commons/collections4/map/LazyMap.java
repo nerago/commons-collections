@@ -71,7 +71,7 @@ import org.apache.commons.collections4.functors.FactoryTransformer;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class LazyMap<K, V> extends AbstractMapDecorator<K, V> {
+public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 7990956402564206740L;

@@ -18,6 +18,7 @@ package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidiMap;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -37,9 +38,15 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractOrderedBidiMapDecorator<K, V>
-        extends AbstractBidiMapDecorator<K, V>
-        implements OrderedBidiMap<K, V> {
+public abstract class AbstractOrderedBidiMapDecorator<K, V,
+            Decorated extends OrderedBidiMap<K, V, Decorated, DecoratedInverse>,
+            DecoratedInverse extends OrderedBidiMap<V, K, DecoratedInverse, Decorated>,
+            RegularMap extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
+            InverseMap extends AbstractOrderedBidiMapDecorator<V, K, DecoratedInverse, Decorated, InverseMap, RegularMap>>
+        extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>
+        implements OrderedBidiMap<K, V, RegularMap, InverseMap> {
+
+    private static final long serialVersionUID = 7010751296610809092L;
 
     /**
      * Constructor that wraps (not copies).
@@ -47,18 +54,8 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    protected AbstractOrderedBidiMapDecorator(final OrderedBidiMap<K, V> map) {
+    protected AbstractOrderedBidiMapDecorator(final Decorated map) {
         super(map);
-    }
-
-    /**
-     * Gets the map being decorated.
-     *
-     * @return the decorated map
-     */
-    @Override
-    protected OrderedBidiMap<K, V> decorated() {
-        return (OrderedBidiMap<K, V>) super.decorated();
     }
 
     @Override
@@ -84,11 +81,6 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V>
     @Override
     public K previousKey(final K key) {
         return decorated().previousKey(key);
-    }
-
-    @Override
-    public OrderedBidiMap<V, K> inverseBidiMap() {
-        return decorated().inverseBidiMap();
     }
 
 }

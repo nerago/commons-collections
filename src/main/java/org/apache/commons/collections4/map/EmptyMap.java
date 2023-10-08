@@ -6,7 +6,6 @@ import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.SortedRangedMap;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
@@ -285,38 +284,13 @@ public class EmptyMap<K, V> implements IterableExtendedMap<K, V>, NavigableRange
     }
 
     @Override
-    public NavigableRangedMap<K, V> subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
+    public EmptyMap<K, V> subMap(final SortedMapRange<K> range) {
         return this;
     }
 
     @Override
-    public NavigableRangedMap<K, V> headMap(final K toKey, final boolean inclusive) {
-        return this;
-    }
-
-    @Override
-    public NavigableRangedMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
-        return this;
-    }
-
-    @Override
-    public SortedRangedMap<K, V> subMap(final SortedMapRange<K> range) {
-        return this;
-    }
-
-    @Override
-    public EmptyMap<K, V> subMap(final K fromKey, final K toKey) {
-        return this;
-    }
-
-    @Override
-    public EmptyMap<K, V> headMap(final K toKey) {
-        return this;
-    }
-
-    @Override
-    public EmptyMap<K, V> tailMap(final K fromKey) {
-        return this;
+    public EmptyMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+        return (EmptyMap<K, V>) NavigableRangedMap.super.subMap(fromKey, fromInclusive, toKey, toInclusive);
     }
 
     @Override

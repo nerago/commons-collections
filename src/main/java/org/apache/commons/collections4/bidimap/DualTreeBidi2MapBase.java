@@ -32,8 +32,8 @@ import java.util.function.Predicate;
 
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractNavigableMapDecorator<K, V>
-        implements SortedExtendedBidiMap<K, V> {
+        extends AbstractNavigableMapDecorator<K, V, NavigableMap<K, V>, DualTreeBidi2MapBase<K, V>>
+        implements NavigableExtendedBidiMap<K, V, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<V, K>> {
     protected static final boolean treeMapImplementsRemove2 = checkNotDefault("remove", Object.class, Object.class);
     protected static final boolean treeMapImplementsReplace3 = checkNotDefault("replace", Object.class, Object.class, Object.class);
     protected static final boolean treeMapImplementsPutIfAbsent = checkNotDefault("putIfAbsent", Object.class, Object.class);
@@ -90,7 +90,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public final SortedExtendedBidiMap<V, K> inverseBidiMap() {
+    public final DualTreeBidi2MapBase<V, K> inverseBidiMap() {
         if (inverseBidiMap == null) {
             inverseBidiMap = createInverse();
             inverseBidiMap.inverseBidiMap = this;

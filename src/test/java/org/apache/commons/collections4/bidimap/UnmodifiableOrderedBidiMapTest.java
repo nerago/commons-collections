@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedBidiMap;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
 
@@ -38,13 +39,13 @@ public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends C
     }
 
     @Override
-    public OrderedBidiMap<K, V> makeObject() {
+    public OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> makeObject() {
         return UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(new TreeBidiMap<K, V>());
     }
 
     @Override
-    public OrderedBidiMap<K, V> makeFullMap() {
-        final OrderedBidiMap<K, V> bidi = new TreeBidiMap<>();
+    public OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> makeFullMap() {
+        final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = new TreeBidiMap<>();
         addSampleMappings(bidi);
         return UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(bidi);
     }
@@ -92,7 +93,7 @@ public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends C
 
     @Test
     public void testDecorateFactory() {
-        final OrderedBidiMap<K, V> map = makeFullMap();
+        final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> map = makeFullMap();
         assertSame(map, UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(map));
 
         assertThrows(NullPointerException.class, () -> UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(null));

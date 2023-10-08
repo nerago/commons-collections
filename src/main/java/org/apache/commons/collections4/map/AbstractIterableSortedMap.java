@@ -23,24 +23,25 @@ import org.apache.commons.collections4.SortedMapRange;
 
 public abstract class AbstractIterableSortedMap<K extends Comparable<K>, V>
         extends AbstractIterableMapAlternate<K, V>
-        implements IterableSortedMap<K, V>, IterableExtendedMap<K, V> {
+        implements IterableSortedMap<K, V, AbstractIterableSortedMap<K, V>>, IterableExtendedMap<K, V> {
     private static final long serialVersionUID = 8059244983988773629L;
 
     @Override
     public abstract OrderedMapIterator<K, V> mapIterator();
 
     @Override
-    public abstract IterableSortedMap<K, V> subMap(final SortedMapRange<K> range);
+    public abstract AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range);
 
-    public final IterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return subMap(getKeyRange().subRange(fromKey, toKey));
+    // todo remove
+    public final AbstractIterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return IterableSortedMap.super.subMap(fromKey, toKey);
     }
 
-    public final IterableSortedMap<K, V> headMap(final K toKey) {
-        return subMap(getKeyRange().head(toKey));
+    public final AbstractIterableSortedMap<K, V> headMap(final K toKey) {
+        return IterableSortedMap.super.headMap(toKey);
     }
 
-    public final IterableSortedMap<K, V> tailMap(final K fromKey) {
-        return subMap(getKeyRange().tail(fromKey));
+    public final AbstractIterableSortedMap<K, V> tailMap(final K fromKey) {
+        return IterableSortedMap.super.tailMap(fromKey);
     }
 }

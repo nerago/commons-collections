@@ -22,6 +22,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedBidiMap;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
@@ -41,7 +42,7 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
      * {@inheritDoc}
      */
     @Override
-    public OrderedBidiMap<K, V> makeObject() {
+    public OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> makeObject() {
         return new TestOrderedBidiMap<>();
     }
 
@@ -96,7 +97,7 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
             super(new DualTreeBidiMap<K, V>());
         }
 
-        TestOrderedBidiMap(final OrderedBidiMap<K, V> map) {
+        TestOrderedBidiMap(final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> map) {
             super(map);
         }
 
@@ -106,7 +107,7 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
         }
 
         @Override
-        public OrderedBidiMap<V, K> inverseBidiMap() {
+        public OrderedBidiMap<V, K, SortedBidiMap<V, K, SubMap>> inverseBidiMap() {
             if (inverse == null) {
                 inverse = new TestOrderedBidiMap<>(decorated().inverseBidiMap());
                 inverse.inverse = this;

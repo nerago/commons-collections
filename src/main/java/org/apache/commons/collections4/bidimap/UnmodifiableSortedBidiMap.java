@@ -43,7 +43,10 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableSortedBidiMap<K, V>
-        extends AbstractSortedBidiMapDecorator<K, V> implements Unmodifiable {
+        extends AbstractSortedBidiMapDecorator<K, V,
+        SortedExtendedBidiMap.Common<K, V>, SortedExtendedBidiMap.Common<V, K>,
+        UnmodifiableSortedBidiMap<K, V>, UnmodifiableSortedBidiMap<V, K>>
+        implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 3795490687011556072L;
@@ -63,10 +66,10 @@ public final class UnmodifiableSortedBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> SortedExtendedBidiMap<K, V> unmodifiableSortedBidiMap(final SortedExtendedBidiMap<K, ? extends V> map) {
+    public static <K, V> SortedExtendedBidiMap<K, V, ?, ?> unmodifiableSortedBidiMap(final SortedExtendedBidiMap.Common<K, V> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final SortedExtendedBidiMap<K, V> tmpMap = (SortedExtendedBidiMap<K, V>) map;
+            final SortedExtendedBidiMap.Common<K, V> tmpMap = (SortedExtendedBidiMap.Common<K, V>) map;
             return tmpMap;
         }
         return new UnmodifiableSortedBidiMap<>(map);
@@ -79,12 +82,17 @@ public final class UnmodifiableSortedBidiMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableSortedBidiMap(final SortedExtendedBidiMap<K, ? extends V> map) {
-        super((SortedExtendedBidiMap<K, V>) map);
+    private UnmodifiableSortedBidiMap(final SortedExtendedBidiMap.Common<K, V> map) {
+        super(map);
     }
 
     @Override
-    protected SortedExtendedBidiMap<K, V> decorateDerived(final SortedExtendedBidiMap<K, V> map) {
+    protected UnmodifiableSortedBidiMap<K, V> decorateDerived(final Common<K, V> map) {
+        return new UnmodifiableSortedBidiMap<>(map);
+    }
+
+    @Override
+    protected UnmodifiableSortedBidiMap<V, K> decorateInverse(final Common<V, K> map) {
         return new UnmodifiableSortedBidiMap<>(map);
     }
 
@@ -154,7 +162,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         final Set<Map.Entry<K, V>> set = super.entrySet();
         return UnmodifiableEntrySet.unmodifiableEntrySet(set);
     }
@@ -182,15 +190,6 @@ public final class UnmodifiableSortedBidiMap<K, V>
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
     }
 
-    @Override
-    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
-        if (inverse == null) {
-            inverse = new UnmodifiableSortedBidiMap<>(decorated().inverseBidiMap());
-            inverse.inverse = this;
-        }
-        return inverse;
-    }
-
     private void writeObject(final ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
         out.writeObject(decorated());
@@ -199,6 +198,6 @@ public final class UnmodifiableSortedBidiMap<K, V>
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        setMap((Map<K, V>) in.readObject());
+        setMap((Common<K, V>) in.readObject());
     }
 }

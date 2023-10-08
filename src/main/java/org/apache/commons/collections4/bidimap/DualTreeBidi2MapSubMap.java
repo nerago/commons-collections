@@ -736,6 +736,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
             return createSimilar(parent, !descending);
         }
 
+        // TODO followup using range better
         @Override
         public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement, final boolean toInclusive) {
             return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.subMap(toKey(fromElement), fromInclusive, toKey(toElement), toInclusive), descending);

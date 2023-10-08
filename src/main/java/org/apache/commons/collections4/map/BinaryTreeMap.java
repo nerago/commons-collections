@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -278,7 +277,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+    public AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
         return new TreeSubMap(range);
     }
 
@@ -1437,7 +1436,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        public AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
             return null;
         }
 

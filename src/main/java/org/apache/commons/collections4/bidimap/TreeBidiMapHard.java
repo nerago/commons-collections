@@ -17,7 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedExtendedBidiMap;
@@ -87,8 +87,13 @@ import java.util.function.Function;
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
-public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractExtendedBidiMap<K, V> {
+public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>,
+            RegularMap extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
+            InverseMap extends OrderedBidiMap<V, K, InverseMap, RegularMap>>
+        extends AbstractExtendedBidiMap<K, V, RegularMap, InverseMap>
+
+    implements OrderedBidiMap<K, V, RegularMap, InverseMap>
+{
 
     private transient Node<K, V> rootNodeKey;
     private transient Node<K, V> rootNodeValue;
@@ -244,7 +249,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    public SortedExtendedBidiMap<K, V> subMap(final SortedMapRange<K> range) {
+    public RegularMap subMap(final SortedMapRange<K> range) {
         return new TreeBidiSubMap(range);
     }
 

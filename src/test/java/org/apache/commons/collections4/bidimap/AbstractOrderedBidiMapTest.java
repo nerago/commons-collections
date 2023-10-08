@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Nested;
@@ -51,9 +51,9 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testFirstKey() {
         resetEmpty();
-        OrderedBidiMap<K, V> bidi = getMap();
+        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = getMap();
 
-        final OrderedBidiMap<K, V> finalBidi = bidi;
+        final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
         assertThrows(NoSuchElementException.class, () -> finalBidi.firstKey());
 
         resetFull();
@@ -65,9 +65,9 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testLastKey() {
         resetEmpty();
-        OrderedBidiMap<K, V> bidi = getMap();
+        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = getMap();
 
-        final OrderedBidiMap<K, V> finalBidi = bidi;
+        final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
         assertThrows(NoSuchElementException.class, () -> finalBidi.lastKey());
 
         resetFull();
@@ -82,7 +82,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testNextKey() {
         resetEmpty();
-        OrderedBidiMap<K, V> bidi = (OrderedBidiMap<K, V>) map;
+        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map;
         assertNull(bidi.nextKey(getOtherKeys()[0]));
         if (!isAllowNullKey()) {
             try {
@@ -93,7 +93,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         }
 
         resetFull();
-        bidi = (OrderedBidiMap<K, V>) map;
+        bidi = (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map;
         final Iterator<K> it = confirmed.keySet().iterator();
         K confirmedLast = it.next();
         while (it.hasNext()) {
@@ -104,7 +104,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         assertNull(bidi.nextKey(confirmedLast));
 
         if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V> finalBidi = bidi;
+            final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
             assertThrows(NullPointerException.class, () -> finalBidi.nextKey(null));
 
         } else {
@@ -115,7 +115,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testPreviousKey() {
         resetEmpty();
-        OrderedBidiMap<K, V> bidi = getMap();
+        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = getMap();
         assertNull(bidi.previousKey(getOtherKeys()[0]));
         if (!isAllowNullKey()) {
             try {
@@ -139,7 +139,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         assertNull(bidi.previousKey(confirmedLast));
 
         if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V> finalBidi = bidi;
+            final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
             assertThrows(NullPointerException.class, () -> finalBidi.previousKey(null));
 
         } else {
@@ -233,8 +233,8 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
      * {@inheritDoc}
      */
     @Override
-    public OrderedBidiMap<K, V> getMap() {
-        return (OrderedBidiMap<K, V>) super.getMap();
+    public OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> getMap() {
+        return (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) super.getMap();
     }
 
     @Nested

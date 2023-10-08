@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
@@ -62,11 +63,11 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> OrderedBidiMap<K, V> unmodifiableOrderedBidiMap(
-            final OrderedBidiMap<? extends K, ? extends V> map) {
+    public static <K, V> OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> unmodifiableOrderedBidiMap(
+            final OrderedBidiMap<? extends K, ? extends V, SortedBidiMap<? extends K, ? extends V, SubMap>> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final OrderedBidiMap<K, V> tmpMap = (OrderedBidiMap<K, V>) map;
+            final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> tmpMap = (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map;
             return tmpMap;
         }
         return new UnmodifiableOrderedBidiMap<>(map);
@@ -79,8 +80,8 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V> map) {
-        super((OrderedBidiMap<K, V>) map);
+    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, SortedBidiMap<? extends K, ? extends V, SubMap>> map) {
+        super((OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map);
     }
 
     @Override
@@ -172,7 +173,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     }
 
     @Override
-    public OrderedBidiMap<V, K> inverseBidiMap() {
+    public OrderedBidiMap<V, K, SortedBidiMap<V, K, SubMap>> inverseBidiMap() {
         return inverseOrderedBidiMap();
     }
 
@@ -187,7 +188,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      *
      * @return an inverted unmodifiable bidirectional map
      */
-    public OrderedBidiMap<V, K> inverseOrderedBidiMap() {
+    public OrderedBidiMap<V, K, SortedBidiMap<V, K, SubMap>> inverseOrderedBidiMap() {
         if (inverse == null) {
             inverse = new UnmodifiableOrderedBidiMap<>(decorated().inverseBidiMap());
             inverse.inverse = this;

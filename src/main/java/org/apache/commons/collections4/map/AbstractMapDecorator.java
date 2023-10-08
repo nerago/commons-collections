@@ -47,13 +47,14 @@ import java.util.function.Function;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, V>  {
+public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
+        extends AbstractIterableMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 653816313916772204L;
 
     /** The map to decorate */
-    transient Map<K, V> map;
+    transient Decorated map;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -68,7 +69,7 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    protected AbstractMapDecorator(final Map<K, V> map) {
+    protected AbstractMapDecorator(final Decorated map) {
         this.map = Objects.requireNonNull(map, "map");
     }
 
@@ -77,7 +78,7 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
      *
      * @return the decorated map
      */
-    protected Map<K, V> decorated() {
+    protected Decorated decorated() {
         return map;
     }
 
@@ -88,7 +89,7 @@ public abstract class AbstractMapDecorator<K, V> extends AbstractIterableMap<K, 
      *
      * @param map  the decorated collection
      */
-    protected void setMap(final Map<K, V> map) {
+    protected void setMap(final Decorated map) {
         this.map = map;
     }
 

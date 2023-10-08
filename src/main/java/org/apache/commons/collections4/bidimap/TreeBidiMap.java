@@ -22,7 +22,6 @@ import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VA
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -80,8 +79,10 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  *
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
-public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
-    implements OrderedBidiMap<K, V>, Serializable {
+public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>,
+        RegularMap extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
+        InverseMap extends OrderedBidiMap<V, K, InverseMap, RegularMap>>
+    implements OrderedBidiMap<K, V, RegularMap, InverseMap> {
 
     enum DataElement {
         KEY("key"), VALUE("value");
@@ -651,7 +652,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * @return the inverse map
      */
     @Override
-    public OrderedBidiMap<V, K> inverseBidiMap() {
+    public InverseMap inverseBidiMap() {
         if (inverse == null) {
             inverse = new Inverse();
         }
@@ -2616,7 +2617,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * The inverse map implementation.
      */
-    class Inverse implements OrderedBidiMap<V, K> {
+    class Inverse implements OrderedBidiMap<V, K, InverseMap, RegularMap> {
 
         /** Store the keySet once created. */
         private Set<V> inverseKeySet;
@@ -2641,7 +2642,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public K getOrDefault(Object key, K defaultValue) {
+        public K getOrDefault(final Object key, final K defaultValue) {
             return TreeBidiMap.this.getKeyOrDefault(key, defaultValue);
         }
 
@@ -2921,8 +2922,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public OrderedBidiMap<K, V> inverseBidiMap() {
-            return TreeBidiMap.this;
+        public RegularMap inverseBidiMap() {
+            return (RegularMap) TreeBidiMap.this;
         }
 
         @Override

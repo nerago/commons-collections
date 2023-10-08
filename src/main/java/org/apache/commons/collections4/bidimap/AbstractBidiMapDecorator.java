@@ -40,8 +40,14 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractBidiMapDecorator<K, V>
-        extends AbstractMapDecorator<K, V> implements BidiMap<K, V> {
+public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K, V, Decorated, DecoratedInverse>,
+                                                     DecoratedInverse extends BidiMap<V, K, DecoratedInverse, Decorated>,
+                                                     RegularMap extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
+                                                     InverseMap extends AbstractBidiMapDecorator<V, K, DecoratedInverse, Decorated, InverseMap, RegularMap>>
+        extends AbstractMapDecorator<K, V, Decorated>
+        implements BidiMap<K, V, RegularMap, InverseMap> {
+
+    private static final long serialVersionUID = -3483039813600794480L;
 
     /**
      * Constructor that wraps (not copies).
@@ -49,18 +55,8 @@ public abstract class AbstractBidiMapDecorator<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    protected AbstractBidiMapDecorator(final BidiMap<K, V> map) {
+    protected AbstractBidiMapDecorator(final Decorated map) {
         super(map);
-    }
-
-    /**
-     * Gets the map being decorated.
-     *
-     * @return the decorated map
-     */
-    @Override
-    protected BidiMap<K, V> decorated() {
-        return (BidiMap<K, V>) super.decorated();
     }
 
     @Override
@@ -74,7 +70,7 @@ public abstract class AbstractBidiMapDecorator<K, V>
     }
 
     @Override
-    public K getKeyOrDefault(Object value, K defaultKey) {
+    public K getKeyOrDefault(final Object value, final K defaultKey) {
         return decorated().getKeyOrDefault(value, defaultKey);
     }
 
@@ -84,9 +80,11 @@ public abstract class AbstractBidiMapDecorator<K, V>
     }
 
     @Override
-    public BidiMap<V, K> inverseBidiMap() {
-        return decorated().inverseBidiMap();
+    public InverseMap inverseBidiMap() {
+        return decorateInverse(decorated().inverseBidiMap());
     }
+
+    protected abstract InverseMap decorateInverse(DecoratedInverse decoratedInverse);
 
     @Override
     public Set<V> values() {

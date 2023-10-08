@@ -2243,11 +2243,6 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             return keyRange;
         }
 
-        /**
-         * Creates and returns a sub-range view of the current {@link RangeMap}.
-         */
-        protected abstract IterableSortedMap<K, V> createRangeMap(SortedMapRange<K> keyRange);
-
         protected abstract boolean inRange(K key);
 
         /**
@@ -2681,6 +2676,25 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             return last;
         }
 
+        @Override
+        public K nextKey(final K key) {
+            updateRangeIfNeeded();
+            final TrieEntry<K, V> entry = getEntry(key);
+            if (entry != null) {
+                final TrieEntry<K, V> next = nextEntryInSubtree(entry, prefixSubTree);
+                if (next != null) {
+                    return next.getKey();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public K previousKey(K key) {
+
+            return null;
+        }
+
         /**
          * Returns true if this {@link PrefixRangeMap}'s key is a prefix of the provided key.
          */
@@ -2709,8 +2723,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         @Override
-        protected IterableSortedMap<K, V> createRangeMap(final SortedMapRange<K> keyRange) {
-            return new BoundedRangeMap(keyRange);
+        public OrderedMapIterator<K, V> mapIterator() {
+            return null;
         }
 
         @Override
@@ -2795,9 +2809,6 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
          * A prefix {@link BoundedRangeEntrySet} view of the {@link org.apache.commons.collections4.Trie}.
          */
         private final class PrefixRangeEntrySet extends BoundedRangeEntrySet {
-            /**
-             * Creates a {@link PrefixRangeEntrySet}.
-             */
             PrefixRangeEntrySet(final PrefixRangeMap delegate) {
                 super(delegate);
             }

@@ -28,7 +28,11 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
 
-public abstract class AbstractExtendedBidiMap<K, V> extends AbstractIterableMapAlternate<K, V> implements SortedExtendedBidiMap<K, V> {
+public abstract class AbstractExtendedBidiMap<K, V,
+                                              RegularMap extends AbstractExtendedBidiMap<K, V, RegularMap, InverseMap>,
+                                              InverseMap extends AbstractExtendedBidiMap<V, K, InverseMap, RegularMap>>
+        extends AbstractIterableMapAlternate<K, V>
+        implements SortedExtendedBidiMap<K, V, RegularMap, InverseMap> {
     private static final long serialVersionUID = -9181666289732043651L;
 
     @Override

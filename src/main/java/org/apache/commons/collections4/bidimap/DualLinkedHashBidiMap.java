@@ -37,7 +37,9 @@ import org.apache.commons.collections4.BidiMap;
  *
  * @since 4.0
  */
-public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> implements Serializable {
+public class DualLinkedHashBidiMap<K, V>
+        extends AbstractDualBidiMap<K, V, DualLinkedHashBidiMap<K, V>, DualLinkedHashBidiMap<V, K>, LinkedHashMap<K, V>, LinkedHashMap<V, K>>
+        implements Serializable {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361810L;
@@ -67,23 +69,19 @@ public class DualLinkedHashBidiMap<K, V> extends AbstractDualBidiMap<K, V> imple
      * @param reverseMap     the reverse direction map
      * @param inverseBidiMap the inverse BidiMap
      */
-    protected DualLinkedHashBidiMap(final Map<K, V> normalMap, final Map<V, K> reverseMap,
-                                    final BidiMap<V, K> inverseBidiMap) {
+    protected DualLinkedHashBidiMap(final LinkedHashMap<K, V> normalMap, final LinkedHashMap<V, K> reverseMap,
+                                    final DualLinkedHashBidiMap<V, K> inverseBidiMap) {
         super(normalMap, reverseMap, inverseBidiMap);
     }
 
+
     /**
-     * Creates a new instance of this object.
-     *
-     * @param normalMap      the normal direction map
-     * @param reverseMap     the reverse direction map
-     * @param inverseBidiMap the inverse BidiMap
+     * Creates a new inverted instance of this object.
      * @return new bidi map
      */
     @Override
-    protected BidiMap<V, K> createBidiMap(final Map<V, K> normalMap, final Map<K, V> reverseMap,
-            final BidiMap<K, V> inverseBidiMap) {
-        return new DualLinkedHashBidiMap<>(normalMap, reverseMap, inverseBidiMap);
+    protected DualLinkedHashBidiMap<V, K> createInverseBidiMap() {
+        return new DualLinkedHashBidiMap<>(reverseMap, normalMap, this);
     }
 
     // Serialization
