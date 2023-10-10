@@ -704,39 +704,5 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
         public boolean isRemoveSupported() {
             return false;
         }
-
-        /**
-         * Iterator does not follow the usual contract of {@link ListIterator#add} in
-         * that add may not be completed if already present in unique set.
-         */
-        @Test
-        @Override
-        public void testAdd() {
-            final E addValue = addSetValue();
-
-            // add at start should be OK, added should be previous
-            ListIterator<E> it = makeObject();
-            it.add(addValue);
-            assertEquals(addValue, it.previous());
-
-            // add at start should be OK, added should not be next
-            it = makeObject();
-            it.add(addValue);
-            assertNotEquals(addValue, it.next());
-
-            // add in middle when already exists should be ignored
-            it = makeObject();
-            it.add(addValue);
-            while (it.hasNext()) {
-                final E value = it.next();
-                assertNotEquals(addValue, value);
-                final int nextIndex = it.nextIndex(), prevIndex = it.previousIndex();
-                it.add(addValue);
-                assertEquals(nextIndex, it.nextIndex(), "index should be unchanged");
-                assertEquals(prevIndex, it.previousIndex(), "index should be unchanged");
-                assertNotEquals(addValue, it.previous());
-                assertEquals(value, it.next());
-            }
-        }
     }
 }

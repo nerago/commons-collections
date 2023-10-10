@@ -18,11 +18,15 @@ package org.apache.commons.collections4.set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
-import org.apache.commons.collections4.BulkTest;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link NavigableSet} methods and contracts.
@@ -145,7 +149,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public class BulkTestNavigableSetSubSet extends TestNavigableSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestNavigableSetSubSet() {
-            super("BulkTestNavigableSetSubSet");
             lowBound = AbstractNavigableSetTest.this.getFullElements().length / 3;
             highBound = AbstractNavigableSetTest.this.getFullElements().length / 3 * 2;
 
@@ -175,7 +178,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public class BulkTestNavigableSetHeadSet extends TestNavigableSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestNavigableSetHeadSet() {
-            super("BulkTestNavigableSetHeadSet");
             highBound = AbstractNavigableSetTest.this.getFullElements().length / 3 * 2;
 
             final int realBound = highBound + 1;
@@ -202,7 +204,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public class BulkTestNavigableSetTailSet extends TestNavigableSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestNavigableSetTailSet() {
-            super("BulkTestNavigableSetTailSet");
             lowBound = AbstractNavigableSetTest.this.getFullElements().length / 3;
             final E[] allElements = AbstractNavigableSetTest.this.getFullElements();
             final int realBound = lowBound + 1;
@@ -227,10 +228,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
         protected E[] fullElements;
         protected E[] otherElements;
 
-        public TestNavigableSetSubSet(String name) {
-            super(name);
-        }
-
         @Override
         public boolean isNullSupported() {
             return AbstractNavigableSetTest.this.isNullSupported();
@@ -248,12 +245,8 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
             return AbstractNavigableSetTest.this.isFailFastSupported();
         }
         @Override
-        public CollectionCommonsRole collectionRole() {
-            return CollectionCommonsRole.INNER;
-        }
-        @Override
-        protected IterationBehaviour getIterationBehaviour() {
-            return IterationBehaviour.FULLY_SORTED;
+        protected int getIterationBehaviour() {
+            return 0;
         }
         @Override
         protected boolean runSubSetTests() {

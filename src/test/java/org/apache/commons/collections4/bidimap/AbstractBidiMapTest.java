@@ -36,8 +36,11 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link BidiMap} methods and contracts.
@@ -429,7 +432,6 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         final AbstractBidiMapTest<K, V> main;
 
         public TestInverseBidiMap(final AbstractBidiMapTest<K, V> main) {
-            super("TestInverseBidiMap");
             this.main = main;
         }
 

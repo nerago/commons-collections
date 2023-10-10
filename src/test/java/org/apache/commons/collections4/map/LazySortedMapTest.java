@@ -24,17 +24,25 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.FactoryUtils;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Extension of {@link LazyMapTest} for exercising the
@@ -59,7 +67,7 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     protected final Comparator<String> reverseStringComparator = new ReverseStringComparator();
 
     @Override
-    public SortedMap<K, V> makeObject() {
+    public LazySortedMap<K, V> makeObject() {
         return lazySortedMap(new TreeMap<>(), FactoryUtils.<V>nullFactory());
     }
 
@@ -144,7 +152,7 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     @Nested
     public class LazyMapTestsNested extends LazyMapTest<K, V> {
         @Override
-        public IterableMap<K, V> makeObject() {
+        public LazySortedMap<K, V> makeObject() {
             return LazySortedMapTest.this.makeObject();
         }
 
@@ -154,8 +162,8 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         }
 
         @Override
-        protected IterationBehaviour getIterationBehaviour() {
-            return IterationBehaviour.FULLY_SORTED;
+        protected int getIterationBehaviour() {
+            return 0;
         }
     }
 
@@ -370,14 +378,6 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         @Override
         public boolean isRemoveSupported() {
             return main.isRemoveSupported();
-        }
-        @Override
-        public boolean isFailFastFunctionalExpected() {
-            return main.isFailFastFunctionalExpected();
-        }
-        @Override
-        public CollectionCommonsRole collectionRole() {
-            return CollectionCommonsRole.INNER;
         }
         @Override
         protected boolean runSubMapTests() {

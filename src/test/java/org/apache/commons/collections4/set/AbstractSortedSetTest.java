@@ -18,11 +18,16 @@ package org.apache.commons.collections4.set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link SortedSet} methods and contracts.
@@ -150,7 +155,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public class BulkTestSortedSetSubSet extends TestSortedSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestSortedSetSubSet() {
-            super("BulkTestSortedSetSubSet");
             final int loBound = AbstractSortedSetTest.this.getFullElements().length / 3;
             final int hiBound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
             lowBound = loBound;
@@ -177,7 +181,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public class BulkTestSortedSetHeadSet extends TestSortedSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestSortedSetHeadSet() {
-            super("BulkTestSortedSetHeadSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
             highBound = bound;
             fullElements = (E[]) new Object[bound];
@@ -201,7 +204,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public class BulkTestSortedSetTailSet extends TestSortedSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestSortedSetTailSet() {
-            super("bulkTestSortedSetTailSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3;
             lowBound = bound;
             final E[] allElements = AbstractSortedSetTest.this.getFullElements();
@@ -226,10 +228,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         protected E[] fullElements;
         protected E[] otherElements;
 
-        public TestSortedSetSubSet(String name) {
-            super(name);
-        }
-
         @Override
         public boolean isNullSupported() {
             return AbstractSortedSetTest.this.isNullSupported();
@@ -247,12 +245,8 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
             return AbstractSortedSetTest.this.isFailFastSupported();
         }
         @Override
-        public CollectionCommonsRole collectionRole() {
-            return CollectionCommonsRole.INNER;
-        }
-        @Override
-        protected IterationBehaviour getIterationBehaviour() {
-            return IterationBehaviour.FULLY_SORTED;
+        protected int getIterationBehaviour() {
+            return 0;
         }
         @Override
         protected boolean runSubSetTests() {

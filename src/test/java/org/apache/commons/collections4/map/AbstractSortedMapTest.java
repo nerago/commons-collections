@@ -26,9 +26,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.BulkTest;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link java.util.SortedMap} methods and contracts.
@@ -101,9 +105,9 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
     public DynamicNode subMapTests() {
         if (runSubMapTests()) {
             return DynamicContainer.dynamicContainer("subMapTests", Arrays.asList(
-                    new TestHeadMap(this).getDynamicTests(),
-                    new TestTailMap(this).getDynamicTests(),
-                    new TestSubMap(this).getDynamicTests()
+                    new TestHeadMap<>(this).getDynamicTests(),
+                    new TestTailMap<>(this).getDynamicTests(),
+                    new TestSubMap<>(this).getDynamicTests()
             ));
         } else {
             return DynamicContainer.dynamicContainer("subMapTests", Stream.empty());
@@ -138,18 +142,9 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             main.verify();
         }
         @Override
-        public BulkTest bulkTestHeadMap() {
-            return null;  // block infinite recursion
+        protected boolean runSubMapTests() {
+            return false;
         }
-        @Override
-        public BulkTest bulkTestTailMap() {
-            return null;  // block infinite recursion
-        }
-        @Override
-        public BulkTest bulkTestSubMap() {
-            return null;  // block infinite recursion
-        }
-
         @Override
         @SuppressWarnings("unchecked")
         public K[] getSampleKeys() {
@@ -185,10 +180,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         @Override
         public boolean isRemoveSupported() {
             return main.isRemoveSupported();
-        }
-        @Override
-        protected boolean runSubMapTests() {
-            return false;
         }
         @Override
         public boolean isTestSerialization() {
