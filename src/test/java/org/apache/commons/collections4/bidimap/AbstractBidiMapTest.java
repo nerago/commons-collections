@@ -30,11 +30,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
-import org.apache.commons.collections4.map.AbstractMapTest;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicNode;
@@ -426,7 +424,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         return new TestInverseBidiMap<>(this).getDynamicTests();
     }
 
-    @Disabled
+    @Disabled("should only run via TestFactory")
     public static class TestInverseBidiMap<K, V> extends AbstractBidiMapTest<V, K> {
 
         final AbstractBidiMapTest<K, V> main;
@@ -493,6 +491,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         @Override
         protected int getIterationBehaviour() {
             return main.getIterationBehaviour();
+        }
+
+        @Override
+        public DynamicNode inverseBidiMapTests() {
+            return null;
         }
     }
 

@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.Disabled;
@@ -988,7 +987,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         return new BulkSubListTests<>(this).getDynamicTests(this::runBulkSubListTests);
     }
 
-    @Disabled
+    @Disabled("should only run via TestFactory")
     public static class BulkSubListTests<E> extends AbstractListTest<E> {
         protected final AbstractListTest<E> outer;
 

@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.list.AbstractListTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -420,14 +421,7 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         listMap.putAll(2, hmap);
     }
 
-    public BulkTest bulkTestKeyListView() {
-        return new TestKeyListView();
-    }
-
-    public BulkTest bulkTestValueListView() {
-        return new TestValueListView();
-    }
-
+    @Nested
     public class TestKeyListView extends AbstractListTest<K> {
 
         @Override
@@ -472,6 +466,7 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
     }
 
+    @Nested
     public class TestValueListView extends AbstractListTest<V> {
 
         @Override

@@ -32,9 +32,12 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.map.AbstractSortedMapTest;
+import org.apache.commons.collections4.map.AbstractMapTest;
+import org.apache.commons.collections4.map.AbstractSortedMapNestedTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -46,7 +49,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
     protected List<V> sortedValues = new ArrayList<>();
     protected SortedSet<V> sortedNewValues = new TreeSet<>();
 
-    public AbstractSortedBidiMapTest() {
+    protected AbstractSortedBidiMapTest() {
         sortedKeys = getAsList(getSampleKeys());
         sortedKeys.sort(null);
         sortedKeys = Collections.unmodifiableList(sortedKeys);
@@ -59,22 +62,6 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
 
         sortedNewValues.addAll(getAsList(getNewSampleValues()));
     }
-
-//    public AbstractTestSortedBidiMap() {
-//        super();
-//        sortedKeys.addAll(Arrays.asList(getSampleValues()));
-//        Collections.sort(sortedKeys);
-//        sortedKeys = Collections.unmodifiableList(sortedKeys);
-//
-//        Map map = new TreeMap();
-//        for (int i = 0; i < getSampleKeys().length; i++) {
-//            map.put(getSampleValues()[i], getSampleKeys()[i]);
-//        }
-//        sortedValues.addAll(map.values());
-//        sortedValues = Collections.unmodifiableList(sortedValues);
-//
-//        sortedNewValues.addAll(Arrays.asList(getNewSampleValues()));
-//    }
 
     @Override
     public boolean isAllowNullKey() {
@@ -643,16 +630,92 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         assertFalse(set.contains(secondEntry));
     }
 
-    public BulkTest bulkTestHeadMap() {
-        return new AbstractSortedMapTest.TestHeadMap<>(this);
+    @Nested
+    public class TestAsSortedMap extends AbstractSortedMapNestedTest<K, V> {
+        @Override
+        protected AbstractMapTest<K, V> getEnclosing() {
+            return AbstractSortedBidiMapTest.this;
+        }
     }
 
-    public BulkTest bulkTestTailMap() {
-        return new AbstractSortedMapTest.TestTailMap<>(this);
+    @Override
+    public DynamicNode inverseBidiMapTests() {
+        return new TestInverseSortedBidiMap<>(this).getDynamicTests();
     }
 
-    public BulkTest bulkTestSubMap() {
-        return new AbstractSortedMapTest.TestSubMap<>(this);
-    }
+    @Disabled("should only run via TestFactory")
+    public static class TestInverseSortedBidiMap<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractSortedBidiMapTest<V, K> {
 
+        final AbstractSortedBidiMapTest<K, V> main;
+
+        public TestInverseSortedBidiMap(final AbstractSortedBidiMapTest<K, V> main) {
+            this.main = main;
+        }
+
+        @Override
+        public SortedBidiMap<V, K> makeObject() {
+            return main.makeObject().inverseBidiMap();
+        }
+
+        @Override
+        public SortedBidiMap<V, K> makeFullMap() {
+            return main.makeFullMap().inverseBidiMap();
+        }
+
+        @Override
+        public V[] getSampleKeys() {
+            return main.getSampleValues();
+        }
+
+        @Override
+        public K[] getSampleValues() {
+            return main.getSampleKeys();
+        }
+
+        @Override
+        public String getCompatibilityVersion() {
+            return main.getCompatibilityVersion();
+        }
+
+        @Override
+        public boolean isAllowNullKey() {
+            return main.isAllowNullKey();
+        }
+
+        @Override
+        public boolean isAllowNullValue() {
+            return main.isAllowNullValue();
+        }
+
+        @Override
+        public boolean isPutAddSupported() {
+            return main.isPutAddSupported();
+        }
+
+        @Override
+        public boolean isPutChangeSupported() {
+            return main.isPutChangeSupported();
+        }
+
+        @Override
+        public boolean isSetValueSupported() {
+            return main.isSetValueSupported();
+        }
+
+        @Override
+        public boolean isRemoveSupported() {
+            return main.isRemoveSupported();
+        }
+
+        @Override
+        protected int getIterationBehaviour() {
+            return main.getIterationBehaviour();
+        }
+
+        @Override
+        public DynamicNode inverseBidiMapTests() {
+            return null;
+        }
+    }
 }

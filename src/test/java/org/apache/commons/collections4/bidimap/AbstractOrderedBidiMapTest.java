@@ -26,11 +26,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.iterators.AbstractOrderedMapIteratorNestedTest;
 import org.apache.commons.collections4.map.AbstractIterableMapTest;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.apache.commons.collections4.map.AbstractOrderedMapNestedTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -158,6 +161,86 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         @Override
         protected AbstractMapTest<K, V> getEnclosing() {
             return AbstractOrderedBidiMapTest.this;
+        }
+    }
+
+    @Override
+    public DynamicNode inverseBidiMapTests() {
+        return new TestInverseOrderedBidiMap<>(this).getDynamicTests();
+    }
+
+    @Disabled("should only run via TestFactory")
+    public static class TestInverseOrderedBidiMap<K, V> extends AbstractOrderedBidiMapTest<V, K> {
+
+        final AbstractOrderedBidiMapTest<K, V> main;
+
+        public TestInverseOrderedBidiMap(final AbstractOrderedBidiMapTest<K, V> main) {
+            this.main = main;
+        }
+
+        @Override
+        public BidiMap<V, K> makeObject() {
+            return main.makeObject().inverseBidiMap();
+        }
+
+        @Override
+        public BidiMap<V, K> makeFullMap() {
+            return main.makeFullMap().inverseBidiMap();
+        }
+
+        @Override
+        public V[] getSampleKeys() {
+            return main.getSampleValues();
+        }
+
+        @Override
+        public K[] getSampleValues() {
+            return main.getSampleKeys();
+        }
+
+        @Override
+        public String getCompatibilityVersion() {
+            return main.getCompatibilityVersion();
+        }
+
+        @Override
+        public boolean isAllowNullKey() {
+            return main.isAllowNullKey();
+        }
+
+        @Override
+        public boolean isAllowNullValue() {
+            return main.isAllowNullValue();
+        }
+
+        @Override
+        public boolean isPutAddSupported() {
+            return main.isPutAddSupported();
+        }
+
+        @Override
+        public boolean isPutChangeSupported() {
+            return main.isPutChangeSupported();
+        }
+
+        @Override
+        public boolean isSetValueSupported() {
+            return main.isSetValueSupported();
+        }
+
+        @Override
+        public boolean isRemoveSupported() {
+            return main.isRemoveSupported();
+        }
+
+        @Override
+        protected int getIterationBehaviour() {
+            return main.getIterationBehaviour();
+        }
+
+        @Override
+        public DynamicNode inverseBidiMapTests() {
+            return null;
         }
     }
 }

@@ -28,7 +28,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections4.BulkTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Test;
@@ -120,9 +120,10 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         protected final List<V> subSortedValues = new ArrayList<>();
         protected final List<V> subSortedNewValues = new ArrayList<>();
 
-        public TestViewMap(final AbstractMapTest<K, V> main) {
+        public TestViewMap(final AbstractSortedMapTest<K, V> main) {
             this.main = main;
         }
+
         @Override
         public void resetEmpty() {
             // needed to init verify correctly
@@ -185,29 +186,14 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         public boolean isTestSerialization() {
             return false;
         }
-//        public void testSimpleSerialization() throws Exception {
-//            if (main.isSubMapViewsSerializable() == false) return;
-//            super.testSimpleSerialization();
-//        }
-//        public void testSerializeDeserializeThenCompare() throws Exception {
-//            if (main.isSubMapViewsSerializable() == false) return;
-//            super.testSerializeDeserializeThenCompare();
-//        }
-//        public void testEmptyMapCompatibility() throws Exception {
-//            if (main.isSubMapViewsSerializable() == false) return;
-//            super.testEmptyMapCompatibility();
-//        }
-//        public void testFullMapCompatibility() throws Exception {
-//            if (main.isSubMapViewsSerializable() == false) return;
-//            super.testFullMapCompatibility();
-//        }
     }
 
+    @Disabled("should only run via TestFactory")
     public static class TestHeadMap<K, V> extends TestViewMap<K, V> {
         static final int SUBSIZE = 6;
         final K toKey;
 
-        public TestHeadMap(final AbstractMapTest<K, V> main) {
+        public TestHeadMap(final AbstractSortedMapTest<K, V> main) {
             super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
@@ -219,11 +205,13 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             this.subSortedValues.subList(SUBSIZE, this.subSortedValues.size()).clear();
             this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
         }
+
         @Override
         public SortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
             return ((SortedMap<K, V>) main.makeObject()).headMap(toKey);
         }
+
         @Override
         public SortedMap<K, V> makeFullMap() {
             return ((SortedMap<K, V>) main.makeFullMap()).headMap(toKey);
@@ -238,29 +226,21 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subSortedValues.get(0)));
             verify();
         }
+
         @Override
         public String getCompatibilityVersion() {
             return main.getCompatibilityVersion() + ".HeadMapView";
         }
-
-//        public void testCreate() throws Exception {
-//            Map map = makeEmptyMap();
-//            writeExternalFormToDisk(
-//                (java.io.Serializable) map,
-//                "D:/dev/collections/data/test/FixedSizeSortedMap.emptyCollection.version3.1.HeadMapView.obj");
-//            map = makeFullMap();
-//            writeExternalFormToDisk(
-//                (java.io.Serializable) map,
-//                "D:/dev/collections/data/test/FixedSizeSortedMap.fullCollection.version3.1.HeadMapView.obj");
-//        }
     }
 
+
+    @Disabled("should only run via TestFactory")
     public static class TestTailMap<K, V> extends TestViewMap<K, V> {
         static final int SUBSIZE = 6;
         final K fromKey;
         final K invalidKey;
 
-        public TestTailMap(final AbstractMapTest<K, V> main) {
+        public TestTailMap(final AbstractSortedMapTest<K, V> main) {
             super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
@@ -273,11 +253,13 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             this.subSortedValues.subList(0, this.subSortedValues.size() - SUBSIZE).clear();
             this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
         }
+
         @Override
         public SortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
             return ((SortedMap<K, V>) main.makeObject()).tailMap(fromKey);
         }
+
         @Override
         public SortedMap<K, V> makeFullMap() {
             return ((SortedMap<K, V>) main.makeFullMap()).tailMap(fromKey);
@@ -292,29 +274,21 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             assertThrows(IllegalArgumentException.class, () -> getMap().put(invalidKey, subSortedValues.get(0)));
             verify();
         }
+
         @Override
         public String getCompatibilityVersion() {
             return main.getCompatibilityVersion() + ".TailMapView";
         }
-
-//        public void testCreate() throws Exception {
-//            Map map = makeEmptyMap();
-//            writeExternalFormToDisk(
-//                (java.io.Serializable) map,
-//                "D:/dev/collections/data/test/FixedSizeSortedMap.emptyCollection.version3.1.TailMapView.obj");
-//            map = makeFullMap();
-//            writeExternalFormToDisk(
-//                (java.io.Serializable) map,
-//                "D:/dev/collections/data/test/FixedSizeSortedMap.fullCollection.version3.1.TailMapView.obj");
-//        }
     }
 
+
+    @Disabled("should only run via TestFactory")
     public static class TestSubMap<K, V> extends TestViewMap<K, V> {
         static final int SUBSIZE = 3;
         final K fromKey;
         final K toKey;
 
-        public TestSubMap(final AbstractMapTest<K, V> main) {
+        public TestSubMap(final AbstractSortedMapTest<K, V> main) {
             super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
@@ -339,6 +313,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             // done this way so toKey is correctly set in the returned map
             return ((SortedMap<K, V>) main.makeObject()).subMap(fromKey, toKey);
         }
+
         @Override
         public SortedMap<K, V> makeFullMap() {
             return ((SortedMap<K, V>) main.makeFullMap()).subMap(fromKey, toKey);
@@ -353,21 +328,11 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subSortedValues.get(0)));
             verify();
         }
+
         @Override
         public String getCompatibilityVersion() {
             return main.getCompatibilityVersion() + ".SubMapView";
         }
-
-//        public void testCreate() throws Exception {
-//            Map map = makeEmptyMap();
-//            writeExternalFormToDisk(
-//                (java.io.Serializable) map,
-//                "D:/dev/collections/data/test/TransformedSortedMap.emptyCollection.version3.1.SubMapView.obj");
-//            map = makeFullMap();
-//            writeExternalFormToDisk(
-//                (java.io.Serializable) map,
-//                "D:/dev/collections/data/test/TransformedSortedMap.fullCollection.version3.1.SubMapView.obj");
-//        }
     }
 
     /**
