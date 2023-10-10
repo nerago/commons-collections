@@ -16,8 +16,20 @@
  */
 package org.apache.commons.collections4;
 
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
+import org.junit.platform.commons.support.AnnotationSupport;
+import org.junit.platform.commons.support.HierarchyTraversalMode;
+import org.junit.platform.commons.util.ReflectionUtils;
+
+import java.net.URI;
+import java.util.function.BooleanSupplier;
+import java.util.stream.Stream;
 
 /**
  * Base class for all test classes that can define both simple and bulk test methods.
@@ -119,6 +131,11 @@ import org.junit.jupiter.api.Test;
  *
  *  A subclass can override a superclass's bulk test by
  *  defining its own inner class with the same name.
+ *  <p>
+ *  Alternately you can define tests in a normal static inner class then define a separate {@code TestFactory} method
+ *  which calls {@link #getDynamicTests}. This is only needed where otherwise {@link Nested} won't work such as where
+ *  inheritance loops may occur. However, this method bypasses standard junit discovery processes and doesn't apply @Before methods
+ *  and any more advanced features.
  */
 public class BulkTest implements Cloneable {
 
@@ -147,6 +164,34 @@ public class BulkTest implements Cloneable {
             return super.clone();
         } catch (final CloneNotSupportedException e) {
             throw new Error(); // should never happen
+        }
+    }
+
+    public DynamicNode getDynamicTests() {
+        final Class<? extends BulkTest> type = getClass();
+        final BulkTest instance = this;
+        return DynamicContainer.dynamicContainer(type.getSimpleName(),
+                URI.create("class:" + type.getName()),
+                Stream.concat(
+                        AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
+                                .stream()
+                                .filter(method -> !AnnotationSupport.isAnnotated(method, Disabled.class))
+                                .map(method -> DynamicTest.dynamicTest(
+                                        method.getName(),
+                                        URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
+                                        () -> ReflectionUtils.invokeMethod(method, instance))),
+                        AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
+                                .stream()
+                                .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
+                )
+        );
+    }
+
+    public DynamicNode getDynamicTests(final BooleanSupplier enableTests) {
+        if (enableTests.getAsBoolean()) {
+            return getDynamicTests();
+        } else {
+            return DynamicContainer.dynamicContainer(getClass().getSimpleName(), Stream.empty());
         }
     }
 }

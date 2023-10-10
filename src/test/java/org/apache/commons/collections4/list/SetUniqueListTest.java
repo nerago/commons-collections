@@ -34,8 +34,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.collections4.set.UnmodifiableSet;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * JUnit tests.
@@ -669,12 +672,36 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
         assertThrows(NullPointerException.class, () -> setUniqueList.createSetBasedOnList(new HashSet<>(), null));
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    @Nested
-    public class TestListIterator extends AbstractListTest<E>.TestListIterator {
+    @Override
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return new SubListIsReadOnlyTests<>(this).getDynamicTests(this::runBulkSubListTests);
+    }
+
+    @Disabled
+    public static class SubListIsReadOnlyTests<E> extends BulkSubListTests<E> {
+        public SubListIsReadOnlyTests(AbstractListTest<E> outer) {
+            super(outer);
+        }
+
+        public void verify() {
+            ((SetUniqueListTest<?>)outer).extraVerify = false;
+            super.verify();
+            ((SetUniqueListTest<?>)outer).extraVerify = true;
+        }
+
         @Override
-        public boolean supportsSet() {
+        public boolean isAddSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isSetSupported() {
             // set completely unsupported via iterator, as opposed to main class which just has behaviour change
+            return false;
+        }
+
+        public boolean isRemoveSupported() {
             return false;
         }
 

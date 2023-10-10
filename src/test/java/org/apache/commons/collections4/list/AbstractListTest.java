@@ -39,8 +39,11 @@ import java.util.NoSuchElementException;
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link java.util.List} methods and contracts.
@@ -976,18 +979,20 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      *  The verify() method is overloaded to test that the original list is
      *  modified when the sublist is.
      */
-    public BulkTest bulkTestSubList() {
-        if (getFullElements().length - 6 < 10) {
-            return null;
-        }
-        return new BulkTestSubList<>(this);
+    public boolean runBulkSubListTests() {
+        return getFullElements().length - 6 >= 10;
     }
 
-    public static class BulkTestSubList<E> extends AbstractListTest<E> {
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return new BulkSubListTests<>(this).getDynamicTests(this::runBulkSubListTests);
+    }
 
-        private final AbstractListTest<E> outer;
+    @Disabled
+    public static class BulkSubListTests<E> extends AbstractListTest<E> {
+        protected final AbstractListTest<E> outer;
 
-        public BulkTestSubList(final AbstractListTest<E> outer) {
+        public BulkSubListTests(final AbstractListTest<E> outer) {
             this.outer = outer;
         }
 

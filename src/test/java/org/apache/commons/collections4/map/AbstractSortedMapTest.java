@@ -45,6 +45,12 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         return false;
     }
 
+    protected boolean runSubMapTests() {
+        return getSampleKeys().length > TestHeadMap.SUBSIZE
+                && getSampleKeys().length > TestTailMap.SUBSIZE
+                && getSampleKeys().length > TestSubMap.SUBSIZE;
+    }
+
     /**
      * SortedMap uses TreeMap as its known comparison.
      *
@@ -91,16 +97,17 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         assertSame(obj, sm.lastKey());
     }
 
-    public BulkTest bulkTestHeadMap() {
-        return new TestHeadMap<>(this);
-    }
-
-    public BulkTest bulkTestTailMap() {
-        return new TestTailMap<>(this);
-    }
-
-    public BulkTest bulkTestSubMap() {
-        return new TestSubMap<>(this);
+    @TestFactory
+    public DynamicNode subMapTests() {
+        if (runSubMapTests()) {
+            return DynamicContainer.dynamicContainer("subMapTests", Arrays.asList(
+                    new TestHeadMap(this).getDynamicTests(),
+                    new TestTailMap(this).getDynamicTests(),
+                    new TestSubMap(this).getDynamicTests()
+            ));
+        } else {
+            return DynamicContainer.dynamicContainer("subMapTests", Stream.empty());
+        }
     }
 
     public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
@@ -178,6 +185,10 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         @Override
         public boolean isRemoveSupported() {
             return main.isRemoveSupported();
+        }
+        @Override
+        protected boolean runSubMapTests() {
+            return false;
         }
         @Override
         public boolean isTestSerialization() {
