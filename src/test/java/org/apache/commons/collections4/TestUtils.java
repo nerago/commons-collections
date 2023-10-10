@@ -106,15 +106,14 @@ public final class TestUtils {
 
     public static Object serializeDeserialize(final Object obj) throws Exception {
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final ObjectOutputStream out = new ObjectOutputStream(buffer);
-        out.writeObject(obj);
-        out.close();
 
-        final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()));
-        final Object dest = in.readObject();
-        in.close();
+        try (final ObjectOutputStream out = new ObjectOutputStream(buffer)) {
+            out.writeObject(obj);
+        }
 
-        return dest;
+        try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()))) {
+            return in.readObject();
+        }
     }
 
     /**

@@ -29,6 +29,7 @@ import java.util.HashMap;
 
 import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.functors.NOPTransformer;
 import org.junit.jupiter.api.Test;
@@ -115,7 +116,7 @@ public class TransformedSplitMapTest extends BulkTest {
                                                     NOPTransformer.<String>nopTransformer() );
 
         final ObjectInputStream in =
-                new ObjectInputStream( new FileInputStream( TEST_DATA_PATH+"/TransformedSplitMap.emptyCollection.version4.obj" ) );
+                new ObjectInputStream( new FileInputStream( TestSerializationUtils.TEST_DATA_PATH+"/TransformedSplitMap.emptyCollection.version4.obj" ) );
         final Object readObject = in.readObject();
         in.close();
 
@@ -136,7 +137,7 @@ public class TransformedSplitMapTest extends BulkTest {
         map.put( "g", "h" );
 
         final ObjectInputStream in =
-                new ObjectInputStream( new FileInputStream( TEST_DATA_PATH+"TransformedSplitMap.fullCollection.version4.obj" ) );
+                new ObjectInputStream( new FileInputStream( TestSerializationUtils.TEST_DATA_PATH+"TransformedSplitMap.fullCollection.version4.obj" ) );
         final Object readObject = in.readObject();
         in.close();
 

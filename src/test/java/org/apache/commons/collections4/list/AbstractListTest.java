@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
 import org.junit.jupiter.api.Disabled;
@@ -892,8 +893,8 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
-        final byte[] object = writeExternalFormToBytes((Serializable) list);
-        final List<E> list2 = (List<E>) readExternalFormFromBytes(object);
+        final byte[] object = TestSerializationUtils.writeExternalFormToBytes((Serializable) list);
+        final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromBytes(object);
 
         assertEquals(0, list.size(), "Both lists are empty");
         assertEquals(0, list2.size(), "Both lists are empty");
@@ -908,8 +909,8 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
-        final byte[] object = writeExternalFormToBytes((Serializable) list);
-        final List<E> list2 = (List<E>) readExternalFormFromBytes(object);
+        final byte[] object = TestSerializationUtils.writeExternalFormToBytes((Serializable) list);
+        final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromBytes(object);
 
         assertEquals(size, list.size(), "Both lists are same size");
         assertEquals(size, list2.size(), "Both lists are same size");
@@ -934,7 +935,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final List<E> list = makeObject();
         if (list instanceof Serializable && !skipSerializedCanonicalTests()
                 && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(list));
+            final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(list));
             assertEquals(0, list2.size(), "List is empty");
             assertEquals(list, list2);
         }
@@ -958,7 +959,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         // test to make sure the canonical form has been preserved
         final List<E> list = makeFullCollection();
         if (list instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(list));
+            final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(list));
             if (list2.size() == 4) {
                 // old serialized tests
                 return;

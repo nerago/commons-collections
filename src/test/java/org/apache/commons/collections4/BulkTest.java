@@ -147,12 +147,6 @@ public class BulkTest implements Cloneable {
     // Given one BulkTest instance, we can just clone it and reset the
     // method name for every simple test it defines.
 
-    /** Path to test data resources */
-    protected static final String TEST_DATA_PATH = "src/test/resources/org/apache/commons/collections4/data/test/";
-
-    /** Path to test properties resources */
-    public static final String TEST_PROPERTIES_PATH = "src/test/resources/org/apache/commons/collections4/properties/";
-
     /**
      *  Creates a clone of this {@code BulkTest}.<P>
      *

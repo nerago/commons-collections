@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
@@ -691,7 +691,7 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
         // test to make sure the canonical form has been preserved
         final MultiSet<T> multiset = makeObject();
         if (multiset instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final MultiSet<?> multiset2 = (MultiSet<?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(multiset));
+            final MultiSet<?> multiset2 = (MultiSet<?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(multiset));
             assertTrue(multiset2.isEmpty(), "MultiSet is empty");
             assertEquals(multiset, multiset2);
         }
@@ -706,7 +706,7 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
         // test to make sure the canonical form has been preserved
         final MultiSet<T> multiset = makeFullCollection();
         if (multiset instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final MultiSet<?> multiset2 = (MultiSet<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(multiset));
+            final MultiSet<?> multiset2 = (MultiSet<?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(multiset));
             assertEquals(multiset.size(), multiset2.size(), "MultiSet is the right size");
             assertEquals(multiset, multiset2);
         }

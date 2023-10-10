@@ -44,6 +44,7 @@ import java.util.Set;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
@@ -757,7 +758,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final Map<K, V> map = makeObject();
         if (map instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
             @SuppressWarnings("unchecked")
-            final Map<K, V> map2 = (Map<K, V>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
+            final Map<K, V> map2 = (Map<K, V>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
             assertEquals(0, map2.size(), "Map is empty");
         }
     }
@@ -780,7 +781,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         final Map<K, V> map = makeFullMap();
         if (map instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
             @SuppressWarnings("unchecked")
-            final Map<K, V> map2 = (Map<K, V>) readExternalFormFromDisk(getCanonicalFullCollectionName(map));
+            final Map<K, V> map2 = (Map<K, V>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(map));
             assertEquals(getSampleKeys().length, map2.size(), "Map is the right size");
         }
     }

@@ -35,6 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ArrayUtils;
@@ -675,7 +676,7 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         // test to make sure the canonical form has been preserved
         final Bag<T> bag = makeObject();
         if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(bag));
+            final Bag<?> bag2 = (Bag<?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(bag));
             assertTrue(bag2.isEmpty(), "Bag is empty");
             assertEquals(bag, bag2);
         }
@@ -690,7 +691,7 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
         // test to make sure the canonical form has been preserved
         final Bag<T> bag = makeFullCollection();
         if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
+            final Bag<?> bag2 = (Bag<?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
             assertEquals(bag.size(), bag2.size(), "Bag is the right size");
             assertEquals(bag, bag2);
         }

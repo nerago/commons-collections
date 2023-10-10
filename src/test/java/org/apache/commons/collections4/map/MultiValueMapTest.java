@@ -40,6 +40,7 @@ import java.util.Map;
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MultiMap;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -478,14 +479,14 @@ public class MultiValueMapTest<K, V> extends AbstractObjectTest {
     @Test
     public void testEmptyMapCompatibility() throws Exception {
         final Map<?, ?> map = makeEmptyMap();
-        final Map<?, ?> map2 = (Map<?, ?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
+        final Map<?, ?> map2 = (Map<?, ?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
         assertEquals(0, map2.size(), "Map is empty");
     }
 
     @Test
     public void testFullMapCompatibility() throws Exception {
         final Map<?, ?> map = (Map<?, ?>) makeObject();
-        final Map<?, ?> map2 = (Map<?, ?>) readExternalFormFromDisk(getCanonicalFullCollectionName(map));
+        final Map<?, ?> map2 = (Map<?, ?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(map));
         assertEquals(map.size(), map2.size(), "Map is the right size");
         for (final Object key : map.keySet()) {
             assertEquals(map.get(key), map2.get(key), "Map had unequal elements");
