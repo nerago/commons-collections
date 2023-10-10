@@ -23,14 +23,16 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.engine.discovery.predicates.IsNestedTestClass;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.util.ReflectionUtils;
 
 import java.lang.reflect.Constructor;
 import java.net.URI;
-import java.util.Arrays;
+import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -204,18 +206,22 @@ public class BulkTest implements Cloneable {
 
     private static Stream<DynamicNode> findNestedClasses(final BulkTest instance) {
         final Class<? extends BulkTest> type = instance.getClass();
-        return Arrays.stream(type.getClasses())
-                .filter(clazz -> AnnotationSupport.isAnnotated(clazz, Nested.class))
-                .map(clazz -> createNestedInstance(clazz, instance).getDynamicTests());
+        final List<Class<?>> candidates = ReflectionUtils.findNestedClasses(type, new IsNestedTestClass());
+
+        // following jupiter engine need to get the first matching each name
+        return candidates.stream()
+                .collect(Collectors.groupingBy(Class::getSimpleName))
+                .values().stream()
+                .map(classes -> createNestedInstance(classes.get(0), instance).getDynamicTests());
     }
 
-    private static BulkTest createNestedInstance(final Class<?> clazz, final BulkTest enclosingInstance) {
-        final Constructor<?> constructor = ReflectionUtils.getDeclaredConstructor(clazz);
+    private static BulkTest createNestedInstance(final Class<?> nestedType, final BulkTest enclosingInstance) {
+        final Constructor<?> constructor = ReflectionUtils.getDeclaredConstructor(nestedType);
         final Object nestedInstance = ReflectionUtils.newInstance(constructor, enclosingInstance);
         if (nestedInstance instanceof BulkTest) {
             return (BulkTest) nestedInstance;
         } else {
-            throw new IllegalArgumentException("BulkTest.getDynamicTests doesn't support nested classes that aren't subclassed from BulkTest (" + clazz.getName() + ")");
+            throw new IllegalArgumentException("BulkTest.getDynamicTests doesn't support nested classes that aren't subclassed from BulkTest (" + nestedType.getName() + ")");
         }
     }
 }
