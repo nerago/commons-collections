@@ -29,9 +29,8 @@ package org.apache.commons.collections4;
  *
  * @since 3.0
  */
-public interface OrderedBidiMap<K, V, RegularMap extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
-                                      InverseMap extends OrderedBidiMap<V, K, InverseMap, RegularMap>>
-        extends BidiMap<K, V, RegularMap, InverseMap>,
+public interface OrderedBidiMap<K, V, InverseMap extends OrderedBidiMap<V, K, ?>>
+        extends BidiMap<K, V, InverseMap>,
                 OrderedMap<K, V> {
 
 }

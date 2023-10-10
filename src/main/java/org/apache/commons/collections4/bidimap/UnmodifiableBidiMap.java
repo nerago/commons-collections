@@ -41,8 +41,15 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableBidiMap<K, V>
-        extends AbstractBidiMapDecorator<K, V> implements Unmodifiable {
+public final class UnmodifiableBidiMap<K, V,
+            Decorated extends BidiMap<K, V, DecoratedInverse>,
+            DecoratedInverse extends BidiMap<V, K, Decorated>>
+        extends AbstractBidiMapDecorator<K, V,
+            BidiMap<K, V, DecoratedInverse>,
+            BidiMap<V, K, Decorated>,
+            UnmodifiableBidiMap<K, V, Decorated, DecoratedInverse>,
+            UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated>>
+        implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = -3563384200742281975L;
@@ -62,7 +69,7 @@ public final class UnmodifiableBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> BidiMap<K, V> unmodifiableBidiMap(final BidiMap<? extends K, ? extends V> map) {
+    public static <K, V> BidiMap<K, V, ?> unmodifiableBidiMap(final BidiMap<? extends K, ? extends V, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
             final BidiMap<K, V> tmpMap = (BidiMap<K, V>) map;
@@ -183,6 +190,11 @@ public final class UnmodifiableBidiMap<K, V>
             inverse.inverse = this;
         }
         return inverse;
+    }
+
+    @Override
+    protected UnmodifiableBidiMap<V, K, ?, ?> decorateInverse(final BidiMap<V, K, Decorated> vkDecoratedBidiMap) {
+        return null;
     }
 
     private void writeObject(final ObjectOutputStream out) throws IOException {

@@ -17,10 +17,8 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
@@ -31,13 +29,13 @@ import org.apache.commons.collections4.spliterators.MapSpliterator;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -87,20 +85,17 @@ import java.util.function.Function;
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
-public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>,
-            RegularMap extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
-            InverseMap extends OrderedBidiMap<V, K, InverseMap, RegularMap>>
-        extends AbstractExtendedBidiMap<K, V, RegularMap, InverseMap>
+public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
+        extends AbstractExtendedBidiMap<K, V, TreeBidiMapHard.TreeBidiSubMap<K, V>, TreeBidiMapHard<K, V>, TreeBidiMapHard.Inverse<K, V>> {
 
-    implements OrderedBidiMap<K, V, RegularMap, InverseMap>
-{
+    private static final long serialVersionUID = -1641463319195982234L;
 
     private transient Node<K, V> rootNodeKey;
     private transient Node<K, V> rootNodeValue;
     private transient int nodeCount;
     private transient int modifications;
 
-    private transient Inverse inverse;
+    private transient Inverse<K, V> inverse;
 
     /**
      * Constructs a new empty TreeBidiMap.
@@ -179,7 +174,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
     @Override
     public Iterator<Entry<K, V>> entryIterator() {
-        return new EntryIteratorStandardByKey();
+        return new EntryIteratorStandardByKey<>(this);
     }
 
     @Override
@@ -224,6 +219,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        super.forEach(action);
+    }
+
+    @Override
     public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         throw new UnsupportedOperationException();
     }
@@ -249,8 +249,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     @Override
-    public RegularMap subMap(final SortedMapRange<K> range) {
-        return new TreeBidiSubMap(range);
+    public TreeBidiSubMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new TreeBidiSubMap<>(this, range);
     }
 
     /**
@@ -406,66 +406,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return node == null ? null : node.getKey();
     }
 
-    /**
-     * Creates a set view of the keys contained in this map in key order.
-     * <p>
-     * The set is backed by the map, so changes to the map are reflected in
-     * the set, and vice-versa. If the map is modified while an iteration over
-     * the set is in progress, the results of the iteration are undefined.
-     * <p>
-     * The set supports element removal, which removes the corresponding mapping
-     * from the map. It does not support the add or addAll operations.
-     *
-     * @return a set view of the keys contained in this map.
-     */
-//    @Override
-//    protected Set<K> createKeySet() {
-//        return new KeyViewByKeys();
-//    }
-
-    /**
-     * Creates a set view of the values contained in this map in key order.
-     * The returned object can be cast to a Set.
-     * <p>
-     * The set is backed by the map, so changes to the map are reflected in
-     * the set, and vice-versa. If the map is modified while an iteration over
-     * the set is in progress, the results of the iteration are undefined.
-     * <p>
-     * The set supports element removal, which removes the corresponding mapping
-     * from the map. It does not support the add or addAll operations.
-     *
-     * @return a set view of the values contained in this map.
-     */
-//    @Override
-//    protected Set<V> createValuesCollection() {
-//        return new ValueViewByKey();
-//    }
-
-    /**
-     * Returns a set view of the entries contained in this map in key order.
-     * For simple iteration through the map, the MapIterator is quicker.
-     * <p>
-     * The set is backed by the map, so changes to the map are reflected in
-     * the set, and vice-versa. If the map is modified while an iteration over
-     * the set is in progress, the results of the iteration are undefined.
-     * <p>
-     * The set supports element removal, which removes the corresponding mapping
-     * from the map. It does not support the add or addAll operations.
-     * The returned MapEntry objects do not support setValue.
-     *
-     * @return a set view of the values contained in this map.
-     */
-//    @Override
-//    protected Set<Entry<K, V>> createEntrySet() {
-//        return new EntryView();
-//    }
-
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         if (isEmpty()) {
             return EmptyOrderedMapIterator.emptyOrderedMapIterator();
         }
-        return new MapIteratorKeyByKey();
+        return new MapIteratorKeyByKey<>(this);
     }
 
     /**
@@ -474,9 +420,9 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @return the inverse map
      */
     @Override
-    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
+    public Inverse<K, V> inverseBidiMap() {
         if (inverse == null) {
-            inverse = new Inverse();
+            inverse = new Inverse<>(this);
         }
         return inverse;
     }
@@ -651,6 +597,184 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
+    private K doPutValueFirst(final V value, final K key, final boolean addIfAbsent, final boolean updateIfPresent) {
+        checkKeyAndValue(key, value);
+
+        Node<K, V> node = rootNodeValue;
+        if (node == null) {
+            if (addIfAbsent) {
+                addAsRoot(key, value);
+            }
+            return null;
+        }
+
+        // find key position
+        final Node<K, V> valueNode;
+        K oldKey = null;
+        while (true) {
+            final int cmp = value.compareTo(node.getValue());
+            if (cmp == 0) {
+                oldKey = node.key;
+                if (!updateIfPresent || Objects.equals(oldKey, key))
+                    return oldKey;
+                this.updateKey(node, key);
+                valueNode = node;
+                break;
+            } else if (cmp < 0) {
+                if (node.valueLeftNode == null) {
+                    if (!addIfAbsent)
+                        return null;
+                    valueNode = addOnLeftValue(key, value, node);
+                    break;
+                }
+                node = node.valueLeftNode;
+            } else { // cmp > 0
+                if (node.valueRightNode == null) {
+                    if (!addIfAbsent)
+                        return null;
+                    valueNode = addOnRightValue(key, value, node);
+                    break;
+                }
+                node = node.valueRightNode;
+            }
+        }
+
+        finishPutValueFirst(key, value, valueNode);
+
+        return oldKey;
+    }
+
+    private K doPutValueFirst(final V value,
+                              final Function<? super V, ? extends K> absentFunc,
+                              final BiFunction<? super V, ? super K, ? extends K> presentFunc) {
+        final int expectedModifications = modifications;
+
+        Node<K, V> node = rootNodeValue;
+        if (node == null) {
+            // map is empty
+            if (absentFunc != null) {
+                final K key = absentFunc.apply(value);
+                if (expectedModifications != modifications) {
+                    throw new ConcurrentModificationException();
+                }
+                if (key != null) {
+                    checkKey(key);
+                    addAsRoot(key, value);
+                    return key;
+                }
+            }
+            return null;
+        }
+
+        // find value position
+        final Node<K, V> valueNode;
+        final K newKey;
+        while (true) {
+            final int cmp = value.compareTo(node.getValue());
+            if (cmp == 0) {
+                final K oldKey = node.getKey();
+                if (presentFunc != null) {
+                    newKey = presentFunc.apply(value, oldKey);
+                    if (expectedModifications != modifications) {
+                        throw new ConcurrentModificationException();
+                    } else if (newKey == null) {
+                        doRedBlackDelete(node);
+                        return null;
+                    } else if (Objects.equals(oldKey, newKey)) {
+                        return oldKey;
+                    } else {
+                        checkKey(newKey);
+                        this.updateKey(node, newKey);
+                        valueNode = node;
+                        break;
+                    }
+                }
+                return oldKey;
+            } else if (cmp < 0) {
+                if (node.valueLeftNode == null) {
+                    if (absentFunc != null) {
+                        newKey = absentFunc.apply(value);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newKey != null) {
+                            checkKey(newKey);
+                            valueNode = addOnLeftValue(newKey, value, node);
+                            break;
+                        }
+                    }
+                    return null;
+                }
+                node = node.valueLeftNode;
+            } else { // cmp > 0
+                if (node.valueRightNode == null) {
+                    if (absentFunc != null) {
+                        newKey = absentFunc.apply(value);
+                        if (expectedModifications != modifications) {
+                            throw new ConcurrentModificationException();
+                        } else if (newKey != null) {
+                            checkKey(newKey);
+                            valueNode = addOnRightValue(newKey, value, node);
+                            break;
+                        }
+                    }
+                    return null;
+                }
+                node = node.valueRightNode;
+            }
+        }
+
+        finishPutValueFirst(newKey, value, valueNode);
+
+        return newKey;
+    }
+
+    private void finishPutValueFirst(final K key, final V value, final Node<K, V> valueNode) {
+        Node<K, V> node = rootNodeKey;
+        if (node == null) {
+            rootNodeKey = valueNode;
+            valueNode.keyParentNode = null;
+            return;
+        }
+
+        while (true) {
+            final int cmp = key.compareTo(node.getKey());
+
+            if (cmp == 0) {
+                // replace existing key node (assume different value)
+                assert !Objects.equals(node.value, value);
+                valueNode.copyColorKey(node);
+                replaceNodeKey(node, valueNode, true);
+                doRedBlackDeleteValue(node);
+                shrink();
+                break;
+            } else if (cmp < 0) {
+                if (node.keyLeftNode == null) {
+                    insertOnLeftKey(node, valueNode);
+                    break;
+                }
+                node = node.keyLeftNode;
+            } else { // cmp > 0
+                if (node.keyRightNode == null) {
+                    insertOnRightKey(node, valueNode);
+                    break;
+                }
+                node = node.keyRightNode;
+            }
+        }
+    }
+
+    private void insertOnLeftKey(final Node<K, V> parentNode, final Node<K, V> node) {
+        parentNode.keyLeftNode = node;
+        node.keyParentNode = parentNode;
+        doRedBlackInsertKey(node);
+    }
+
+    private void insertOnRightKey(final Node<K, V> parentNode, final Node<K, V> node) {
+        parentNode.keyRightNode = node;
+        node.keyParentNode = parentNode;
+        doRedBlackInsertKey(node);
+    }
+
     private void insertOnLeftValue(final Node<K, V> parent, final Node<K, V> node) {
         parent.valueLeftNode = node;
         node.valueParentNode = parent;
@@ -688,12 +812,40 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return node;
     }
 
+    private Node<K, V> addOnLeftValue(final K key, final V value, final Node<K, V> parent) {
+        final Node<K, V> node = new Node<>(key, value);
+        parent.valueLeftNode = node;
+        node.valueParentNode = parent;
+        doRedBlackInsertValue(node);
+        grow();
+        return node;
+    }
+
+    private Node<K, V> addOnRightValue(final K key, final V value, final Node<K, V> parent) {
+        final Node<K, V> node = new Node<>(key, value);
+        parent.valueRightNode = node;
+        node.valueParentNode = parent;
+        doRedBlackInsertValue(node);
+        grow();
+        return node;
+    }
+
     private void updateValue(final Node<K, V> node, final V value) {
         // remove from value tree
         doRedBlackDeleteValue(node);
 
         // update value
         node.value = value;
+        node.calculatedHashCode = false;
+        modify();
+    }
+
+    private void updateKey(final Node<K, V> node, final K key) {
+        // remove from value tree
+        doRedBlackDeleteKey(node);
+
+        // update value
+        node.key = key;
         node.calculatedHashCode = false;
         modify();
     }
@@ -769,6 +921,38 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return null;
     }
 
+    private Node<K, V> lookupValueLower(final V value) {
+        Node<K, V> node = rootNodeValue, lower = null;
+
+        while (node != null) {
+            final int cmp = node.getValue().compareTo(value);
+            if (cmp < 0) {
+                lower = node;
+                node = node.valueRightNode;
+            } else {
+                node = node.valueLeftNode;
+            }
+        }
+
+        return lower;
+    }
+
+    private Node<K, V> lookupValueHigher(final V value) {
+        Node<K, V> node = rootNodeValue, higher = null;
+
+        while (node != null) {
+            final int cmp = node.getValue().compareTo(value);
+            if (cmp > 0) {
+                higher = node;
+                node = node.valueLeftNode;
+            } else {
+                node = node.valueRightNode;
+            }
+        }
+
+        return higher;
+    }
+
     /**
      * Gets the next smaller node from the specified node.
      *
@@ -795,7 +979,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             return parent;
         }
     }
-    
+
     /**
      * Gets the next larger node from the specified node.
      *
@@ -822,7 +1006,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
     }
-    
+
     /**
      * Gets the next smaller node from the specified node.
      *
@@ -1505,7 +1689,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
                 replacement.keyRightNode.keyParentNode = replacement;
             }
         }
-        
+
         previous.keyLeftNode = null;
         previous.keyRightNode = null;
         previous.keyParentNode = null;
@@ -1912,194 +2096,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     /**
-     * A view of this map.
-     */
-    private abstract class View<E> extends AbstractSet<E> {
-        @Override
-        public final int size() {
-            return TreeBidiMapHard.this.size();
-        }
-
-        @Override
-        public final void clear() {
-            TreeBidiMapHard.this.clear();
-        }
-    }
-
-    private abstract class KeyView extends View<K> {
-        @Override
-        public final boolean contains(final Object obj) {
-            return lookupKey(checkKey(obj)) != null;
-        }
-
-        @Override
-        public final boolean remove(final Object o) {
-            V result = null;
-            final Node<K, V> node = lookupKey(checkKey(o));
-            if (node != null) {
-                doRedBlackDelete(node);
-                result = node.getValue();
-            }
-            return result != null;
-        }
-    }
-
-//    private final class KeyViewByKeys extends KeyView {
-//        @Override
-//        public Iterator<K> iterator() {
-//            return new MapIteratorKeyByKey();
-//        }
-//
-//        @Override
-//        public Spliterator<K> spliterator() {
-//            return new SpliteratorKeyByKey();
-//        }
-//    }
-//
-//    private final class KeyViewByValue extends View<K> {
-//        @Override
-//        public Iterator<K> iterator() {
-//            return new MapIteratorKeyByValue();
-//        }
-//
-//        @Override
-//        public Spliterator<K> spliterator() {
-//            return new SpliteratorKeyByValue();
-//        }
-//    }
-//
-//    private abstract class ValueView extends View<V> {
-//        @Override
-//        public final boolean contains(final Object obj) {
-//            return lookupValue(checkValue(obj)) != null;
-//        }
-//
-//        @Override
-//        public final boolean remove(final Object obj) {
-//            K result = null;
-//            final Node<K, V> node = lookupValue(checkValue(obj));
-//            if (node != null) {
-//                doRedBlackDelete(node);
-//                result = node.getKey();
-//            }
-//            return result != null;
-//        }
-//    }
-//
-//    private final class ValueViewByKey extends ValueView {
-//        @Override
-//        public Iterator<V> iterator() {
-//            return new MapIteratorValueByKey();
-//        }
-//
-//        @Override
-//        public Spliterator<V> spliterator() {
-//            return new SpliteratorValueByKey();
-//        }
-//    }
-//
-//    private final class ValueViewByValue extends ValueView {
-//        @Override
-//        public Iterator<V> iterator() {
-//            return new MapIteratorValueByValue();
-//        }
-//
-//        @Override
-//        public Spliterator<V> spliterator() {
-//            return new SpliteratorValueByValue();
-//        }
-//    }
-
-    /**
-     * A view of this map.
-     */
-//    private final class EntryView extends View<Entry<K, V>> {
-//        @Override
-//        public boolean contains(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getKey());
-//            final V value = checkValue(entry.getValue());
-//            final Node<K, V> node = lookupKey(key);
-//            return node != null && node.getValue().equals(value);
-//        }
-//
-//        @Override
-//        public boolean remove(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getKey());
-//            final V value = checkValue(entry.getValue());
-//            final Node<K, V> node = lookupKey(key);
-//            if (node != null && node.getValue().equals(value)) {
-//                doRedBlackDelete(node);
-//                return true;
-//            }
-//            return false;
-//        }
-//
-//        @Override
-//        public Iterator<Entry<K, V>> iterator() {
-//            return new EntryIteratorStandardByKey();
-//        }
-//
-//        @Override
-//        public Spliterator<Entry<K, V>> spliterator() {
-//            return new SpliteratorEntryByKey();
-//        }
-//    }
-
-    /**
-     * A view of this map.
-     */
-//    private final class InverseEntryView extends View<Entry<V, K>> {
-//        @Override
-//        public boolean contains(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getValue());
-//            final V value = checkValue(entry.getKey());
-//            final Node<K, V> node = lookupValue(value);
-//            return node != null && node.getKey().equals(key);
-//        }
-//
-//        @Override
-//        public boolean remove(final Object obj) {
-//            if (!(obj instanceof Map.Entry)) {
-//                return false;
-//            }
-//            final Entry<?, ?> entry = (Entry<?, ?>) obj;
-//            final K key = checkKey(entry.getValue());
-//            final V value = checkValue(entry.getKey());
-//            final Node<K, V> node = lookupValue(value);
-//            if (node != null && node.getKey().equals(key)) {
-//                doRedBlackDelete(node);
-//                return true;
-//            }
-//            return false;
-//        }
-//
-//        @Override
-//        public Iterator<Entry<V, K>> iterator() {
-//            return new EntryIteratorInvertedByValue();
-//        }
-//
-//        @Override
-//        public Spliterator<Entry<V, K>> spliterator() {
-//            return new SpliteratorEntryInvertedByValue();
-//        }
-//    }
-
-    /**
      * Base class for all iterators.
      */
-    abstract class BaseIterator {
+    abstract static class BaseIterator<K extends Comparable<K>, V extends Comparable<V>> {
+        final TreeBidiMapHard<K, V> parent;
+
         /**
          * The last node returned by the iterator.
          */
@@ -2120,8 +2121,9 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         /**
          * Constructor.
          */
-        BaseIterator() {
-            expectedModifications = modifications;
+        BaseIterator(final TreeBidiMapHard<K, V> parent) {
+            this.parent = parent;
+            this.expectedModifications = parent.modifications;
             reset();
         }
 
@@ -2153,9 +2155,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * Intermediate iterator class ordering results by key.
      */
-    abstract class IteratorByKey extends BaseIterator {
+    abstract static class IteratorByKey<K extends Comparable<K>, V extends Comparable<V>> extends BaseIterator<K, V> {
+        IteratorByKey(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         public final void reset() {
-            nextNode = leastNodeKey(rootNodeKey);
+            nextNode = parent.leastNodeKey(parent.rootNodeKey);
             lastReturnedNode = null;
             previousNode = null;
         }
@@ -2164,12 +2170,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (nextNode == null) {
                 throw new NoSuchElementException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             lastReturnedNode = nextNode;
             previousNode = nextNode;
-            nextNode = nextGreaterKey(nextNode);
+            nextNode = parent.nextGreaterKey(nextNode);
             return lastReturnedNode;
         }
 
@@ -2177,12 +2183,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (previousNode == null) {
                 throw new NoSuchElementException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             lastReturnedNode = previousNode;
             nextNode = previousNode;
-            previousNode = nextSmallerKey(lastReturnedNode);
+            previousNode = parent.nextSmallerKey(lastReturnedNode);
             return lastReturnedNode;
         }
 
@@ -2190,24 +2196,24 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (lastReturnedNode == null) {
                 throw new IllegalStateException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
-            doRedBlackDelete(lastReturnedNode);
+            parent.doRedBlackDelete(lastReturnedNode);
             expectedModifications++;
             if (lastReturnedNode == previousNode) {
                 // most recent was navigateNext
                 if (nextNode == null) {
-                    previousNode = greatestNodeKey(rootNodeKey);
+                    previousNode = parent.greatestNodeKey(parent.rootNodeKey);
                 } else {
-                    previousNode = nextSmallerKey(nextNode);
+                    previousNode = parent.nextSmallerKey(nextNode);
                 }
             } else {
                 // most recent was navigatePrevious
                 if (previousNode == null) {
-                    nextNode = leastNodeKey(rootNodeKey);
+                    nextNode = parent.leastNodeKey(parent.rootNodeKey);
                 } else {
-                    nextNode = nextGreaterKey(previousNode);
+                    nextNode = parent.nextGreaterKey(previousNode);
                 }
             }
             lastReturnedNode = null;
@@ -2217,9 +2223,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * Intermediate iterator class ordering results by value.
      */
-    abstract class IteratorByValue extends BaseIterator {
+    abstract static class IteratorByValue<K extends Comparable<K>, V extends Comparable<V>> extends BaseIterator<K, V> {
+        IteratorByValue(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         public final void reset() {
-            nextNode = leastNodeValue(rootNodeValue);
+            nextNode = parent.leastNodeValue(parent.rootNodeValue);
             lastReturnedNode = null;
             previousNode = null;
         }
@@ -2228,12 +2238,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (nextNode == null) {
                 throw new NoSuchElementException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             lastReturnedNode = nextNode;
             previousNode = nextNode;
-            nextNode = nextGreaterValue(nextNode);
+            nextNode = parent.nextGreaterValue(nextNode);
             return lastReturnedNode;
         }
 
@@ -2241,12 +2251,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (previousNode == null) {
                 throw new NoSuchElementException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             lastReturnedNode = previousNode;
             nextNode = previousNode;
-            previousNode = nextSmallerValue(lastReturnedNode);
+            previousNode = parent.nextSmallerValue(lastReturnedNode);
             return lastReturnedNode;
         }
 
@@ -2254,24 +2264,24 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (lastReturnedNode == null) {
                 throw new IllegalStateException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
-            doRedBlackDelete(lastReturnedNode);
+            parent.doRedBlackDelete(lastReturnedNode);
             expectedModifications++;
             if (lastReturnedNode == previousNode) {
                 // most recent was navigateNext
                 if (nextNode == null) {
-                    previousNode = greatestNodeValue(rootNodeValue);
+                    previousNode = parent.greatestNodeValue(parent.rootNodeValue);
                 } else {
-                    previousNode = nextSmallerValue(nextNode);
+                    previousNode = parent.nextSmallerValue(nextNode);
                 }
             } else {
                 // most recent was navigatePrevious
                 if (previousNode == null) {
-                    nextNode = leastNodeValue(rootNodeValue);
+                    nextNode = parent.leastNodeValue(parent.rootNodeValue);
                 } else {
-                    nextNode = nextGreaterValue(previousNode);
+                    nextNode = parent.nextGreaterValue(previousNode);
                 }
             }
             lastReturnedNode = null;
@@ -2281,7 +2291,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * An iterator over the map.
      */
-    private final class MapIteratorKeyByKey extends IteratorByKey implements OrderedMapIterator<K, V> {
+    private static final class MapIteratorKeyByKey<K extends Comparable<K>, V extends Comparable<V>>
+            extends IteratorByKey<K, V>
+            implements OrderedMapIterator<K, V> {
+        private MapIteratorKeyByKey(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public K getKey() {
             checkCanGetKey();
@@ -2313,7 +2329,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * An iterator over the map.
      */
-    private final class MapIteratorKeyByValue extends IteratorByValue implements OrderedMapIterator<K, V> {
+    private static final class MapIteratorKeyByValue<K extends Comparable<K>, V extends Comparable<V>>
+            extends IteratorByValue<K, V>
+            implements OrderedMapIterator<K, V> {
+        private MapIteratorKeyByValue(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public K getKey() {
             checkCanGetKey();
@@ -2345,7 +2367,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * An iterator over the map.
      */
-    private final class MapIteratorValueByKey extends IteratorByKey implements OrderedMapIterator<V, K> {
+    private static final class MapIteratorValueByKey<K extends Comparable<K>, V extends Comparable<V>>
+            extends IteratorByKey<K, V>
+            implements OrderedMapIterator<V, K> {
+        private MapIteratorValueByKey(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public V getKey() {
             checkCanGetKey();
@@ -2377,7 +2405,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * An iterator over the map.
      */
-    private final class MapIteratorValueByValue extends IteratorByValue implements OrderedMapIterator<V, K> {
+    private static final class MapIteratorValueByValue<K extends Comparable<K>, V extends Comparable<V>>
+            extends IteratorByValue<K, V>
+            implements OrderedMapIterator<V, K> {
+        private MapIteratorValueByValue(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public V getKey() {
             checkCanGetKey();
@@ -2410,7 +2444,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * An iterator over the map entries.
      */
-    private final class EntryIteratorStandardByKey extends IteratorByKey implements OrderedIterator<Entry<K, V>> {
+    private static final class EntryIteratorStandardByKey<K extends Comparable<K>, V extends Comparable<V>>
+            extends IteratorByKey<K, V>
+            implements OrderedIterator<Entry<K, V>> {
+        private EntryIteratorStandardByKey(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public Entry<K, V> next() {
             return navigateNext().copyEntryStandard();
@@ -2422,7 +2462,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private final class EntryIteratorInvertedByValue extends IteratorByValue implements OrderedIterator<Entry<V, K>> {
+    private static final class EntryIteratorInvertedByValue<K extends Comparable<K>, V extends Comparable<V>>
+            extends IteratorByValue<K, V>
+            implements OrderedIterator<Entry<V, K>> {
+        private EntryIteratorInvertedByValue(final TreeBidiMapHard<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public Entry<V, K> next() {
             return navigateNext().copyEntryInverted();
@@ -2437,6 +2483,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * A node used to store the data.
      */
+    @SuppressWarnings({"MagicNumber", "ImplicitNumericConversion", "ClassWithTooManyFields"})
     private static final class Node<K extends Comparable<K>, V extends Comparable<V>> implements Entry<K, V>, KeyValue<K, V> {
 
         // TODO make finals (replacing)
@@ -2607,106 +2654,113 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * The inverse map implementation.
      */
-    private final class Inverse extends AbstractExtendedBidiMap<V, K> {
+    public static final class Inverse<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractExtendedBidiMap<V, K, TreeBidiSubMap<V, K>, Inverse<K, V>, TreeBidiMapHard<K, V>> {
+
         private static final long serialVersionUID = -5940400507869486450L;
+        private final TreeBidiMapHard<K, V> parent;
+
+        Inverse(final TreeBidiMapHard<K, V> parent) {
+            this.parent = parent;
+        }
 
         @Override
         public int size() {
-            return TreeBidiMapHard.this.size();
+            return parent.size();
         }
 
         @Override
         public boolean isEmpty() {
-            return TreeBidiMapHard.this.isEmpty();
+            return parent.isEmpty();
         }
 
         @Override
         public K getOrDefault(final Object value, final K defaultKey) {
-            return TreeBidiMapHard.this.getKeyOrDefault(value, defaultKey);
+            return parent.getKeyOrDefault(value, defaultKey);
         }
 
         @Override
         public V getKeyOrDefault(final Object value, final V defaultKey) {
-            return TreeBidiMapHard.this.getOrDefault(value, defaultKey);
+            return parent.getOrDefault(value, defaultKey);
         }
 
         @Override
         public boolean containsKey(final Object key) {
-            return TreeBidiMapHard.this.containsValue(key);
+            return parent.containsValue(key);
         }
 
         @Override
         public boolean containsEntry(final Object key, final Object value) {
-            return TreeBidiMapHard.this.containsEntry(value, key);
+            return parent.containsEntry(value, key);
         }
 
         @Override
         public V firstKey() {
-            if (TreeBidiMapHard.this.nodeCount == 0) {
+            if (parent.nodeCount == 0) {
                 throw new NoSuchElementException("Map is empty");
             }
-            return leastNodeValue(TreeBidiMapHard.this.rootNodeValue).getValue();
+            return parent.leastNodeValue(parent.rootNodeValue).getValue();
         }
 
         @Override
         public V lastKey() {
-            if (TreeBidiMapHard.this.nodeCount == 0) {
+            if (parent.nodeCount == 0) {
                 throw new NoSuchElementException("Map is empty");
             }
-            return greatestNodeValue(TreeBidiMapHard.this.rootNodeValue).getValue();
+            return parent.greatestNodeValue(parent.rootNodeValue).getValue();
         }
 
         @Override
         public V nextKey(final V key) {
-            final Node<K, V> rval = lookupValueHigher(checkValue(key));
+            final Node<K, V> rval = parent.lookupValueHigher(parent.checkValue(key));
             return rval == null ? null : rval.getValue();
         }
 
         @Override
         public V previousKey(final V key) {
-            final Node<K, V> rval = lookupValueLower(checkValue(key));
+            final Node<K, V> rval = parent.lookupValueLower(parent.checkValue(key));
             return rval == null ? null : rval.getValue();
         }
 
         @Override
         protected K doPut(final V value, final K key, final boolean addIfAbsent, final boolean updateIfPresent) {
-            checkKeyAndValue(key, value);
-            return doPutValueFirst(value, key, addIfAbsent,  updateIfPresent);
+            parent.checkKeyAndValue(key, value);
+            return parent.doPutValueFirst(value, key, addIfAbsent,  updateIfPresent);
         }
 
         @Override
         protected K doPut(final V key, final Function<? super V, ? extends K> absentFunc, final BiFunction<? super V, ? super K, ? extends K> presentFunc, final boolean saveNulls) {
-            return doPutValueFirst(key, absentFunc, presentFunc);
+            return parent.doPutValueFirst(key, absentFunc, presentFunc);
         }
 
         @Override
         public K remove(final Object key) {
-            return TreeBidiMapHard.this.removeValue(key);
+            return parent.removeValue(key);
         }
 
         @Override
         public boolean remove(final Object key, final Object value) {
-            return TreeBidiMapHard.this.remove(value, key);
+            return parent.remove(value, key);
         }
 
         @Override
         public boolean removeAsBoolean(final Object value) {
-            return TreeBidiMapHard.this.removeValueAsBoolean(value);
+            return parent.removeValueAsBoolean(value);
         }
 
         @Override
         public V removeValue(final Object value) {
-            return TreeBidiMapHard.this.remove(value);
+            return parent.remove(value);
         }
 
         @Override
         public boolean removeValueAsBoolean(final Object value) {
-            return TreeBidiMapHard.this.removeAsBoolean(value);
+            return parent.removeAsBoolean(value);
         }
 
         @Override
         public void clear() {
-            TreeBidiMapHard.this.clear();
+            parent.clear();
         }
 
         @Override
@@ -2714,7 +2768,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             if (isEmpty()) {
                 return EmptyOrderedMapIterator.emptyOrderedMapIterator();
             }
-            return new MapIteratorValueByValue();
+            return new MapIteratorValueByValue<>(parent);
         }
 
         @Override
@@ -2729,8 +2783,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public SortedExtendedBidiMap<K, V> inverseBidiMap() {
-            return TreeBidiMapHard.this;
+        public TreeBidiMapHard<K, V> inverseBidiMap() {
+            return parent;
         }
 
         @Override
@@ -2754,261 +2808,20 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public SortedExtendedBidiMap<V, K> subMap(final SortedMapRange<V> range) {
+        public TreeBidiSubMap<V, K> subMap(final SortedMapRange<V> range) {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
-        }
-
-        private Node<K, V> lookupValueHigher(final V value) {
-            Node<K, V> node = rootNodeValue, higher = null;
-
-            while (node != null) {
-                final int cmp = node.getValue().compareTo(value);
-                if (cmp > 0) {
-                    higher = node;
-                    node = node.valueLeftNode;
-                } else {
-                    node = node.valueRightNode;
-                }
-            }
-
-            return higher;
-        }
-
-        private Node<K, V> lookupValueLower(final V value) {
-            Node<K, V> node = rootNodeValue, lower = null;
-
-            while (node != null) {
-                final int cmp = node.getValue().compareTo(value);
-                if (cmp < 0) {
-                    lower = node;
-                    node = node.valueRightNode;
-                } else {
-                    node = node.valueLeftNode;
-                }
-            }
-
-            return lower;
-        }
-
-        private K doPutValueFirst(final V value, final K key, final boolean addIfAbsent, final boolean updateIfPresent) {
-            checkKeyAndValue(key, value);
-
-            Node<K, V> node = rootNodeValue;
-            if (node == null) {
-                if (addIfAbsent) {
-                    addAsRoot(key, value);
-                }
-                return null;
-            }
-
-            // find key position
-            final Node<K, V> valueNode;
-            K oldKey = null;
-            while (true) {
-                final int cmp = value.compareTo(node.getValue());
-                if (cmp == 0) {
-                    oldKey = node.key;
-                    if (!updateIfPresent || Objects.equals(oldKey, key))
-                        return oldKey;
-                    updateKey(node, key);
-                    valueNode = node;
-                    break;
-                } else if (cmp < 0) {
-                    if (node.valueLeftNode == null) {
-                        if (!addIfAbsent)
-                            return null;
-                        valueNode = addOnLeftValue(key, value, node);
-                        break;
-                    }
-                    node = node.valueLeftNode;
-                } else { // cmp > 0
-                    if (node.valueRightNode == null) {
-                        if (!addIfAbsent)
-                            return null;
-                        valueNode = addOnRightValue(key, value, node);
-                        break;
-                    }
-                    node = node.valueRightNode;
-                }
-            }
-
-            finishPutValueFirst(key, value, valueNode);
-
-            return oldKey;
-        }
-
-        private K doPutValueFirst(final V value,
-                                final Function<? super V, ? extends K> absentFunc,
-                                final BiFunction<? super V, ? super K, ? extends K> presentFunc) {
-            final int expectedModifications = modifications;
-
-            Node<K, V> node = rootNodeValue;
-            if (node == null) {
-                // map is empty
-                if (absentFunc != null) {
-                    final K key = absentFunc.apply(value);
-                    if (expectedModifications != modifications) {
-                        throw new ConcurrentModificationException();
-                    }
-                    if (key != null) {
-                        checkKey(key);
-                        addAsRoot(key, value);
-                        return key;
-                    }
-                }
-                return null;
-            }
-
-            // find value position
-            final Node<K, V> valueNode;
-            final K newKey;
-            while (true) {
-                final int cmp = value.compareTo(node.getValue());
-                if (cmp == 0) {
-                    final K oldKey = node.getKey();
-                    if (presentFunc != null) {
-                        newKey = presentFunc.apply(value, oldKey);
-                        if (expectedModifications != modifications) {
-                            throw new ConcurrentModificationException();
-                        } else if (newKey == null) {
-                            doRedBlackDelete(node);
-                            return null;
-                        } else if (Objects.equals(oldKey, newKey)) {
-                            return oldKey;
-                        } else {
-                            checkKey(newKey);
-                            updateKey(node, newKey);
-                            valueNode = node;
-                            break;
-                        }
-                    }
-                    return oldKey;
-                } else if (cmp < 0) {
-                    if (node.valueLeftNode == null) {
-                        if (absentFunc != null) {
-                            newKey = absentFunc.apply(value);
-                            if (expectedModifications != modifications) {
-                                throw new ConcurrentModificationException();
-                            } else if (newKey != null) {
-                                checkKey(newKey);
-                                valueNode = addOnLeftValue(newKey, value, node);
-                                break;
-                            }
-                        }
-                        return null;
-                    }
-                    node = node.valueLeftNode;
-                } else { // cmp > 0
-                    if (node.valueRightNode == null) {
-                        if (absentFunc != null) {
-                            newKey = absentFunc.apply(value);
-                            if (expectedModifications != modifications) {
-                                throw new ConcurrentModificationException();
-                            } else if (newKey != null) {
-                                checkKey(newKey);
-                                valueNode = addOnRightValue(newKey, value, node);
-                                break;
-                            }
-                        }
-                        return null;
-                    }
-                    node = node.valueRightNode;
-                }
-            }
-
-            finishPutValueFirst(newKey, value, valueNode);
-
-            return newKey;
-        }
-
-        private void finishPutValueFirst(final K key, final V value, final Node<K, V> valueNode) {
-            Node<K, V> node = rootNodeKey;
-            if (node == null) {
-                rootNodeKey = valueNode;
-                valueNode.keyParentNode = null;
-                return;
-            }
-
-            while (true) {
-                final int cmp = key.compareTo(node.getKey());
-
-                if (cmp == 0) {
-                    // replace existing key node (assume different value)
-                    assert !Objects.equals(node.value, value);
-                    valueNode.copyColorKey(node);
-                    replaceNodeKey(node, valueNode, true);
-                    doRedBlackDeleteValue(node);
-                    shrink();
-                    break;
-                } else if (cmp < 0) {
-                    if (node.keyLeftNode == null) {
-                        insertOnLeftKey(node, valueNode);
-                        break;
-                    }
-                    node = node.keyLeftNode;
-                } else { // cmp > 0
-                    if (node.keyRightNode == null) {
-                        insertOnRightKey(node, valueNode);
-                        break;
-                    }
-                    node = node.keyRightNode;
-                }
-            }
-        }
-
-        private void insertOnLeftKey(final Node<K, V> parent, final Node<K, V> node) {
-            parent.keyLeftNode = node;
-            node.keyParentNode = parent;
-            doRedBlackInsertKey(node);
-        }
-
-        private void insertOnRightKey(final Node<K, V> parent, final Node<K, V> node) {
-            parent.keyRightNode = node;
-            node.keyParentNode = parent;
-            doRedBlackInsertKey(node);
-        }
-
-        private void addAsRoot(final K key, final V value) {
-            final Node<K, V> root = new Node<>(key, value);
-            rootNodeKey = root;
-            rootNodeValue = root;
-            grow();
-        }
-
-        private Node<K, V> addOnLeftValue(final K key, final V value, final Node<K, V> parent) {
-            final Node<K, V> node = new Node<>(key, value);
-            parent.valueLeftNode = node;
-            node.valueParentNode = parent;
-            doRedBlackInsertValue(node);
-            grow();
-            return node;
-        }
-
-        private Node<K, V> addOnRightValue(final K key, final V value, final Node<K, V> parent) {
-            final Node<K, V> node = new Node<>(key, value);
-            parent.valueRightNode = node;
-            node.valueParentNode = parent;
-            doRedBlackInsertValue(node);
-            grow();
-            return node;
-        }
-
-        private void updateKey(final Node<K, V> node, final K key) {
-            // remove from value tree
-            doRedBlackDeleteKey(node);
-
-            // update value
-            node.key = key;
-            node.calculatedHashCode = false;
-            modify();
         }
     }
 
-    private class TreeBidiSubMap extends AbstractExtendedBidiMap<K, V> {
+    public static final class TreeBidiSubMap<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractExtendedBidiMap<K, V, TreeBidiSubMap<K, V>, TreeBidiSubMap<K, V>, TreeBidiSubMap<V, K>> {
+
         private static final long serialVersionUID = 7793720431038658603L;
+        private final TreeBidiMapHard<K, V> parent;
         private final SortedMapRange<K> keyRange;
 
-        TreeBidiSubMap(final SortedMapRange<K> keyRange) {
+        TreeBidiSubMap(final TreeBidiMapHard<K, V> parent, final SortedMapRange<K> keyRange) {
+            this.parent = parent;
             this.keyRange = keyRange;
         }
 
@@ -3019,10 +2832,20 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public int size() {
+            return 0;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+
+        @Override
         public boolean containsKey(final Object keyObject) {
-            final K key = checkKey(keyObject);
+            final K key = parent.checkKey(keyObject);
             if (keyRange.inRange(key)) {
-                return lookupKey(key) != null;
+                return parent.lookupKey(key) != null;
             } else {
                 return false;
             }
@@ -3036,7 +2859,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public OrderedMapIterator<K, V> mapIterator() {
             // TODO
-            return new MapIteratorKeyByKey();
+            return new MapIteratorKeyByKey<>(parent);
         }
 
         @Override
@@ -3046,9 +2869,9 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public V getOrDefault(final Object keyObject, final V defaultValue) {
-            final K key = checkKey(keyObject);
+            final K key = parent.checkKey(keyObject);
             if (keyRange.inRange(key)) {
-                final Node<K, V> node = lookupKey(key);
+                final Node<K, V> node = parent.lookupKey(key);
                 if (node != null) {
                     return node.value;
                 }
@@ -3058,10 +2881,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public boolean containsEntry(final Object keyObject, final Object valueObject) {
-            final K key = checkKey(keyObject);
-            final V value = checkValue(valueObject);
+            final K key = parent.checkKey(keyObject);
+            final V value = parent.checkValue(valueObject);
             if (keyRange.inRange(key)) {
-                final Node<K, V> node = lookupKey(key);
+                final Node<K, V> node = parent.lookupKey(key);
                 if (node != null) {
                     return Objects.equals(node.value, value);
                 }
@@ -3071,8 +2894,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public K getKeyOrDefault(final Object valueObject, final K defaultKey) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
+            final V value = parent.checkValue(valueObject);
+            final Node<K, V> node = parent.lookupValue(value);
             if (node != null && keyRange.inRange(node.key)) {
                 return node.key;
             }
@@ -3081,10 +2904,10 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public K removeValue(final Object valueObject) {
-            final V value = checkValue(valueObject);
-            final Node<K, V> node = lookupValue(value);
+            final V value = parent.checkValue(valueObject);
+            final Node<K, V> node = parent.lookupValue(value);
             if (node != null && keyRange.inRange(node.key)) {
-                doRedBlackDelete(node);
+                parent.doRedBlackDelete(node);
                 return node.key;
             }
             return null;
@@ -3092,27 +2915,27 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public V remove(final Object keyObject) {
-            final K key = checkKey(keyObject);
+            final K key = parent.checkKey(keyObject);
             if (keyRange.inRange(key)) {
-                return TreeBidiMapHard.this.remove(key);
+                return parent.remove(key);
             }
             return null;
         }
 
         @Override
         public boolean remove(final Object keyObject, final Object value) {
-            final K key = checkKey(keyObject);
+            final K key = parent.checkKey(keyObject);
             if (keyRange.inRange(key)) {
-                return TreeBidiMapHard.this.remove(key,  value);
+                return parent.remove(key,  value);
             }
             return false;
         }
 
         @Override
         public boolean removeAsBoolean(final Object keyObject) {
-            final K key = checkKey(keyObject);
+            final K key = parent.checkKey(keyObject);
             if (keyRange.inRange(key)) {
-                return TreeBidiMapHard.this.removeAsBoolean(keyObject);
+                return parent.removeAsBoolean(keyObject);
             }
             return false;
         }
@@ -3120,13 +2943,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
             verifyRange(key);
-            return TreeBidiMapHard.this.doPut(key, value, addIfAbsent, updateIfPresent);
+            return parent.doPut(key, value, addIfAbsent, updateIfPresent);
         }
 
         @Override
         protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
             verifyRange(key);
-            return TreeBidiMapHard.this.doPut(key, absentFunc, presentFunc, saveNulls);
+            return parent.doPut(key, absentFunc, presentFunc, saveNulls);
         }
 
         @Override
@@ -3134,25 +2957,30 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             for (final K key : m.keySet()) {
                 verifyRange(key);
             }
-            TreeBidiMapHard.this.putAll(m);
+            parent.putAll(m);
+        }
+
+        @Override
+        public void clear() {
+
         }
 
         private Entry<K, V> nextEntry(final K key) {
-            return lookupKeyHigher(key, false);
+            return parent.lookupKeyHigher(key, false);
         }
 
         private Entry<K, V> previousEntry(final K key) {
-            return lookupKeyLower(key, false);
+            return parent.lookupKeyLower(key, false);
         }
 
         @Override
         public K firstKey() {
-            return getKeyNullSafe(firstEntryInRange(keyRange));
+            return getKeyNullSafe(parent.firstEntryInRange(keyRange));
         }
 
         @Override
         public K lastKey() {
-            return getKeyNullSafe(lastEntryInRange(keyRange));
+            return getKeyNullSafe(parent.lastEntryInRange(keyRange));
         }
 
         @Override
@@ -3186,39 +3014,40 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public SortedExtendedBidiMap<K, V> subMap(final SortedMapRange<K> range) {
-            return new TreeBidiSubMap(range);
+        public TreeBidiSubMap<K, V> subMap(final SortedMapRange<K> range) {
+            return new TreeBidiSubMap<>(parent, range);
         }
 
         @Override
-        public SortedExtendedBidiMap<V, K> inverseBidiMap() {
+        public TreeBidiSubMap<V, K> inverseBidiMap() {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
     }
 
-    private final class KeyMapSpliterator extends AbstractTreeSpliterator<K, V, Node<K, V>> {
-        private KeyMapSpliterator() {
-        }
+    private static final class KeyMapSpliterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractTreeSpliterator<K, V, Node<K, V>> {
+        private final TreeBidiMapHard<K, V> parent;
 
-        private KeyMapSpliterator(final SplitState state,
+        private KeyMapSpliterator(final TreeBidiMapHard<K, V> parent, final SplitState state,
                                   final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
+            this.parent = parent;
         }
 
         @Override
         protected AbstractTreeSpliterator<K, V, Node<K, V>> makeSplit(final SplitState state,
                                                                       final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
-            return new KeyMapSpliterator(state, currentNode, lastNode, estimatedSize);
+            return new KeyMapSpliterator<>(parent, state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
         protected int modCount() {
-            return modifications;
+            return parent.modifications;
         }
 
         @Override
         protected Node<K, V> rootNode() {
-            return rootNodeKey;
+            return parent.rootNodeKey;
         }
 
         @Override
@@ -3233,22 +3062,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         protected Node<K, V> nextLower(final Node<K, V> node) {
-            return nextSmallerKey(node);
+            return parent.nextSmallerKey(node);
         }
 
         @Override
         protected Node<K, V> nextGreater(final Node<K, V> node) {
-            return nextGreaterKey(node);
+            return parent.nextGreaterKey(node);
         }
 
         @Override
         protected Node<K, V> subTreeLowest(final Node<K, V> node) {
-            return leastNodeKey(node);
+            return parent.leastNodeKey(node);
         }
 
         @Override
         protected Node<K, V> subTreeGreatest(final Node<K, V> node) {
-            return greatestNodeKey(node);
+            return parent.greatestNodeKey(node);
         }
 
         @Override
@@ -3262,30 +3091,35 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
     }
 
-    private final class KeyRangeMapSpliterator extends AbstractTreeRangeSpliterator<K, V, Node<K, V>> {
-        private KeyRangeMapSpliterator(final SortedMapRange<K> range) {
+    private static final class KeyRangeMapSpliterator<K extends Comparable<K>, V extends Comparable<V>>
+            extends AbstractTreeRangeSpliterator<K, V, Node<K, V>> {
+        private final TreeBidiMapHard<K, V> parent;
+
+        private KeyRangeMapSpliterator(final TreeBidiMapHard<K, V> parent, final SortedMapRange<K> range) {
             super(range);
+            this.parent = parent;
         }
 
-        private KeyRangeMapSpliterator(final SortedMapRange<K> range, final SplitState state,
+        private KeyRangeMapSpliterator(final TreeBidiMapHard<K, V> parent, final SortedMapRange<K> range, final SplitState state,
                                        final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
             super(range, state, currentNode, lastNode, estimatedSize);
+            this.parent = parent;
         }
 
         @Override
         protected AbstractTreeSpliterator<K, V, Node<K, V>> makeSplit(final SplitState state,
                                                                       final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
-            return new KeyRangeMapSpliterator(keyRange, state, currentNode, lastNode, estimatedSize);
+            return new KeyRangeMapSpliterator<>(parent, keyRange, state, currentNode, lastNode, estimatedSize);
         }
 
         @Override
         protected int modCount() {
-            return modifications;
+            return parent.modifications;
         }
 
         @Override
         protected Node<K, V> rootNode() {
-            return rootNodeKey;
+            return parent.rootNodeKey;
         }
 
         @Override
@@ -3300,22 +3134,22 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         protected Node<K, V> nextLower(final Node<K, V> node) {
-            return nextSmallerKey(node);
+            return parent.nextSmallerKey(node);
         }
 
         @Override
         protected Node<K, V> nextGreater(final Node<K, V> node) {
-            return nextGreaterKey(node);
+            return parent.nextGreaterKey(node);
         }
 
         @Override
         protected Node<K, V> subTreeLowest(final Node<K, V> node) {
-            return leastNodeKey(node);
+            return parent.leastNodeKey(node);
         }
 
         @Override
         protected Node<K, V> subTreeGreatest(final Node<K, V> node) {
-            return greatestNodeKey(node);
+            return parent.greatestNodeKey(node);
         }
 
         @Override
@@ -3330,12 +3164,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         protected Node<K, V> findFirstNode() {
-            return firstEntryInRange(keyRange);
+            return parent.firstEntryInRange(keyRange);
         }
 
         @Override
         protected Node<K, V> findLastNode() {
-            return lastEntryInRange(keyRange);
+            return parent.lastEntryInRange(keyRange);
         }
     }
 }

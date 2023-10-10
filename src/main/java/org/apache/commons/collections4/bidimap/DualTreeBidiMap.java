@@ -48,7 +48,7 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  */
 public class DualTreeBidiMap<K, V>
         extends AbstractDualBidiMap<K, V, DualTreeBidiMap<K, V>, DualTreeBidiMap<V, K>, NavigableMap<K, V>, NavigableMap<V, K>>
-        implements SortedBidiMap<K, V, DualTreeBidiMap<K, V>, DualTreeBidiMap<V, K>>, Serializable {
+        implements SortedBidiMap<K, V, DualTreeBidiMap<K, V>, DualTreeBidiMap<K, V>, DualTreeBidiMap<V, K>> {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361809L;

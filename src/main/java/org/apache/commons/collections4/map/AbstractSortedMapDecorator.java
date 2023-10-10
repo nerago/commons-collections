@@ -17,11 +17,13 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
 import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
@@ -44,7 +46,9 @@ import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractSortedMapDecorator<K, V, Decorated extends SortedMap<K, V>, SubMap extends IterableSortedMap<K, V, SubMap>>
+public abstract class AbstractSortedMapDecorator<K, V,
+                Decorated extends SortedMap<K, V>,
+                SubMap extends IterableSortedMap<K, V, SubMap>>
         extends AbstractMapDecorator<K, V, Decorated>
         implements IterableSortedMap<K, V, SubMap> {
 

@@ -79,10 +79,8 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  *
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
-public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>,
-        RegularMap extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
-        InverseMap extends OrderedBidiMap<V, K, InverseMap, RegularMap>>
-    implements OrderedBidiMap<K, V, RegularMap, InverseMap> {
+public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
+    implements OrderedBidiMap<K, V, OrderedBidiMap<V, K, ?>> {
 
     enum DataElement {
         KEY("key"), VALUE("value");
@@ -652,7 +650,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>,
      * @return the inverse map
      */
     @Override
-    public InverseMap inverseBidiMap() {
+    public OrderedBidiMap<V, K, ?> inverseBidiMap() {
         if (inverse == null) {
             inverse = new Inverse();
         }
@@ -2617,7 +2615,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>,
     /**
      * The inverse map implementation.
      */
-    class Inverse implements OrderedBidiMap<V, K, InverseMap, RegularMap> {
+    class Inverse implements OrderedBidiMap<V, K, OrderedBidiMap<K, V, ?>> {
+        private static final long serialVersionUID = -8331796932150921575L;
 
         /** Store the keySet once created. */
         private Set<V> inverseKeySet;
@@ -2922,8 +2921,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>,
         }
 
         @Override
-        public RegularMap inverseBidiMap() {
-            return (RegularMap) TreeBidiMap.this;
+        public OrderedBidiMap<K, V, ?> inverseBidiMap() {
+            return TreeBidiMap.this;
         }
 
         @Override

@@ -39,12 +39,12 @@ import org.apache.commons.collections4.SortedBidiMap;
  * @since 3.0
  */
 public abstract class AbstractOrderedBidiMapDecorator<K, V,
-            Decorated extends OrderedBidiMap<K, V, Decorated, DecoratedInverse>,
-            DecoratedInverse extends OrderedBidiMap<V, K, DecoratedInverse, Decorated>,
+            Decorated extends OrderedBidiMap<K, V, DecoratedInverse>,
+            DecoratedInverse extends OrderedBidiMap<V, K, Decorated>,
             RegularMap extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
             InverseMap extends AbstractOrderedBidiMapDecorator<V, K, DecoratedInverse, Decorated, InverseMap, RegularMap>>
         extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>
-        implements OrderedBidiMap<K, V, RegularMap, InverseMap> {
+        implements OrderedBidiMap<K, V, InverseMap> {
 
     private static final long serialVersionUID = 7010751296610809092L;
 

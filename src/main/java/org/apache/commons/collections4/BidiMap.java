@@ -43,8 +43,7 @@ import java.util.Set;
  *
  * @since 3.0
  */
-public interface BidiMap<K, V, RegularMap extends BidiMap<K, V, RegularMap, InverseMap>,
-                               InverseMap extends BidiMap<V, K, InverseMap, RegularMap>>
+public interface BidiMap<K, V, InverseMap extends BidiMap<V, K, ?>>
         extends IterableMap<K, V> {
 
     /**

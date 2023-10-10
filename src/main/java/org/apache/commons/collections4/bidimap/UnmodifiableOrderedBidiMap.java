@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
@@ -42,14 +43,18 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableOrderedBidiMap<K, V>
-        extends AbstractOrderedBidiMapDecorator<K, V> implements Unmodifiable {
+public final class UnmodifiableOrderedBidiMap<K, V,
+            Decorated extends OrderedBidiMap<K, V, DecoratedInverse>,
+            DecoratedInverse extends OrderedBidiMap<V, K, Decorated>>
+        extends AbstractOrderedBidiMapDecorator<K, V,
+            Decorated,
+            DecoratedInverse,
+            UnmodifiableOrderedBidiMap<K, V, Decorated, DecoratedInverse>,
+            UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, Decorated>>
+        implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 1857025949527593193L;
-
-    /** The inverse unmodifiable map */
-    private transient UnmodifiableOrderedBidiMap<V, K> inverse;
 
     /**
      * Factory method to create an unmodifiable map.
@@ -63,11 +68,11 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> unmodifiableOrderedBidiMap(
-            final OrderedBidiMap<? extends K, ? extends V, SortedBidiMap<? extends K, ? extends V, SubMap>> map) {
+    public static <K, V> OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?>> unmodifiableOrderedBidiMap(
+            final OrderedBidiMap<? extends K, ? extends V, OrderedBidiMap<? extends K, ? extends V, ?>> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> tmpMap = (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map;
+            final OrderedBidiMap<K, V, SortedBidiMap<K, V, ?>> tmpMap = (OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?>>) map;
             return tmpMap;
         }
         return new UnmodifiableOrderedBidiMap<>(map);
@@ -80,8 +85,8 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, SortedBidiMap<? extends K, ? extends V, SubMap>> map) {
-        super((OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map);
+    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, OrderedBidiMap<? extends K, ? extends V, ?>> map) {
+        super(map);
     }
 
     @Override
@@ -105,47 +110,47 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     }
 
     @Override
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    public boolean remove(final Object key, final Object value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
@@ -173,8 +178,8 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     }
 
     @Override
-    public OrderedBidiMap<V, K, SortedBidiMap<V, K, SubMap>> inverseBidiMap() {
-        return inverseOrderedBidiMap();
+    protected UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, Decorated> decorateInverse(final DecoratedInverse decoratedInverse) {
+        return null;
     }
 
     @Override
@@ -188,12 +193,8 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      *
      * @return an inverted unmodifiable bidirectional map
      */
-    public OrderedBidiMap<V, K, SortedBidiMap<V, K, SubMap>> inverseOrderedBidiMap() {
-        if (inverse == null) {
-            inverse = new UnmodifiableOrderedBidiMap<>(decorated().inverseBidiMap());
-            inverse.inverse = this;
-        }
-        return inverse;
+    public UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, Decorated> inverseOrderedBidiMap() {
+        return inverseBidiMap();
     }
 
     /**
@@ -217,6 +218,6 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        setMap((Map<K, V>) in.readObject());
+        setMap((Decorated) in.readObject());
     }
 }

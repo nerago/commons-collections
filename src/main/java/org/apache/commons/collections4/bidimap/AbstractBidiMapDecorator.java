@@ -40,14 +40,15 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K, V, Decorated, DecoratedInverse>,
-                                                     DecoratedInverse extends BidiMap<V, K, DecoratedInverse, Decorated>,
+public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K, V, DecoratedInverse>,
+                                                     DecoratedInverse extends BidiMap<V, K, Decorated>,
                                                      RegularMap extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
                                                      InverseMap extends AbstractBidiMapDecorator<V, K, DecoratedInverse, Decorated, InverseMap, RegularMap>>
         extends AbstractMapDecorator<K, V, Decorated>
-        implements BidiMap<K, V, RegularMap, InverseMap> {
+        implements BidiMap<K, V, InverseMap> {
 
     private static final long serialVersionUID = -3483039813600794480L;
+    private InverseMap inverse;
 
     /**
      * Constructor that wraps (not copies).
@@ -81,7 +82,10 @@ public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K
 
     @Override
     public InverseMap inverseBidiMap() {
-        return decorateInverse(decorated().inverseBidiMap());
+        if (inverse == null) {
+            inverse = decorateInverse(decorated().inverseBidiMap());
+        }
+        return inverse;
     }
 
     protected abstract InverseMap decorateInverse(DecoratedInverse decoratedInverse);

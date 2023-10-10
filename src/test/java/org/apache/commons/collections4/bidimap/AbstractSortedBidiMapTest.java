@@ -23,14 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.map.AbstractSortedMapTest;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

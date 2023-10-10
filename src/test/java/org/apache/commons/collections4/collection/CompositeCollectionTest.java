@@ -453,15 +453,15 @@ public class CompositeCollectionTest<E> extends AbstractCollectionTest<E> {
      * Override testUnsupportedRemove, since the default impl expects removeAll,
      * retainAll and iterator().remove to throw
      */
-    @Test
-    @Override
-    public void testUnsupportedRemove() {
-        resetFull();
-
-        assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(null));
-
-        verify();
-    }
+//    @Test
+//    @Override
+//    public void testUnsupportedRemove() {
+//        resetFull();
+//
+//        assertThrows(UnsupportedOperationException.class, () -> getCollection().remove(null));
+//
+//        verify();
+//    }
 
 //    public void testCreate() throws Exception {
 //        resetEmpty();

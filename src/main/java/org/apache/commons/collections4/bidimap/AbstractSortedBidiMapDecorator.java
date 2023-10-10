@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Comparator;
-import java.util.Set;
 
 import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
@@ -41,12 +40,13 @@ import org.apache.commons.collections4.SortedMapRange;
  * @since 3.0
  */
 public abstract class AbstractSortedBidiMapDecorator<K, V,
-            Decorated extends SortedExtendedBidiMap<K, V, Decorated, DecoratedInverse>,
-            DecoratedInverse extends SortedExtendedBidiMap<V, K, DecoratedInverse, Decorated>,
-            RegularMap extends AbstractSortedBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
-            InverseMap extends AbstractSortedBidiMapDecorator<V, K,  DecoratedInverse, Decorated, InverseMap, RegularMap>>
+            Decorated extends SortedExtendedBidiMap<K, V, Decorated, Decorated, DecoratedInverse>,
+            DecoratedInverse extends SortedExtendedBidiMap<V, K, DecoratedInverse, DecoratedInverse, Decorated>,
+            SubMap extends AbstractSortedBidiMapDecorator<K, V, Decorated, DecoratedInverse, SubMap, SubMap, ?>,
+            RegularMap extends AbstractSortedBidiMapDecorator<K, V, Decorated, DecoratedInverse, SubMap, RegularMap, InverseMap>,
+            InverseMap extends AbstractSortedBidiMapDecorator<V, K, DecoratedInverse, Decorated, ?, InverseMap, RegularMap>>
         extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>
-        implements SortedExtendedBidiMap<K, V, RegularMap, InverseMap> {
+        implements SortedExtendedBidiMap<K, V, SubMap, RegularMap, InverseMap> {
 
     private static final long serialVersionUID = -2025553015999206418L;
 
@@ -60,7 +60,7 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
         super(map);
     }
 
-    protected abstract RegularMap decorateDerived(final Decorated map);
+    protected abstract SubMap decorateDerived(final Decorated map);
 
     @Override
     public Comparator<? super K> comparator() {
@@ -73,11 +73,11 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
     }
 
     @Override
-    public RegularMap subMap(final SortedMapRange<K> range) {
+    public SubMap subMap(final SortedMapRange<K> range) {
         return decorateDerived(range.applyToMap(decorated()));
     }
 
-        @Override
+    @Override
     public SortedMapRange<K> getKeyRange() {
         return decorated().getKeyRange();
     }

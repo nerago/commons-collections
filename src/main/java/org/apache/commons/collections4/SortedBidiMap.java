@@ -19,10 +19,11 @@ package org.apache.commons.collections4;
 import java.util.Comparator;
 
 public interface SortedBidiMap<K, V,
-                               RegularMap extends SortedBidiMap<K, V, RegularMap, InverseMap>,
-                               InverseMap extends SortedBidiMap<V, K, InverseMap, RegularMap>>
-        extends OrderedBidiMap<K, V, RegularMap, InverseMap>,
-                IterableSortedMap<K, V, RegularMap> {
+            SubMap extends SortedBidiMap<K, V, SubMap, SubMap, ?>,
+            RegularMap extends SortedBidiMap<K, V, SubMap, RegularMap, InverseMap>,
+            InverseMap extends SortedBidiMap<V, K, ?, InverseMap, RegularMap>>
+        extends OrderedBidiMap<K, V, InverseMap>,
+                IterableSortedMap<K, V, SubMap> {
     /**
      * Get the comparator used for the values in the value-to-key map aspect.
      * @return Comparator&lt;? super V&gt;

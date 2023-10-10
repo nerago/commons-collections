@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import java.util.Iterator;
 import java.util.SortedMap;
 
 /**

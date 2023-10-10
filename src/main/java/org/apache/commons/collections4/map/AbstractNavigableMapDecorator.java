@@ -39,7 +39,9 @@ import java.util.*;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractNavigableMapDecorator<K, V, Decorated extends NavigableMap<K, V>, SubMap extends AbstractNavigableMapDecorator<K, V, Decorated, SubMap>>
+public abstract class AbstractNavigableMapDecorator<K, V,
+                Decorated extends NavigableMap<K, V>,
+                SubMap extends AbstractNavigableMapDecorator<K, V, Decorated, SubMap>>
         extends AbstractSortedMapDecorator<K, V, Decorated, SubMap>
         implements NavigableRangedMap<K, V, SubMap> {
 
