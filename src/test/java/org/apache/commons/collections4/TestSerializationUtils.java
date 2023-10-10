@@ -25,7 +25,10 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class TestSerializationUtils {
+public final class TestSerializationUtils {
+
+    private TestSerializationUtils() {}
+
     /**
      * Path to test data resources
      */
@@ -34,7 +37,6 @@ public class TestSerializationUtils {
      * Path to test properties resources
      */
     public static final String TEST_PROPERTIES_PATH = "src/test/resources/org/apache/commons/collections4/properties/";
-
 
     /**
      * Writes a Serializable or Externalizable object as

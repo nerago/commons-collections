@@ -27,7 +27,9 @@ import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.util.ReflectionUtils;
 
+import java.lang.reflect.Constructor;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
 
@@ -161,31 +163,59 @@ public class BulkTest implements Cloneable {
         }
     }
 
-    public DynamicNode getDynamicTests() {
-        final Class<? extends BulkTest> type = getClass();
-        final BulkTest instance = this;
-        return DynamicContainer.dynamicContainer(type.getSimpleName(),
-                URI.create("class:" + type.getName()),
-                Stream.concat(
-                        AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
-                                .stream()
-                                .filter(method -> !AnnotationSupport.isAnnotated(method, Disabled.class))
-                                .map(method -> DynamicTest.dynamicTest(
-                                        method.getName(),
-                                        URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
-                                        () -> ReflectionUtils.invokeMethod(method, instance))),
-                        AnnotationSupport.findAnnotatedMethods(type, TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
-                                .stream()
-                                .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance))
-                )
-        );
-    }
-
     public DynamicNode getDynamicTests(final BooleanSupplier enableTests) {
         if (enableTests.getAsBoolean()) {
             return getDynamicTests();
         } else {
             return DynamicContainer.dynamicContainer(getClass().getSimpleName(), Stream.empty());
+        }
+    }
+
+    public DynamicNode getDynamicTests() {
+        final Class<? extends BulkTest> type = getClass();
+        return DynamicContainer.dynamicContainer(type.getSimpleName(),
+                URI.create("class:" + type.getName()),
+                Stream.concat(
+                        Stream.concat(
+                            findTestMethods(this),
+                            findTestFactories(this)
+                        ),
+                        findNestedClasses(this)
+                )
+        );
+    }
+
+    private static Stream<DynamicNode> findTestMethods(final BulkTest instance) {
+        final Class<? extends BulkTest> type = instance.getClass();
+        return AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
+                .stream()
+                .filter(method -> !AnnotationSupport.isAnnotated(method, Disabled.class))
+                .map(method -> DynamicTest.dynamicTest(
+                        method.getName(),
+                        URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
+                        () -> ReflectionUtils.invokeMethod(method, instance)));
+    }
+
+    private static Stream<DynamicNode> findTestFactories(final BulkTest instance) {
+        return AnnotationSupport.findAnnotatedMethods(instance.getClass(), TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
+                .stream()
+                .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance));
+    }
+
+    private static Stream<DynamicNode> findNestedClasses(final BulkTest instance) {
+        final Class<? extends BulkTest> type = instance.getClass();
+        return Arrays.stream(type.getClasses())
+                .filter(clazz -> AnnotationSupport.isAnnotated(clazz, Nested.class))
+                .map(clazz -> createNestedInstance(clazz, instance).getDynamicTests());
+    }
+
+    private static BulkTest createNestedInstance(final Class<?> clazz, final BulkTest enclosingInstance) {
+        final Constructor<?> constructor = ReflectionUtils.getDeclaredConstructor(clazz);
+        final Object nestedInstance = ReflectionUtils.newInstance(constructor, enclosingInstance);
+        if (nestedInstance instanceof BulkTest) {
+            return (BulkTest) nestedInstance;
+        } else {
+            throw new IllegalArgumentException("BulkTest.getDynamicTests doesn't support nested classes that aren't subclassed from BulkTest (" + clazz.getName() + ")");
         }
     }
 }
