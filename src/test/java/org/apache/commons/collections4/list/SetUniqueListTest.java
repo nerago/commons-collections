@@ -18,7 +18,6 @@ package org.apache.commons.collections4.list;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,9 +32,12 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.set.UnmodifiableSet;
-import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * JUnit tests.
@@ -57,9 +59,28 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
 
     boolean extraVerify = true;
 
+    public SetUniqueListTest() {
+        super(SetUniqueListTest.class.getSimpleName());
+    }
+
     @Override
     public String getCompatibilityVersion() {
         return "4";
+    }
+
+    @Override
+    public boolean isAllowDuplicateValues() {
+        return false;
+    }
+
+    @Override
+    public boolean isIteratorSetSupported() {
+        return false;
+    }
+
+    @Override
+    public CollectionCommonsRole collectionRole() {
+        return CollectionCommonsRole.OTHER_DECORATOR;
     }
 
     @Override
@@ -67,35 +88,35 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     public E[] getFullNonNullElements() {
         // override to avoid duplicate "One"
         return (E[]) new Object[] {
-            "",
-            "One",
-            Integer.valueOf(2),
-            "Three",
-            Integer.valueOf(4),
-            Double.valueOf(5),
-            Float.valueOf(6),
-            "Seven",
-            "Eight",
-            "Nine",
-            Integer.valueOf(10),
-            Short.valueOf((short) 11),
-            Long.valueOf(12),
-            "Thirteen",
-            "14",
-            "15",
-            Byte.valueOf((byte) 16)
+                "",
+                "One",
+                Integer.valueOf(2),
+                "Three",
+                Integer.valueOf(4),
+                Double.valueOf(5),
+                Float.valueOf(6),
+                "Seven",
+                "Eight",
+                "Nine",
+                Integer.valueOf(10),
+                Short.valueOf((short) 11),
+                Long.valueOf(12),
+                "Thirteen",
+                "14",
+                "15",
+                Byte.valueOf((byte) 16)
         };
     }
 
     @Override
     public List<E> makeObject() {
-        return new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        return new SetUniqueList<>(new ArrayList<E>(), new HashSet<E>());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void testAdd() {
-        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<E>(), new HashSet<E>());
 
         // Duplicate element
         final E obj = (E) Integer.valueOf(1);
@@ -111,10 +132,10 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Test
     @SuppressWarnings("unchecked")
     public void testAddAll() {
-        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<E>(), new HashSet<E>());
 
         lset.addAll(
-            Arrays.asList((E[]) new Integer[] { Integer.valueOf(1), Integer.valueOf(1)}));
+                Arrays.asList((E[]) new Integer[] { Integer.valueOf(1), Integer.valueOf(1)}));
 
         assertEquals(1, lset.size(), "Duplicate element was added.");
     }
@@ -208,7 +229,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
         // repeat the test with a different class than HashSet;
         // which means subclassing SetUniqueList below
         list = new ArrayList<>();
-        uniqueList = new SetUniqueList307(list, new TreeSet<>());
+        uniqueList = new SetUniqueList307(list, new TreeSet<E>());
 
         uniqueList.add((E) hello);
         uniqueList.add((E) world);
@@ -267,7 +288,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Test
     public void testIntCollectionAddAll() {
         // make a SetUniqueList with one element
-        final List<Integer> list = new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        final List<Integer> list = new SetUniqueList<>(new ArrayList<Integer>(), new HashSet<Integer>());
         final Integer existingElement = Integer.valueOf(1);
         list.add(existingElement);
 
@@ -293,7 +314,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Test
     @SuppressWarnings("unchecked")
     public void testListIterator() {
-        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<E>(), new HashSet<E>());
 
         final E obj1 = (E) Integer.valueOf(1);
         final E obj2 = (E) Integer.valueOf(2);
@@ -370,6 +391,26 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     }
 
     @Test
+    @Override
+    public void testListReplaceAll() {
+        resetFull();
+        getCollection().replaceAll(v -> v instanceof String ? (E) ((String)v).toLowerCase() : null);
+        Collection<E> confirmed = makeConfirmedCollection();
+        for (E e : getFullElements()) {
+            if (e instanceof String) {
+                E s = (E) ((String) e).toLowerCase();
+                if (!confirmed.contains(s))
+                    confirmed.add(s);
+            } else {
+                if (!confirmed.contains(null))
+                    confirmed.add(null);
+            }
+        }
+        setConfirmed(confirmed);
+        verify();
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testRetainAll() {
         final List<E> list = new ArrayList<>(10);
@@ -422,7 +463,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Test
     @SuppressWarnings("unchecked")
     public void testSet() {
-        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        final SetUniqueList<E> lset = new SetUniqueList<>(new ArrayList<E>(), new HashSet<E>());
 
         // Duplicate element
         final E obj1 = (E) Integer.valueOf(1);
@@ -461,7 +502,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
 
     @Test
     public void testSetCollections444() {
-        final SetUniqueList<Integer> lset = new SetUniqueList<>(new ArrayList<>(), new HashSet<>());
+        final SetUniqueList<Integer> lset = new SetUniqueList<>(new ArrayList<Integer>(), new HashSet<Integer>());
 
         // Duplicate element
         final Integer obj1 = Integer.valueOf(1);
@@ -592,7 +633,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Test
     @SuppressWarnings("unchecked")
     public void testUniqueListDoubleInsert() {
-        final List<E> l = SetUniqueList.setUniqueList(new LinkedList<>());
+        final List<E> l = SetUniqueList.setUniqueList(new LinkedList<E>());
         l.add((E) new Object());
         l.add((E) new Object());
 
@@ -608,7 +649,7 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     @Test
     @SuppressWarnings("unchecked")
     public void testUniqueListReInsert() {
-        final List<E> l = SetUniqueList.setUniqueList(new LinkedList<>());
+        final List<E> l = SetUniqueList.setUniqueList(new LinkedList<E>());
         l.add((E) new Object());
         l.add((E) new Object());
 
@@ -669,47 +710,43 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
         assertThrows(NullPointerException.class, () -> setUniqueList.createSetBasedOnList(new HashSet<>(), null));
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    @Nested
-    public class TestListIterator extends AbstractListTest<E>.TestListIterator {
+    @Override
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return new SubListIsReadOnlyTests<>(this).getDynamicTests(this::runBulkSubListTests);
+    }
+
+    @Disabled
+    public static class SubListIsReadOnlyTests<E> extends BulkSubListTests<E> {
+        public SubListIsReadOnlyTests(AbstractListTest<E> outer) {
+            super(outer);
+        }
+
         @Override
-        public boolean supportsSet() {
-            // set completely unsupported via iterator, as opposed to main class which just has behaviour change
+        public void verify() {
+            ((SetUniqueListTest<?>)outer).extraVerify = false;
+            super.verify();
+            ((SetUniqueListTest<?>)outer).extraVerify = true;
+        }
+
+        @Override
+        public boolean isRemoveElementSupported() {
             return false;
         }
 
-        /**
-         * Iterator does not follow the usual contract of {@link ListIterator#add} in
-         * that add may not be completed if already present in unique set.
-         */
-        @Test
         @Override
-        public void testAdd() {
-            final E addValue = addSetValue();
+        public boolean isAddSupported() {
+            return false;
+        }
 
-            // add at start should be OK, added should be previous
-            ListIterator<E> it = makeObject();
-            it.add(addValue);
-            assertEquals(addValue, it.previous());
+        @Override
+        public boolean isSetSupported() {
+            return false;
+        }
 
-            // add at start should be OK, added should not be next
-            it = makeObject();
-            it.add(addValue);
-            assertNotEquals(addValue, it.next());
-
-            // add in middle when already exists should be ignored
-            it = makeObject();
-            it.add(addValue);
-            while (it.hasNext()) {
-                final E value = it.next();
-                assertNotEquals(addValue, value);
-                final int nextIndex = it.nextIndex(), prevIndex = it.previousIndex();
-                it.add(addValue);
-                assertEquals(nextIndex, it.nextIndex(), "index should be unchanged");
-                assertEquals(prevIndex, it.previousIndex(), "index should be unchanged");
-                assertNotEquals(addValue, it.previous());
-                assertEquals(value, it.next());
-            }
+        @Override
+        public boolean isRemoveSupported() {
+            return false;
         }
     }
 }
