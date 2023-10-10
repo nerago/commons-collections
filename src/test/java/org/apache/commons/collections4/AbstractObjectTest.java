@@ -34,7 +34,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 /**
  * Abstract test class for {@link java.lang.Object} methods and contracts.
@@ -131,29 +130,11 @@ public abstract class AbstractObjectTest extends BulkTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T cloneObject(final T obj) throws Exception {
-        return (T) serializeDeserialize(obj);
-    }
-
-    protected Object serializeDeserialize(final Object obj) throws Exception {
-        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final ObjectOutputStream out = new ObjectOutputStream(buffer);
-        out.writeObject(obj);
-        out.close();
-
-        final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()));
-        final Object dest = in.readObject();
-        in.close();
-
-        return dest;
-    }
-
     @Test
     public void testSerializeDeserializeThenCompare() throws Exception {
         final Object obj = makeObject();
         if (obj instanceof Serializable && isTestSerialization()) {
-            final Object dest = serializeDeserialize(obj);
+            final Object dest = TestUtils.serializeDeserialize(obj);
             if (isEqualsCheckable()) {
                 assertEquals(obj, dest, "obj != deserialize(serialize(obj))");
             }
@@ -330,19 +311,5 @@ public abstract class AbstractObjectTest extends BulkTest {
     private void writeExternalFormToStream(final Serializable o, final OutputStream stream) throws IOException {
         final ObjectOutputStream oStream = new ObjectOutputStream(stream);
         oStream.writeObject(o);
-    }
-
-    protected static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
-        try {
-            executable.execute();
-        } catch (final Throwable throwable) {
-            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
-                return;
-            }
-
-            fail(message + " ==> Unexpected exception type thrown. " + message, throwable);
-        }
-
-        fail(message + " ==> Expected exception to be thrown, but nothing was thrown.");
     }
 }

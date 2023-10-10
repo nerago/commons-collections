@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
+import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
+import static org.apache.commons.collections4.TestUtils.cloneMapEntry;
+import static org.apache.commons.collections4.TestUtils.cloneObject;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -449,15 +452,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     public Map<K, V> makeConfirmedMap() {
         return new HashMap<>();
-    }
-
-    /**
-     * Creates a new Map Entry that is independent of the first and the map.
-     */
-    public static <K, V> Map.Entry<K, V> cloneMapEntry(final Map.Entry<K, V> entry) {
-        final HashMap<K, V> map = new HashMap<>();
-        map.put(entry.getKey(), entry.getValue());
-        return map.entrySet().iterator().next();
     }
 
     /**
@@ -1132,7 +1126,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
-     * Tests that the {@link Map#bitMaps} collection is backed by
+     * Tests that the {@link Map#values()} collection is backed by
      * the underlying map for clear().
      */
     @Test
@@ -1301,7 +1295,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     /**
-     * Tests that the {@link Map#bitMaps} collection is backed by
+     * Tests that the {@link Map#values} collection is backed by
      * the underlying map by removing from the values collection
      * and testing if the value was removed from the map.
      * <p>

@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import static org.apache.commons.collections4.TestUtils.cloneMapEntry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
