@@ -16,8 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
+import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,6 +103,20 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         assertSame(obj, sm.lastKey());
     }
 
+    public static <K> Object[] generateKeysInRange(final List<K> keys) {
+        final String a = (String) keys.get(0);
+        final String b = (String) keys.get(1);
+        final String low = (a.compareTo(b) < 0) ? a : b;
+        final String high = (a.compareTo(b) >= 0) ? a : b;
+        final List<Object> others = new ArrayList<>();
+        for (int i = 0; i < 10; ++i) {
+            final String val = low + String.valueOf(i);
+            assertTrue(low.compareTo(val) < 0 && val.compareTo(high) < 0, "couldn't generate a between key");
+            others.add(val);
+        }
+        return others.toArray();
+    }
+
     @TestFactory
     public DynamicNode subMapTests() {
         if (runSubMapTests()) {
@@ -114,7 +130,7 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         }
     }
 
-    public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
+    public abstract static class TestViewMap<K, V> extends AbstractSortedMapNestedTest<K, V> {
         protected final AbstractMapTest<K, V> main;
         protected final List<K> subSortedKeys = new ArrayList<>();
         protected final List<V> subSortedValues = new ArrayList<>();
@@ -123,7 +139,10 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         public TestViewMap(final AbstractSortedMapTest<K, V> main) {
             this.main = main;
         }
-
+        @Override
+        protected AbstractMapTest<K, V> getEnclosing() {
+            return main;
+        }
         @Override
         public void resetEmpty() {
             // needed to init verify correctly
@@ -143,10 +162,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             main.verify();
         }
         @Override
-        protected boolean runSubMapTests() {
-            return false;
-        }
-        @Override
         @SuppressWarnings("unchecked")
         public K[] getSampleKeys() {
             return (K[]) subSortedKeys.toArray();
@@ -161,29 +176,23 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         public V[] getNewSampleValues() {
             return (V[]) subSortedNewValues.toArray();
         }
+        @Override
+        @SuppressWarnings("unchecked")
+        public K[] getOtherKeys() {
+            return (K[]) generateKeysInRange(subSortedKeys);
+        }
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getOtherValues() {
+            return (V[]) generateKeysInRange(subSortedKeys);
+        }
 
         @Override
-        public boolean isAllowNullKey() {
-            return main.isAllowNullKey();
-        }
-        @Override
-        public boolean isAllowNullValue() {
-            return main.isAllowNullValue();
-        }
-        @Override
-        public boolean isPutAddSupported() {
-            return main.isPutAddSupported();
-        }
-        @Override
-        public boolean isPutChangeSupported() {
-            return main.isPutChangeSupported();
-        }
-        @Override
-        public boolean isRemoveSupported() {
-            return main.isRemoveSupported();
-        }
-        @Override
         public boolean isTestSerialization() {
+            return false;
+        }
+        @Override
+        protected boolean runSubMapTests() {
             return false;
         }
     }

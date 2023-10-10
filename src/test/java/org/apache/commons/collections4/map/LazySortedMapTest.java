@@ -160,11 +160,6 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         public boolean isAllowNullKey() {
             return false;
         }
-
-        @Override
-        protected int getIterationBehaviour() {
-            return 0;
-        }
     }
 
     @Override
@@ -358,6 +353,16 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         public V[] getNewSampleValues() {
             return (V[]) subSortedNewValues.toArray();
         }
+        @Override
+        @SuppressWarnings("unchecked")
+        public K[] getOtherKeys() {
+            return (K[]) generateKeysInRange(subSortedKeys);
+        }
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getOtherValues() {
+            return (V[]) generateKeysInRange(subSortedKeys);
+        }
 
         @Override
         public boolean isAllowNullKey() {
@@ -380,13 +385,41 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
             return main.isRemoveSupported();
         }
         @Override
+        public boolean isTestSerialization() {
+            return false;
+        }
+        @Override
         protected boolean runSubMapTests() {
             return false;
         }
 
-        @Override
-        public boolean isTestSerialization() {
-            return false;
+        @SuppressWarnings("ClassNameSameAsAncestorName")
+        @Nested
+        public class LazyMapTestsNested extends LazySortedMapTest<K, V>.LazyMapTestsNested {
+            @Override
+            public K[] getSampleKeys() {
+                return TestLazyViewMap.this.getSampleKeys();
+            }
+            @Override
+            public V[] getSampleValues() {
+                return TestLazyViewMap.this.getSampleValues();
+            }
+            @Override
+            public V[] getNewSampleValues() {
+                return TestLazyViewMap.this.getNewSampleValues();
+            }
+            @Override
+            public K[] getOtherKeys() {
+                return TestLazyViewMap.this.getOtherKeys();
+            }
+            @Override
+            public V[] getOtherValues() {
+                return TestLazyViewMap.this.getOtherValues();
+            }
+            @Override
+            public boolean isTestSerialization() {
+                return false;
+            }
         }
     }
 
