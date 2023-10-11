@@ -832,9 +832,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
         } else if (isPutChangeSupported()) {
             resetEmpty();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().put(keys[0], values[0]),
-                    "Expected UnsupportedOperationException or IllegalArgumentException on put (add) when fixed size");
+                    "Expected UnsupportedOperationException or IllegalArgumentException on put (add) when fixed size",
+                    UnsupportedOperationException.class, IllegalArgumentException.class);
 
             resetFull();
             int i = 0;
@@ -873,9 +874,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             if (isAllowNullKey()) {
                 getMap().put(null, values[0]);
             } else {
-                assertThrowsEither(NullPointerException.class, IllegalArgumentException.class,
+                assertThrowsAnyOf(
                         () -> getMap().put(null, values[0]),
-                        "put(null, value) should throw NPE/IAE");
+                        "put(null, value) should throw NPE/IAE",
+                        NullPointerException.class, IllegalArgumentException.class);
             }
         }
     }
@@ -913,9 +915,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         } else {
             // check putAll rejects adding empty map to empty map
             resetEmpty();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertOptionallyThrowsAnyOf(
                     () -> getMap().putAll(new HashMap<>()),
-                    "Expected UnsupportedOperationException on putAll");
+                    "Expected UnsupportedOperationException or no-op on putAll",
+                    UnsupportedOperationException.class);
             assertEquals(0, getMap().size());
             verify();
         }
@@ -947,17 +950,19 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         } else {
             // check putAll rejects adding empty map to non-empty map
             resetFull();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertOptionallyThrowsAnyOf(
                     () -> getMap().putAll(new HashMap<>()),
-                    "Expected UnsupportedOperationException on putAll");
+                    "Expected UnsupportedOperationException or no-op on putAll",
+                    UnsupportedOperationException.class);
             verify();
 
-
             // check putAll rejects adding JDK map with current values
+            // arguably no-op might be acceptable here too, but no existing class has the behaviour
             resetFull();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().putAll(m1),
-                    "Expected UnsupportedOperationException on putAll");
+                    "Expected UnsupportedOperationException on putAll",
+                    UnsupportedOperationException.class);
             verify();
         }
     }
@@ -992,16 +997,18 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         } else {
             // check putAll rejects adding non-empty map to empty map
             resetEmpty();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().putAll(m2),
-                    "Expected IllegalArgumentException on putAll");
+                    "Expected UnsupportedOperationException/IllegalArgumentException on putAll",
+                    UnsupportedOperationException.class, IllegalArgumentException.class);
             verify();
 
             // check putAll rejects adding non-empty JDK map to empty map
             resetEmpty();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().putAll(m3),
-                    "Expected IllegalArgumentException on putAll");
+                    "Expected UnsupportedOperationException/IllegalArgumentException on putAll",
+                    UnsupportedOperationException.class, IllegalArgumentException.class);
             verify();
         }
     }
@@ -1028,9 +1035,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         } else {
             // check putAll rejects adding non-empty JDK map to non-empty map
             resetFull();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().putAll(m4),
-                    "Expected IllegalArgumentException on putAll");
+                    "Expected UnsupportedOperationException/IllegalArgumentException on putAll",
+                    UnsupportedOperationException.class, IllegalArgumentException.class);
             verify();
         }
     }

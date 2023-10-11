@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;

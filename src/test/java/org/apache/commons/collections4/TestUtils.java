@@ -19,7 +19,9 @@ package org.apache.commons.collections4;
 import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
@@ -85,18 +87,55 @@ public final class TestUtils {
         assertSameAfterSerialization(null, o);
     }
 
-    public static <E1, E2> void assertThrowsEither(final Class<E1> e1, final Class<E2> e2, final Executable executable, final String message) {
+    /**
+     * Does method throw any one of the specified exception types or their subclasses.
+     * <p>
+     * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
+     */
+    public static void assertThrowsAnyOf(final Executable executable, final String message, final Class<?>... exceptionsAllowed) {
+        assertNotEquals(0, exceptionsAllowed.length, message + " ==> No exception types specified");
+        for (final Class<?> exceptType : exceptionsAllowed) {
+            assertTrue(Throwable.class.isAssignableFrom(exceptType), message + " ==> Not an Throwable type " + exceptType.getName());
+        }
+
         try {
             executable.execute();
-        } catch (final Throwable throwable) {
-            if (e1.isInstance(throwable) || e2.isInstance(throwable)) {
-                return;
+        } catch (final Throwable caught) {
+            for (final Class<?> exceptType : exceptionsAllowed) {
+                if (exceptType.isInstance(caught)) {
+                    return;
+                }
             }
 
-            fail(message + " ==> Unexpected exception type thrown. " + message, throwable);
+            fail(message + " ==> Unexpected exception type thrown. " + message, caught);
         }
 
         fail(message + " ==> Expected exception to be thrown, but nothing was thrown.");
+    }
+
+    /**
+     * Does method throw any one of the specified exception types or pass through without error.
+     * Presumably the alternate should be a no-op but that needs follow-up verification.
+     * <p>
+     * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
+     */
+    public static void assertOptionallyThrowsAnyOf(final Executable executable, final String message, final Class<?>... exceptionsAllowed) {
+        assertNotEquals(0, exceptionsAllowed.length, message + " ==> No exception types specified");
+        for (final Class<?> exceptType : exceptionsAllowed) {
+            assertTrue(Throwable.class.isAssignableFrom(exceptType), message + " ==> Not an Throwable type " + exceptType.getName());
+        }
+
+        try {
+            executable.execute();
+        } catch (final Throwable caught) {
+            for (final Class<?> exceptType : exceptionsAllowed) {
+                if (exceptType.isInstance(caught)) {
+                    return;
+                }
+            }
+
+            fail(message + " ==> Unexpected exception type thrown. " + message, caught);
+        }
     }
 
     @SuppressWarnings("unchecked")
