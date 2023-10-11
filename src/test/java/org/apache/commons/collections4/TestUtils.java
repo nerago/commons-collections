@@ -19,7 +19,10 @@ package org.apache.commons.collections4;
 import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -33,6 +36,8 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public final class TestUtils {
 
@@ -49,7 +54,6 @@ public final class TestUtils {
      *
      * @param msg the identifying message for the {@code AssertionError}.
      * @param o object that will be tested.
-     * @see #assertSameAfterSerialization(Object)
      */
     public static void assertSameAfterSerialization(final String msg, final Object o) {
         try {
@@ -74,40 +78,17 @@ public final class TestUtils {
     }
 
     /**
-     * Asserts that deserialization of the object returns the same object as the
-     * one that was serialized.
-     * <p>
-     * Effect of method call is the same as:
-     * {@code assertSameAfterSerialization(null, o)}.
-     *
-     * @param o object that will be tested.
-     * @see #assertSameAfterSerialization(String, Object)
-     */
-    public static void assertSameAfterSerialization(final Object o) {
-        assertSameAfterSerialization(null, o);
-    }
-
-    /**
      * Does method throw any one of the specified exception types or their subclasses.
      * <p>
      * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
      */
     public static void assertThrowsAnyOf(final Executable executable, final String message, final Class<?>... exceptionsAllowed) {
-        assertNotEquals(0, exceptionsAllowed.length, message + " ==> No exception types specified");
-        for (final Class<?> exceptType : exceptionsAllowed) {
-            assertTrue(Throwable.class.isAssignableFrom(exceptType), message + " ==> Not an Throwable type " + exceptType.getName());
-        }
+        validateExceptionsAllowed(message, exceptionsAllowed);
 
         try {
             executable.execute();
         } catch (final Throwable caught) {
-            for (final Class<?> exceptType : exceptionsAllowed) {
-                if (exceptType.isInstance(caught)) {
-                    return;
-                }
-            }
-
-            fail(message + " ==> Unexpected exception type thrown. " + message, caught);
+            checkCaughtIsAllowedType(message, caught, exceptionsAllowed);
         }
 
         fail(message + " ==> Expected exception to be thrown, but nothing was thrown.");
@@ -120,22 +101,77 @@ public final class TestUtils {
      * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
      */
     public static void assertOptionallyThrowsAnyOf(final Executable executable, final String message, final Class<?>... exceptionsAllowed) {
-        assertNotEquals(0, exceptionsAllowed.length, message + " ==> No exception types specified");
-        for (final Class<?> exceptType : exceptionsAllowed) {
-            assertTrue(Throwable.class.isAssignableFrom(exceptType), message + " ==> Not an Throwable type " + exceptType.getName());
-        }
+        validateExceptionsAllowed(message, exceptionsAllowed);
 
         try {
             executable.execute();
         } catch (final Throwable caught) {
-            for (final Class<?> exceptType : exceptionsAllowed) {
-                if (exceptType.isInstance(caught)) {
-                    return;
-                }
-            }
-
-            fail(message + " ==> Unexpected exception type thrown. " + message, caught);
+            checkCaughtIsAllowedType(message, caught, exceptionsAllowed);
         }
+    }
+
+    /**
+     * Does method throw any one of the specified exception types or return false.
+     * Should be used where either result is equivalent for passing a test.
+     * <p>
+     * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
+     */
+    public static void assertReturnsFalseOrThrowsAnyOf(final BooleanSupplier executable, final String message, final Class<?>... exceptionsAllowed) {
+        validateExceptionsAllowed(message, exceptionsAllowed);
+
+        final boolean result;
+        try {
+            result = executable.getAsBoolean();
+        } catch (final Throwable caught) {
+            checkCaughtIsAllowedType(message, caught, exceptionsAllowed);
+            return;
+        }
+
+        assertFalse(result, message);
+    }
+
+    /**
+     * Does method throw NullPointerException or return false.
+     */
+    public static void assertReturnsFalseOrThrowsNPE(final BooleanSupplier executable) {
+        final boolean result;
+        try {
+            result = executable.getAsBoolean();
+        } catch (final Throwable caught) {
+            assertInstanceOf(NullPointerException.class, caught);
+            return;
+        }
+        assertFalse(result);
+    }
+
+    /**
+     * Does method throw NullPointerException or return null.
+     */
+    public static void assertReturnsNullOrThrowsNPE(final Supplier<Object> executable) {
+        final Object result;
+        try {
+            result = executable.get();
+        } catch (final Throwable caught) {
+            assertInstanceOf(NullPointerException.class, caught);
+            return;
+        }
+        assertNull(result);
+    }
+
+    private static void validateExceptionsAllowed(final String message, final Class<?>[] exceptionsAllowed) {
+        assertNotEquals(0, exceptionsAllowed.length, message + " ==> No exception types specified");
+        for (final Class<?> exceptType : exceptionsAllowed) {
+            assertTrue(Throwable.class.isAssignableFrom(exceptType), message + " ==> Not an Throwable type " + exceptType.getName());
+        }
+    }
+
+    private static void checkCaughtIsAllowedType(final String message, final Throwable caught, final Class<?>[] exceptionsAllowed) {
+        for (final Class<?> exceptType : exceptionsAllowed) {
+            if (exceptType.isInstance(caught)) {
+                return;
+            }
+        }
+        fail(message + " ==> Unexpected exception type thrown. " + message, caught);
     }
 
     @SuppressWarnings("unchecked")

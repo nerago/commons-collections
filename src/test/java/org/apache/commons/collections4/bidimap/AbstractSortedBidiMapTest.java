@@ -16,12 +16,15 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.cloneMapEntry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +38,7 @@ import java.util.TreeSet;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.apache.commons.collections4.map.AbstractSortedMapNestedTest;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.Nested;
@@ -628,6 +632,26 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         assertFalse(sub.containsKey(secondEntry.getKey()));
         assertFalse(sub.containsValue(secondEntry.getValue()));
         assertFalse(set.contains(secondEntry));
+    }
+
+    @Test
+    @Override
+    public void testBidiMapPutNulls() {
+        final Object[] keys = getSampleKeys();
+        final Object[] values = getSampleValues();
+
+        resetFull();
+        Assumptions.assumeTrue(isPutAddSupported() && isPutChangeSupported() && isRemoveSupported(),
+                "this version of the test expects full modify allowed");
+        assertFalse(isAllowNullKey() && isAllowNullValue(), "this version of the test only applies to nulls allowed");
+        assertFalse(Arrays.asList(keys).contains(null));
+        assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsKey(null), "full map shouldn't contain null in general", NullPointerException.class);
+        assertFalse(Arrays.asList(values).contains(null));
+        assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsValue(null), "full map shouldn't contain null in general", NullPointerException.class);
+
+        assertThrows(NullPointerException.class, () -> getMap().put(null, (V) values[0]));
+        assertThrows(NullPointerException.class, () -> getMap().put((K) keys[0], null));
+        verify();
     }
 
     @Nested

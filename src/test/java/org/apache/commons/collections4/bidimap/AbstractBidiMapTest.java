@@ -16,13 +16,17 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsNPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -319,6 +323,87 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
         assertFalse(map.inverseBidiMap().containsValue(key), "Key was not removed from inverse map.");
         assertFalse(map.inverseBidiMap().containsKey(value), "Value was not removed from inverse map.");
+    }
+
+    // bidi override of normal map test since setting a value can result in deletion
+    @Test
+    @Override
+    public void testMapPutNullKey() {
+    }
+
+    @Test
+    @Override
+    public void testMapPutNullValue() {
+    }
+
+    @Test
+    public void testBidiMapPutNulls() {
+        final K[] keys = getSampleKeys();
+        final V[] values = getSampleValues();
+
+        resetFull();
+        Assumptions.assumeTrue(isPutAddSupported() && isPutChangeSupported() && isRemoveSupported(),
+                "this version of the test expects full modify allowed");
+        assertTrue(isAllowNullKey() && isAllowNullValue(), "this version of the test only applies to nulls allowed");
+        assertTrue(Arrays.asList(keys).contains(null) && getMap().containsKey(null),
+                "this version of the test expects null keys in full map");
+        assertTrue(Arrays.asList(values).contains(null) && getMap().containsValue(null),
+                "this version of the test expects null keys in full map");
+
+        resetFull();
+        assertNotNull(getMap().get(null));
+        assertNotEquals(values[0], getMap().get(null));
+        getMap().put(null, values[0]);
+        // confirmed isn't a bidi so replicate removing the old mapping first
+        getConfirmed().values().remove(values[0]);
+        getConfirmed().put(null, values[0]);
+        verify();
+
+        resetFull();
+        assertNotNull(getMap().get(keys[0]));
+        getMap().put(keys[0], null);
+        // confirmed isn't a bidi so replicate removing the old mapping first
+        getConfirmed().values().remove(null);
+        getConfirmed().put(keys[0], null);
+        verify();
+    }
+
+    @Test
+    public void testBidiMapPutNullsUnsupported() {
+        final K[] keys = getSampleKeys();
+        final V[] values = getSampleValues();
+
+        Assumptions.assumeTrue(!isPutAddSupported() && !isPutChangeSupported() && !isRemoveSupported(),
+                "this version of the test expects no modify allowed");
+
+        resetFull();
+        assertThrows(UnsupportedOperationException.class, () -> getMap().put(null, values[0]));
+        assertThrows(UnsupportedOperationException.class, () -> getMap().put(keys[0], null));
+    }
+
+    @Test
+    @Override
+    public void testNullValuesMiscellaneous() {
+        super.testNullValuesMiscellaneous();
+
+        if (isAllowNullValue()) {
+            resetFull();
+            final Map.Entry<K, V> nullEntry = getMap().entrySet().stream().filter(e -> e.getValue() == null).findFirst().get();
+
+            assertEquals(nullEntry.getKey(), getMap().getKey(null));
+
+            if (isRemoveSupported()) {
+                resetFull();
+                getMap().removeValue(null);
+                getConfirmed().remove(nullEntry.getKey());
+                verify();
+            }
+        } else {
+            assertReturnsNullOrThrowsNPE(() -> getMap().getKey(null));
+            verify();
+            assertReturnsNullOrThrowsNPE(() -> getMap().removeValue(null));
+            verify();
+        }
     }
 
     /**

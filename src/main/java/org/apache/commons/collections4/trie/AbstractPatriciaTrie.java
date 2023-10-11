@@ -1792,6 +1792,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
          * Returns true if the provided key is greater than TO and less than FROM.
          */
         protected boolean inRange(final K key) {
+            Objects.requireNonNull(key, "key");
+
             final K fromKey = getFromKey();
             final K toKey = getToKey();
 
@@ -1802,6 +1804,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
          * This form allows the high endpoint (as well as all legit keys).
          */
         protected boolean inRange2(final K key) {
+            Objects.requireNonNull(key, "key");
+
             final K fromKey = getFromKey();
             final K toKey = getToKey();
 

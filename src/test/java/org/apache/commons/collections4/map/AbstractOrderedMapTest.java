@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsNPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -170,6 +171,20 @@ public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTe
             if (!isAllowNullKey()) {
                 assertNull(ordered.previousKey(null));
             }
+        }
+    }
+
+    @Test
+    @Override
+    public void testNullKeysMiscellaneous() {
+        super.testNullKeysMiscellaneous();
+
+        if (isAllowNullKey()) {
+            assertNull(getMap().nextKey(null));
+            assertNull(getMap().previousKey(null));
+        } else {
+            assertReturnsNullOrThrowsNPE(() -> getMap().nextKey(null));
+            assertReturnsNullOrThrowsNPE(() -> getMap().previousKey(null));
         }
     }
 

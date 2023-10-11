@@ -16,7 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
+import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsNPE;
+import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsNPE;
+import static org.apache.commons.collections4.TestUtils.assertThrowsAnyOf;
+import static org.apache.commons.collections4.TestUtils.assertOptionallyThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.cloneMapEntry;
 import static org.apache.commons.collections4.TestUtils.cloneObject;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,6 +50,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
@@ -825,9 +829,10 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
                     }
                 }
             } else {
-                assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+                assertThrowsAnyOf(
                         () -> getMap().put(keys[0], newValues[0]),
-                        "Expected IllegalArgumentException or UnsupportedOperationException on put (change)");
+                        "Expected IllegalArgumentException or UnsupportedOperationException on put (change)",
+                        ArithmeticException.class);
             }
 
         } else if (isPutChangeSupported()) {
@@ -873,12 +878,13 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         if (isPutAddSupported()) {
             if (isAllowNullKey()) {
                 getMap().put(null, values[0]);
+                getConfirmed().put(null, values[0]);
             } else {
-                assertThrowsAnyOf(
+                assertThrows(NullPointerException.class,
                         () -> getMap().put(null, values[0]),
-                        "put(null, value) should throw NPE/IAE",
-                        NullPointerException.class, IllegalArgumentException.class);
+                        "put(null, value) should throw NullPointerException");
             }
+            verify();
         }
     }
 
@@ -893,11 +899,137 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         if (isPutAddSupported()) {
             if (isAllowNullValue()) {
                 getMap().put(keys[0], null);
+                getConfirmed().put(keys[0], null);
             } else {
-                assertThrowsEither(NullPointerException.class, IllegalArgumentException.class,
+                assertThrows(NullPointerException.class,
                         () -> getMap().put(keys[0], null),
-                        "put(null, value) should throw NPE/IAE");
+                        "put(key, null) should throw NullPointerException");
             }
+            verify();
+        }
+    }
+
+    @Test
+    public void testNullKeysMiscellaneous() {
+        final Object[] values = getSampleValues();
+
+        if (isAllowNullKey()) {
+            resetFull();
+            assertEquals(getConfirmed().containsKey(null), getMap().containsKey(null));
+
+            if (isRemoveSupported()) {
+                resetFull();
+                getMap().remove(null);
+                getConfirmed().remove(null);
+                verify();
+            }
+
+            resetFull();
+            assertEquals(getConfirmed().keySet().contains(null), getMap().keySet().contains(null));
+            verify();
+            if (isRemoveSupported()) {
+                assertEquals(getConfirmed().keySet().remove(null), getMap().keySet().remove(null));
+                verify();
+            }
+
+            resetFull();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(null));
+            if (isRemoveSupported()) {
+                assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(null));
+            }
+            verify();
+
+            if (getConfirmed().containsKey(null)) {
+                resetFull();
+                final Map.Entry<K, V> nullEntry = new UnmodifiableMapEntry<>(null, getMap().get(null));
+                assertTrue(getMap().entrySet().contains(nullEntry));
+                verify();
+                if (isRemoveSupported()) {
+                    assertTrue(getMap().entrySet().remove(nullEntry));
+                    getConfirmed().remove(null);
+                    verify();
+                }
+            }
+        } else {
+            resetFull();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().containsKey(null));
+            verify();
+            assertReturnsNullOrThrowsNPE(() -> getMap().get(null));
+            verify();
+            assertReturnsNullOrThrowsNPE(() -> getMap().remove(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().keySet().contains(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().keySet().remove(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(null));
+            verify();
+            final Map.Entry<K, V> nullEntry = new UnmodifiableMapEntry<>(null, (V) values[0]);
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(nullEntry));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(nullEntry));
+            verify(); // none of these should have done anything
+        }
+    }
+
+    @Test
+    public void testNullValuesMiscellaneous() {
+        final Object[] keys = getSampleKeys();
+
+        if (isAllowNullValue()) {
+            resetFull();
+            assertEquals(getConfirmed().containsValue(null), getMap().containsValue(null));
+            verify();
+
+            resetFull();
+            assertEquals(getConfirmed().values().contains(null), getMap().values().contains(null));
+            verify();
+            if (isRemoveSupported()) {
+                assertEquals(getConfirmed().values().remove(null), getMap().values().remove(null));
+            }
+            verify();
+
+            resetFull();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(null));
+            if (isRemoveSupported()) {
+                assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(null));
+            }
+            verify();
+
+            resetFull();
+            if (getConfirmed().containsValue(null)) {
+                final Map.Entry<K, V> nullEntry = new UnmodifiableMapEntry<>(getMap().entrySet().stream().filter(e -> e.getValue() == null).findFirst().get());
+                assertTrue(getMap().entrySet().contains(nullEntry));
+                verify();
+                if (isRemoveSupported()) {
+                    assertTrue(getMap().entrySet().remove(nullEntry));
+                    assertTrue(getConfirmed().entrySet().remove(nullEntry));
+                    verify();
+                }
+            }
+        } else {
+            resetFull();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().containsKey(null));
+            verify();
+            assertReturnsNullOrThrowsNPE(() -> getMap().get(null));
+            verify();
+            assertReturnsNullOrThrowsNPE(() -> getMap().remove(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().values().contains(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().values().remove(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(null));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(null));
+            verify();
+            final Map.Entry<K, V> nullEntry = new UnmodifiableMapEntry<>((K) keys[0], null);
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(nullEntry));
+            verify();
+            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(nullEntry));
+            verify(); // none of these should have done anything
         }
     }
 
@@ -1074,16 +1206,18 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         } else {
             // check putAll rejects setting one changed value
             resetFull();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().putAll(m5),
-                    "Expected IllegalArgumentException on putAll");
+                    "Expected UnsupportedOperationException on putAll",
+                    UnsupportedOperationException.class);
             verify();
 
             // check putAll rejects setting all changed values
             resetFull();
-            assertThrowsEither(IllegalArgumentException.class, UnsupportedOperationException.class,
+            assertThrowsAnyOf(
                     () -> getMap().putAll(m6),
-                    "Expected IllegalArgumentException on putAll");
+                    "Expected UnsupportedOperationException on putAll",
+                    UnsupportedOperationException.class);
             verify();
         }
     }
