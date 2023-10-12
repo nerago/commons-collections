@@ -18,6 +18,7 @@ package org.apache.commons.collections4.list;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,7 +34,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.collections4.set.UnmodifiableSet;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * JUnit tests.
@@ -54,10 +59,6 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
     }
 
     boolean extraVerify = true;
-
-    public SetUniqueListTest() {
-        super(SetUniqueListTest.class.getSimpleName());
-    }
 
     @Override
     public String getCompatibilityVersion() {
@@ -671,4 +672,80 @@ public class SetUniqueListTest<E> extends AbstractListTest<E> {
         assertThrows(NullPointerException.class, () -> setUniqueList.createSetBasedOnList(new HashSet<>(), null));
     }
 
+    @Override
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return new SubListIsReadOnlyTests<>(this).getDynamicTests(this::runBulkSubListTests);
+    }
+
+    @Disabled
+    public static class SubListIsReadOnlyTests<E> extends BulkSubListTests<E> {
+        public SubListIsReadOnlyTests(AbstractListTest<E> outer) {
+            super(outer);
+        }
+
+        public void verify() {
+            ((SetUniqueListTest<?>) outer).extraVerify = false;
+            super.verify();
+            ((SetUniqueListTest<?>) outer).extraVerify = true;
+        }
+
+        @Override
+        public boolean isAddSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isRemoveSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isSetSupported() {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    @Nested
+    public class TestListIterator extends AbstractListTest<E>.TestListIterator {
+        @Override
+        public boolean supportsSet() {
+            return false;
+        }
+
+        /**
+         * Iterator does not follow the usual contract of {@link ListIterator#add} in
+         * that add may not be completed if already present in unique set.
+         */
+        @Test
+        @Override
+        public void testAdd() {
+            final E addValue = addSetValue();
+
+            // add at start should be OK, added should be previous
+            ListIterator<E> it = makeObject();
+            it.add(addValue);
+            assertEquals(addValue, it.previous());
+
+            // add at start should be OK, added should not be next
+            it = makeObject();
+            it.add(addValue);
+            assertNotEquals(addValue, it.next());
+
+            // add in middle when already exists should be ignored
+            it = makeObject();
+            it.add(addValue);
+            while (it.hasNext()) {
+                final E value = it.next();
+                assertNotEquals(addValue, value);
+                final int nextIndex = it.nextIndex(), prevIndex = it.previousIndex();
+                it.add(addValue);
+                assertEquals(nextIndex, it.nextIndex(), "index should be unchanged");
+                assertEquals(prevIndex, it.previousIndex(), "index should be unchanged");
+                assertNotEquals(addValue, it.previous());
+                assertEquals(value, it.next());
+            }
+        }
+    }
 }

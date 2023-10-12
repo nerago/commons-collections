@@ -19,7 +19,7 @@ package org.apache.commons.collections4.queue;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -29,10 +29,6 @@ import org.junit.jupiter.api.Test;
  * @since 4.2
  */
 public class SynchronizedQueueTest<T> extends AbstractQueueTest<T> {
-
-    public SynchronizedQueueTest() {
-        super(SynchronizedQueueTest.class.getSimpleName());
-    }
 
     @Override
     public String getCompatibilityVersion() {
@@ -48,11 +44,11 @@ public class SynchronizedQueueTest<T> extends AbstractQueueTest<T> {
     @Disabled("Run once")
     public void testCreate() throws Exception {
         Queue<T> queue = makeObject();
-        writeExternalFormToDisk((java.io.Serializable) queue,
-            BulkTest.TEST_DATA_PATH + "SynchronizedQueue.emptyCollection.version4.2.obj");
+        TestSerializationUtils.writeExternalFormToDisk((java.io.Serializable) queue,
+            TestSerializationUtils.TEST_DATA_PATH + "SynchronizedQueue.emptyCollection.version4.2.obj");
         queue = makeFullCollection();
-        writeExternalFormToDisk((java.io.Serializable) queue,
-            BulkTest.TEST_DATA_PATH + "SynchronizedQueue.fullCollection.version4.2.obj");
+        TestSerializationUtils.writeExternalFormToDisk((java.io.Serializable) queue,
+            TestSerializationUtils.TEST_DATA_PATH + "SynchronizedQueue.fullCollection.version4.2.obj");
     }
 
 }

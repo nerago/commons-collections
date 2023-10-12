@@ -16,13 +16,14 @@
  */
 package org.apache.commons.collections4.bloomfilter;
 
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.LongPredicate;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IndexProducerFromBitmapProducerTest extends AbstractIndexProducerTest {
 
@@ -84,7 +85,7 @@ public class IndexProducerFromBitmapProducerTest extends AbstractIndexProducerTe
         }
     }
 
-    private static class TestingBitMapProducer implements BitMapProducer {
+    private static final class TestingBitMapProducer implements BitMapProducer {
         long[] values;
 
         TestingBitMapProducer(final long[] values) {

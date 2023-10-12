@@ -25,11 +25,6 @@ import org.apache.commons.collections4.MultiSet;
  * @since 4.1
  */
 public class SynchronizedMultiSetTest<T> extends AbstractMultiSetTest<T> {
-
-    public SynchronizedMultiSetTest() {
-        super(SynchronizedMultiSetTest.class.getSimpleName());
-    }
-
     @Override
     public MultiSet<T> makeObject() {
         return SynchronizedMultiSet.synchronizedMultiSet(new HashMultiSet<>());

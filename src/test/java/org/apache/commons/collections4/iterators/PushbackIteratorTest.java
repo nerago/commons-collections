@@ -38,10 +38,6 @@ public class PushbackIteratorTest<E> extends AbstractIteratorTest<E> {
 
     private List<E> testList;
 
-    public PushbackIteratorTest() {
-        super(PushbackIteratorTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */

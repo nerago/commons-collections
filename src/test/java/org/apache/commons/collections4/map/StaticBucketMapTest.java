@@ -29,10 +29,6 @@ import org.junit.jupiter.api.Test;
  */
 public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public StaticBucketMapTest() {
-        super(StaticBucketMapTest.class.getSimpleName());
-    }
-
     @Override
     public StaticBucketMap<K, V> makeObject() {
         return new StaticBucketMap<>(30);
@@ -44,17 +40,6 @@ public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
     @Override
     public boolean isFailFastExpected() {
         return false;
-    }
-
-    @Override
-    public String[] ignoredTests() {
-        final String pre = "StaticBucketMapTest.bulkTestMap";
-        final String post = ".testCollectionIteratorFailFast";
-        return new String[] {
-            pre + "EntrySet" + post,
-            pre + "KeySet" + post,
-            pre + "Values" + post
-        };
     }
 
     // Bugzilla 37567

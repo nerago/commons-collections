@@ -39,10 +39,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public TransformedMapTest() {
-        super(TransformedMapTest.class.getSimpleName());
-    }
-
     @Override
     public IterableMap<K, V> makeObject() {
         return TransformedMap.transformingMap(new HashMap<>(), TransformerUtils.<K>nopTransformer(),

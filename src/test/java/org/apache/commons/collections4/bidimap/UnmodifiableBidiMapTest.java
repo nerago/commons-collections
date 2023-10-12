@@ -33,10 +33,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
 
-    public UnmodifiableBidiMapTest() {
-        super(UnmodifiableBidiMapTest.class.getSimpleName());
-    }
-
     @Override
     public BidiMap<K, V> makeObject() {
         return UnmodifiableBidiMap.unmodifiableBidiMap(new DualHashBidiMap<>());
@@ -52,14 +48,6 @@ public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
     @Override
     public Map<K, V> makeConfirmedMap() {
         return new HashMap<>();
-    }
-
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return new String[] {"UnmodifiableBidiMapTest.bulkTestInverseMap.bulkTestInverseMap"};
     }
 
     @Override

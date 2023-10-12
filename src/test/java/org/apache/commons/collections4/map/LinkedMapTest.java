@@ -25,21 +25,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.list.AbstractListTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
  * JUnit tests.
  */
 public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
-
-    public LinkedMapTest() {
-        super(LinkedMapTest.class.getSimpleName());
-    }
 
     @Override
     public LinkedMap<K, V> makeObject() {
@@ -227,15 +223,8 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         }
     }
 
-    public BulkTest bulkTestListView() {
-        return new TestListView();
-    }
-
+    @Nested
     public class TestListView extends AbstractListTest<K> {
-
-        TestListView() {
-            super("TestListView");
-        }
 
         @Override
         public List<K> makeObject() {

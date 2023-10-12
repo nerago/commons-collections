@@ -37,10 +37,6 @@ public class PredicatedSortedBagTest<T> extends AbstractSortedBagTest<T> {
 
     private final SortedBag<T> nullBag = null;
 
-    public PredicatedSortedBagTest() {
-        super(PredicatedSortedBagTest.class.getSimpleName());
-    }
-
     protected Predicate<T> stringPredicate() {
         return String.class::isInstance;
     }

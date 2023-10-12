@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -32,10 +33,6 @@ import org.junit.jupiter.api.Test;
  */
 public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public CaseInsensitiveMapTest() {
-        super(CaseInsensitiveMapTest.class.getSimpleName());
-    }
-
     @Override
     public String getCompatibilityVersion() {
         return "4";
@@ -44,6 +41,13 @@ public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V> 
     @Override
     public CaseInsensitiveMap<K, V> makeObject() {
         return new CaseInsensitiveMap<>();
+    }
+
+    @Override
+    public Object[] getOtherNonNullStringElements() {
+        return Arrays.stream(super.getOtherNonNullStringElements())
+                     .map(e -> ((String) e).toLowerCase())
+                     .toArray();
     }
 
     @Test

@@ -28,10 +28,6 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class AbstractLinkedListTest<E> extends AbstractListTest<E> {
 
-    public AbstractLinkedListTest(final String testName) {
-        super(testName);
-    }
-
     @Test
     @SuppressWarnings("unchecked")
     public void testRemoveFirst() {

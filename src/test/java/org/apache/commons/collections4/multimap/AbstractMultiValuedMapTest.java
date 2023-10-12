@@ -35,18 +35,19 @@ import java.util.Set;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.Bag;
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.SetValuedMap;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.bag.AbstractBagTest;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.map.AbstractMapTest;
 import org.apache.commons.collections4.multiset.AbstractMultiSetTest;
 import org.apache.commons.collections4.set.AbstractSetTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -64,11 +65,6 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
 
     /** MultiValuedHashMap created by reset(). */
     protected MultiValuedMap<K, V> confirmed;
-
-
-    public AbstractMultiValuedMapTest(final String testName) {
-        super(testName);
-    }
 
     @Override
     public abstract MultiValuedMap<K, V> makeObject();
@@ -865,7 +861,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     public void testEmptyMapCompatibility() throws Exception {
         final MultiValuedMap<?, ?> map = makeObject();
         final MultiValuedMap<?, ?> map2 =
-                (MultiValuedMap<?, ?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
+                (MultiValuedMap<?, ?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
         assertEquals(0, map2.size(), "Map is empty");
     }
 
@@ -874,7 +870,7 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
     public void testFullMapCompatibility() throws Exception {
         final MultiValuedMap map = makeFullMap();
         final MultiValuedMap map2 =
-                (MultiValuedMap) readExternalFormFromDisk(getCanonicalFullCollectionName(map));
+                (MultiValuedMap) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(map));
         assertEquals(map.size(), map2.size(), "Map is the right size");
         for (final Object key : map.keySet()) {
             assertTrue(CollectionUtils.isEqualCollection(map.get(key), map2.get(key)),
@@ -894,19 +890,9 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * of the tests in {@link AbstractCollectionTest}. After modification
      * operations, {@link #verify()} is invoked to ensure that the map and the
      * other collection views are still valid.
-     *
-     * @return a {@link AbstractCollectionTest} instance for testing the map's
-     *         values collection
      */
-    public BulkTest bulkTestMultiValuedMapEntries() {
-        return new TestMultiValuedMapEntries();
-    }
-
+    @Nested
     public class TestMultiValuedMapEntries extends AbstractCollectionTest<Entry<K, V>> {
-        public TestMultiValuedMapEntries() {
-            super("");
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public Entry<K, V>[] getFullElements() {
@@ -982,18 +968,9 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * of the tests in {@link AbstractSetTest}. After modification operations,
      * {@link #verify()} is invoked to ensure that the map and the other
      * collection views are still valid.
-     *
-     * @return a {@link AbstractSetTest} instance for testing the map's key set
      */
-    public BulkTest bulkTestMultiValuedMapKeySet() {
-        return new TestMultiValuedMapKeySet();
-    }
-
+    @Nested
     public class TestMultiValuedMapKeySet extends AbstractSetTest<K> {
-        public TestMultiValuedMapKeySet() {
-            super("");
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public K[] getFullElements() {
@@ -1041,19 +1018,9 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * of the tests in {@link AbstractCollectionTest}. After modification
      * operations, {@link #verify()} is invoked to ensure that the map and the
      * other collection views are still valid.
-     *
-     * @return a {@link AbstractCollectionTest} instance for testing the map's
-     *         values collection
      */
-    public BulkTest bulkTestMultiValuedMapValues() {
-        return new TestMultiValuedMapValues();
-    }
-
+    @Nested
     public class TestMultiValuedMapValues extends AbstractCollectionTest<V> {
-        public TestMultiValuedMapValues() {
-            super("");
-        }
-
         @Override
         public V[] getFullElements() {
             return getSampleValues();
@@ -1130,16 +1097,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
      * @return a {@link AbstractBagTest} instance for testing the map's values
      *         collection
      */
-    public BulkTest bulkTestMultiValuedMapKeys() {
-        return new TestMultiValuedMapKeys();
-    }
-
+    @Nested
     public class TestMultiValuedMapKeys extends AbstractMultiSetTest<K> {
-
-        public TestMultiValuedMapKeys() {
-            super("");
-        }
-
         @Override
         public K[] getFullElements() {
             return getSampleKeys();
@@ -1195,15 +1154,8 @@ public abstract class AbstractMultiValuedMapTest<K, V> extends AbstractObjectTes
         }
     }
 
-    public BulkTest bulkTestAsMap() {
-        return new TestMultiValuedMapAsMap();
-    }
-
+    @Nested
     public class TestMultiValuedMapAsMap extends AbstractMapTest<K, Collection<V>> {
-
-        public TestMultiValuedMapAsMap() {
-            super("");
-        }
 
         @Override
         public Map<K, Collection<V>> makeObject() {

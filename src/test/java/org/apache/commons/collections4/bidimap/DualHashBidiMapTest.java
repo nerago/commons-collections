@@ -23,24 +23,12 @@ import org.apache.commons.collections4.collection.AbstractCollectionTest;
  */
 public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
 
-    public DualHashBidiMapTest() {
-        super(DualHashBidiMapTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public DualHashBidiMap<K, V> makeObject() {
         return new DualHashBidiMap<>();
-    }
-
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return new String[] { "DualHashBidiMapTest.bulkTestInverseMap.bulkTestInverseMap" };
     }
 
     @Override

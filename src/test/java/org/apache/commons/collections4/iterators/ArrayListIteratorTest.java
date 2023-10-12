@@ -24,15 +24,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test the ArrayListIterator class.
  */
 public class ArrayListIteratorTest<E> extends ArrayIteratorTest<E> {
-
-    public ArrayListIteratorTest() {
-    }
 
     @Override
     public ArrayListIterator<E> makeEmptyIterator() {
@@ -114,4 +112,26 @@ public class ArrayListIteratorTest<E> extends ArrayIteratorTest<E> {
         assertThrows(IllegalStateException.class, () -> finalIter.set((E) "should fail"), "ListIterator#set should fail if next() or previous() have not yet been called.");
     }
 
+    @Nested
+    public class TestAsListIterator extends AbstractListIteratorTest<E> {
+        @Override
+        public ListIterator<E> makeEmptyIterator() {
+            return ArrayListIteratorTest.this.makeEmptyIterator();
+        }
+
+        @Override
+        public ListIterator<E> makeObject() {
+            return ArrayListIteratorTest.this.makeObject();
+        }
+
+        @Override
+        public boolean supportsAdd() {
+            return false;
+        }
+
+        @Override
+        public boolean supportsRemove() {
+            return false;
+        }
+    }
 }

@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -38,16 +39,6 @@ import org.junit.jupiter.api.Test;
  * They also declare certain aspects of the tests.
  */
 public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractComparatorTest(final String testName) {
-        super(testName);
-    }
-
 
     /**
      * Implement this method to return a list of sorted objects.
@@ -165,7 +156,7 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
 
     public String getCanonicalComparatorName(final Object object) {
         final StringBuilder retval = new StringBuilder();
-        retval.append(TEST_DATA_PATH);
+        retval.append(TestSerializationUtils.TEST_DATA_PATH);
         String colName = object.getClass().getName();
         colName = colName.substring(colName.lastIndexOf(".") + 1);
         retval.append(colName);
@@ -187,7 +178,7 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
 
             // test to make sure the canonical form has been preserved
             try {
-                comparator = (Comparator<T>) readExternalFormFromDisk(getCanonicalComparatorName(makeObject()));
+                comparator = (Comparator<T>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalComparatorName(makeObject()));
             } catch (final FileNotFoundException exception) {
 
                 final boolean autoCreateSerialized = false;
@@ -195,7 +186,7 @@ public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
                 if (autoCreateSerialized) {
                     comparator = makeObject();
                     final String fileName = getCanonicalComparatorName(comparator);
-                    writeExternalFormToDisk((Serializable) comparator, fileName);
+                    TestSerializationUtils.writeExternalFormToDisk((Serializable) comparator, fileName);
                     fail("Serialized form could not be found.  A serialized version "
                             + "has now been written (and should be added to CVS): " + fileName);
                 } else {

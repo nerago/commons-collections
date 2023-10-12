@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class CircularFifoQueueTest<E> extends AbstractQueueTest<E> {
 
-    public CircularFifoQueueTest() {
-        super(CircularFifoQueueTest.class.getSimpleName());
-    }
-
     /**
      *  Runs through the regular verifications, but also verifies that
      *  the buffer contains the same elements in the same sequence as the

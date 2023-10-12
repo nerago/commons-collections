@@ -32,10 +32,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableSortedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
 
-    public UnmodifiableSortedBidiMapTest() {
-        super(UnmodifiableSortedBidiMapTest.class.getSimpleName());
-    }
-
     @Override
     public SortedBidiMap<K, V> makeObject() {
         return UnmodifiableSortedBidiMap.unmodifiableSortedBidiMap(new DualTreeBidiMap<>());
@@ -57,12 +53,6 @@ public class UnmodifiableSortedBidiMapTest<K extends Comparable<K>, V extends Co
     public boolean isSubMapViewsSerializable() {
         // TreeMap sub map views have a bug in deserialization.
         return false;
-    }
-
-    @Override
-    public String[] ignoredTests() {
-        // Override to prevent infinite recursion of tests.
-        return new String[] {"UnmodifiableSortedBidiMapTest.bulkTestInverseMap.bulkTestInverseMap"};
     }
 
     @Override

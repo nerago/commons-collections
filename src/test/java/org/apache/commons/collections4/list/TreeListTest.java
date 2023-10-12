@@ -33,10 +33,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TreeListTest<E> extends AbstractListTest<E> {
 
-    public TreeListTest() {
-        super(TreeListTest.class.getSimpleName());
-    }
-
 //    public static void main(String[] args) {
 //        junit.textui.TestRunner.run(suite());
 //        System.out.println("         add; toArray; iterator; insert; get; indexOf; remove");

@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.SortedBag;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -38,14 +39,6 @@ import org.junit.jupiter.api.Test;
  * @since 4.0
  */
 public class CollectionSortedBagTest<T> extends AbstractCollectionTest<T> {
-
-    /**
-     * JUnit constructor.
-     */
-    public CollectionSortedBagTest() {
-        super(CollectionSortedBagTest.class.getSimpleName());
-    }
-
 
     /**
      * Overridden because SortedBags don't allow null elements (normally).
@@ -133,7 +126,7 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionTest<T> {
         // test to make sure the canonical form has been preserved
         final Bag<T> bag = makeObject();
         if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Bag<?> bag2 = (Bag<?>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(bag));
+            final Bag<?> bag2 = (Bag<?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(bag));
             assertEquals(0, bag2.size(), "Bag is empty");
             assertEquals(bag, bag2);
         }
@@ -148,7 +141,7 @@ public class CollectionSortedBagTest<T> extends AbstractCollectionTest<T> {
         // test to make sure the canonical form has been preserved
         final SortedBag<T> bag = (SortedBag<T>) makeFullCollection();
         if (bag instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final SortedBag<?> bag2 = (SortedBag<?>) readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
+            final SortedBag<?> bag2 = (SortedBag<?>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(bag));
             assertEquals(bag.size(), bag2.size(), "Bag is the right size");
             assertEquals(bag, bag2);
         }

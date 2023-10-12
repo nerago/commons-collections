@@ -36,10 +36,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedCollectionTest<E> extends AbstractCollectionTest<E> {
 
-    public PredicatedCollectionTest() {
-        super(PredicatedCollectionTest.class.getSimpleName());
-    }
-
     protected Predicate<E> truePredicate = TruePredicate.<E>truePredicate();
 
     protected Collection<E> decorateCollection(

@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.collection;
 
+import static org.apache.commons.collections4.TestUtils.assertUnorderedArrayEquals;
+import static org.apache.commons.collections4.TestUtils.cloneMapEntry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,7 +37,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -172,15 +173,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  still matches the confirmed collection.
      */
     private Collection<E> confirmed;
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractCollectionTest(final String testName) {
-        super(testName);
-    }
 
     /**
      *  Specifies whether equal elements in the collection are, in fact,
@@ -386,15 +378,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         final Collection<E> c = makeObject();
         c.addAll(Arrays.asList(getFullElements()));
         return c;
-    }
-
-    /**
-     * Creates a new Map Entry that is independent of the first and the map.
-     */
-    public Map.Entry<E, E> cloneMapEntry(final Map.Entry<E, E> entry) {
-        final HashMap<E, E> map = new HashMap<>();
-        map.put(entry.getKey(), entry.getValue());
-        return map.entrySet().iterator().next();
     }
 
     /**
@@ -1164,37 +1147,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     /**
-     * Assert the arrays contain the same elements, ignoring the order.
-     *
-     * <p>Note this does not test the arrays are deeply equal. Array elements are compared
-     * using {@link Object#equals(Object)}.
-     *
-     * @param a1 First array
-     * @param a2 Second array
-     * @param msg Failure message prefix
-     */
-    protected static void assertUnorderedArrayEquals(final Object[] a1, final Object[] a2, final String msg) {
-        assertEquals(a1.length, a2.length, () -> msg + ": length");
-        final int size = a1.length;
-        // Track values that have been matched once (and only once)
-        final boolean[] matched = new boolean[size];
-        NEXT_OBJECT:
-        for (final Object o : a1) {
-            for (int i = 0; i < size; i++) {
-                if (matched[i]) {
-                    // skip values already matched
-                    continue;
-                }
-                if (Objects.equals(o, a2[i])) {
-                    // values matched
-                    matched[i] = true;
-                    // continue to the outer loop
-                    continue NEXT_OBJECT;
-                }
-            }
-            fail(msg + ": array 2 does not have object: " + o);
-        }
-    }
 
     /**
      *  Tests {@code toString} on a collection.
@@ -1373,58 +1325,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      */
     public void setConfirmed(final Collection<E> confirmed) {
         this.confirmed = confirmed;
-    }
-
-    /**
-     * Handle the optional exceptions declared by {@link Collection#contains(Object)}
-     * @param coll
-     * @param element
-     */
-    protected static void assertNotCollectionContains(final Collection<?> coll, final Object element) {
-        try {
-            assertFalse(coll.contains(element));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle the optional exceptions declared by {@link Collection#containsAll(Collection)}
-     * @param coll
-     * @param sub
-     */
-    protected static void assertNotCollectionContainsAll(final Collection<?> coll, final Collection<?> sub) {
-        try {
-            assertFalse(coll.containsAll(sub));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle optional exceptions of {@link Collection#remove(Object)}
-     * @param coll
-     * @param element
-     */
-    protected static void assertNotRemoveFromCollection(final Collection<?> coll, final Object element) {
-        try {
-            assertFalse(coll.remove(element));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
-    }
-
-    /**
-     * Handle optional exceptions of {@link Collection#removeAll(Collection)}
-     * @param coll
-     * @param sub
-     */
-    protected static void assertNotRemoveAllFromCollection(final Collection<?> coll, final Collection<?> sub) {
-        try {
-            assertFalse(coll.removeAll(sub));
-        } catch (final ClassCastException | NullPointerException e) {
-            //apparently not
-        }
     }
 
 }

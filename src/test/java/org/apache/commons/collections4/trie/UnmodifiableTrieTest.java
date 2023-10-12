@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.map.AbstractIterableSortedMapTest;
 import org.apache.commons.collections4.map.AbstractSortedMapTest;
 import org.junit.jupiter.api.Test;
 
@@ -31,11 +32,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 4.0
  */
-public class UnmodifiableTrieTest<V> extends AbstractSortedMapTest<String, V> {
-
-    public UnmodifiableTrieTest() {
-        super(UnmodifiableTrieTest.class.getSimpleName());
-    }
+public class UnmodifiableTrieTest<V> extends AbstractIterableSortedMapTest<String, V> {
 
     @Override
     public Trie<String, V> makeObject() {
@@ -76,14 +73,6 @@ public class UnmodifiableTrieTest<V> extends AbstractSortedMapTest<String, V> {
         assertSame(trie, UnmodifiableTrie.unmodifiableTrie(trie));
 
         assertThrows(NullPointerException.class, () -> UnmodifiableTrie.unmodifiableTrie(null));
-    }
-
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return null;
     }
 
     @Override

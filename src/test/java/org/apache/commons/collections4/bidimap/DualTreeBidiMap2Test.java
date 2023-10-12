@@ -42,10 +42,6 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("boxing")
 public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
 
-    public DualTreeBidiMap2Test() {
-        super(DualTreeBidiMap2Test.class.getSimpleName());
-    }
-
     @Override
     public DualTreeBidiMap<K, V> makeObject() {
         return new DualTreeBidiMap<>(
@@ -97,7 +93,7 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
         }
     }
 
-    private static class IntegerComparator implements Comparator<Integer>, Serializable{
+    private static final class IntegerComparator implements Comparator<Integer>, Serializable{
         private static final long serialVersionUID = 1L;
         @Override
         public int compare(final Integer o1, final Integer o2) {
@@ -147,16 +143,6 @@ public class DualTreeBidiMap2Test<K extends Comparable<K>, V extends Comparable<
     public String getCompatibilityVersion() {
         return "4.Test2";
     }
-
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        final String recursiveTest = "DualTreeBidiMap2Test.bulkTestInverseMap.bulkTestInverseMap";
-        return new String[] { recursiveTest };
-    }
-
 
 //    public void testCreate() throws Exception {
 //        resetEmpty();

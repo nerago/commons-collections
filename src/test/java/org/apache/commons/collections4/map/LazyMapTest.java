@@ -40,10 +40,6 @@ public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     private static final Factory<Integer> oneFactory = FactoryUtils.constantFactory(1);
 
-    public LazyMapTest() {
-        super(LazyMapTest.class.getSimpleName());
-    }
-
     @Override
     public LazyMap<K, V> makeObject() {
         return lazyMap(new HashMap<>(), FactoryUtils.<V>nullFactory());

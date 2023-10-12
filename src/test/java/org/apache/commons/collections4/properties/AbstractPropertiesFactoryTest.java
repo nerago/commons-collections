@@ -28,7 +28,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,7 +65,7 @@ public abstract class AbstractPropertiesFactoryTest<T extends Properties> {
     }
 
     private String getPathString(final String fileExtension) {
-        return BulkTest.TEST_PROPERTIES_PATH + "test" + fileExtension;
+        return TestSerializationUtils.TEST_PROPERTIES_PATH + "test" + fileExtension;
     }
 
     private boolean isXmlTest(final String fileExtension) {

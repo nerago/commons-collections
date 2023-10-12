@@ -49,10 +49,6 @@ public class ListOrderedSetTest<E>
 
     private static final Integer THREE = Integer.valueOf(3);
 
-    public ListOrderedSetTest() {
-        super(ListOrderedSetTest.class.getSimpleName());
-    }
-
     @Override
     public ListOrderedSet<E> makeObject() {
         return ListOrderedSet.listOrderedSet(new HashSet<>());

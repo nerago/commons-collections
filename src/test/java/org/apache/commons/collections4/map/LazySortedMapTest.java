@@ -24,17 +24,25 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.FactoryUtils;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Extension of {@link LazyMapTest} for exercising the
@@ -45,7 +53,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("boxing")
 public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
 
-    private static class ReverseStringComparator implements Comparator<String> {
+    private static final class ReverseStringComparator implements Comparator<String> {
 
         @Override
         public int compare(final String arg0, final String arg1) {
@@ -58,12 +66,8 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
 
     protected final Comparator<String> reverseStringComparator = new ReverseStringComparator();
 
-    public LazySortedMapTest() {
-        super(LazySortedMapTest.class.getSimpleName());
-    }
-
     @Override
-    public SortedMap<K, V> makeObject() {
+    public LazySortedMap<K, V> makeObject() {
         return lazySortedMap(new TreeMap<>(), FactoryUtils.<V>nullFactory());
     }
 
@@ -144,6 +148,281 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
                         "Expecting NullPointerException for null map")
         );
     }
+
+    @Nested
+    public class LazyMapTestsNested extends LazyMapTest<K, V> {
+        @Override
+        public LazySortedMap<K, V> makeObject() {
+            return LazySortedMapTest.this.makeObject();
+        }
+
+        @Override
+        public boolean isAllowNullKey() {
+            return false;
+        }
+    }
+
+    @Override
+    @TestFactory
+    public DynamicNode subMapTests() {
+        if (runSubMapTests()) {
+            return DynamicContainer.dynamicContainer("subMapTests", Arrays.asList(
+                    new TestLazyHeadMap(this).getDynamicTests(),
+                    new TestLazyTailMap(this).getDynamicTests(),
+                    new TestLazySubMap(this).getDynamicTests()
+            ));
+        } else {
+            return DynamicContainer.dynamicContainer("subMapTests", Stream.empty());
+        }
+    }
+
+    public class TestLazyHeadMap extends TestLazyViewMap<K, V> {
+        static final int SUBSIZE = 6;
+        final K toKey;
+
+        public TestLazyHeadMap(final AbstractMapTest<K, V> main) {
+            super(main);
+            final Map<K, V> sm = main.makeFullMap();
+            for (final Map.Entry<K, V> entry : sm.entrySet()) {
+                this.subSortedKeys.add(entry.getKey());
+                this.subSortedValues.add(entry.getValue());
+            }
+            this.toKey = this.subSortedKeys.get(SUBSIZE);
+            this.subSortedKeys.subList(SUBSIZE, this.subSortedKeys.size()).clear();
+            this.subSortedValues.subList(SUBSIZE, this.subSortedValues.size()).clear();
+            this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
+        }
+        @Override
+        public LazySortedMap<K, V> makeObject() {
+            // done this way so toKey is correctly set in the returned map
+            return (LazySortedMap<K, V>) ((LazySortedMap<K, V>) main.makeObject()).headMap(toKey);
+        }
+        @Override
+        public SortedMap<K, V> makeFullMap() {
+            return ((SortedMap<K, V>) main.makeFullMap()).headMap(toKey);
+        }
+
+        @Test
+        public void testHeadMapOutOfRange() {
+            if (!isPutAddSupported()) {
+                return;
+            }
+            resetEmpty();
+            assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subSortedValues.get(0)));
+            verify();
+        }
+        @Override
+        public String getCompatibilityVersion() {
+            return main.getCompatibilityVersion() + ".HeadMapView";
+        }
+    }
+
+    public class TestLazyTailMap extends TestLazyViewMap<K, V> {
+        static final int SUBSIZE = 6;
+        final K fromKey;
+        final K invalidKey;
+
+        public TestLazyTailMap(final AbstractMapTest<K, V> main) {
+            super(main);
+            final Map<K, V> sm = main.makeFullMap();
+            for (final Map.Entry<K, V> entry : sm.entrySet()) {
+                this.subSortedKeys.add(entry.getKey());
+                this.subSortedValues.add(entry.getValue());
+            }
+            this.fromKey = this.subSortedKeys.get(this.subSortedKeys.size() - SUBSIZE);
+            this.invalidKey = this.subSortedKeys.get(this.subSortedKeys.size() - SUBSIZE - 1);
+            this.subSortedKeys.subList(0, this.subSortedKeys.size() - SUBSIZE).clear();
+            this.subSortedValues.subList(0, this.subSortedValues.size() - SUBSIZE).clear();
+            this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
+        }
+        @Override
+        public LazySortedMap<K, V> makeObject() {
+            // done this way so toKey is correctly set in the returned map
+            return (LazySortedMap<K, V>) ((SortedMap<K, V>) main.makeObject()).tailMap(fromKey);
+        }
+        @Override
+        public SortedMap<K, V> makeFullMap() {
+            return ((SortedMap<K, V>) main.makeFullMap()).tailMap(fromKey);
+        }
+
+        @Test
+        public void testTailMapOutOfRange() {
+            if (!isPutAddSupported()) {
+                return;
+            }
+            resetEmpty();
+            assertThrows(IllegalArgumentException.class, () -> getMap().put(invalidKey, subSortedValues.get(0)));
+            verify();
+        }
+        @Override
+        public String getCompatibilityVersion() {
+            return main.getCompatibilityVersion() + ".TailMapView";
+        }
+    }
+
+    public class TestLazySubMap extends TestLazyViewMap<K, V> {
+        static final int SUBSIZE = 3;
+        final K fromKey;
+        final K toKey;
+
+        public TestLazySubMap(final AbstractMapTest<K, V> main) {
+            super(main);
+            final Map<K, V> sm = main.makeFullMap();
+            for (final Map.Entry<K, V> entry : sm.entrySet()) {
+                this.subSortedKeys.add(entry.getKey());
+                this.subSortedValues.add(entry.getValue());
+            }
+            this.fromKey = this.subSortedKeys.get(SUBSIZE);
+            this.toKey = this.subSortedKeys.get(this.subSortedKeys.size() - SUBSIZE);
+
+            this.subSortedKeys.subList(0, SUBSIZE).clear();
+            this.subSortedKeys.subList(this.subSortedKeys.size() - SUBSIZE, this.subSortedKeys.size()).clear();
+
+            this.subSortedValues.subList(0, SUBSIZE).clear();
+            this.subSortedValues.subList(this.subSortedValues.size() - SUBSIZE, this.subSortedValues.size()).clear();
+
+            this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(
+                    SUBSIZE, this.main.getNewSampleValues().length - SUBSIZE));
+        }
+
+        @Override
+        public LazySortedMap<K, V> makeObject() {
+            // done this way so toKey is correctly set in the returned map
+            return (LazySortedMap<K, V>) ((SortedMap<K, V>) main.makeObject()).subMap(fromKey, toKey);
+        }
+        @Override
+        public SortedMap<K, V> makeFullMap() {
+            return ((SortedMap<K, V>) main.makeFullMap()).subMap(fromKey, toKey);
+        }
+
+        @Test
+        public void testSubMapOutOfRange() {
+            if (!isPutAddSupported()) {
+                return;
+            }
+            resetEmpty();
+            assertThrows(IllegalArgumentException.class, () -> getMap().put(toKey, subSortedValues.get(0)));
+            verify();
+        }
+        @Override
+        public String getCompatibilityVersion() {
+            return main.getCompatibilityVersion() + ".SubMapView";
+        }
+    }
+
+    public abstract static class TestLazyViewMap<K, V> extends LazySortedMapTest<K, V> {
+        protected final AbstractMapTest<K, V> main;
+        protected final List<K> subSortedKeys = new ArrayList<>();
+        protected final List<V> subSortedValues = new ArrayList<>();
+        protected final List<V> subSortedNewValues = new ArrayList<>();
+
+        public TestLazyViewMap(final AbstractMapTest<K, V> main) {
+            this.main = main;
+        }
+        @Override
+        public void resetEmpty() {
+            // needed to init verify correctly
+            main.resetEmpty();
+            super.resetEmpty();
+        }
+        @Override
+        public void resetFull() {
+            // needed to init verify correctly
+            main.resetFull();
+            super.resetFull();
+        }
+        @Override
+        public void verify() {
+            // cross verify changes on view with changes on main map
+            super.verify();
+            main.verify();
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public K[] getSampleKeys() {
+            return (K[]) subSortedKeys.toArray();
+        }
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getSampleValues() {
+            return (V[]) subSortedValues.toArray();
+        }
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getNewSampleValues() {
+            return (V[]) subSortedNewValues.toArray();
+        }
+        @Override
+        @SuppressWarnings("unchecked")
+        public K[] getOtherKeys() {
+            return (K[]) generateKeysInRange(subSortedKeys);
+        }
+        @Override
+        @SuppressWarnings("unchecked")
+        public V[] getOtherValues() {
+            return (V[]) generateKeysInRange(subSortedKeys);
+        }
+
+        @Override
+        public boolean isAllowNullKey() {
+            return main.isAllowNullKey();
+        }
+        @Override
+        public boolean isAllowNullValue() {
+            return main.isAllowNullValue();
+        }
+        @Override
+        public boolean isPutAddSupported() {
+            return main.isPutAddSupported();
+        }
+        @Override
+        public boolean isPutChangeSupported() {
+            return main.isPutChangeSupported();
+        }
+        @Override
+        public boolean isRemoveSupported() {
+            return main.isRemoveSupported();
+        }
+        @Override
+        public boolean isTestSerialization() {
+            return false;
+        }
+        @Override
+        protected boolean runSubMapTests() {
+            return false;
+        }
+
+        @SuppressWarnings("ClassNameSameAsAncestorName")
+        @Nested
+        public class LazyMapTestsNested extends LazySortedMapTest<K, V>.LazyMapTestsNested {
+            @Override
+            public K[] getSampleKeys() {
+                return TestLazyViewMap.this.getSampleKeys();
+            }
+            @Override
+            public V[] getSampleValues() {
+                return TestLazyViewMap.this.getSampleValues();
+            }
+            @Override
+            public V[] getNewSampleValues() {
+                return TestLazyViewMap.this.getNewSampleValues();
+            }
+            @Override
+            public K[] getOtherKeys() {
+                return TestLazyViewMap.this.getOtherKeys();
+            }
+            @Override
+            public V[] getOtherValues() {
+                return TestLazyViewMap.this.getOtherValues();
+            }
+            @Override
+            public boolean isTestSerialization() {
+                return false;
+            }
+        }
+    }
+
 
     @Override
     public String getCompatibilityVersion() {

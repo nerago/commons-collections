@@ -21,10 +21,6 @@ package org.apache.commons.collections4.bidimap;
  */
 public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
 
-    public DualTreeBidiMapTest() {
-        super(DualTreeBidiMapTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -33,14 +29,6 @@ public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V
         return new DualTreeBidiMap<>();
     }
 
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        final String recursiveTest = "DualTreeBidiMapTest.bulkTestInverseMap.bulkTestInverseMap";
-        return new String[] { recursiveTest };
-    }
 
 //    public void testCreate() throws Exception {
 //        resetEmpty();

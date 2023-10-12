@@ -33,10 +33,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.collections4.BulkTest;
-import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -50,10 +47,6 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
     private static final String TEN = "10";
     private static final String TWENTY = "20";
     private static final String THIRTY = "30";
-
-    public Flat3MapTest() {
-        super(Flat3MapTest.class.getSimpleName());
-    }
 
     @Override
     public Flat3Map<K, V> makeObject() {
@@ -371,62 +364,6 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
         assertEquals("one", map.get("A"));
         assertEquals("two", map.get("B"));
         assertNull(map.get("C"));
-    }
-
-    @Override
-    public BulkTest bulkTestMapIterator() {
-        return new TestFlatMapIterator();
-    }
-
-    public class TestFlatMapIterator extends AbstractMapIteratorTest<K, V> {
-        public TestFlatMapIterator() {
-            super("TestFlatMapIterator");
-        }
-
-        @Override
-        public V[] addSetValues() {
-            return Flat3MapTest.this.getNewSampleValues();
-        }
-
-        @Override
-        public boolean supportsRemove() {
-            return Flat3MapTest.this.isRemoveSupported();
-        }
-
-        @Override
-        public boolean supportsSetValue() {
-            return Flat3MapTest.this.isSetValueSupported();
-        }
-
-        @Override
-        public MapIterator<K, V> makeEmptyIterator() {
-            resetEmpty();
-            return Flat3MapTest.this.getMap().mapIterator();
-        }
-
-        @Override
-        public MapIterator<K, V> makeObject() {
-            resetFull();
-            return Flat3MapTest.this.getMap().mapIterator();
-        }
-
-        @Override
-        public IterableMap<K, V> getMap() {
-            // assumes makeFullMapIterator() called first
-            return Flat3MapTest.this.getMap();
-        }
-
-        @Override
-        public Map<K, V> getConfirmedMap() {
-            // assumes makeFullMapIterator() called first
-            return Flat3MapTest.this.getConfirmed();
-        }
-
-        @Override
-        public void verify() {
-            super.verify();
-            Flat3MapTest.this.verify();
-        }
     }
 
     @Override

@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.list.AbstractListTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -40,10 +40,6 @@ import org.junit.jupiter.api.Test;
  * @since 3.0
  */
 public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
-
-    public ListOrderedMapTest() {
-        super(ListOrderedMapTest.class.getSimpleName());
-    }
 
     @Override
     public ListOrderedMap<K, V> makeObject() {
@@ -424,19 +420,8 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         listMap.putAll(2, hmap);
     }
 
-    public BulkTest bulkTestKeyListView() {
-        return new TestKeyListView();
-    }
-
-    public BulkTest bulkTestValueListView() {
-        return new TestValueListView();
-    }
-
+    @Nested
     public class TestKeyListView extends AbstractListTest<K> {
-
-        TestKeyListView() {
-            super("TestKeyListView");
-        }
 
         @Override
         public List<K> makeObject() {
@@ -480,11 +465,8 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
     }
 
+    @Nested
     public class TestValueListView extends AbstractListTest<V> {
-
-        TestValueListView() {
-            super("TestValueListView");
-        }
 
         @Override
         public List<V> makeObject() {

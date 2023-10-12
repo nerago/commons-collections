@@ -36,10 +36,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedMultiSetTest<T> extends AbstractMultiSetTest<T> {
 
-    public PredicatedMultiSetTest() {
-        super(PredicatedMultiSetTest.class.getSimpleName());
-    }
-
     protected Predicate<T> stringPredicate() {
         return String.class::isInstance;
     }

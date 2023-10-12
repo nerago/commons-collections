@@ -33,10 +33,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ComparatorChainTest extends AbstractComparatorTest<ComparatorChainTest.PseudoRow> {
 
-    public ComparatorChainTest() {
-        super(ComparatorChainTest.class.getSimpleName());
-    }
-
     @Override
     public Comparator<PseudoRow> makeObject() {
         final ComparatorChain<PseudoRow> chain = new ComparatorChain<>(new ColumnComparator(0));

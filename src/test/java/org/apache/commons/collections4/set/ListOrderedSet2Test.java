@@ -39,10 +39,6 @@ public class ListOrderedSet2Test<E> extends AbstractSetTest<E> {
     private static final Integer TWO = Integer.valueOf(2);
     private static final Integer THREE = Integer.valueOf(3);
 
-    public ListOrderedSet2Test() {
-        super(ListOrderedSet2Test.class.getSimpleName());
-    }
-
     @Override
     public ListOrderedSet<E> makeObject() {
         return new ListOrderedSet<>();

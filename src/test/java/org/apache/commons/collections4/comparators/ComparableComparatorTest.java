@@ -26,10 +26,6 @@ import java.util.List;
 @SuppressWarnings("boxing")
 public class ComparableComparatorTest extends AbstractComparatorTest<Integer> {
 
-    public ComparableComparatorTest() {
-        super(ComparableComparatorTest.class.getSimpleName());
-    }
-
     @Override
     public Comparator<Integer> makeObject() {
         return new ComparableComparator<>();

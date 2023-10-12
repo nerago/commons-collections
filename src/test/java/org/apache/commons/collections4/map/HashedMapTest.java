@@ -26,10 +26,6 @@ import org.junit.jupiter.api.Test;
  */
 public class HashedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
-    public HashedMapTest() {
-        super(HashedMapTest.class.getSimpleName());
-    }
-
     @Override
     public HashedMap<K, V> makeObject() {
         return new HashedMap<>();

@@ -45,10 +45,6 @@ public class LazyIteratorChainTest extends AbstractIteratorTest<String> {
     protected List<String> list2 = null;
     protected List<String> list3 = null;
 
-    public LazyIteratorChainTest() {
-        super(LazyIteratorChainTest.class.getSimpleName());
-    }
-
     @BeforeEach
     public void setUp() {
         list1 = new ArrayList<>();

@@ -38,14 +38,14 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
 
-    private static class StringToInteger implements Transformer<Object, Object> {
+    private static final class StringToInteger implements Transformer<Object, Object> {
         @Override
         public Object transform(final Object input) {
             return Integer.valueOf((String) input);
         }
     }
 
-    private static class ToLowerCase implements Transformer<Object, Object> {
+    private static final class ToLowerCase implements Transformer<Object, Object> {
         @Override
         public Object transform(final Object input) {
             return ((String) input).toLowerCase();
@@ -55,10 +55,6 @@ public class TransformedCollectionTest extends AbstractCollectionTest<Object> {
     public static final Transformer<Object, Object> NOOP_TRANSFORMER = TransformerUtils.nopTransformer();
     public static final Transformer<Object, Object> STRING_TO_INTEGER_TRANSFORMER = new StringToInteger();
     public static final Transformer<Object, Object> TO_LOWER_CASE_TRANSFORMER = new ToLowerCase();
-
-    public TransformedCollectionTest() {
-        super(TransformedCollectionTest.class.getSimpleName());
-    }
 
     @Override
     public Collection<Object> makeConfirmedCollection() {

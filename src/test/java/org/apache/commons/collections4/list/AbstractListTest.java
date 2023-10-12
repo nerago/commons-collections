@@ -36,10 +36,14 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.collections4.BulkTest;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.iterators.AbstractListIteratorTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 /**
  * Abstract test class for {@link java.util.List} methods and contracts.
@@ -53,15 +57,6 @@ import org.junit.jupiter.api.Test;
  * protected methods from AbstractCollectionTest.
  */
 public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractListTest(final String testName) {
-        super(testName);
-    }
 
     /**
      *  Returns true if the collections produced by
@@ -898,8 +893,8 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
-        final byte[] object = writeExternalFormToBytes((Serializable) list);
-        final List<E> list2 = (List<E>) readExternalFormFromBytes(object);
+        final byte[] object = TestSerializationUtils.writeExternalFormToBytes((Serializable) list);
+        final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromBytes(object);
 
         assertEquals(0, list.size(), "Both lists are empty");
         assertEquals(0, list2.size(), "Both lists are empty");
@@ -914,8 +909,8 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
-        final byte[] object = writeExternalFormToBytes((Serializable) list);
-        final List<E> list2 = (List<E>) readExternalFormFromBytes(object);
+        final byte[] object = TestSerializationUtils.writeExternalFormToBytes((Serializable) list);
+        final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromBytes(object);
 
         assertEquals(size, list.size(), "Both lists are same size");
         assertEquals(size, list2.size(), "Both lists are same size");
@@ -940,7 +935,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         final List<E> list = makeObject();
         if (list instanceof Serializable && !skipSerializedCanonicalTests()
                 && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(list));
+            final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(list));
             assertEquals(0, list2.size(), "List is empty");
             assertEquals(list, list2);
         }
@@ -964,7 +959,7 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         // test to make sure the canonical form has been preserved
         final List<E> list = makeFullCollection();
         if (list instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final List<E> list2 = (List<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(list));
+            final List<E> list2 = (List<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(list));
             if (list2.size() == 4) {
                 // old serialized tests
                 return;
@@ -984,19 +979,20 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
      *  The verify() method is overloaded to test that the original list is
      *  modified when the sublist is.
      */
-    public BulkTest bulkTestSubList() {
-        if (getFullElements().length - 6 < 10) {
-            return null;
-        }
-        return new BulkTestSubList<>(this);
+    public boolean runBulkSubListTests() {
+        return getFullElements().length - 6 >= 10;
     }
 
-    public static class BulkTestSubList<E> extends AbstractListTest<E> {
+    @TestFactory
+    public DynamicNode bulkSubListTests() {
+        return new BulkSubListTests<>(this).getDynamicTests(this::runBulkSubListTests);
+    }
 
-        private final AbstractListTest<E> outer;
+    @Disabled("should only run via TestFactory")
+    public static class BulkSubListTests<E> extends AbstractListTest<E> {
+        protected final AbstractListTest<E> outer;
 
-        public BulkTestSubList(final AbstractListTest<E> outer) {
-            super("");
+        public BulkSubListTests(final AbstractListTest<E> outer) {
             this.outer = outer;
         }
 
@@ -1191,15 +1187,8 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
                 m.getName() + " raised unexpected " + thrown.getTargetException());
     }
 
-    public BulkTest bulkTestListIterator() {
-        return new TestListIterator();
-    }
-
+    @Nested
     public class TestListIterator extends AbstractListIteratorTest<E> {
-        public TestListIterator() {
-            super("TestListIterator");
-        }
-
         @Override
         public E addSetValue() {
             return AbstractListTest.this.getOtherElements()[0];

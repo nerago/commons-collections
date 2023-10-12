@@ -32,10 +32,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V> {
 
-    public UnmodifiableOrderedBidiMapTest() {
-        super(UnmodifiableOrderedBidiMapTest.class.getSimpleName());
-    }
-
     @Override
     public OrderedBidiMap<K, V> makeObject() {
         return UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(new TreeBidiMap<>());
@@ -51,14 +47,6 @@ public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends C
     @Override
     public Map<K, V> makeConfirmedMap() {
         return new TreeMap<>();
-    }
-
-    /**
-     * Override to prevent infinite recursion of tests.
-     */
-    @Override
-    public String[] ignoredTests() {
-        return new String[] {"UnmodifiableOrderedBidiMapTest.bulkTestInverseMap.bulkTestInverseMap"};
     }
 
     @Override

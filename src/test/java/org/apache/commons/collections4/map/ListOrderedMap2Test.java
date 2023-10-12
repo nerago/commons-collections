@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.list.AbstractListTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -35,10 +35,6 @@ import org.junit.jupiter.api.Test;
  * @since 3.1
  */
 public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
-
-    public ListOrderedMap2Test() {
-        super(ListOrderedMap2Test.class.getSimpleName());
-    }
 
     @Override
     public ListOrderedMap<K, V> makeObject() {
@@ -156,16 +152,8 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
         }
     }
 
-    public BulkTest bulkTestListView() {
-        return new TestListView();
-    }
-
+    @Nested
     public class TestListView extends AbstractListTest<K> {
-
-        TestListView() {
-            super("TestListView");
-        }
-
         @Override
         public List<K> makeObject() {
             return ListOrderedMap2Test.this.makeObject().asList();

@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Test;
 
@@ -48,15 +49,6 @@ import org.junit.jupiter.api.Test;
  * @since 4.0
  */
 public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractQueueTest(final String testName) {
-        super(testName);
-    }
 
     /**
      *  Returns true if the collections produced by
@@ -301,8 +293,8 @@ public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
-        final byte[] object = writeExternalFormToBytes((Serializable) queue);
-        final Queue<E> queue2 = (Queue<E>) readExternalFormFromBytes(object);
+        final byte[] object = TestSerializationUtils.writeExternalFormToBytes((Serializable) queue);
+        final Queue<E> queue2 = (Queue<E>) TestSerializationUtils.readExternalFormFromBytes(object);
 
         assertEquals(0, queue.size(), "Both queues are empty");
         assertEquals(0, queue2.size(), "Both queues are empty");
@@ -317,8 +309,8 @@ public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
             return;
         }
 
-        final byte[] object = writeExternalFormToBytes((Serializable) queue);
-        final Queue<E> queue2 = (Queue<E>) readExternalFormFromBytes(object);
+        final byte[] object = TestSerializationUtils.writeExternalFormToBytes((Serializable) queue);
+        final Queue<E> queue2 = (Queue<E>) TestSerializationUtils.readExternalFormFromBytes(object);
 
         assertEquals(size, queue.size(), "Both queues are same size");
         assertEquals(size, queue2.size(), "Both queues are same size");
@@ -343,7 +335,7 @@ public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
         final Queue<E> queue = makeObject();
         if (queue instanceof Serializable && !skipSerializedCanonicalTests()
                 && isTestSerialization()) {
-            final Queue<E> queue2 = (Queue<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(queue));
+            final Queue<E> queue2 = (Queue<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(queue));
             assertEquals(0, queue2.size(), "Queue is empty");
         }
     }
@@ -366,7 +358,7 @@ public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
         // test to make sure the canonical form has been preserved
         final Queue<E> queue = makeFullCollection();
         if (queue instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
-            final Queue<E> queue2 = (Queue<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(queue));
+            final Queue<E> queue2 = (Queue<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(queue));
             assertEquals(queue.size(), queue2.size(), "Queues are not the right size");
         }
     }

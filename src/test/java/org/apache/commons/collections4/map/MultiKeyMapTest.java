@@ -44,10 +44,6 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
     static final Integer I7 = Integer.valueOf(7);
     static final Integer I8 = Integer.valueOf(8);
 
-    public MultiKeyMapTest() {
-        super(MultiKeyMapTest.class.getSimpleName());
-    }
-
     @Override
     public MultiKeyMap<K, V> makeObject() {
         return new MultiKeyMap<>();
