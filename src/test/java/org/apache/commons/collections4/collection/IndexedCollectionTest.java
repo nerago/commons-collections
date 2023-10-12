@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.collection;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.collections4.TestUtils.assertUnorderedArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -43,11 +43,7 @@ import org.junit.jupiter.api.Test;
 public class IndexedCollectionTest extends AbstractCollectionTest<String> {
 
     protected Collection<String> decorateCollection(final Collection<String> collection) {
-        return IndexedCollection.nonUniqueIndexedCollection(collection, new IntegerTransformer());
-    }
-
-    protected IndexedCollection<Integer, String> decorateUniqueCollection(final Collection<String> collection) {
-        return IndexedCollection.uniqueIndexedCollection(collection, new IntegerTransformer());
+        return IndexedCollectionOriginal.nonUniqueIndexedCollection(collection, new IntegerTransformer());
     }
 
     private static final class IntegerTransformer implements Transformer<String, Integer>, Serializable {
@@ -80,12 +76,12 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
 
     @Override
     public String[] getFullElements() {
-        return new String[] { "1", "3", "5", "7", "2", "4", "6" };
+        return new String[] { "1", "3", "5", "7", "2", "4", "6", "7", "2", "4", "6" };
     }
 
     @Override
     public String[] getOtherElements() {
-        return new String[] {"9", "88", "678", "87", "98", "78", "99"};
+        return new String[] {"9", "88", "678", "87", "98", "78", "99","98", "78", "99"};
     }
 
     @Override
@@ -98,14 +94,16 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         return new ArrayList<>(Arrays.asList(getFullElements()));
     }
 
-    public Collection<String> makeUniqueTestCollection() {
-        return decorateUniqueCollection(new ArrayList<>());
-    }
-
     @Override
-    protected boolean skipSerializedCanonicalTests() {
-        // FIXME: support canonical tests
-        return true;
+    public void verify() {
+        super.verify();
+
+        final IndexedCollectionInterface<Integer, String> coll = (IndexedCollectionInterface<Integer, String>) getCollection();
+        for (final String item : coll) {
+            final Integer num = Integer.valueOf(item);
+            assertTrue(coll.contains(item));
+            assertEquals(item, coll.get(num));
+        }
     }
 
     @Test
@@ -117,52 +115,13 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
         coll.addAll(asList("2", "3", "4"));
 
         @SuppressWarnings("unchecked")
-        final IndexedCollection<Integer, String> indexed = (IndexedCollection<Integer, String>) coll;
+        final IndexedCollectionInterface<Integer, String> indexed = (IndexedCollectionInterface<Integer, String>) coll;
         assertEquals("12", indexed.get(12));
         assertEquals("16", indexed.get(16));
         assertEquals("1", indexed.get(1));
         assertEquals("2", indexed.get(2));
         assertEquals("3", indexed.get(3));
         assertEquals("4", indexed.get(4));
-    }
-
-    @Test
-    public void testEnsureDuplicateObjectsCauseException() throws Exception {
-        final Collection<String> coll = makeUniqueTestCollection();
-
-        coll.add("1");
-
-        assertThrows(IllegalArgumentException.class, () -> coll.add("1"));
-    }
-
-    @Test
-    public void testDecoratedCollectionIsIndexedOnCreation() throws Exception {
-        final Collection<String> original = makeFullCollection();
-        final IndexedCollection<Integer, String> indexed = decorateUniqueCollection(original);
-
-        assertEquals("1", indexed.get(1));
-        assertEquals("2", indexed.get(2));
-        assertEquals("3", indexed.get(3));
-    }
-
-    @Test
-    public void testReindexUpdatesIndexWhenDecoratedCollectionIsModifiedSeparately() throws Exception {
-        final Collection<String> original = new ArrayList<>();
-        final IndexedCollection<Integer, String> indexed = decorateUniqueCollection(original);
-
-        original.add("1");
-        original.add("2");
-        original.add("3");
-
-        assertNull(indexed.get(1));
-        assertNull(indexed.get(2));
-        assertNull(indexed.get(3));
-
-        indexed.reindex();
-
-        assertEquals("1", indexed.get(1));
-        assertEquals("2", indexed.get(2));
-        assertEquals("3", indexed.get(3));
     }
 
     @Test

@@ -17,16 +17,13 @@
 package org.apache.commons.collections4.collection;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.ListValuedMap;
-import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.map.MultiValueMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 /**
@@ -48,7 +45,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
  *
  * @since 4.0
  */
-public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
+public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> implements IndexedCollectionInterface<K, C> {
 
     /** Serialization version */
     private static final long serialVersionUID = -5512610452568370038L;
@@ -181,6 +178,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      * @return element found
      * @see #values(Object)
      */
+    @Override
     public C get(final K key) {
         // index is a MultiMap which returns a Collection
         final List<C> coll = index.get(key);
@@ -193,6 +191,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      * @param key  key to look up
      * @return a collection of elements found, or null if {@code contains(key) == false}
      */
+    @Override
     @SuppressWarnings("unchecked") // index is a MultiMap which returns a Collection
     public Collection<C> values(final K key) {
         if (index.containsKey(key)) {
@@ -205,6 +204,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
     /**
      * Clears the index and re-indexes the entire decorated {@link Collection}.
      */
+    @Override
     public void reindex() {
         index.clear();
         for (final C c : decorated()) {

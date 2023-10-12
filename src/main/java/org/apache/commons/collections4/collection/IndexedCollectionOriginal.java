@@ -45,7 +45,7 @@ import java.util.function.Predicate;
  *
  * @since 4.0
  */
-public class IndexedCollectionOriginal<K, C> extends AbstractCollectionDecorator<C> {
+public class IndexedCollectionOriginal<K, C> extends AbstractCollectionDecorator<C> implements IndexedCollectionInterface<K, C> {
 
     // TODO: replace with MultiValuedMap
 
