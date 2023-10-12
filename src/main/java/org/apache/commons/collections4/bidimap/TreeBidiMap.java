@@ -24,18 +24,22 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedMap;
 
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
@@ -84,7 +88,7 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
 public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
-    implements OrderedBidiMap<K, V>, Serializable {
+    implements SortedBidiMap<K, V>, TreeBidiMap.InternalMap<K, V>, Serializable {
 
     enum DataElement {
         KEY("key"), VALUE("value");
@@ -114,7 +118,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     private transient Set<K> keySet;
     private transient Set<V> valuesSet;
     private transient Set<Map.Entry<K, V>> entrySet;
-    private transient Inverse inverse;
+    private transient Inverse<K, V> inverse;
 
     /**
      * Constructs a new empty TreeBidiMap.
@@ -344,6 +348,16 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return greatestNode(rootNode[KEY.ordinal()], KEY).getKey();
     }
 
+    @Override
+    public Node<K, V> firstNode(final DataElement orderType) {
+        return leastNode(rootNode[orderType.ordinal()], orderType);
+    }
+
+    @Override
+    public Node<K, V> lastNode(final DataElement orderType) {
+        return greatestNode(rootNode[orderType.ordinal()], orderType);
+    }
+
     /**
      * Gets the next key after the one specified.
      * <p>
@@ -389,7 +403,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public Set<K> keySet() {
         if (keySet == null) {
-            keySet = new KeyView(KEY);
+            keySet = new KeyView<>(this, KEY);
         }
         return keySet;
     }
@@ -410,7 +424,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public Set<V> values() {
         if (valuesSet == null) {
-            valuesSet = new ValueView(KEY);
+            valuesSet = new ValueView<>(this, KEY);
         }
         return valuesSet;
     }
@@ -432,7 +446,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
         if (entrySet == null) {
-            entrySet = new EntryView();
+            entrySet = new EntryView<>(this);
         }
         return entrySet;
     }
@@ -440,9 +454,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         if (isEmpty()) {
-            return EmptyOrderedMapIterator.<K, V>emptyOrderedMapIterator();
+            return EmptyOrderedMapIterator.emptyOrderedMapIterator();
         }
-        return new ViewMapIterator(KEY);
+        return new ViewMapIterator<>(this, KEY);
     }
 
     /**
@@ -451,11 +465,26 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * @return the inverse map
      */
     @Override
-    public OrderedBidiMap<V, K> inverseBidiMap() {
+    public SortedBidiMap<V, K> inverseBidiMap() {
         if (inverse == null) {
-            inverse = new Inverse();
+            inverse = new Inverse<>();
         }
         return inverse;
+    }
+
+    @Override
+    public Comparator<? super K> comparator() {
+        return null;
+    }
+
+    @Override
+    public Comparator<? super V> valueComparator() {
+        return null;
+    }
+
+    @Override
+    public int modifications() {
+        return modifications;
     }
 
     /**
@@ -487,6 +516,21 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public String toString() {
         return this.doToString(KEY);
+    }
+
+    @Override
+    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        return new SubMap<>(this, SortedMapRange.<K>full(null).subRange(fromKey, toKey));
+    }
+
+    @Override
+    public SortedMap<K, V> headMap(final K toKey) {
+        return new SubMap<>(this, SortedMapRange.<K>full(null).head(toKey));
+    }
+
+    @Override
+    public SortedMap<K, V> tailMap(final K fromKey) {
+        return new SubMap<>(this, SortedMapRange.<K>full(null).tail(fromKey));
     }
 
     /**
@@ -550,7 +594,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
-    private V doRemoveKey(final Object key) {
+    @Override
+    public V doRemoveKey(final Object key) {
         final Node<K, V> node = lookupKey(key);
         if (node == null) {
             return null;
@@ -559,7 +604,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return node.getValue();
     }
 
-    private K doRemoveValue(final Object value) {
+    @Override
+    public K doRemoveValue(final Object value) {
         final Node<K, V> node = lookupValue(value);
         if (node == null) {
             return null;
@@ -594,11 +640,13 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return rval;
     }
 
-    private Node<K, V> lookupKey(final Object key) {
+    @Override
+    public Node<K, V> lookupKey(final Object key) {
         return this.<K>lookup(key, KEY);
     }
 
-    private Node<K, V> lookupValue(final Object value) {
+    @Override
+    public Node<K, V> lookupValue(final Object value) {
         return this.<V>lookup(value, VALUE);
     }
 
@@ -610,7 +658,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      *                     or the {@link DataElement#VALUE value}.
      * @return the specified node
      */
-    private Node<K, V> nextGreater(final Node<K, V> node, final DataElement dataElement) {
+    @Override
+    public Node<K, V> nextGreater(final Node<K, V> node, final DataElement dataElement) {
         final Node<K, V> rval;
         if (node == null) {
             rval = null;
@@ -645,7 +694,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      *                     or the {@link DataElement#VALUE value}.
      * @return the specified node
      */
-    private Node<K, V> nextSmaller(final Node<K, V> node, final DataElement dataElement) {
+    @Override
+    public Node<K, V> nextSmaller(final Node<K, V> node, final DataElement dataElement) {
         final Node<K, V> rval;
         if (node == null) {
             rval = null;
@@ -974,7 +1024,8 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      *
      * @param deletedNode the node to be deleted
      */
-    private void doRedBlackDelete(final Node<K, V> deletedNode) {
+    @Override
+    public void doRedBlackDelete(final Node<K, V> deletedNode) {
         for (final DataElement dataElement : DataElement.values()) {
             // if deleted node has both left and children, swap with
             // the next greater node
@@ -1427,9 +1478,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     private MapIterator<?, ?> getMapIterator(final DataElement dataElement) {
         switch (dataElement) {
         case KEY:
-            return new ViewMapIterator(KEY);
+            return new ViewMapIterator<>(this, KEY);
         case VALUE:
-            return new InverseViewMapIterator(VALUE);
+            return new InverseViewMapIterator<>(this, VALUE);
         default:
             throw new IllegalArgumentException();
         }
@@ -1469,83 +1520,114 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
+    interface InternalMap<K extends Comparable<K>, V extends Comparable<V>> extends SortedMap<K, V> {
+
+        int modifications();
+
+        K getKey(Object key);
+
+        Node<K, V> lookupKey(Object obj);
+
+        Node<K, V> lookupValue(Object obj);
+
+        Node<K, V> firstNode(DataElement orderType);
+
+        Node<K, V> lastNode(DataElement orderType);
+
+        Node<K, V> nextGreater(Node<K, V> nextNode, DataElement orderType);
+
+        Node<K, V> nextSmaller(Node<K, V> lastReturnedNode, DataElement orderType);
+
+        V doRemoveKey(Object o);
+
+        K doRemoveValue(Object o);
+
+        void doRedBlackDelete(Node<K, V> lastReturnedNode);
+    }
+
     /**
      * A view of this map.
      */
-    abstract class AbstractView<E> extends AbstractSet<E> {
+    abstract static class AbstractView<K extends Comparable<K>, V extends Comparable<V>, E> extends AbstractSet<E> {
+
+        /** Reference to parent map, inverse or sub map */
+        final InternalMap<K, V> parent;
 
         /** Whether to return KEY or VALUE order. */
         final DataElement orderType;
 
         /**
          * Constructor.
-         * @param orderType  the KEY or VALUE int for the order
+         *
+         * @param parent reference to parent map, inverse or sub map
+         * @param orderType the KEY or VALUE int for the order
          */
-        AbstractView(final DataElement orderType) {
+        AbstractView(final InternalMap<K, V> parent, final DataElement orderType) {
+            this.parent = parent;
             this.orderType = orderType;
         }
 
         @Override
         public int size() {
-            return TreeBidiMap.this.size();
+            return parent.size();
         }
 
         @Override
         public void clear() {
-            TreeBidiMap.this.clear();
+            parent.clear();
         }
     }
 
-    class KeyView extends AbstractView<K> {
+    static class KeyView<K extends Comparable<K>, V extends Comparable<V>> extends AbstractView<K, V, K> {
 
         /**
          * Creates a new TreeBidiMap.KeyView.
          */
-        KeyView(final DataElement orderType) {
-            super(orderType);
+        KeyView(final InternalMap<K, V> parent, final DataElement orderType) {
+            super(parent, orderType);
         }
 
         @Override
         public Iterator<K> iterator() {
-            return new ViewMapIterator(orderType);
+            return new ViewMapIterator<>(parent, orderType);
         }
 
         @Override
         public boolean contains(final Object obj) {
             checkNonNullComparable(obj, KEY);
-            return lookupKey(obj) != null;
+            return parent.lookupKey(obj) != null;
         }
 
         @Override
         public boolean remove(final Object o) {
-            return doRemoveKey(o) != null;
+            return parent.doRemoveKey(o) != null;
         }
 
     }
 
-    class ValueView extends AbstractView<V> {
+    static class ValueView<K extends Comparable<K>, V extends Comparable<V>> extends AbstractView<K, V, V> {
 
         /**
          * Creates a new TreeBidiMap.ValueView.
          */
-        ValueView(final DataElement orderType) {
-            super(orderType);
+        ValueView(final InternalMap<K, V> parent, final DataElement orderType) {
+            super(parent, orderType);
         }
 
         @Override
         public Iterator<V> iterator() {
-            return new InverseViewMapIterator(orderType);
+            return new InverseViewMapIterator<>(parent, orderType);
         }
 
         @Override
         public boolean contains(final Object obj) {
             checkNonNullComparable(obj, VALUE);
-            return lookupValue(obj) != null;
+            return parent.lookupValue(obj) != null;
         }
 
         @Override
         public boolean remove(final Object o) {
-            return doRemoveValue(o) != null;
+            return parent.doRemoveValue(o) != null;
         }
 
     }
@@ -1553,10 +1635,10 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    class EntryView extends AbstractView<Map.Entry<K, V>> {
+    static class EntryView<K extends Comparable<K>, V extends Comparable<V>> extends AbstractView<K, V, Map.Entry<K, V>> {
 
-        EntryView() {
-            super(KEY);
+        EntryView(final InternalMap<K, V> parent) {
+            super(parent, KEY);
         }
 
         @Override
@@ -1566,7 +1648,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupKey(entry.getKey());
+            final Node<K, V> node = parent.lookupKey(entry.getKey());
             return node != null && node.getValue().equals(value);
         }
 
@@ -1577,9 +1659,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupKey(entry.getKey());
+            final Node<K, V> node = parent.lookupKey(entry.getKey());
             if (node != null && node.getValue().equals(value)) {
-                doRedBlackDelete(node);
+                parent.doRedBlackDelete(node);
                 return true;
             }
             return false;
@@ -1587,17 +1669,17 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            return new ViewMapEntryIterator();
+            return new ViewMapEntryIterator<>(parent);
         }
     }
 
     /**
      * A view of this map.
      */
-    class InverseEntryView extends AbstractView<Map.Entry<V, K>> {
+    static class InverseEntryView<K extends Comparable<K>, V extends Comparable<V>> extends AbstractView<K, V, Map.Entry<V, K>> {
 
-        InverseEntryView() {
-            super(VALUE);
+        InverseEntryView(final InternalMap<K, V> parent) {
+            super(parent, VALUE);
         }
 
         @Override
@@ -1607,7 +1689,7 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupValue(entry.getKey());
+            final Node<K, V> node = parent.lookupValue(entry.getKey());
             return node != null && node.getKey().equals(value);
         }
 
@@ -1618,9 +1700,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             }
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
             final Object value = entry.getValue();
-            final Node<K, V> node = lookupValue(entry.getKey());
+            final Node<K, V> node = parent.lookupValue(entry.getKey());
             if (node != null && node.getKey().equals(value)) {
-                doRedBlackDelete(node);
+                parent.doRedBlackDelete(node);
                 return true;
             }
             return false;
@@ -1628,15 +1710,17 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Iterator<Map.Entry<V, K>> iterator() {
-            return new InverseViewMapEntryIterator();
+            return new InverseViewMapEntryIterator<>(parent);
         }
     }
 
     /**
      * An iterator over the map.
      */
-    abstract class AbstractViewIterator {
+    abstract static class AbstractViewIterator<K extends Comparable<K>, V extends Comparable<V>> {
 
+        /** Reference to parent map, inverse or sub map. */
+        private final InternalMap<K,V> parent;
         /** Whether to return KEY or VALUE order. */
         private final DataElement orderType;
         /** The last node returned by the iterator. */
@@ -1652,10 +1736,11 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
          * Constructor.
          * @param orderType  the KEY or VALUE int for the order
          */
-        AbstractViewIterator(final DataElement orderType) {
+        AbstractViewIterator(final InternalMap<K, V> parent, final DataElement orderType) {
+            this.parent = parent;
             this.orderType = orderType;
-            expectedModifications = modifications;
-            nextNode = leastNode(rootNode[orderType.ordinal()], orderType);
+            expectedModifications = parent.modifications();
+            nextNode = parent.firstNode(orderType);
             lastReturnedNode = null;
             previousNode = null;
         }
@@ -1668,12 +1753,12 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             if (nextNode == null) {
                 throw new NoSuchElementException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications() != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             lastReturnedNode = nextNode;
             previousNode = nextNode;
-            nextNode = nextGreater(nextNode, orderType);
+            nextNode = parent.nextGreater(nextNode, orderType);
             return lastReturnedNode;
         }
 
@@ -1685,12 +1770,12 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             if (previousNode == null) {
                 throw new NoSuchElementException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications() != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
             lastReturnedNode = previousNode;
             nextNode = previousNode;
-            previousNode = nextSmaller(lastReturnedNode, orderType);
+            previousNode = parent.nextSmaller(lastReturnedNode, orderType);
             return lastReturnedNode;
         }
 
@@ -1698,24 +1783,24 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             if (lastReturnedNode == null) {
                 throw new IllegalStateException();
             }
-            if (modifications != expectedModifications) {
+            if (parent.modifications() != expectedModifications) {
                 throw new ConcurrentModificationException();
             }
-            doRedBlackDelete(lastReturnedNode);
+            parent.doRedBlackDelete(lastReturnedNode);
             expectedModifications++;
             if (lastReturnedNode == previousNode) {
                 // most recent was navigateNext
                 if (nextNode == null) {
-                    previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+                    previousNode = parent.lastNode(orderType);
                 } else {
-                    previousNode = nextSmaller(nextNode, orderType);
+                    previousNode = parent.nextSmaller(nextNode, orderType);
                 }
             } else {
                 // most recent was navigatePrevious
                 if (previousNode == null) {
-                    nextNode = leastNode(rootNode[orderType.ordinal()], orderType);
+                    nextNode = parent.firstNode(orderType);
                 } else {
-                    nextNode = nextGreater(previousNode, orderType);
+                    nextNode = parent.nextGreater(previousNode, orderType);
                 }
             }
             lastReturnedNode = null;
@@ -1725,13 +1810,13 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map.
      */
-    class ViewMapIterator extends AbstractViewIterator implements OrderedMapIterator<K, V> {
+    static class ViewMapIterator<K extends Comparable<K>, V extends Comparable<V>> extends AbstractViewIterator<K, V> implements OrderedMapIterator<K, V> {
 
         /**
          * Constructor.
          */
-        ViewMapIterator(final DataElement orderType) {
-            super(orderType);
+        ViewMapIterator(final InternalMap<K, V> parent, final DataElement orderType) {
+            super(parent, orderType);
         }
 
         @Override
@@ -1771,13 +1856,13 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map.
      */
-    class InverseViewMapIterator extends AbstractViewIterator implements OrderedMapIterator<V, K> {
+    static class InverseViewMapIterator<K extends Comparable<K>, V extends Comparable<V>> extends AbstractViewIterator<K, V> implements OrderedMapIterator<V, K> {
 
         /**
          * Creates a new TreeBidiMap.InverseViewMapIterator.
          */
-        InverseViewMapIterator(final DataElement orderType) {
-            super(orderType);
+        InverseViewMapIterator(final InternalMap<K, V> parent, final DataElement orderType) {
+            super(parent, orderType);
         }
 
         @Override
@@ -1817,13 +1902,13 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the map entries.
      */
-    class ViewMapEntryIterator extends AbstractViewIterator implements OrderedIterator<Map.Entry<K, V>> {
+    static class ViewMapEntryIterator<K extends Comparable<K>, V extends Comparable<V>> extends AbstractViewIterator<K, V> implements OrderedIterator<Map.Entry<K, V>> {
 
         /**
          * Constructor.
          */
-        ViewMapEntryIterator() {
-            super(KEY);
+        ViewMapEntryIterator(final InternalMap<K, V> parent) {
+            super(parent, KEY);
         }
 
         @Override
@@ -1840,13 +1925,13 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * An iterator over the inverse map entries.
      */
-    class InverseViewMapEntryIterator extends AbstractViewIterator implements OrderedIterator<Map.Entry<V, K>> {
+    static class InverseViewMapEntryIterator<K extends Comparable<K>, V extends Comparable<V>> extends AbstractViewIterator<K, V> implements OrderedIterator<Map.Entry<V, K>> {
 
         /**
          * Constructor.
          */
-        InverseViewMapEntryIterator() {
-            super(VALUE);
+        InverseViewMapEntryIterator(final InternalMap<K, V> parent) {
+            super(parent, VALUE);
         }
 
         @Override
@@ -2090,8 +2175,9 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * The inverse map implementation.
      */
-    class Inverse implements OrderedBidiMap<V, K> {
+    static class Inverse<K extends Comparable<K>, V extends Comparable<V>> implements SortedBidiMap<V, K>, InternalMap<V, K> {
 
+        private InternalMap<K, V> parent;
         /** Store the keySet once created. */
         private Set<V> inverseKeySet;
         /** Store the valuesSet once created. */
@@ -2099,24 +2185,28 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         /** Store the entrySet once created. */
         private Set<Map.Entry<V, K>> inverseEntrySet;
 
+        Inverse(final InternalMap<K, V> parent) {
+            this.parent = parent;
+        }
+
         @Override
         public int size() {
-            return TreeBidiMap.this.size();
+            return parent.size();
         }
 
         @Override
         public boolean isEmpty() {
-            return TreeBidiMap.this.isEmpty();
+            return parent.isEmpty();
         }
 
         @Override
         public K get(final Object key) {
-            return TreeBidiMap.this.getKey(key);
+            return parent.getKey(key);
         }
 
         @Override
         public V getKey(final Object value) {
-            return TreeBidiMap.this.get(value);
+            return parent.get(value);
         }
 
         @Override
@@ -2127,6 +2217,21 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public boolean containsValue(final Object value) {
             return TreeBidiMap.this.containsKey(value);
+        }
+
+        @Override
+        public SortedMap<V, K> subMap(V fromKey, V toKey) {
+            return null;
+        }
+
+        @Override
+        public SortedMap<V, K> headMap(V toKey) {
+            return null;
+        }
+
+        @Override
+        public SortedMap<V, K> tailMap(V fromKey) {
+            return null;
         }
 
         @Override
@@ -2143,6 +2248,16 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
                 throw new NoSuchElementException("Map is empty");
             }
             return greatestNode(TreeBidiMap.this.rootNode[VALUE.ordinal()], VALUE).getValue();
+        }
+
+        @Override
+        public Node<K, V> firstNode(DataElement orderType) {
+            return null;
+        }
+
+        @Override
+        public Node<K, V> lastNode(DataElement orderType) {
+            return null;
         }
 
         @Override
@@ -2215,14 +2330,24 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public OrderedMapIterator<V, K> mapIterator() {
             if (isEmpty()) {
-                return EmptyOrderedMapIterator.<V, K>emptyOrderedMapIterator();
+                return EmptyOrderedMapIterator.emptyOrderedMapIterator();
             }
-            return new InverseViewMapIterator(VALUE);
+            return new InverseViewMapIterator(this, VALUE);
         }
 
         @Override
-        public OrderedBidiMap<K, V> inverseBidiMap() {
+        public SortedBidiMap<K, V> inverseBidiMap() {
             return TreeBidiMap.this;
+        }
+
+        @Override
+        public Comparator<? super V> comparator() {
+            return null;
+        }
+
+        @Override
+        public Comparator<? super K> valueComparator() {
+            return null;
         }
 
         @Override
@@ -2241,4 +2366,142 @@ public class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
+    /**
+     * The inverse map implementation.
+     */
+    private static class SubMap<K extends Comparable<K>, V extends Comparable<V>> implements SortedMap<K, V>, InternalMap<K, V> {
+        private final TreeBidiMap<K, V> parent;
+        private final SortedMapRange<K> range;
+
+        SubMap(final TreeBidiMap<K, V> parent, final SortedMapRange<K> range) {
+            this.parent = parent;
+            this.range = range;
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return null;
+        }
+
+        @Override
+        public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+            return new SubMap<>(parent, range.subRange(fromKey, toKey));
+        }
+
+        @Override
+        public SortedMap<K, V> headMap(final K toKey) {
+            return new SubMap<>(parent, range.head(toKey));
+        }
+
+        @Override
+        public SortedMap<K, V> tailMap(final K fromKey) {
+            return new SubMap<>(parent, range.tail(fromKey));
+        }
+
+        @Override
+        public K firstKey() {
+            return null;
+        }
+
+        @Override
+        public K lastKey() {
+            return null;
+        }
+
+
+        @Override
+        public Node<K, V> firstNode(DataElement orderType) {
+            return null;
+        }
+
+        @Override
+        public Node<K, V> lastNode(DataElement orderType) {
+            return null;
+        }
+
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return false;
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return false;
+        }
+
+        @Override
+        public V get(Object key) {
+            return null;
+        }
+
+        @Override
+        public V put(K key, V value) {
+            return null;
+        }
+
+        @Override
+        public V remove(Object key) {
+            return null;
+        }
+
+        @Override
+        public void putAll(Map<? extends K, ? extends V> m) {
+
+        }
+
+        @Override
+        public void clear() {
+
+        }
+
+        @Override
+        public int modifications() {
+            return 0;
+        }
+
+        @Override
+        public Node<K, V> firstNode(DataElement orderType) {
+            return null;
+        }
+
+        @Override
+        public Node<K, V> nextGreater(Node<K, V> nextNode, DataElement orderType) {
+            return null;
+        }
+
+        @Override
+        public Node<K, V> nextSmaller(Node<K, V> lastReturnedNode, DataElement orderType) {
+            return null;
+        }
+
+        @Override
+        public Node<K, V> lookupKey(Object obj) {
+            return null;
+        }
+
+        @Override
+        public Set<K> keySet() {
+            return null;
+        }
+
+        @Override
+        public Collection<V> values() {
+            return null;
+        }
+
+        @Override
+        public Set<Entry<K, V>> entrySet() {
+            return null;
+        }
+    }
 }

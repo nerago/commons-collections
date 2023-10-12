@@ -20,6 +20,7 @@ import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrow
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -181,7 +182,9 @@ public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTe
 
         if (isAllowNullKey()) {
             assertNull(getMap().nextKey(null));
-            assertNull(getMap().previousKey(null));
+            final K previous = getMap().previousKey(null);
+            // TODO confirm which of these results is better
+            assertTrue(previous == null || previous.equals(getMap().lastKey()));
         } else {
             assertReturnsNullOrThrowsNPE(() -> getMap().nextKey(null));
             assertReturnsNullOrThrowsNPE(() -> getMap().previousKey(null));

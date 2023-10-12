@@ -18,16 +18,16 @@ package org.apache.commons.collections4.bidimap;
 
 import java.util.TreeMap;
 
-import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.SortedBidiMap;
 
 /**
  * JUnit tests.
  */
-public class TreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V> {
+public class TreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
 
     @Override
-    public BidiMap<K, V> makeObject() {
-        return new TreeBidiMap<>();
+    public SortedBidiMap<K, V> makeObject() {
+        return new TreeBidiMap<K, V>();
     }
 
     @Override
