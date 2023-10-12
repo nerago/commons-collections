@@ -51,7 +51,7 @@ public final class TestSerializationUtils {
      * @throws IOException
      */
     public static void writeExternalFormToDisk(final Serializable o, final String path) throws IOException {
-        try (final ObjectOutputStream oStream = new ObjectOutputStream(Files.newOutputStream(Paths.get(path)))) {
+        try (ObjectOutputStream oStream = new ObjectOutputStream(Files.newOutputStream(Paths.get(path)))) {
             oStream.writeObject(o);
         }
     }
@@ -66,7 +66,7 @@ public final class TestSerializationUtils {
      */
     public static byte[] writeExternalFormToBytes(final Serializable o) throws IOException {
         final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        try (final ObjectOutputStream oStream = new ObjectOutputStream(byteStream)) {
+        try (ObjectOutputStream oStream = new ObjectOutputStream(byteStream)) {
             oStream.writeObject(o);
         }
         return byteStream.toByteArray();
@@ -83,7 +83,7 @@ public final class TestSerializationUtils {
      * @throws ClassNotFoundException
      */
     public static Object readExternalFormFromDisk(final String path) throws IOException, ClassNotFoundException {
-        try (final ObjectInputStream oStream = new ObjectInputStream(Files.newInputStream(Paths.get(path)))) {
+        try (ObjectInputStream oStream = new ObjectInputStream(Files.newInputStream(Paths.get(path)))) {
             return oStream.readObject();
         }
     }
@@ -98,7 +98,7 @@ public final class TestSerializationUtils {
      * @throws ClassNotFoundException
      */
     public static Object readExternalFormFromBytes(final byte[] bytes) throws IOException, ClassNotFoundException {
-        try (final ObjectInputStream oStream = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
+        try (ObjectInputStream oStream = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
             return oStream.readObject();
         }
     }

@@ -261,7 +261,7 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
             return otherElements;
         }
 
-        protected abstract SortedSet<E> getSubSet(final SortedSet<E> set);
+        protected abstract SortedSet<E> getSubSet(SortedSet<E> set);
 
         @Override
         public SortedSet<E> makeObject() {

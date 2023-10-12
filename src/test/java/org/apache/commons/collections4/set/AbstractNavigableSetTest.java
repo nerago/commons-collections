@@ -262,7 +262,7 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
             return otherElements;
         }
 
-        protected abstract NavigableSet<E> getSubSet(final NavigableSet<E> set);
+        protected abstract NavigableSet<E> getSubSet(NavigableSet<E> set);
 
         @Override
         public NavigableSet<E> makeObject() {

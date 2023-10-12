@@ -203,7 +203,7 @@ public final class TestUtils {
     public static Object serializeDeserialize(final Object obj) throws Exception {
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-        try (final ObjectOutputStream out = new ObjectOutputStream(buffer)) {
+        try (ObjectOutputStream out = new ObjectOutputStream(buffer)) {
             out.writeObject(obj);
         }
 

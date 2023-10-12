@@ -437,10 +437,10 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
             V newValue1 = getNewSampleValues()[0];
             V newValue2 = getNewSampleValues()[1];
 
-            key1 = (K) new String((String)key1);
-            key2 = (K) new String((String)key2);
-            newValue1 = (V) new String((String)newValue1);
-            newValue2 = (V) new String((String)newValue2);
+            key1 = (K) new String((String) key1);
+            key2 = (K) new String((String) key2);
+            newValue1 = (V) new String((String) newValue1);
+            newValue2 = (V) new String((String) newValue2);
 
             resetFull();
             // explicitly get entries as sample values/keys are connected for some maps
@@ -456,10 +456,10 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
             TestBidiMapEntrySet.this.verify();
 
 
-            key1 = (K) new String((String)key1);
-            key2 = (K) new String((String)key2);
-            newValue1 = (V) new String((String)newValue1);
-            newValue2 = (V) new String((String)newValue2);
+            key1 = (K) new String((String) key1);
+            key2 = (K) new String((String) key2);
+            newValue1 = (V) new String((String) newValue1);
+            newValue2 = (V) new String((String) newValue2);
 
             if (!isSetValueSupported()) {
                 assertThrows(UnsupportedOperationException.class, () -> entry1.setValue(getNewSampleValues()[0]));
@@ -471,19 +471,19 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
             entryConfirmed1.setValue(newValue1);
 
 
-            key1 = (K) new String((String)key1);
-            key2 = (K) new String((String)key2);
-            newValue1 = (V) new String((String)newValue1);
-            newValue2 = (V) new String((String)newValue2);
+            key1 = (K) new String((String) key1);
+            key2 = (K) new String((String) key2);
+            newValue1 = (V) new String((String) newValue1);
+            newValue2 = (V) new String((String) newValue2);
 
             entry2.setValue(newValue2);
             entryConfirmed2.setValue(newValue2);
 
 
-            key1 = (K) new String((String)key1);
-            key2 = (K) new String((String)key2);
-            newValue1 = (V) new String((String)newValue1);
-            newValue2 = (V) new String((String)newValue2);
+            key1 = (K) new String((String) key1);
+            key2 = (K) new String((String) key2);
+            newValue1 = (V) new String((String) newValue1);
+            newValue2 = (V) new String((String) newValue2);
 
             getMap().put(key1, newValue1);
             getMap().put(key2, newValue2);
