@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsAnyOf;
+import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsNPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -344,28 +346,39 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         resetFull();
         Assumptions.assumeTrue(isPutAddSupported() && isPutChangeSupported() && isRemoveSupported(),
                 "this version of the test expects full modify allowed");
-        assertTrue(isAllowNullKey() && isAllowNullValue(), "this version of the test only applies to nulls allowed");
-        assertTrue(Arrays.asList(keys).contains(null) && getMap().containsKey(null),
-                "this version of the test expects null keys in full map");
-        assertTrue(Arrays.asList(values).contains(null) && getMap().containsValue(null),
-                "this version of the test expects null keys in full map");
+        if (isAllowNullKey() && isAllowNullValue()) {
+            assertTrue(Arrays.asList(keys).contains(null) && getMap().containsKey(null),
+                    "this version of the test expects null keys in full map");
+            assertTrue(Arrays.asList(values).contains(null) && getMap().containsValue(null),
+                    "this version of the test expects null keys in full map");
 
-        resetFull();
-        assertNotNull(getMap().get(null));
-        assertNotEquals(values[0], getMap().get(null));
-        getMap().put(null, values[0]);
-        // confirmed isn't a bidi so replicate removing the old mapping first
-        getConfirmed().values().remove(values[0]);
-        getConfirmed().put(null, values[0]);
-        verify();
+            resetFull();
+            assertNotNull(getMap().get(null));
+            assertNotEquals(values[0], getMap().get(null));
+            getMap().put(null, values[0]);
+            // confirmed isn't a bidi so replicate removing the old mapping first
+            getConfirmed().values().remove(values[0]);
+            getConfirmed().put(null, values[0]);
+            verify();
 
-        resetFull();
-        assertNotNull(getMap().get(keys[0]));
-        getMap().put(keys[0], null);
-        // confirmed isn't a bidi so replicate removing the old mapping first
-        getConfirmed().values().remove(null);
-        getConfirmed().put(keys[0], null);
-        verify();
+            resetFull();
+            assertNotNull(getMap().get(keys[0]));
+            getMap().put(keys[0], null);
+            // confirmed isn't a bidi so replicate removing the old mapping first
+            getConfirmed().values().remove(null);
+            getConfirmed().put(keys[0], null);
+            verify();
+        } else {
+            assertFalse(isAllowNullKey() && isAllowNullValue(), "this version of the test only applies to nulls allowed");
+            assertFalse(Arrays.asList(keys).contains(null));
+            assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsKey(null), NullPointerException.class);
+            assertFalse(Arrays.asList(values).contains(null));
+            assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsValue(null), NullPointerException.class);
+
+            assertThrows(NullPointerException.class, () -> getMap().put(null, (V) values[0]));
+            assertThrows(NullPointerException.class, () -> getMap().put((K) keys[0], null));
+            verify();
+        }
     }
 
     @Test
@@ -401,7 +414,7 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         } else {
             assertReturnsNullOrThrowsNPE(() -> getMap().getKey(null));
             verify();
-            assertReturnsNullOrThrowsNPE(() -> getMap().removeValue(null));
+            assertReturnsNullOrThrowsAnyOf(() -> getMap().removeValue(null), NullPointerException.class, UnsupportedOperationException.class);
             verify();
         }
     }

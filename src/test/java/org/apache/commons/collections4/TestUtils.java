@@ -89,6 +89,7 @@ public final class TestUtils {
             executable.execute();
         } catch (final Throwable caught) {
             checkCaughtIsAllowedType(message, caught, exceptionsAllowed);
+            return;
         }
 
         fail(message + " ==> Expected exception to be thrown, but nothing was thrown.");

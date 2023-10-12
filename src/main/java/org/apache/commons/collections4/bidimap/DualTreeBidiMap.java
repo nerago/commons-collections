@@ -185,6 +185,13 @@ public class DualTreeBidiMap<K, V> extends AbstractDualBidiMap<K, V>
         return hm.lastKey();
     }
 
+    @Override
+    public V put(final K key, final V value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+        return super.put(key, value);
+    }
+
     /**
      * Obtains an ordered map iterator.
      * <p>
