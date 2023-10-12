@@ -16,7 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
+import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsNPE;
+import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsNPE;
 import static org.apache.commons.collections4.TestUtils.assertThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.assertOptionallyThrowsAnyOf;
@@ -956,20 +958,20 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             verify();
             assertReturnsNullOrThrowsNPE(() -> getMap().get(null));
             verify();
-            assertReturnsNullOrThrowsNPE(() -> getMap().remove(null));
+            assertReturnsNullOrThrowsAnyOf(() -> getMap().remove(null), NullPointerException.class, UnsupportedOperationException.class);
             verify();
             assertReturnsFalseOrThrowsNPE(() -> getMap().keySet().contains(null));
             verify();
-            assertReturnsFalseOrThrowsNPE(() -> getMap().keySet().remove(null));
+            assertReturnsNullOrThrowsAnyOf(() -> getMap().keySet().remove(null), NullPointerException.class, UnsupportedOperationException.class);
             verify();
             assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(null));
             verify();
-            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(null));
+            assertReturnsFalseOrThrowsAnyOf(() -> getMap().entrySet().remove(null), NullPointerException.class, UnsupportedOperationException.class);
             verify();
             final Map.Entry<K, V> nullEntry = new UnmodifiableMapEntry<>(null, (V) values[0]);
             assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().contains(nullEntry));
             verify();
-            assertReturnsFalseOrThrowsNPE(() -> getMap().entrySet().remove(nullEntry));
+            assertReturnsNullOrThrowsAnyOf(() -> getMap().entrySet().remove(nullEntry), NullPointerException.class, UnsupportedOperationException.class);
             verify(); // none of these should have done anything
         }
     }

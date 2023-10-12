@@ -645,9 +645,9 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
                 "this version of the test expects full modify allowed");
         assertFalse(isAllowNullKey() && isAllowNullValue(), "this version of the test only applies to nulls allowed");
         assertFalse(Arrays.asList(keys).contains(null));
-        assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsKey(null), "full map shouldn't contain null in general", NullPointerException.class);
+        assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsKey(null), NullPointerException.class);
         assertFalse(Arrays.asList(values).contains(null));
-        assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsValue(null), "full map shouldn't contain null in general", NullPointerException.class);
+        assertReturnsFalseOrThrowsAnyOf(() -> getMap().containsValue(null), NullPointerException.class);
 
         assertThrows(NullPointerException.class, () -> getMap().put(null, (V) values[0]));
         assertThrows(NullPointerException.class, () -> getMap().put((K) keys[0], null));

@@ -26,6 +26,7 @@ import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.engine.discovery.predicates.IsNestedTestClass;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
+import org.junit.platform.commons.support.ReflectionSupport;
 import org.junit.platform.commons.util.ReflectionUtils;
 
 import java.lang.reflect.Constructor;
@@ -195,18 +196,18 @@ public class BulkTest implements Cloneable {
                 .map(method -> DynamicTest.dynamicTest(
                         method.getName(),
                         URI.create("method:" + ReflectionUtils.getFullyQualifiedMethodName(type, method)),
-                        () -> ReflectionUtils.invokeMethod(method, instance)));
+                        () -> ReflectionSupport.invokeMethod(method, instance)));
     }
 
     private static Stream<DynamicNode> findTestFactories(final BulkTest instance) {
         return AnnotationSupport.findAnnotatedMethods(instance.getClass(), TestFactory.class, HierarchyTraversalMode.TOP_DOWN)
                 .stream()
-                .map(method -> (DynamicNode) ReflectionUtils.invokeMethod(method, instance));
+                .map(method -> (DynamicNode) ReflectionSupport.invokeMethod(method, instance));
     }
 
     private static Stream<DynamicNode> findNestedClasses(final BulkTest instance) {
         final Class<? extends BulkTest> type = instance.getClass();
-        final List<Class<?>> candidates = ReflectionUtils.findNestedClasses(type, new IsNestedTestClass());
+        final List<Class<?>> candidates = ReflectionSupport.findNestedClasses(type, new IsNestedTestClass());
 
         // following jupiter engine need to get the first matching each name
         return candidates.stream()

@@ -116,18 +116,38 @@ public final class TestUtils {
      * <p>
      * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
      */
-    public static void assertReturnsFalseOrThrowsAnyOf(final BooleanSupplier executable, final String message, final Class<?>... exceptionsAllowed) {
-        validateExceptionsAllowed(message, exceptionsAllowed);
+    public static void assertReturnsFalseOrThrowsAnyOf(final BooleanSupplier executable, final Class<?>... exceptionsAllowed) {
+        validateExceptionsAllowed("", exceptionsAllowed);
 
         final boolean result;
         try {
             result = executable.getAsBoolean();
         } catch (final Throwable caught) {
-            checkCaughtIsAllowedType(message, caught, exceptionsAllowed);
+            checkCaughtIsAllowedType("", caught, exceptionsAllowed);
             return;
         }
 
-        assertFalse(result, message);
+        assertFalse(result);
+    }
+
+    /**
+     * Does method throw any one of the specified exception types or return null.
+     * Should be used where either result is equivalent for passing a test.
+     * <p>
+     * Uses runtime validation of exception classes since java can't enforce generic types with vararg anyway.
+     */
+    public static void assertReturnsNullOrThrowsAnyOf(final Supplier<Object> executable, final Class<?>... exceptionsAllowed) {
+        validateExceptionsAllowed("", exceptionsAllowed);
+
+        final Object result;
+        try {
+            result = executable.get();
+        } catch (final Throwable caught) {
+            checkCaughtIsAllowedType("", caught, exceptionsAllowed);
+            return;
+        }
+
+        assertNull(result);
     }
 
     /**
