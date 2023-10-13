@@ -45,7 +45,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
  *
  * @since 4.0
  */
-public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> implements IndexedCollectionInterface<K, C> {
+public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
 
     /** Serialization version */
     private static final long serialVersionUID = -5512610452568370038L;
@@ -74,7 +74,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
     public static <K, C> IndexedCollection<K, C> uniqueIndexedCollection(final Collection<C> coll,
                                                                          final Transformer<C, K> keyTransformer) {
         return new IndexedCollection<>(coll, keyTransformer,
-                                           new ArrayListValuedHashMap<>(),
+                                           new ArrayListValuedHashMap<>(1),
                                            true);
     }
 
@@ -119,15 +119,24 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
      */
     @Override
     public boolean add(final C object) {
+        final K key = checkCanAddToIndex(object);
         final boolean added = super.add(object);
         if (added) {
-            addToIndex(object);
+            index.put(key, object);
         }
         return added;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException if the object maps to an existing key and the index
+     *   enforces a uniqueness constraint
+     */
     @Override
     public boolean addAll(final Collection<? extends C> coll) {
+        checkCanAddAllToIndex(coll);
+
         boolean changed = false;
         for (final C c: coll) {
             changed |= add(c);
@@ -142,20 +151,45 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
     }
 
     /**
-     * {@inheritDoc}
+     * Returns <tt>true</tt> if this collection contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this collection
+     * contains at least one element <tt>e</tt> such that keyTransformer(object) == keyTransformer(e)
      * <p>
-     * Note: uses the index for fast lookup
+     * Note: uses the index for fast lookup.
+     * Will return true for any object that maps to the same index key as a contained element.
+     * If you need normal {@link Collection#contains} semantics then see {@link #containsExact}.
+     *
+     * @param object element whose presence in this collection is to be tested
+     * @return <tt>true</tt> if this collection contains any element with the same index key
+     * @throws ClassCastException if the type of the specified element is incompatible with this collection or transformer
+     * @throws NullPointerException if the specified element is null and this collection or transformer does not permit null elements
      */
-    @SuppressWarnings("unchecked")
     @Override
     public boolean contains(final Object object) {
-        return index.containsKey(keyTransformer.transform((C) object));
+        return index.containsKey(transform(object));
+    }
+
+    /**
+     * Returns <tt>true</tt> if this collection contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this collection
+     * contains at least one element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     *
+     * @param object element whose presence in this collection is to be tested
+     * @return <tt>true</tt> if this collection contains the specified element
+     * @throws ClassCastException if the type of the specified element is incompatible with this collection or transformer
+     * @throws NullPointerException if the specified element is null and this collection or transformer does not permit null elements
+     */
+    public boolean containsExact(final Object object) {
+        final K key = transform((C) object);
+        return index.containsMapping(key, object);
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Note: uses the index for fast lookup
+     * Note: uses the index for fast lookup.
+     * Will return true for any object that maps to the same index key as a contained element.
      */
     @Override
     public boolean containsAll(final Collection<?> coll) {
@@ -178,9 +212,9 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
      * @return element found
      * @see #values(Object)
      */
-    @Override
     public C get(final K key) {
-        // index is a MultiMap which returns a Collection
+        // index is a MultiValuedMap which returns a Collection
+
         final List<C> coll = index.get(key);
         return coll.isEmpty() ? null : coll.get(0);
     }
@@ -191,11 +225,11 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
      * @param key  key to look up
      * @return a collection of elements found, or null if {@code contains(key) == false}
      */
-    @Override
-    @SuppressWarnings("unchecked") // index is a MultiMap which returns a Collection
     public Collection<C> values(final K key) {
-        if (index.containsKey(key)) {
-            return UnmodifiableCollection.unmodifiableCollection(index.get(key));
+        // index is a MultiValuedMap which returns a Collection
+        final List<C> coll = index.get(key);
+        if (!coll.isEmpty()) {
+            return UnmodifiableCollection.unmodifiableCollection(coll);
         } else {
             return null;
         }
@@ -204,20 +238,24 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
     /**
      * Clears the index and re-indexes the entire decorated {@link Collection}.
      */
-    @Override
     public void reindex() {
         index.clear();
         for (final C c : decorated()) {
-            addToIndex(c);
+            final K key = checkCanAddToIndex(c);
+            index.put(key, c);
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean remove(final Object object) {
         final boolean removed = super.remove(object);
         if (removed) {
-            removeFromIndex((C) object);
+            final K key = transform(object);
+            if (uniqueIndex) {
+                index.remove(key);
+            } else {
+                index.removeMapping(key, object);
+            }
         }
         return removed;
     }
@@ -246,11 +284,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
 
     @Override
     public boolean removeAll(final Collection<?> coll) {
-        boolean changed = false;
-        for (final Object o : coll) {
-            changed |= remove(o);
-        }
-        return changed;
+        return removeIf(coll::contains);
     }
 
     @Override
@@ -262,34 +296,40 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> impl
         return changed;
     }
 
+    @SuppressWarnings("unchecked")
+    private K transform(final Object object) {
+        return keyTransformer.transform((C) object);
+    }
 
     /**
-     * Provides checking for adding the index.
+     * Provides checking for adding to the index before any changes made.
      *
-     * @param object the object to index
-     * @throws IllegalArgumentException if the object maps to an existing key and the index
-     *   enforces a uniqueness constraint
+     * @param object the object to check
+     * @return the transformed key for object
+     * @throws IllegalArgumentException if the object maps to an existing key
      */
-    private void addToIndex(final C object) {
-        final K key = keyTransformer.transform(object);
+    private K checkCanAddToIndex(final C object) {
+        final K key = transform(object);
         if (uniqueIndex && index.containsKey(key)) {
             throw new IllegalArgumentException("Duplicate key in uniquely indexed collection.");
         }
-        index.put(key, object);
+        return key;
     }
 
     /**
-     * Removes an object from the index.
+     * Provides checking for adding to the index before any changes made.
      *
-     * @param object the object to remove
+     * @param coll the objects to check
+     * @throws IllegalArgumentException if any object maps to an existing key
      */
-    private void removeFromIndex(final C object) {
-        final K key = keyTransformer.transform(object);
+    private void checkCanAddAllToIndex(final Iterable<? extends C> coll) {
         if (uniqueIndex) {
-            index.remove(key);
-        } else {
-            index.removeMapping(keyTransformer.transform(object), object);
+            for (final C object : coll) {
+                final K key = transform(object);
+                if (index.containsKey(key)) {
+                    throw new IllegalArgumentException("Duplicate key in uniquely indexed collection.");
+                }
+            }
         }
     }
-
 }
