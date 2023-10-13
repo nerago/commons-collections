@@ -43,16 +43,7 @@ import org.junit.jupiter.api.Test;
 public class IndexedCollectionTest extends AbstractCollectionTest<String> {
 
     protected Collection<String> decorateCollection(final Collection<String> collection) {
-        return IndexedCollectionOriginal.nonUniqueIndexedCollection(collection, new IntegerTransformer());
-    }
-
-    private static final class IntegerTransformer implements Transformer<String, Integer>, Serializable {
-        private static final long serialVersionUID = 809439581555072949L;
-
-        @Override
-        public Integer transform(final String input) {
-            return Integer.valueOf(input);
-        }
+        return IndexedCollectionOriginal.nonUniqueIndexedCollection(collection, new LowerCaseTransformer());
     }
 
     private static final class LowerCaseTransformer implements Transformer<String, String>, Serializable {
@@ -76,12 +67,15 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
 
     @Override
     public String[] getFullElements() {
-        return new String[] { "1", "3", "5", "7", "2", "4", "6", "7", "2", "4", "6" };
+        // Include some duplicates, some otherwise mapping to same key.
+        // However, order matters to some of the base collection tests since this collection mildly breaks usual contract
+        //   where Collection.contains uses indexed value (in this example case-insensitive match).
+        return new String[] { "a", "c", "3", "i", "r", "s", "d", "f", "B", "D", "f" };
     }
 
     @Override
     public String[] getOtherElements() {
-        return new String[] {"9", "88", "678", "87", "98", "78", "99","98", "78", "99"};
+        return new String[] {"9", "v", "678", "87", "98", "q", "99", "98", "Q", "99"};
     }
 
     @Override
@@ -98,30 +92,14 @@ public class IndexedCollectionTest extends AbstractCollectionTest<String> {
     public void verify() {
         super.verify();
 
-        final IndexedCollectionInterface<Integer, String> coll = (IndexedCollectionInterface<Integer, String>) getCollection();
+        final IndexedCollectionInterface<String, String> coll = (IndexedCollectionInterface<String, String>) getCollection();
+        // older version of non-unique indexed collection failed both of these asserts since remove cleared too much
         for (final String item : coll) {
-            final Integer num = Integer.valueOf(item);
             assertTrue(coll.contains(item));
-            assertEquals(item, coll.get(num));
+
+            final String key = item.toLowerCase();
+            assertTrue(coll.values(key).contains(item));
         }
-    }
-
-    @Test
-    public void testAddedObjectsCanBeRetrievedByKey() throws Exception {
-        final Collection<String> coll = makeObject();
-        coll.add("12");
-        coll.add("16");
-        coll.add("1");
-        coll.addAll(asList("2", "3", "4"));
-
-        @SuppressWarnings("unchecked")
-        final IndexedCollectionInterface<Integer, String> indexed = (IndexedCollectionInterface<Integer, String>) coll;
-        assertEquals("12", indexed.get(12));
-        assertEquals("16", indexed.get(16));
-        assertEquals("1", indexed.get(1));
-        assertEquals("2", indexed.get(2));
-        assertEquals("3", indexed.get(3));
-        assertEquals("4", indexed.get(4));
     }
 
     @Test

@@ -173,6 +173,7 @@ public class IndexedCollectionUniqueTest extends AbstractSetTest<String> {
         resetFull();
         size = getCollection().size();
         assertThrows(IllegalArgumentException.class, () -> getCollection().addAll(Arrays.asList(getFullElements())));
+        // prior version of indexedcollection failed verify here since didn't pre validate uniqueness before changing
         verify();
         assertEquals(size, getCollection().size(), "Size should not change if addAll throws");
     }
