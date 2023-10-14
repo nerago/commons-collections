@@ -1440,4 +1440,15 @@ public class IteratorUtils {
         return stringBuilder.toString();
     }
 
+    public static <V> boolean removeIf(final Iterator<V> iterator, final java.util.function.Predicate<? super V> filter) {
+        Objects.requireNonNull(filter);
+        boolean changed = false;
+        while (iterator.hasNext()) {
+            if (filter.test(iterator.next())) {
+                iterator.remove();
+                changed = true;
+            }
+        }
+        return changed;
+    }
 }

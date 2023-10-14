@@ -18,14 +18,14 @@ package org.apache.commons.collections4;
 
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 
+import java.io.Serializable;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 
-public interface BiMultiMap<K, V> {
+public interface BiMultiMap<K, V> extends Serializable {
     // Query operations
 
     int size();
@@ -72,30 +72,30 @@ public interface BiMultiMap<K, V> {
 
     // Views
 
-    Collection<Entry<K, V>> allEntries();
-
-    MultiSet<K> keys();
+    Collection<Entry<K, V>> entrySet();
 
     Set<K> keySet();
 
-    MultiSet<K> values();
+    MultiSet<K> keyMultiSet();
 
-    Set<K> valueSet();
+    MultiValuedMap<V, K> keyMultiMap();
 
-    MultiValuedMap<V, K> asMultiKeyMap();
+    Set<V> valueSet();
 
-    MultiValuedMap<K, V> asMultiValueMap();
+    MultiSet<V> valueMultiSet();
+
+    MultiValuedMap<K, V> valueMultiMap();
 
     BiMultiMap<V, K> inverseBiMultiMap();
 
     // Iterators
 
-    MapIterator<K, V> mapIteratorFull();
+    MapIterator<K, V> mapIteratorEntries();
 
     MapIterator<K, Set<V>> mapIteratorKeys();
 
     MapIterator<V, Set<K>> mapIteratorValues();
 
-    MapSpliterator<K, V> mapSpliterator();
+    MapSpliterator<K, V> mapSpliteratorEntries();
 
 }
