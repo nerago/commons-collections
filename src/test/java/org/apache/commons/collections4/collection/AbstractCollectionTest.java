@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -46,6 +47,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
 
@@ -504,6 +506,44 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
     }
 
     // Tests
+    /**
+     * Compare the current serialized form of the Collection
+     * against the canonical version in SCM.
+     */
+    @Test
+    public void testEmptyCollectionCompatibility() throws Exception {
+        // test to make sure the canonical form has been preserved
+        final Collection<E> coll = makeObject();
+        if (coll instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
+            @SuppressWarnings("unchecked")
+            final Collection<E> coll2 = (Collection<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(coll));
+            assertEquals(0, coll2.size(), "Collection should be empty");
+            assertSame(coll.getClass(), coll2.getClass(), "Object has different type");
+            confirmed = coll;
+            collection = coll2;
+            verify();
+        }
+    }
+
+    /**
+     * Compare the current serialized form of the Collection
+     * against the canonical version in SCM.
+     */
+    @Test
+    public void testFullMapCompatibility() throws Exception {
+        // test to make sure the canonical form has been preserved
+        final Collection<E> coll = makeFullCollection();
+        if (coll instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
+            @SuppressWarnings("unchecked")
+            final Collection<E> coll2 = (Collection<E>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(coll));
+            assertEquals(coll2.size(), coll.size(), "Collection should be same size");
+            assertSame(coll.getClass(), coll2.getClass(), "Object has different type");
+            confirmed = coll;
+            collection = coll2;
+            verify();
+        }
+    }
+
     /**
      *  Tests {@link Collection#add(Object)}.
      */

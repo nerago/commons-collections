@@ -82,6 +82,11 @@ public class IndexedCollectionUniqueTest extends AbstractCollectionTest<String> 
     }
 
     @Override
+    public String getCompatibilityVersion() {
+        return "4.Unique";
+    }
+
+    @Override
     public void verify() {
         super.verify();
 
