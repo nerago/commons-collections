@@ -55,7 +55,10 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
     private final Transformer<C, K> keyTransformer;
 
     /** The map of indexes to collected objects. */
-    protected final ListValuedMap<K, C> index;
+    private final ListValuedMap<K, C> index;
+
+    /** The uniqueness constraint for the index. */
+    private final boolean uniqueIndex;
 
     /**
      * Create an {@link IndexedCollection} for a unique index.
@@ -71,8 +74,9 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      */
     public static <K, C> IndexedCollection<K, C> uniqueIndexedCollection(final Collection<C> coll,
                                                                          final Transformer<C, K> keyTransformer) {
-        return new IndexedCollectionUnique<>(coll, keyTransformer,
-                                           new ArrayListValuedHashMap<>(1));
+        return new IndexedCollection<>(coll, keyTransformer,
+                                           new ArrayListValuedHashMap<>(1),
+                                           true);
     }
 
     /**
@@ -87,7 +91,8 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
     public static <K, C> IndexedCollection<K, C> nonUniqueIndexedCollection(final Collection<C> coll,
                                                                             final Transformer<C, K> keyTransformer) {
         return new IndexedCollection<>(coll, keyTransformer,
-                                            new ArrayListValuedHashMap<>());
+                                            new ArrayListValuedHashMap<>(),
+                                           false);
     }
 
     /**
@@ -96,12 +101,14 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      * @param coll  decorated {@link Collection}
      * @param keyTransformer  {@link Transformer} for generating index keys
      * @param map  map to use as index
+     * @param uniqueIndex  if the index shall enforce uniqueness of index keys
      */
     public IndexedCollection(final Collection<C> coll, final Transformer<C, K> keyTransformer,
-                             final ListValuedMap<K, C> map) {
+                             final ListValuedMap<K, C> map, final boolean uniqueIndex) {
         super(coll);
         this.keyTransformer = keyTransformer;
         this.index = map;
+        this.uniqueIndex = uniqueIndex;
         reindex();
     }
 
@@ -129,6 +136,8 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      */
     @Override
     public boolean addAll(final Collection<? extends C> coll) {
+        checkCanAddAllToIndex(coll);
+
         boolean changed = false;
         for (final C c: coll) {
             changed |= add(c);
@@ -173,7 +182,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      * @throws NullPointerException if the specified element is null and this collection or transformer does not permit null elements
      */
     public boolean containsExact(final Object object) {
-        final K key = transform((C) object);
+        final K key = transform(object);
         return index.containsMapping(key, object);
     }
 
@@ -293,7 +302,7 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
     }
 
     @SuppressWarnings("unchecked")
-    protected K transform(final Object object) {
+    private K transform(final Object object) {
         return keyTransformer.transform((C) object);
     }
 
@@ -304,71 +313,28 @@ public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
      * @return the transformed key for object
      * @throws IllegalArgumentException if the object maps to an existing key
      */
-    protected K checkCanAddToIndex(final C object) {
-        return transform(object);
+    private K checkCanAddToIndex(final C object) {
+        final K key = transform(object);
+        if (uniqueIndex && index.containsKey(key)) {
+            throw new IllegalArgumentException("Duplicate key in uniquely indexed collection.");
+        }
+        return key;
     }
 
-    private static final class IndexedCollectionUnique<K, C> extends IndexedCollection<K, C> {
-
-        /** Serialization version */
-        private static final long serialVersionUID = -5512610452568370038L;
-
-        /**
-         * Create a {@link IndexedCollection}.
-         *
-         * @param coll           decorated {@link Collection}
-         * @param keyTransformer {@link Transformer} for generating index keys
-         * @param map            map to use as index
-         */
-        private IndexedCollectionUnique(final Collection<C> coll, final Transformer<C, K> keyTransformer, final ListValuedMap<K, C> map) {
-            super(coll, keyTransformer, map);
-        }
-
-        @Override
-        public boolean remove(final Object object) {
-            final boolean removed = super.remove(object);
-            if (removed) {
-                final K key = transform(object);
-                index.remove(key);
-            }
-            return removed;
-        }
-
-        @Override
-        public boolean addAll(final Collection<? extends C> coll) {
-            checkCanAddAllToIndex(coll);
-            return super.addAll(coll);
-        }
-
-        /**
-         * Provides checking for adding to the index before any changes made.
-         *
-         * @param coll the objects to check
-         * @throws IllegalArgumentException if any object maps to an existing key
-         */
-        private void checkCanAddAllToIndex(final Iterable<? extends C> coll) {
+    /**
+     * Provides checking for adding to the index before any changes made.
+     *
+     * @param coll the objects to check
+     * @throws IllegalArgumentException if any object maps to an existing key
+     */
+    private void checkCanAddAllToIndex(final Iterable<? extends C> coll) {
+        if (uniqueIndex) {
             for (final C object : coll) {
                 final K key = transform(object);
                 if (index.containsKey(key)) {
                     throw new IllegalArgumentException("Duplicate key in uniquely indexed collection.");
                 }
             }
-        }
-
-        /**
-         * Provides checking for adding to the index before any changes made.
-         *
-         * @param object the object to check
-         * @return the transformed key for object
-         * @throws IllegalArgumentException if the object maps to an existing key
-         */
-        @Override
-        protected K checkCanAddToIndex(final C object) {
-            final K key = super.checkCanAddToIndex(object);
-            if (index.containsKey(key)) {
-                throw new IllegalArgumentException("Duplicate key in uniquely indexed collection.");
-            }
-            return key;
         }
     }
 
