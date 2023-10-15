@@ -8,13 +8,16 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.EntrySetUtil;
 import org.apache.commons.collections4.map.HashedMap;
+import org.apache.commons.collections4.multiset.AbstractMultiSet;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
 import org.apache.commons.collections4.set.HashedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -24,6 +27,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.Predicate;
 
 @SuppressWarnings("CollectionDeclaredAsConcreteClass")
@@ -50,28 +54,23 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
     private final Map<V, SlotSet<K>> valueMap = new HashedMap<>();
 
     @SuppressWarnings("unchecked")
-    protected K checkKey(final Object object) {
-        return (K) Objects.requireNonNull(object);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected V checkValue(final Object object) {
-        return (V) Objects.requireNonNull(object);
+    private static <S> S checkParam(final Object object) {
+        return (S) Objects.requireNonNull(object);
     }
 
     protected void checkKeyValue(final K key, final V value) {
-        Objects.requireNonNull(key);
-        Objects.requireNonNull(value);
+        checkParam(key);
+        checkParam(value);
     }
 
     @Override
     public boolean containsKey(final K key) {
-        return keyMap.containsKey(checkKey(key));
+        return keyMap.containsKey(DualHashBiMultiMap.<K>checkParam(key));
     }
 
     @Override
     public boolean containsValue(final V value) {
-        return valueMap.containsValue(checkValue(value));
+        return valueMap.containsValue(DualHashBiMultiMap.<V>checkParam(value));
     }
 
     @Override
@@ -86,7 +85,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
     @Override
     public Set<V> getValues(final K key) {
-        final SlotSet<V> valueSet = keyMap.get(checkKey(key));
+        final SlotSet<V> valueSet = keyMap.get(DualHashBiMultiMap.<K>checkParam(key));
         if (valueSet != null) {
             return valueSet.wrapped();
         } else {
@@ -96,7 +95,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
     @Override
     public Set<K> getKeys(final V value) {
-        final SlotSet<K> keySet = valueMap.get(checkValue(value));
+        final SlotSet<K> keySet = valueMap.get(DualHashBiMultiMap.<V>checkParam(value));
         if (keySet != null) {
             return keySet.wrapped();
         } else {
@@ -126,12 +125,12 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
     @Override
     public boolean addAll(final K key, final Iterable<? extends V> values) {
-        return addAllOneSlot(keyMap, valueMap, checkKey(key), values);
+        return addAllOneSlot(keyMap, valueMap, checkParam(key), values);
     }
 
     @Override
     public boolean addAll(final Iterable<? extends K> keys, final V value) {
-        return addAllOneSlot(valueMap, keyMap, checkValue(value), keys);
+        return addAllOneSlot(valueMap, keyMap, checkParam(value), keys);
     }
 
     private <S, O> boolean addAllOneSlot(final Map<S, SlotSet<O>> slotMap, final Map<O, SlotSet<S>> otherMap,
@@ -265,6 +264,12 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         }
     }
 
+    private <S, O> void fixupPostRemove(final Map<O, SlotSet<S>> otherMap, final S slot, final Collection<O> itemCollection) {
+        for (final O item : itemCollection) {
+            fixupPostRemove(otherMap, slot, item);
+        }
+    }
+
     @Override
     public boolean removeAllKeys(final Collection<K> collection) {
         return removeAllGenericByItem(collection, keyMap, valueMap);
@@ -343,31 +348,31 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
     @Override
     protected Collection<Map.Entry<K, V>> createEntrySet() {
-        return new EntrySetView();
+        return new EntrySetView<>(this);
     }
 
     @Override
     protected Set<K> createKeySet() {
-        return new KeySetView();
-    }
-
-    @Override
-    protected MultiSet<K> createKeyMultiSet() {
-        return null; // TODO
-    }
-
-    @Override
-    protected MultiValuedMap<V, K> createKeyMultiMap() {
-        return null; // TODO
+        return new SetView<>(this, keyMap, valueMap);
     }
 
     @Override
     protected Set<V> createValueSet() {
-        return new ValueSetView();
+        return new SetView<>(this, valueMap, keyMap);
+    }
+
+    @Override
+    protected MultiSet<K> createKeyMultiSet() {
+        return new MultiSetView<>(this, keyMap, valueMap);
     }
 
     @Override
     protected MultiSet<V> createValueMultiSet() {
+        return new MultiSetView<>(this, valueMap, keyMap);
+    }
+
+    @Override
+    protected MultiValuedMap<V, K> createKeyMultiMap() {
         return null; // TODO
     }
 
@@ -383,17 +388,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
     @Override
     public MapIterator<K, V> mapIteratorEntries() {
-        return new EntryMapIterator();
-    }
-
-    @Override
-    public MapIterator<K, Set<V>> mapIteratorKeys() {
-        return null; // TODO
-    }
-
-    @Override
-    public MapIterator<V, Set<K>> mapIteratorValues() {
-        return null; // TODO
+        return new EntryMapIterator<>(this);
     }
 
     @Override
@@ -401,95 +396,176 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         return null; // TODO
     }
 
-    private abstract class SetView<E> extends AbstractSetDecorator<E> {
-        protected SetView(final Set<E> set) {
-            super(set);
+    @Override
+    public MapIterator<K, Set<V>> mapIteratorKeys() {
+        return new MapIteratorForSets<>(this, keyMap, valueMap);
+    }
+
+    @Override
+    public MapIterator<V, Set<K>> mapIteratorValues() {
+        return new MapIteratorForSets<>(this, valueMap, keyMap);
+    }
+
+    private static final class SetView<S, O> extends AbstractSetDecorator<S> {
+        private static final long serialVersionUID = -994466265223876023L;
+        private final DualHashBiMultiMap<?, ?> parent;
+        private final Map<S, SlotSet<O>> primaryMap;
+        private final Map<O, SlotSet<S>> otherMap;
+
+        private SetView(final DualHashBiMultiMap<?, ?> parent, final Map<S, SlotSet<O>> primaryMap, final Map<O, SlotSet<S>> otherMap) {
+            super(primaryMap.keySet());
+            this.parent = parent;
+            this.primaryMap = primaryMap;
+            this.otherMap = otherMap;
         }
 
         @Override
         public void clear() {
-            DualHashBiMultiMap.this.clear();
+            parent.clear();
         }
 
         @Override
-        public boolean removeIf(final Predicate<? super E> filter) {
+        public boolean remove(final Object object) {
+            return parent.removeSlot(checkParam(object), primaryMap, otherMap);
+        }
+
+        @Override
+        public boolean removeIf(final Predicate<? super S> filter) {
             return IteratorUtils.removeIf(iterator(), filter);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public boolean removeAll(final Collection<?> coll) {
-            return removeAllValues((Collection<V>) coll);
         }
 
         @Override
         public boolean retainAll(final Collection<?> coll) {
             return removeIf(e -> !coll.contains(e));
         }
-    }
 
-    private final class KeySetView extends SetView<K> {
-        private static final long serialVersionUID = 4363160454265549798L;
-
-        private KeySetView() {
-            super(keyMap.keySet());
-        }
-
-        @Override
-        public Iterator<K> iterator() {
-            return mapIteratorKeys();
-        }
-
-        @Override
-        public boolean remove(final Object object) {
-            return removeSlot(checkKey(object), keyMap, valueMap);
-        }
-
-    }
-
-    private final class ValueSetView extends SetView<V> {
-        private static final long serialVersionUID = -6810547806861188320L;
-
-        private ValueSetView() {
-            super(valueMap.keySet());
-        }
-
-        @Override
-        public Iterator<V> iterator() {
-            return mapIteratorValues();
-        }
-
-        @Override
-        public boolean remove(final Object object) {
-            return removeSlot(checkValue(object), valueMap, keyMap);
-        }
-
-        @Override
         @SuppressWarnings("unchecked")
+        @Override
         public boolean removeAll(final Collection<?> coll) {
-            return removeAllKeys((Collection<K>) coll);
+            return parent.removeAllGenericByItem((Collection<S>) coll, primaryMap, otherMap);
+        }
+
+        @Override
+        public Iterator<S> iterator() {
+            return new MapIteratorForSets<>(parent, primaryMap, otherMap);
         }
     }
 
-    private class EntrySetView extends AbstractSet<Map.Entry<K, V>> {
+    private static final class MultiSetView<S, O> extends AbstractMultiSet<S> {
+        private final DualHashBiMultiMap<?, ?> parent;
+        private final Map<S, SlotSet<O>> primaryMap;
+        private final Map<O, SlotSet<S>> otherMap;
+
+        private MultiSetView(final DualHashBiMultiMap<?, ?> parent, final Map<S, SlotSet<O>> primaryMap, final Map<O, SlotSet<S>> otherMap) {
+            this.parent = parent;
+            this.primaryMap = primaryMap;
+            this.otherMap = otherMap;
+        }
+
         @Override
         public int size() {
-            return entryCount;
+            return parent.entryCount;
+        }
+
+        @Override
+        protected int uniqueElements() {
+            return primaryMap.size();
         }
 
         @Override
         public boolean isEmpty() {
-            return entryCount != 0;
-        }
-
-        @Override
-        public Iterator<Map.Entry<K, V>> iterator() {
-            return new EntryIterator();
+            return parent.entryCount == 0;
         }
 
         @Override
         public void clear() {
-            DualHashBiMultiMap.this.clear();
+            parent.clear();
+        }
+
+        @Override
+        public int getCount(final Object object) {
+            final SlotSet<?> slot = primaryMap.get(checkParam(object));
+            if (slot != null) {
+                return slot.size();
+            } else {
+                return 0;
+            }
+        }
+
+        @Override
+        protected Set<S> createUniqueSet() {
+            return new SetView<>(parent, primaryMap, otherMap);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public boolean removeAll(final Collection<?> coll) {
+            return parent.removeAllGeneric((Collection<S>) coll, primaryMap, otherMap);
+        }
+
+        @Override
+        protected Iterator<Entry<S>> createEntrySetIterator() {
+            return new TransformIterator<>(primaryMap.entrySet().iterator(),
+                    e -> new BiMultiSetEntry<>(e.getKey(), e.getValue().size()));
+        }
+
+        @Override
+        protected Spliterator<Entry<S>> createEntrySetSpliterator() {
+            return new TransformSpliterator<>(primaryMap.entrySet().spliterator(),
+                    e -> new BiMultiSetEntry<>(e.getKey(), e.getValue().size()));
+        }
+
+        @Override
+        public boolean contains(final Object object) {
+            return primaryMap.containsKey(object);
+        }
+
+        private static final class BiMultiSetEntry<E> extends AbstractMultiSet.AbstractEntry<E> {
+            private final E element;
+            private final int count;
+
+            private BiMultiSetEntry(final E element, final int count) {
+                this.element = element;
+                this.count = count;
+            }
+
+            @Override
+            public E getElement() {
+                return element;
+            }
+
+            @Override
+            public int getCount() {
+                return count;
+            }
+        }
+    }
+
+    private static final class EntrySetView<K, V> extends AbstractSet<Map.Entry<K, V>> {
+        private final DualHashBiMultiMap<K, V> parent;
+
+        private EntrySetView(final DualHashBiMultiMap<K, V> parent) {
+            this.parent = parent;
+        }
+
+        @Override
+        public int size() {
+            return parent.entryCount;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return parent.entryCount != 0;
+        }
+
+        @Override
+        public Iterator<Map.Entry<K, V>> iterator() {
+            return new EntryIterator<>(parent);
+        }
+
+        @Override
+        public void clear() {
+            parent.clear();
         }
 
         @SuppressWarnings("unchecked")
@@ -497,7 +573,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         public boolean contains(final Object obj) {
             if (obj instanceof Map.Entry) {
                 final Map.Entry<K, V> entry = (Map.Entry<K, V>) obj;
-                return containsMapping(entry.getKey(), entry.getValue());
+                return parent.containsMapping(entry.getKey(), entry.getValue());
             }
             return false;
         }
@@ -507,7 +583,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         public boolean remove(final Object obj) {
             if (obj instanceof Map.Entry) {
                 final Map.Entry<K, V> entry = (Map.Entry<K, V>) obj;
-                return removeMapping(entry.getKey(), entry.getValue());
+                return parent.removeMapping(entry.getKey(), entry.getValue());
             }
             return false;
         }
@@ -524,16 +600,17 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
         @Override
         public Object[] toArray() {
-            return EntrySetUtil.toArrayUnmodifiable(mapIteratorEntries(), size());
+            return EntrySetUtil.toArrayUnmodifiable(parent.mapIteratorEntries(), size());
         }
 
         @Override
         public <T> T[] toArray(final T[] array) {
-            return EntrySetUtil.toArrayUnmodifiable(mapIteratorEntries(), size(), array);
+            return EntrySetUtil.toArrayUnmodifiable(parent.mapIteratorEntries(), size(), array);
         }
     }
 
-    protected abstract class AbstractEntryIterator {
+    protected abstract static class AbstractDistinctEntryIterator<K, V> {
+        private final DualHashBiMultiMap<K, V> parent;
         private Iterator<Map.Entry<K, SlotSet<V>>> slotIterator;
         private Iterator<V> itemIterator;
         private boolean shouldDeleteKeySlot;
@@ -541,12 +618,13 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         protected K key;
         protected V value;
 
-        protected AbstractEntryIterator() {
+        protected AbstractDistinctEntryIterator(final DualHashBiMultiMap<K, V> parent) {
+            this.parent = parent;
             reset();
         }
 
         public void reset() {
-            slotIterator = keyMap.entrySet().iterator();
+            slotIterator = parent.keyMap.entrySet().iterator();
             itemIterator = null;
             shouldDeleteKeySlot = false;
             validEntry = false;
@@ -596,12 +674,16 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
                 throw new IllegalStateException();
             }
             itemIterator.remove();
-            fixupPostRemove(valueMap, key, value);
+            fixupPostRemove(parent.valueMap, key, value);
             validEntry = false;
         }
     }
 
-    protected class EntryMapIterator extends AbstractEntryIterator implements MapIterator<K, V>, ResettableIterator<K> {
+    protected static class EntryMapIterator<K, V> extends AbstractDistinctEntryIterator<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
+        protected EntryMapIterator(final DualHashBiMultiMap<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public K next() throws NoSuchElementException {
             nextItem();
@@ -630,11 +712,67 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         }
     }
 
-    protected class EntryIterator extends AbstractEntryIterator implements ResettableIterator<Map.Entry<K, V>> {
+    protected static class EntryIterator<K, V> extends AbstractDistinctEntryIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
+        protected EntryIterator(final DualHashBiMultiMap<K, V> parent) {
+            super(parent);
+        }
+
         @Override
         public Map.Entry<K, V> next() throws NoSuchElementException {
             nextItem();
             return new UnmodifiableMapEntry<>(key, value);
+        }
+    }
+
+    private static final class MapIteratorForSets<S, O> implements MapIterator<S, Set<O>>, ResettableIterator<S> {
+        private final DualHashBiMultiMap<?, ?> parent;
+        private final Map<S, SlotSet<O>> primaryMap;
+        private final Map<O, SlotSet<S>> otherMap;
+        private Iterator<Map.Entry<S, SlotSet<O>>> entryIterator;
+        private Map.Entry<S, SlotSet<O>> entry;
+
+        private MapIteratorForSets(final DualHashBiMultiMap<?, ?> parent, final Map<S, SlotSet<O>> primaryMap, final Map<O, SlotSet<S>> otherMap) {
+            this.parent = parent;
+            this.primaryMap = primaryMap;
+            this.otherMap = otherMap;
+        }
+
+        @Override
+        public void reset() {
+            entryIterator = primaryMap.entrySet().iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return entryIterator.hasNext();
+        }
+
+        @Override
+        public S next() {
+            entry = entryIterator.next();
+            return entry.getKey();
+        }
+
+        @Override
+        public S getKey() {
+            return entry.getKey();
+        }
+
+        @Override
+        public Set<O> getValue() {
+            return entry.getValue().wrapped();
+        }
+
+        @Override
+        public void remove() {
+            entryIterator.remove();
+            parent.fixupPostRemove(otherMap, entry.getKey(), entry.getValue());
+            entry = null;
+        }
+
+        @Override
+        public Set<O> setValue(final Set<O> value) {
+            throw new UnsupportedOperationException();
         }
     }
 }
