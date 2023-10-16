@@ -37,8 +37,10 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecorator<K, V>
+public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecorator<K, V, OrderedMap<K, V>>
         implements OrderedMap<K, V> {
+
+    private static final long serialVersionUID = 6964783574989279065L;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -55,16 +57,6 @@ public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecor
      */
     public AbstractOrderedMapDecorator(final OrderedMap<K, V> map) {
         super(map);
-    }
-
-    /**
-     * Gets the map being decorated.
-     *
-     * @return the decorated map
-     */
-    @Override
-    protected OrderedMap<K, V> decorated() {
-        return (OrderedMap<K, V>) super.decorated();
     }
 
     @Override

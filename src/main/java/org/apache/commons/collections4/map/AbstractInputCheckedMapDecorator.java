@@ -44,8 +44,10 @@ import org.apache.commons.collections4.set.AbstractSetDecorator;
  *
  * @since 3.1
  */
-abstract class AbstractInputCheckedMapDecorator<K, V>
-        extends AbstractMapDecorator<K, V> {
+abstract class AbstractInputCheckedMapDecorator<K, V, Decorated extends Map<K, V>>
+        extends AbstractMapDecorator<K, V, Decorated> {
+
+    private static final long serialVersionUID = 6321139819267289886L;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -59,7 +61,7 @@ abstract class AbstractInputCheckedMapDecorator<K, V>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if map is null
      */
-    protected AbstractInputCheckedMapDecorator(final Map<K, V> map) {
+    protected AbstractInputCheckedMapDecorator(final Decorated map) {
         super(map);
     }
 
@@ -113,9 +115,9 @@ abstract class AbstractInputCheckedMapDecorator<K, V>
         private static final long serialVersionUID = 4354731610923110264L;
 
         /** The parent map */
-        private final AbstractInputCheckedMapDecorator<K, V> parent;
+        private final AbstractInputCheckedMapDecorator<K, V, ?> parent;
 
-        protected EntrySet(final Set<Map.Entry<K, V>> set, final AbstractInputCheckedMapDecorator<K, V> parent) {
+        protected EntrySet(final Set<Map.Entry<K, V>> set, final AbstractInputCheckedMapDecorator<K, V, ?> parent) {
             super(set);
             this.parent = parent;
         }
@@ -169,10 +171,10 @@ abstract class AbstractInputCheckedMapDecorator<K, V>
     private class EntrySetIterator extends AbstractIteratorDecorator<Map.Entry<K, V>> {
 
         /** The parent map */
-        private final AbstractInputCheckedMapDecorator<K, V> parent;
+        private final AbstractInputCheckedMapDecorator<K, V, ?> parent;
 
         protected EntrySetIterator(final Iterator<Map.Entry<K, V>> iterator,
-                                   final AbstractInputCheckedMapDecorator<K, V> parent) {
+                                   final AbstractInputCheckedMapDecorator<K, V, ?> parent) {
             super(iterator);
             this.parent = parent;
         }
@@ -190,9 +192,9 @@ abstract class AbstractInputCheckedMapDecorator<K, V>
     private class MapEntry extends AbstractMapEntryDecorator<K, V> {
 
         /** The parent map */
-        private final AbstractInputCheckedMapDecorator<K, V> parent;
+        private final AbstractInputCheckedMapDecorator<K, V, ?> parent;
 
-        protected MapEntry(final Map.Entry<K, V> entry, final AbstractInputCheckedMapDecorator<K, V> parent) {
+        protected MapEntry(final Map.Entry<K, V> entry, final AbstractInputCheckedMapDecorator<K, V, ?> parent) {
             super(entry);
             this.parent = parent;
         }

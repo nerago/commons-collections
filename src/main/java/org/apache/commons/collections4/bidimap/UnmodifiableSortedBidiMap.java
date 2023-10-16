@@ -21,12 +21,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
@@ -42,17 +45,19 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableSortedBidiMap<K, V>
+public final class UnmodifiableSortedBidiMap<K, V,
+                Decorated extends SortedExtendedBidiMap<K, V, Decorated, Decorated, DecoratedInverse>,
+                DecoratedInverse extends SortedExtendedBidiMap<V, K, DecoratedInverse, DecoratedInverse, Decorated>>
         extends AbstractSortedBidiMapDecorator<K, V,
-        SortedExtendedBidiMap.Common<K, V>, SortedExtendedBidiMap.Common<V, K>,
-        UnmodifiableSortedBidiMap<K, V>, UnmodifiableSortedBidiMap<V, K>>
+            Decorated,
+            DecoratedInverse,
+            UnmodifiableSortedBidiMap<K, V, Decorated, DecoratedInverse>,
+            UnmodifiableSortedBidiMap<K, V, Decorated, DecoratedInverse>,
+            UnmodifiableSortedBidiMap<V, K, DecoratedInverse, Decorated>>
         implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 3795490687011556072L;
-
-    /** The inverse unmodifiable map */
-    private transient UnmodifiableSortedBidiMap<V, K> inverse;
 
     /**
      * Factory method to create an unmodifiable map.
@@ -66,10 +71,10 @@ public final class UnmodifiableSortedBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> SortedExtendedBidiMap<K, V, ?, ?> unmodifiableSortedBidiMap(final SortedExtendedBidiMap.Common<K, V> map) {
+    public static <K, V> SortedExtendedBidiMap<K, V, ?, ?, ?> unmodifiableSortedBidiMap(final SortedExtendedBidiMap<K, V, ?, ?, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final SortedExtendedBidiMap.Common<K, V> tmpMap = (SortedExtendedBidiMap.Common<K, V>) map;
+            final SortedExtendedBidiMap<K, V, ?, ?, ?> tmpMap = (SortedExtendedBidiMap<K, V, ?, ?, ?>) map;
             return tmpMap;
         }
         return new UnmodifiableSortedBidiMap<>(map);
@@ -82,18 +87,18 @@ public final class UnmodifiableSortedBidiMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableSortedBidiMap(final SortedExtendedBidiMap.Common<K, V> map) {
-        super(map);
+    private UnmodifiableSortedBidiMap(final SortedExtendedBidiMap<K, V, ?, ?, ?> map) {
+        super((Decorated) map);
     }
 
     @Override
-    protected UnmodifiableSortedBidiMap<K, V> decorateDerived(final Common<K, V> map) {
+    protected UnmodifiableSortedBidiMap<K, V, Decorated, DecoratedInverse> decorateDerived(final Decorated map) {
         return new UnmodifiableSortedBidiMap<>(map);
     }
 
     @Override
-    protected UnmodifiableSortedBidiMap<V, K> decorateInverse(final Common<V, K> map) {
-        return new UnmodifiableSortedBidiMap<>(map);
+    protected UnmodifiableSortedBidiMap<V, K, DecoratedInverse, Decorated> decorateInverse(final DecoratedInverse inverse) {
+        return new UnmodifiableSortedBidiMap<>(inverse);
     }
 
     @Override
@@ -198,6 +203,6 @@ public final class UnmodifiableSortedBidiMap<K, V>
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        setMap((Common<K, V>) in.readObject());
+        setMap((Decorated) in.readObject());
     }
 }

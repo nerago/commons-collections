@@ -45,17 +45,14 @@ public final class UnmodifiableBidiMap<K, V,
             Decorated extends BidiMap<K, V, DecoratedInverse>,
             DecoratedInverse extends BidiMap<V, K, Decorated>>
         extends AbstractBidiMapDecorator<K, V,
-            BidiMap<K, V, DecoratedInverse>,
-            BidiMap<V, K, Decorated>,
+            Decorated,
+            DecoratedInverse,
             UnmodifiableBidiMap<K, V, Decorated, DecoratedInverse>,
             UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated>>
         implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = -3563384200742281975L;
-
-    /** The inverse unmodifiable map */
-    private transient UnmodifiableBidiMap<V, K> inverse;
 
     /**
      * Factory method to create an unmodifiable map.
@@ -72,7 +69,7 @@ public final class UnmodifiableBidiMap<K, V,
     public static <K, V> BidiMap<K, V, ?> unmodifiableBidiMap(final BidiMap<? extends K, ? extends V, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final BidiMap<K, V> tmpMap = (BidiMap<K, V>) map;
+            final BidiMap<K, V, ?> tmpMap = (BidiMap<K, V, ?>) map;
             return tmpMap;
         }
         return new UnmodifiableBidiMap<>(map);
@@ -85,8 +82,8 @@ public final class UnmodifiableBidiMap<K, V,
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableBidiMap(final BidiMap<? extends K, ? extends V> map) {
-        super((BidiMap<K, V>) map);
+    private UnmodifiableBidiMap(final BidiMap<? extends K, ? extends V, ?> map) {
+        super((Decorated) map);
     }
 
     @Override
@@ -110,47 +107,47 @@ public final class UnmodifiableBidiMap<K, V,
     }
 
     @Override
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    public boolean remove(final Object key, final Object value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
@@ -184,17 +181,8 @@ public final class UnmodifiableBidiMap<K, V,
     }
 
     @Override
-    public synchronized BidiMap<V, K> inverseBidiMap() {
-        if (inverse == null) {
-            inverse = new UnmodifiableBidiMap<>(decorated().inverseBidiMap());
-            inverse.inverse = this;
-        }
-        return inverse;
-    }
-
-    @Override
-    protected UnmodifiableBidiMap<V, K, ?, ?> decorateInverse(final BidiMap<V, K, Decorated> vkDecoratedBidiMap) {
-        return null;
+    protected UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated> decorateInverse(final DecoratedInverse inverse) {
+        return new UnmodifiableBidiMap<>(inverse);
     }
 
     private void writeObject(final ObjectOutputStream out) throws IOException {
@@ -205,7 +193,7 @@ public final class UnmodifiableBidiMap<K, V,
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        setMap((Map<K, V>) in.readObject());
+        setMap((Decorated) in.readObject());
     }
 
 }

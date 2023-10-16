@@ -31,7 +31,6 @@ import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
-import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Comparator;
@@ -40,7 +39,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -48,9 +46,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 // https://en.wikipedia.org/wiki/Radix_tree
-public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
+public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>, SubMap extends IterableSortedMap<K, V, SubMap>>
         extends AbstractIterableMapAlternate<K, V>
-        implements Trie<K, V>, Serializable {
+        implements Trie<K, V, SubMap> {
     private static final long serialVersionUID = -1993317552691676845L;
 
     private transient final SortedMapRange<K> keyRange;
@@ -424,12 +422,12 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public SortedMap<K, V> prefixMap(K key) {
+    public SubMap prefixMap(K key) {
         return null;
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+    public SubMap subMap(final SortedMapRange<K> range) {
         return null;
     }
 
@@ -638,12 +636,12 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static class TrieMapIterator<K extends Comparable<K>, V extends Comparable<V>>
             implements OrderedMapIterator<K, V>, ResettableIterator<K> {
-        private final GeneralRadixTrie<K, V> parent;
+        private final GeneralRadixTrie<K, V, ?> parent;
         private TEntry<K, V> current;
         private TEntry<K, V> nextEntry;
         private TEntry<K, V> previousEntry;
 
-        public TrieMapIterator(final GeneralRadixTrie<K, V> parent) {
+        public TrieMapIterator(final GeneralRadixTrie<K, V, ?> parent) {
             this.parent = parent;
             reset();
         }
@@ -715,11 +713,11 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static final class TrieEntryIterator<K extends Comparable<K>, V extends Comparable<V>>
             implements ResettableIterator<Entry<K, V>> {
-        private final GeneralRadixTrie<K, V> parent;
+        private final GeneralRadixTrie<K, V, ?> parent;
         private TEntry<K, V> current;
         private TEntry<K, V> nextEntry;
 
-        private TrieEntryIterator(final GeneralRadixTrie<K, V> parent) {
+        private TrieEntryIterator(final GeneralRadixTrie<K, V, ?> parent) {
             this.parent = parent;
             reset();
         }
@@ -756,13 +754,13 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static class TrieEntrySpliterator<K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractTreeSpliterator<K, V, TEntry<K, V>> {
-        private final GeneralRadixTrie<K, V> parent;
+        private final GeneralRadixTrie<K, V, ?> parent;
 
-        TrieEntrySpliterator(final GeneralRadixTrie<K, V> parent) {
+        TrieEntrySpliterator(final GeneralRadixTrie<K, V, ?> parent) {
             this.parent = parent;
         }
 
-        TrieEntrySpliterator(final GeneralRadixTrie<K, V> parent, final SplitState state, final TEntry<K, V> currentNode, final TEntry<K, V> lastNode, final long estimatedSize) {
+        TrieEntrySpliterator(final GeneralRadixTrie<K, V, ?> parent, final SplitState state, final TEntry<K, V> currentNode, final TEntry<K, V> lastNode, final long estimatedSize) {
             super(state, currentNode, lastNode, estimatedSize);
             this.parent = parent;
         }
@@ -828,9 +826,9 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private abstract static class TrieView<E, K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractSet<E> {
-        protected final GeneralRadixTrie<K, V> parent;
+        protected final GeneralRadixTrie<K, V, ?> parent;
 
-        public TrieView(GeneralRadixTrie<K,V> parent) {
+        public TrieView(GeneralRadixTrie<K, V, ?> parent) {
             this.parent = parent;
         }
 
@@ -864,7 +862,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieEntrySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<Entry<K, V>, K, V>
             implements Set<Entry<K, V>> {
-        private TrieEntrySet(final GeneralRadixTrie<K, V> parent) {
+        private TrieEntrySet(final GeneralRadixTrie<K, V, ?> parent) {
             super(parent);
         }
 
@@ -944,7 +942,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieKeySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<K, K, V>
             implements Set<K> {
-        public TrieKeySet(final GeneralRadixTrie<K, V> parent) {
+        public TrieKeySet(final GeneralRadixTrie<K, V, ?> parent) {
             super(parent);
         }
 
@@ -987,7 +985,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
     private static class TrieValues<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieView<V, K, V> {
-        private TrieValues(final GeneralRadixTrie<K, V> parent) {
+        private TrieValues(final GeneralRadixTrie<K, V, ?> parent) {
             super(parent);
         }
 

@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.trie;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,12 +42,13 @@ import org.apache.commons.collections4.map.UnmodifiableSortedMap;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodifiable {
+public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+        implements Trie<K, V, SubMap>, Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = -7156426030315945159L;
 
-    private final Trie<K, V> delegate;
+    private final Trie<K, V, ?> delegate;
 
     /**
      * Factory method to create an unmodifiable trie.
@@ -59,10 +59,10 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
      * @return a new unmodifiable trie
      * @throws NullPointerException if trie is null
      */
-    public static <K, V> Trie<K, V> unmodifiableTrie(final Trie<K, ? extends V> trie) {
+    public static <K, V> Trie<K, V, ?> unmodifiableTrie(final Trie<K, V, ?> trie) {
         if (trie instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final Trie<K, V> tmpTrie = (Trie<K, V>) trie;
+            final Trie<K, V, ?> tmpTrie = (Trie<K, V, ?>) trie;
             return tmpTrie;
         }
         return new UnmodifiableTrie<>(trie);
@@ -74,9 +74,9 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
      * @param trie  the trie to decorate, must not be null
      * @throws NullPointerException if trie is null
      */
-    public UnmodifiableTrie(final Trie<K, ? extends V> trie) {
+    public UnmodifiableTrie(final Trie<K, V, ?> trie) {
         @SuppressWarnings("unchecked") // safe to upcast
-        final Trie<K, V> tmpTrie = (Trie<K, V>) Objects.requireNonNull(trie, "trie");
+        final Trie<K, V, ?> tmpTrie = (Trie<K, V, ?>) Objects.requireNonNull(trie, "trie");
         this.delegate = tmpTrie;
     }
 
@@ -191,18 +191,13 @@ public class UnmodifiableTrie<K, V> implements Trie<K, V>, Serializable, Unmodif
     }
 
     @Override
-    public IterableSortedMap<K, V> headMap(final K toKey) {
-        return UnmodifiableSortedMap.unmodifiableSortedMap(delegate.headMap(toKey));
-    }
-
-    @Override
     public K lastKey() {
         return delegate.lastKey();
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-        return UnmodifiableSortedMap.unmodifiableSortedMap(range.applyToMap(delegate));
+    public SubMap subMap(final SortedMapRange<K> range) {
+        return (SubMap) UnmodifiableSortedMap.unmodifiableSortedMap(range.applyToMap(delegate));
     }
 
     @Override

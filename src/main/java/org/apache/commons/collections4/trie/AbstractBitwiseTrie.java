@@ -21,6 +21,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
 
@@ -32,8 +33,9 @@ import org.apache.commons.collections4.Trie;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractBitwiseTrie<K, V> extends AbstractMap<K, V>
-        implements Trie<K, V>, Serializable {
+public abstract class AbstractBitwiseTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+        extends AbstractMap<K, V>
+        implements Trie<K, V, SubMap> {
 
     private static final long serialVersionUID = 5826987063535505652L;
 

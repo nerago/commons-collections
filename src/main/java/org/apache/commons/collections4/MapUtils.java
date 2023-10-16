@@ -1233,7 +1233,7 @@ public class MapUtils {
      */
     public static <K, V> IterableMap<K, V> iterableMap(final Map<K, V> map) {
         Objects.requireNonNull(map, "map");
-        return map instanceof IterableMap ? (IterableMap<K, V>) map : new AbstractMapDecorator<K, V>(map) {
+        return map instanceof IterableMap ? (IterableMap<K, V>) map : new AbstractMapDecorator<K, V, Map<K, V>>(map) {
             // empty
         };
     }
@@ -1251,9 +1251,7 @@ public class MapUtils {
     public static <K, V> IterableSortedMap<K, V, ?> iterableSortedMap(final SortedMap<K, V> sortedMap) {
         Objects.requireNonNull(sortedMap, "sortedMap");
         return sortedMap instanceof IterableSortedMap ? (IterableSortedMap<K, V, ?>) sortedMap
-                : new AbstractSortedMapDecorator<K, V, ?, ?>(sortedMap) {
-                    // empty
-                };
+                : new AbstractSortedMapDecorator.BasicWrapper<>(sortedMap);
     }
 
     /**
@@ -1926,7 +1924,7 @@ public class MapUtils {
      * @return an unmodifiable map backed by the given map
      * @throws NullPointerException if the map is null
      */
-    public static <K, V> SortedMap<K, V> unmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
+    public static <K, V> SortedMap<K, V> unmodifiableSortedMap(final SortedMap<K, V> map) {
         return UnmodifiableSortedMap.unmodifiableSortedMap(map);
     }
 

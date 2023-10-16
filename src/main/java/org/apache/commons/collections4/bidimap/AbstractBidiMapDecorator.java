@@ -81,14 +81,14 @@ public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K
     }
 
     @Override
-    public InverseMap inverseBidiMap() {
+    public final InverseMap inverseBidiMap() {
         if (inverse == null) {
             inverse = decorateInverse(decorated().inverseBidiMap());
         }
         return inverse;
     }
 
-    protected abstract InverseMap decorateInverse(DecoratedInverse decoratedInverse);
+    protected abstract InverseMap decorateInverse(DecoratedInverse inverse);
 
     @Override
     public Set<V> values() {

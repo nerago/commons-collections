@@ -21,16 +21,11 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.BoundedMap;
-import org.apache.commons.collections4.IterableExtendedMap;
-import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 import org.apache.commons.collections4.keyvalue.TiedMapEntry;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
@@ -64,8 +59,7 @@ import org.apache.commons.collections4.spliterators.SingletonSpliterator;
  * @param <V> the type of the values in this map
  * @since 3.1
  */
-public class SingletonMap<K, V> implements IterableExtendedMap<K, V>, NavigableRangedMap<K, V>, SortedExtendedBidiMap<K, V>,
-        BoundedMap<K, V>, Trie<K, V>, KeyValue<K, V>, Map.Entry<K, V>, Cloneable {
+public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, Map.Entry<K, V>, Cloneable {
 
     /** Serialization version */
     private static final long serialVersionUID = -8931271118676803261L;
@@ -520,7 +514,7 @@ public class SingletonMap<K, V> implements IterableExtendedMap<K, V>, NavigableR
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+    public EverythingMap<K, V> subMap(final SortedMapRange<K> range) {
         if (range.inRange(this.key)) {
             return this;
         } else {
@@ -609,7 +603,7 @@ public class SingletonMap<K, V> implements IterableExtendedMap<K, V>, NavigableR
     }
 
     @Override
-    public SortedExtendedBidiMap<V, K> inverseBidiMap() {
+    public EverythingMap<V, K> inverseBidiMap() {
         return null;
     }
 
@@ -619,7 +613,7 @@ public class SingletonMap<K, V> implements IterableExtendedMap<K, V>, NavigableR
     }
 
     @Override
-    public SortedMap<K, V> prefixMap(K key) {
+    public EverythingMap<K, V> prefixMap(K key) {
         return null;
     }
 

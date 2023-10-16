@@ -84,7 +84,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
  * @param <V> the type of the values in this map
  * @since 3.1
  */
-public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K>, V>
+public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K>, V, AbstractHashedMap<MultiKey<? extends K>, V>>
         implements Serializable, Cloneable {
 
     /** Serialisation version */
@@ -869,14 +869,6 @@ public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected AbstractHashedMap<MultiKey<? extends K>, V> decorated() {
-        return (AbstractHashedMap<MultiKey<? extends K>, V>) super.decorated();
-    }
-
-    /**
      * Write the map out using a custom routine.
      *
      * @param out  the output stream
@@ -897,7 +889,7 @@ public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        map = (Map<MultiKey<? extends K>, V>) in.readObject();
+        setMap((AbstractHashedMap<MultiKey<? extends K>, V>) in.readObject());
     }
 
 }

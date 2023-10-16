@@ -49,8 +49,8 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableMap<K, V>
-        extends AbstractMapDecorator<K, V>
-        implements Unmodifiable, Serializable {
+        extends AbstractMapDecorator<K, V, Map<K, V>>
+        implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 2737023427269031941L;

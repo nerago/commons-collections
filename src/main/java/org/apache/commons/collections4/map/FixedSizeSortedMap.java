@@ -24,13 +24,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
@@ -67,7 +65,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public class FixedSizeSortedMap<K, V>
-        extends AbstractSortedMapDecorator<K, V>
+        extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, FixedSizeSortedMap<K, V>>
         implements BoundedMap<K, V> {
 
     /** Serialization version */
@@ -107,7 +105,7 @@ public class FixedSizeSortedMap<K, V>
     }
 
     @Override
-    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
+    protected FixedSizeSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return new FixedSizeSortedMap<>(subMap, keyRange);
     }
 
@@ -132,7 +130,7 @@ public class FixedSizeSortedMap<K, V>
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        map = (Map<K, V>) in.readObject(); // (1)
+        map = (SortedMap<K, V>) in.readObject(); // (1)
     }
 
     @Override

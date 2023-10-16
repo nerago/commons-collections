@@ -69,7 +69,7 @@ import org.apache.commons.collections4.iterators.TransformIterator;
  * @deprecated since 4.1, use {@link org.apache.commons.collections4.MultiValuedMap MultiValuedMap} instead
  */
 @Deprecated
-public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object> implements MultiMap<K, V>, Serializable {
+public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, Object>> implements MultiMap<K, V>, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = -2214159910087182007L;

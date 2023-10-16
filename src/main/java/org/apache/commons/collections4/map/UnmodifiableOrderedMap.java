@@ -105,7 +105,7 @@ public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecora
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        map = (Map<K, V>) in.readObject(); // (1)
+        map = (OrderedMap<K, V>) in.readObject(); // (1)
     }
 
     @Override

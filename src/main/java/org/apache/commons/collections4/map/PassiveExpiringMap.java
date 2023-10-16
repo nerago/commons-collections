@@ -66,7 +66,7 @@ import java.util.function.Function;
  * @since 4.0
  */
 public class PassiveExpiringMap<K, V>
-    extends AbstractMapDecorator<K, V> {
+    extends AbstractMapDecorator<K, V, Map<K, V>> {
 
     /**
      * A {@link org.apache.commons.collections4.map.PassiveExpiringMap.ExpirationPolicy ExpirationPolicy}

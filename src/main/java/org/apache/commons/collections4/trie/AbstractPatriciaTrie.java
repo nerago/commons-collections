@@ -51,7 +51,8 @@ import org.apache.commons.collections4.iterators.SingletonIterator;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
+public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+        extends AbstractBitwiseTrie<K, V, SubMap> {
 
     private static final long serialVersionUID = 5155253417231339498L;
 
@@ -991,7 +992,7 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
     }
 
     @Override
-    public SortedMap<K, V> prefixMap(final K key) {
+    public SubMap prefixMap(final K key) {
         return getPrefixMapByBits(key, 0, lengthInBits(key));
     }
 
@@ -1010,13 +1011,13 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
      * that contains the prefixes if the entry holding the subtree is
      * removed or changes. Changing the subtree takes O(K) time.
      *
-     * @param key  the key to use in the search
-     * @param offsetInBits  the prefix offset
-     * @param lengthInBits  the number of significant prefix bits
+     * @param key          the key to use in the search
+     * @param offsetInBits the prefix offset
+     * @param lengthInBits the number of significant prefix bits
      * @return a {@link SortedMap} view of this {@link org.apache.commons.collections4.Trie} with all elements whose
-     *   key is prefixed by the search key
+     * key is prefixed by the search key
      */
-    private SortedMap<K, V> getPrefixMapByBits(final K key, final int offsetInBits, final int lengthInBits) {
+    private SubMap getPrefixMapByBits(final K key, final int offsetInBits, final int lengthInBits) {
 
         final int offsetLength = offsetInBits + lengthInBits;
         if (offsetLength > lengthInBits(key)) {
@@ -1025,15 +1026,15 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         if (offsetLength == 0) {
-            return this;
+            return (SubMap) this;
         }
 
-        return new PrefixRangeMap(key, offsetInBits, lengthInBits);
+        return (SubMap) new PrefixRangeMap(key, offsetInBits, lengthInBits);
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-        return new BoundedRangeMap(range);
+    public SubMap subMap(final SortedMapRange<K> range) {
+        return (SubMap) new BoundedRangeMap(range);
     }
 
     /**
@@ -2228,8 +2229,9 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
      * A range view of the {@link org.apache.commons.collections4.Trie}.
      */
     private abstract class RangeMap extends AbstractMap<K, V>
-            implements IterableSortedMap<K, V> {
+            implements IterableSortedMap<K, V, SubMap> {
 
+        private static final long serialVersionUID = 5837026185237818383L;
         protected SortedMapRange<K> keyRange;
 
         /** The {@link #entrySet()} view. */
@@ -2305,15 +2307,17 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         @Override
-        public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        public SubMap subMap(final SortedMapRange<K> range) {
             return createRangeMap(range);
         }
+
+        protected abstract SubMap createRangeMap(SortedMapRange<K> range);
     }
 
     /**
      * A {@link RangeMap} that deals with {@link Entry}s.
      */
-    private class BoundedRangeMap extends RangeMap implements IterableSortedMap<K, V> {
+    private class BoundedRangeMap extends RangeMap {
 
         /**
          * Creates a {@link BoundedRangeMap}.
@@ -2428,8 +2432,8 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
         }
 
         @Override
-        protected IterableSortedMap<K, V> createRangeMap(final SortedMapRange<K> keyRange) {
-            return new BoundedRangeMap(keyRange);
+        protected SubMap createRangeMap(final SortedMapRange<K> keyRange) {
+            return (SubMap) new BoundedRangeMap(keyRange);
         }
 
         @Override
@@ -2602,6 +2606,11 @@ public abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, 
             this.offsetInBits = offsetInBits;
             this.lengthInBits = lengthInBits;
             updateRange();
+        }
+
+        @Override
+        protected SubMap createRangeMap(SortedMapRange<K> range) {
+            return null;
         }
 
         private void updateRangeIfNeeded() {

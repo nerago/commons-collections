@@ -51,7 +51,7 @@ import org.apache.commons.collections4.Transformer;
  */
 public class TransformedSortedMap<K, V>
         extends TransformedMap<K, V>
-        implements IterableSortedMap<K, V> {
+        implements IterableSortedMap<K, V, TransformedSortedMap<K, V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = -8751771676410385778L;
@@ -163,7 +163,7 @@ public class TransformedSortedMap<K, V>
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+    public TransformedSortedMap<K, V> subMap(final SortedMapRange<K> range) {
         return new TransformedSortedMap<>(range.applyToMap(getSortedMap()), keyTransformer, valueTransformer, range);
     }
 

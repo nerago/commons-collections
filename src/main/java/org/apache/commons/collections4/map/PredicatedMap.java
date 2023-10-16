@@ -55,8 +55,8 @@ import org.apache.commons.collections4.Predicate;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class PredicatedMap<K, V>
-        extends AbstractInputCheckedMapDecorator<K, V>
+public class PredicatedMap<K, V, Decorated extends Map<K, V>>
+        extends AbstractInputCheckedMapDecorator<K, V, Decorated>
         implements Serializable {
 
     /** Serialization version */
@@ -83,7 +83,7 @@ public class PredicatedMap<K, V>
      * @throws NullPointerException if the map is null
      * @since 4.0
      */
-    public static <K, V> PredicatedMap<K, V> predicatedMap(final Map<K, V> map,
+    public static <K, V> PredicatedMap<K, V, ?> predicatedMap(final Map<K, V> map,
                                                            final Predicate<? super K> keyPredicate,
                                                            final Predicate<? super V> valuePredicate) {
         return new PredicatedMap<>(map, keyPredicate, valuePredicate);
@@ -97,7 +97,7 @@ public class PredicatedMap<K, V>
      * @param valuePredicate  the predicate to validate to values, null means no check
      * @throws NullPointerException if the map is null
      */
-    protected PredicatedMap(final Map<K, V> map, final Predicate<? super K> keyPredicate,
+    protected PredicatedMap(final Decorated map, final Predicate<? super K> keyPredicate,
                             final Predicate<? super V> valuePredicate) {
         super(map);
         this.keyPredicate = keyPredicate;
@@ -128,7 +128,7 @@ public class PredicatedMap<K, V>
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        map = (Map<K, V>) in.readObject(); // (1)
+        map = (Decorated) in.readObject(); // (1)
     }
 
     /**

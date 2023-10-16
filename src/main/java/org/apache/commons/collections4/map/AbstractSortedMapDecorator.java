@@ -17,13 +17,11 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
 import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
@@ -129,4 +127,25 @@ public abstract class AbstractSortedMapDecorator<K, V,
         return SortedMapOrderedMapIterator.sortedMapIterator(decorated());
     }
 
+    /** Simple wrapper class to decorate a SortedMap with IterableSortedMap interfaces but no changed behaviour */
+    public static final class BasicWrapper<K, V> extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, BasicWrapper<K, V>> {
+        private static final long serialVersionUID = -4795013829872876714L;
+
+        /** Default wrapping contractor
+         * @param map map to decorate
+         * */
+        public BasicWrapper(final SortedMap<K, V> map) {
+            super(map);
+        }
+
+        /** Private sub-map contractor */
+        private BasicWrapper(final SortedMap<K, V> map, final SortedMapRange<K> keyRange) {
+            super(map, keyRange);
+        }
+
+        @Override
+        protected BasicWrapper<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
+            return new BasicWrapper<>(subMap, keyRange);
+        }
+    }
 }

@@ -19,7 +19,6 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -48,8 +47,8 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableSortedMap<K, V>
-        extends AbstractSortedMapDecorator<K, V>
-        implements Unmodifiable, Serializable {
+        extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, UnmodifiableSortedMap<K, V>>
+        implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 5805344239827376360L;
@@ -64,15 +63,23 @@ public final class UnmodifiableSortedMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> IterableSortedMap<K, V> unmodifiableSortedMap(final SortedMap<K, ? extends V> map) {
+    public static <K, V> IterableSortedMap<K, V, ?> unmodifiableSortedMap(final SortedMap<K, V> map) {
         return new UnmodifiableSortedMap<>(map, SortedMapRange.full(map.comparator()));
     }
 
-    public static <K, V> IterableSortedMap<K, V> unmodifiableSortedMap(final IterableSortedMap<K, ? extends V> map) {
+    /**
+     * Factory method to create an unmodifiable sorted iterable map.
+     *
+     * @param <K>  the key type
+     * @param <V>  the value type
+     * @param map  the map to decorate, must not be null
+     * @return a new unmodifiable sorted map
+     * @throws NullPointerException if map is null
+     * @since 4.0
+     */
+    public static <K, V> IterableSortedMap<K, V, ?> unmodifiableSortedMap(final IterableSortedMap<K, V, ?> map) {
         if (map instanceof Unmodifiable) {
-            @SuppressWarnings("unchecked") // safe to upcast
-            final IterableSortedMap<K, V> tmpMap = (IterableSortedMap<K, V>) map;
-            return tmpMap;
+            return map;
         }
         return new UnmodifiableSortedMap<>(map, map.getKeyRange());
     }
@@ -112,7 +119,7 @@ public final class UnmodifiableSortedMap<K, V>
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        map = (Map<K, V>) in.readObject();
+        map = (SortedMap<K, V>) in.readObject();
     }
 
     @Override
@@ -211,7 +218,7 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    protected IterableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
+    protected UnmodifiableSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return new UnmodifiableSortedMap<>(subMap, keyRange);
     }
 

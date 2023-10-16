@@ -57,7 +57,8 @@ import org.apache.commons.collections4.SortedMapUtils;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements IterableSortedMap<K, V> {
+public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V, SortedMap<K, V>>
+                                       implements IterableSortedMap<K, V, PredicatedSortedMap<K, V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 3359846175935304332L;
@@ -97,43 +98,34 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V> implements It
         this.keyRange = keyRange;
     }
 
-    /**
-     * Gets the map being decorated.
-     *
-     * @return the decorated map
-     */
-    protected SortedMap<K, V> getSortedMap() {
-        return (SortedMap<K, V>) map;
-    }
-
     @Override
     public K firstKey() {
-        return getSortedMap().firstKey();
+        return decorated().firstKey();
     }
 
     @Override
     public K lastKey() {
-        return getSortedMap().lastKey();
+        return decorated().lastKey();
     }
 
     @Override
     public K nextKey(final K key) {
-        return SortedMapUtils.nextKey(getSortedMap(), key);
+        return SortedMapUtils.nextKey(decorated(), key);
     }
 
     @Override
     public K previousKey(final K key) {
-        return SortedMapUtils.previousKey(getSortedMap(), key);
+        return SortedMapUtils.previousKey(decorated(), key);
     }
 
     @Override
     public Comparator<? super K> comparator() {
-        return getSortedMap().comparator();
+        return decorated().comparator();
     }
 
     @Override
-    public IterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-        return new PredicatedSortedMap<>(range.applyToMap(getSortedMap()), keyPredicate, valuePredicate, range);
+    public PredicatedSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new PredicatedSortedMap<>(range.applyToMap(decorated()), keyPredicate, valuePredicate, range);
     }
 
     @Override

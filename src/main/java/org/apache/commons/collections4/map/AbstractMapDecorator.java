@@ -78,7 +78,7 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
      *
      * @return the decorated map
      */
-    protected Decorated decorated() {
+    protected final Decorated decorated() {
         return map;
     }
 

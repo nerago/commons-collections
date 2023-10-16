@@ -1,6 +1,7 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.BoundedMap;
+import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.IterableExtendedMap;
 import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -18,7 +19,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -32,8 +32,7 @@ import java.util.function.Function;
  * @param <V> the type of the values in this map (if it could have any)
  * @since X.X
  */
-public class EmptyMap<K, V> implements IterableExtendedMap<K, V>, NavigableRangedMap<K, V>,
-        SortedExtendedBidiMap<K, V>, BoundedMap<K, V>, Trie<K, V> {
+public class EmptyMap<K, V> implements EverythingMap<K, V> {
 
     private static final long serialVersionUID = -5239565925081890488L;
 
@@ -289,12 +288,7 @@ public class EmptyMap<K, V> implements IterableExtendedMap<K, V>, NavigableRange
     }
 
     @Override
-    public EmptyMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-        return (EmptyMap<K, V>) NavigableRangedMap.super.subMap(fromKey, fromInclusive, toKey, toInclusive);
-    }
-
-    @Override
-    public SortedMap<K, V> prefixMap(final K key) {
+    public EmptyMap<K, V> prefixMap(final K key) {
         return this;
     }
 

@@ -68,11 +68,11 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?>> unmodifiableOrderedBidiMap(
-            final OrderedBidiMap<? extends K, ? extends V, OrderedBidiMap<? extends K, ? extends V, ?>> map) {
+    public static <K, V> OrderedBidiMap<K, V, ?> unmodifiableOrderedBidiMap(
+            final OrderedBidiMap<? extends K, ? extends V, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final OrderedBidiMap<K, V, SortedBidiMap<K, V, ?>> tmpMap = (OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?>>) map;
+            final OrderedBidiMap<K, V, ?> tmpMap = (OrderedBidiMap<K, V, ?>) map;
             return tmpMap;
         }
         return new UnmodifiableOrderedBidiMap<>(map);
@@ -85,8 +85,8 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, OrderedBidiMap<? extends K, ? extends V, ?>> map) {
-        super(map);
+    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, ?> map) {
+        super((Decorated) map);
     }
 
     @Override

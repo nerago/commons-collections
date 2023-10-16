@@ -54,7 +54,7 @@ import org.apache.commons.collections4.Transformer;
  * @since 3.0
  */
 public class TransformedMap<K, V>
-        extends AbstractInputCheckedMapDecorator<K, V>
+        extends AbstractInputCheckedMapDecorator<K, V, Map<K, V>>
         implements Serializable {
 
     /** Serialization version */

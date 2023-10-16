@@ -179,7 +179,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
     @Override
     public MapSpliterator<K, V> mapSpliterator() {
-        return new KeyMapSpliterator();
+        return new KeyMapSpliterator<>(this);
     }
 
     /**
@@ -2864,7 +2864,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public MapSpliterator<K, V> mapSpliterator() {
-            return new KeyRangeMapSpliterator(keyRange);
+            return new KeyRangeMapSpliterator<>(parent, keyRange);
         }
 
         @Override
@@ -3027,6 +3027,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private static final class KeyMapSpliterator<K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractTreeSpliterator<K, V, Node<K, V>> {
         private final TreeBidiMapHard<K, V> parent;
+
+        private KeyMapSpliterator(final TreeBidiMapHard<K, V> parent) {
+            super();
+            this.parent = parent;
+        }
 
         private KeyMapSpliterator(final TreeBidiMapHard<K, V> parent, final SplitState state,
                                   final Node<K, V> currentNode, final Node<K, V> lastNode, final long estimatedSize) {
