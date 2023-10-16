@@ -42,7 +42,7 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
      * {@inheritDoc}
      */
     @Override
-    public OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> makeObject() {
+    public OrderedBidiMap<K, V, SortedBidiMap<K, V, ?, ?, ?>> makeObject() {
         return new TestOrderedBidiMap<>();
     }
 

@@ -22,7 +22,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -201,8 +200,8 @@ public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMa
     }
 
     @Override
-    public SortedMap<K, V> prefixMap(final K key) {
-        return Collections.unmodifiableSortedMap(delegate.prefixMap(key));
+    public SubMap prefixMap(final K key) {
+        return (SubMap) Collections.unmodifiableSortedMap(delegate.prefixMap(key));
     }
 
     @Override

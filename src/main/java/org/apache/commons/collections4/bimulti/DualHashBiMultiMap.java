@@ -22,12 +22,15 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 @SuppressWarnings("CollectionDeclaredAsConcreteClass")
@@ -393,7 +396,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
     @Override
     public MapSpliterator<K, V> mapSpliteratorEntries() {
-        return null; // TODO
+        return new EntryMapSpliterator<>(this);
     }
 
     @Override
@@ -679,6 +682,18 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         }
     }
 
+    protected static class EntryIterator<K, V> extends AbstractDistinctEntryIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
+        protected EntryIterator(final DualHashBiMultiMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public Map.Entry<K, V> next() throws NoSuchElementException {
+            nextItem();
+            return new UnmodifiableMapEntry<>(key, value);
+        }
+    }
+
     protected static class EntryMapIterator<K, V> extends AbstractDistinctEntryIterator<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
         protected EntryMapIterator(final DualHashBiMultiMap<K, V> parent) {
             super(parent);
@@ -712,15 +727,57 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         }
     }
 
-    protected static class EntryIterator<K, V> extends AbstractDistinctEntryIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
-        protected EntryIterator(final DualHashBiMultiMap<K, V> parent) {
-            super(parent);
+    private static class EntryMapSpliterator<K, V> implements MapSpliterator<K, V> {
+//        private final DualHashBiMultiMap<K, V> parent;
+        private final Spliterator<Map.Entry<K, SlotSet<V>>> mainSpliterator;
+        private Iterator<V> itemIterator;
+        private long estimateSize;
+        private K key;
+
+        private EntryMapSpliterator(final DualHashBiMultiMap<K, V> parent) {
+//            this.parent = parent;
+            mainSpliterator = parent.keyMap.entrySet().spliterator();
+            estimateSize = parent.entryCount;
+        }
+
+        private EntryMapSpliterator(final Spliterator<Map.Entry<K, SlotSet<V>>> split, final long size) {
+            mainSpliterator = split;
+            estimateSize = size;
         }
 
         @Override
-        public Map.Entry<K, V> next() throws NoSuchElementException {
-            nextItem();
-            return new UnmodifiableMapEntry<>(key, value);
+        public boolean tryAdvance(final BiConsumer<? super K, ? super V> action) {
+            if ((itemIterator != null && itemIterator.hasNext()) || mainSpliterator.tryAdvance(this::advanceSlot)) {
+                final V value = itemIterator.next();
+                action.accept(key, value);
+                return true;
+            }
+            return false;
+        }
+
+        private void advanceSlot(final Map.Entry<K, SlotSet<V>> entry) {
+            key = entry.getKey();
+            itemIterator = entry.getValue().iterator();
+        }
+
+        @Override
+        public MapSpliterator<K, V> trySplit() {
+            final Spliterator<Map.Entry<K, SlotSet<V>>> split = mainSpliterator.trySplit();
+            if (split != null) {
+                return new EntryMapSpliterator<>(split, estimateSize >>>= 1L);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public long estimateSize() {
+            return estimateSize;
+        }
+
+        @Override
+        public int characteristics() {
+            return mainSpliterator.characteristics();
         }
     }
 
