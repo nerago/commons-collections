@@ -55,10 +55,6 @@ public class DualTransformedCollectionTest extends AbstractCollectionTest<Intege
     public static final Transformer<String, Integer> STRING_TO_INTEGER_TRANSFORMER = new StringToInteger();
     public static final Transformer<Integer, String> INTEGER_TO_STRING_TRANSFORMER = new IntegerToString();
 
-    public DualTransformedCollectionTest() {
-        super(TransformedCollectionTest.class.getSimpleName());
-    }
-
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.TRANSFORM;

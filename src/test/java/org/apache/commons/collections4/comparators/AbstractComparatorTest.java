@@ -29,7 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections4.AbstractObjectTest;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -39,16 +38,6 @@ import org.junit.jupiter.api.Test;
  * They also declare certain aspects of the tests.
  */
 public abstract class AbstractComparatorTest<T> extends AbstractObjectTest {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractComparatorTest(final String testName) {
-        super(testName);
-    }
-
 
     /**
      * Implement this method to return a list of sorted objects.

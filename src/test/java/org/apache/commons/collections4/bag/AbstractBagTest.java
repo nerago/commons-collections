@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,15 +67,6 @@ import org.junit.jupiter.api.Test;
  * otherwise the collection will be wrapped by a {@link CollectionBag} decorator.
  */
 public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractBagTest(final String testName) {
-        super(testName);
-    }
 
     /**
      * Returns an empty {@link ArrayList}.
@@ -700,10 +689,6 @@ public abstract class AbstractBagTest<T> extends AbstractCollectionTest<T> {
      */
     @Nested
     public class TestBagUniqueSet extends AbstractSetTest<T> {
-
-        public TestBagUniqueSet() {
-            super("");
-        }
 
         @Override
         public T[] getFullElements() {

@@ -1,13 +1,8 @@
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.EverythingMap;
-import org.apache.commons.collections4.IterableExtendedMap;
-import org.apache.commons.collections4.NavigableRangedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;

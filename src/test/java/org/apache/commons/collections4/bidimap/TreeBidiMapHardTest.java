@@ -24,14 +24,10 @@ import java.util.TreeMap;
 /**
  * JUnit tests.
  */
-public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
-
-    public TreeBidiMapHardTest() {
-        super(TreeBidiMapHardTest.class.getSimpleName());
-    }
+public class TreeBidiMapHardTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V, SortedBidiMap<K, V, ?, ?>> {
 
     @Override
-    public SortedBidiMap<K, V> makeObject() {
+    public SortedBidiMap<K, V, ?, ?> makeObject() {
         return new TreeBidiMapHard<>();
     }
 

@@ -16,24 +16,20 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
  * JUnit tests.
  */
-public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
-
-    public DualHashBidiMapTest() {
-        super(DualHashBidiMapTest.class.getSimpleName());
-    }
+public class DualHashBidiMapTest<K, V> extends AbstractBidiMapTest<K, V, BidiMap<K, V, ?>> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DualHashBidiMap<K, V> makeObject() {
+    public BidiMap<K, V, ?> makeObject() {
         return new DualHashBidiMap<>();
     }
 

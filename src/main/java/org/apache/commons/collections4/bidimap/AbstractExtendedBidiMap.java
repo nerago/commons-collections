@@ -18,23 +18,19 @@ package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
 
-import java.util.AbstractCollection;
 import java.util.AbstractSet;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
 
 public abstract class AbstractExtendedBidiMap<K, V,
-            SubMap extends AbstractExtendedBidiMap<K, V, SubMap, SubMap, ?>,
-            RegularMap extends AbstractExtendedBidiMap<K, V, SubMap, RegularMap, InverseMap>,
-            InverseMap extends AbstractExtendedBidiMap<V, K, ?, InverseMap, RegularMap>>
+            SubMap extends AbstractExtendedBidiMap<K, V, ?, ?>,
+        InverseMap extends AbstractExtendedBidiMap<V, K, ?, ?>>
         extends AbstractIterableMapAlternate<K, V>
-        implements SortedExtendedBidiMap<K, V, SubMap, RegularMap, InverseMap> {
+        implements SortedBidiMap<K, V, SubMap, InverseMap> {
     private static final long serialVersionUID = -9181666289732043651L;
 
     @Override

@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.TestUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
@@ -132,7 +131,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link #isAllowDuplicateValues()} and have it return {@code false}
  */
 @SuppressWarnings("unchecked")
-public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
+public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
+        extends AbstractObjectTest {
 
     /**
      * JDK1.2 has bugs in null handling of Maps, especially HashMap.Entry.toString
@@ -153,7 +153,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     // are still equal to the confirmed's collection views.
 
     /** Map created by reset(). */
-    protected Map<K, V> map;
+    protected TMap map;
 
     /** Entry set of map created by reset(). */
     protected Set<Map.Entry<K, V>> entrySet;
@@ -166,15 +166,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
 
     /** HashMap created by reset(). */
     protected Map<K, V> confirmed;
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractMapTest(final String testName) {
-        super(testName);
-    }
 
     /**
      * Returns true if the maps produced by
@@ -508,7 +499,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      * @return the map to be tested
      */
     @Override
-    public abstract Map<K, V> makeObject();
+    public abstract TMap makeObject();
 
     /**
      * Return a new, populated map.  The mappings in the map should match the
@@ -519,8 +510,8 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      *
      * @return the map to be tested
      */
-    public Map<K, V> makeFullMap() {
-        final Map<K, V> m = makeObject();
+    public TMap makeFullMap() {
+        final TMap m = makeObject();
         addSampleMappings(m);
         return m;
     }
@@ -535,7 +526,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<K, V> makeObjectCopy(Map<K,V> map) {
+    protected Map<K, V> makeObjectCopy(final Map<K, V> map) {
         return (Map<K, V>) makeObjectCopy(map, Map.class);
     }
 
@@ -1740,7 +1731,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         // writeExternalFormToDisk((Serializable) confirmed, getCanonicalEmptyCollectionName(confirmed));
 
         // test to make sure the canonical form has been preserved
-        map = (Map<K, V>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(confirmed));
+        map = (TMap) readExternalFormFromDisk(getCanonicalEmptyCollectionName(confirmed));
         assertEquals(0, map.size(), "Map is empty");
         assertEquals(confirmed.getClass(), map.getClass(), "serialized test data doesn't produce same type");
         views();
@@ -1762,7 +1753,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
         // writeExternalFormToDisk((Serializable) confirmed, getCanonicalFullCollectionName(confirmed));
 
         // test to make sure the canonical form has been preserved
-        map = (Map<K, V>) readExternalFormFromDisk(getCanonicalFullCollectionName(confirmed));
+        map = (TMap) readExternalFormFromDisk(getCanonicalFullCollectionName(confirmed));
         assertEquals(getSampleKeys().length, map.size(), "Map is the right size");
         assertEquals(confirmed.getClass(), map.getClass(), "serialized test data doesn't produce same type");
         views();
@@ -2609,7 +2600,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             return;
 
         confirmed = makeConfirmedMap();
-        map = makeObjectCopy(confirmed);
+        map = (TMap) makeObjectCopy(confirmed);
         views();
         assertNotSame(confirmed, map);
         assertNotSame(confirmed.values(), map.values());
@@ -2624,7 +2615,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
             return;
 
         confirmed = makeConfirmedFullMap();
-        map = makeObjectCopy(confirmed);
+        map = (TMap) makeObjectCopy(confirmed);
         views();
         assertNotSame(confirmed, map);
         assertNotSame(confirmed.values(), map.values());
@@ -2660,10 +2651,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Nested
     public class TestMapEntrySet extends AbstractSetTest<Map.Entry<K, V>> {
-        public TestMapEntrySet() {
-            super("MapEntrySet");
-        }
-
         // Have to implement manually; entrySet doesn't support addAll
         /**
          * {@inheritDoc}
@@ -3093,10 +3080,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Nested
     public class TestMapKeySet extends AbstractSetTest<K> {
-        public TestMapKeySet() {
-            super("");
-        }
-
         @Override
         public K[] getFullElements() {
             return getSampleKeys();
@@ -3188,10 +3171,6 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Nested
     public class TestMapValues extends AbstractCollectionTest<V> {
-        public TestMapValues() {
-            super("");
-        }
-
         @Override
         public V[] getFullElements() {
             return getSampleValues();
@@ -3458,7 +3437,7 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      *
      * @return Map<K, V>
      */
-    public Map<K, V> getMap() {
+    public final TMap getMap() {
         return map;
     }
 

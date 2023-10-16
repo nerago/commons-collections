@@ -37,14 +37,6 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
 public class CollectionSortedBagTest<T> extends AbstractCollectionBagTest<T> {
 
     /**
-     * JUnit constructor.
-     */
-    public CollectionSortedBagTest() {
-        super(CollectionSortedBagTest.class.getSimpleName());
-    }
-
-
-    /**
      * Overridden because SortedBags don't allow null elements (normally).
      * @return false
      */

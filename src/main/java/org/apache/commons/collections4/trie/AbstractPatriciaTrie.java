@@ -51,7 +51,7 @@ import org.apache.commons.collections4.iterators.SingletonIterator;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMap<K, V, ?>>
         extends AbstractBitwiseTrie<K, V, SubMap> {
 
     private static final long serialVersionUID = 5155253417231339498L;

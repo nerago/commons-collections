@@ -35,10 +35,6 @@ import java.util.HashSet;
  */
 public class TreeBagTest<T> extends AbstractSortedBagTest<T> {
 
-    public TreeBagTest() {
-        super(TreeBagTest.class.getSimpleName());
-    }
-
     @Override
     public SortedBag<T> makeObject() {
         return new TreeBag<>();

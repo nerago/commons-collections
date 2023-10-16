@@ -40,15 +40,6 @@ import org.junit.jupiter.api.*;
 public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param name  name for test
-     */
-    public AbstractNavigableSetTest(final String name) {
-        super(name);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -157,7 +148,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public class BulkTestNavigableSetSubSet extends TestNavigableSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestNavigableSetSubSet() {
-            super("BulkTestNavigableSetSubSet");
             lowBound = AbstractNavigableSetTest.this.getFullElements().length / 3;
             highBound = AbstractNavigableSetTest.this.getFullElements().length / 3 * 2;
 
@@ -187,7 +177,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public class BulkTestNavigableSetHeadSet extends TestNavigableSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestNavigableSetHeadSet() {
-            super("BulkTestNavigableSetHeadSet");
             highBound = AbstractNavigableSetTest.this.getFullElements().length / 3 * 2;
 
             final int realBound = highBound + 1;
@@ -214,7 +203,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
     public class BulkTestNavigableSetTailSet extends TestNavigableSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestNavigableSetTailSet() {
-            super("BulkTestNavigableSetTailSet");
             lowBound = AbstractNavigableSetTest.this.getFullElements().length / 3;
             final E[] allElements = AbstractNavigableSetTest.this.getFullElements();
             final int realBound = lowBound + 1;
@@ -238,10 +226,6 @@ public abstract class AbstractNavigableSetTest<E> extends AbstractSortedSetTest<
         protected int highBound;
         protected E[] fullElements;
         protected E[] otherElements;
-
-        public TestNavigableSetSubSet(String name) {
-            super(name);
-        }
 
         @Override
         public boolean isNullSupported() {

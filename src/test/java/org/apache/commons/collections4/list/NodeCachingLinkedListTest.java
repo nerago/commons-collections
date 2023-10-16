@@ -27,10 +27,6 @@ import org.junit.jupiter.api.Test;
  */
 public class NodeCachingLinkedListTest<E> extends AbstractLinkedListTest<E> {
 
-    public NodeCachingLinkedListTest() {
-        super(NodeCachingLinkedListTest.class.getSimpleName());
-    }
-
     @Override
     public NodeCachingLinkedList<E> makeObject() {
         return new NodeCachingLinkedList<>();

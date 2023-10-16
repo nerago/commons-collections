@@ -36,12 +36,8 @@ import org.junit.jupiter.api.Test;
  */
 public class PatriciaTrieTest<V> extends AbstractPatriciaTrieTest<V> {
 
-    public PatriciaTrieTest() {
-        super(PatriciaTrieTest.class.getSimpleName());
-    }
-
     @Override
-    public Trie<String, V> makeObject() {
+    public Trie<String, V, ?> makeObject() {
         return new PatriciaTrie<>();
     }
 

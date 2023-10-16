@@ -152,47 +152,6 @@ public class BulkTest implements Cloneable {
     public static final String TEST_PROPERTIES_PATH = "src/test/resources/org/apache/commons/collections4/properties/";
 
     /**
-     *  The full name of this bulk test instance.  It's displayed in the text runner
-     *  to ease debugging.
-     */
-    String verboseName;
-
-    /**
-     *  the name of the simple test method
-     */
-    private String name;
-
-    /**
-     *  Constructs a new {@code BulkTest} instance that will run the
-     *  specified simple test.
-     *
-     *  @param name  the name of the simple test method to run
-     */
-    public BulkTest(final String name) {
-        this.name = name;
-        this.verboseName = getClass().getName();
-    }
-
-    /**
-     *  Returns the name of the simple test method of this {@code BulkTest}.
-     *
-     *  @return the name of the simple test method of this {@code BulkTest}
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     *  Returns the name of the simple test method of this {@code BulkTest}, or else the type name.
-     */
-    public String getNameDefaulted() {
-        if (name != null && name.length() > 0)
-            return name;
-        else
-            return verboseName;
-    }
-
-    /**
      *  Creates a clone of this {@code BulkTest}.<P>
      *
      *  @return  a clone of this {@code BulkTest}
@@ -206,20 +165,10 @@ public class BulkTest implements Cloneable {
         }
     }
 
-    /**
-     *  Returns the display name of this {@code BulkTest}.
-     *
-     *  @return the display name of this {@code BulkTest}
-     */
-    @Override
-    public String toString() {
-        return getName() + "(" + verboseName + ") ";
-    }
-
     public <N> DynamicNode getDynamicTests() {
         final Class<? extends BulkTest> type = getClass();
         final BulkTest instance = this;
-        return DynamicContainer.dynamicContainer(getNameDefaulted(),
+        return DynamicContainer.dynamicContainer(type.getSimpleName(),
                 URI.create("class:" + type.getName()),
                 Stream.concat(
                     AnnotationSupport.findAnnotatedMethods(type, Test.class, HierarchyTraversalMode.TOP_DOWN)
@@ -240,7 +189,7 @@ public class BulkTest implements Cloneable {
         if (enableTests.getAsBoolean()) {
             return getDynamicTests();
         } else {
-            return DynamicContainer.dynamicContainer(getNameDefaulted(), Stream.empty());
+            return DynamicContainer.dynamicContainer(getClass().getSimpleName(), Stream.empty());
         }
     }
 }

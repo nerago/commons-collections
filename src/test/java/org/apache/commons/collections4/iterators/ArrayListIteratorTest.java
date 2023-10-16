@@ -31,9 +31,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ArrayListIteratorTest<E> extends ArrayIteratorTest<E> {
 
-    public ArrayListIteratorTest() {
-    }
-
     @Override
     public ArrayListIterator<E> makeEmptyIterator() {
         return new ArrayListIterator<>(new Object[0]);

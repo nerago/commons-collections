@@ -39,10 +39,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedQueueTest<E> extends AbstractQueueTest<E> {
 
-    public TransformedQueueTest() {
-        super(TransformedQueueTest.class.getSimpleName());
-    }
-
     @Override
     public Queue<E> makeConfirmedCollection() {
         return new LinkedList<>();

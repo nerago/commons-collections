@@ -36,10 +36,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableListTest<E> extends AbstractListTest<E> {
 
-    public UnmodifiableListTest() {
-        super(UnmodifiableListTest.class.getSimpleName());
-    }
-
     @Override
     public UnmodifiableList<E> makeObject() {
         return new UnmodifiableList<>(new ArrayList<E>());

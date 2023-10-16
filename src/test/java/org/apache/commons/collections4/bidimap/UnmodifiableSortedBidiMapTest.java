@@ -25,34 +25,24 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.SortedBidiMap;
-import org.apache.commons.collections4.SortedExtendedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.junit.jupiter.api.Test;
 
 /**
  * JUnit tests.
  */
-public class UnmodifiableSortedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
+public class UnmodifiableSortedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V, SortedBidiMap<K, V, ?, ?>> {
 
-    public UnmodifiableSortedBidiMapTest() {
-        super(UnmodifiableSortedBidiMapTest.class.getSimpleName());
+    @Override
+    public SortedBidiMap<K, V, ?, ?> makeObject() {
+        return UnmodifiableSortedBidiMap.unmodifiableSortedBidiMap(new DualTreeBidi2Map<K,V>());
     }
 
     @Override
-    public SortedExtendedBidiMap<K, V> makeObject() {
-        return UnmodifiableSortedBidiMap.unmodifiableSortedBidiMap(new DualTreeBidi2Map<K, V>());
-    }
-
-    @Override
-    public SortedExtendedBidiMap<K, V> makeFullMap() {
-        final SortedExtendedBidiMap<K, V> bidi = new DualTreeBidi2Map<>();
+    public SortedBidiMap<K, V, ?, ?> makeFullMap() {
+        final SortedBidiMap<K, V, ?, ?> bidi = new DualTreeBidi2Map<>();
         addSampleMappings(bidi);
         return UnmodifiableSortedBidiMap.unmodifiableSortedBidiMap(bidi);
-    }
-
-    @Override
-    public SortedMap<K, V> makeConfirmedMap() {
-        return new TreeMap<>();
     }
 
     @Override
@@ -99,7 +89,7 @@ public class UnmodifiableSortedBidiMapTest<K extends Comparable<K>, V extends Co
 
     @Test
     public void testDecorateFactory() {
-        final SortedExtendedBidiMap<K, V> map = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> map = makeFullMap();
         assertSame(map, UnmodifiableSortedBidiMap.unmodifiableSortedBidiMap(map));
 
         assertThrows(NullPointerException.class, () -> UnmodifiableSortedBidiMap.unmodifiableSortedBidiMap(null));

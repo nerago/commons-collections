@@ -29,23 +29,15 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.SortedRangedMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.*;
 
 /**
  * Abstract test class for {@link java.util.SortedMap} methods and contracts.
  */
-public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractSortedMapTest(final String testName) {
-        super(testName);
-    }
+public abstract class AbstractSortedMapTest<K, V, TMap extends SortedRangedMap<K, V, ?>>
+        extends AbstractMapTest<K, V, TMap> {
 
     /**
      * Can't sort null keys.
@@ -84,20 +76,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         // no tests I can think of
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract SortedMap<K, V> makeObject();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SortedMap<K, V> makeFullMap() {
-        return (SortedMap<K, V>) super.makeFullMap();
-    }
-
     @Test
     public void testFirstKey() {
         final SortedMap<K, V> sm = makeFullMap();
@@ -127,14 +105,14 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         }
     }
 
-    public abstract static class TestViewMap<K, V> extends AbstractSortedMapTest<K, V> {
-        protected final AbstractMapTest<K, V> main;
+    public abstract static class TestViewMap<K, V>
+            extends AbstractSortedMapTest<K, V, SortedRangedMap<K, V, ?>> {
+        protected final AbstractMapTest<K, V, ? extends SortedRangedMap<K, V, ?>> main;
         protected final List<K> subSortedKeys = new ArrayList<>();
         protected final List<V> subSortedValues = new ArrayList<>();
         protected final List<V> subSortedNewValues = new ArrayList<>();
 
-        public TestViewMap(final String name, final AbstractMapTest<K, V> main) {
-            super(name);
+        protected TestViewMap(final AbstractMapTest<K, V, ? extends SortedRangedMap<K, V, ?>> main) {
             this.main = main;
         }
         @Override
@@ -257,8 +235,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         static final int SUBSIZE = 6;
         final K toKey;
 
-        public TestHeadMap(final AbstractMapTest<K, V> main) {
-            super("SortedMap.HeadMap", main);
+        public TestHeadMap(final AbstractSortedMapTest<K, V, ? extends SortedRangedMap<K, V, ?>> main) {
+            super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
                 this.subSortedKeys.add(entry.getKey());
@@ -270,13 +248,13 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
         }
         @Override
-        public IterableSortedMap<K, V> makeObject() {
+        public SortedRangedMap<K, V, ?> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return ((IterableSortedMap<K, V>) main.makeObject()).headMap(toKey);
+            return main.makeObject().headMap(toKey);
         }
         @Override
-        public IterableSortedMap<K, V> makeFullMap() {
-            return ((IterableSortedMap<K, V>) main.makeFullMap()).headMap(toKey);
+        public SortedRangedMap<K, V, ?> makeFullMap() {
+            return main.makeFullMap().headMap(toKey);
         }
 
         @Test
@@ -310,8 +288,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         final K fromKey;
         final K invalidKey;
 
-        public TestTailMap(final AbstractMapTest<K, V> main) {
-            super("SortedMap.TailMap", main);
+        public TestTailMap(final AbstractSortedMapTest<K, V, ? extends SortedRangedMap<K, V, ?>> main) {
+            super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
                 this.subSortedKeys.add(entry.getKey());
@@ -324,13 +302,13 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
             this.subSortedNewValues.addAll(Arrays.asList(main.getNewSampleValues()).subList(0, SUBSIZE));
         }
         @Override
-        public IterableSortedMap<K, V> makeObject() {
+        public SortedRangedMap<K, V, ?> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return ((IterableSortedMap<K, V>) main.makeObject()).tailMap(fromKey);
+            return main.makeObject().tailMap(fromKey);
         }
         @Override
-        public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).tailMap(fromKey);
+        public SortedRangedMap<K, V, ?> makeFullMap() {
+            return main.makeFullMap().tailMap(fromKey);
         }
 
         @Test
@@ -364,8 +342,8 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         final K fromKey;
         final K toKey;
 
-        public TestSubMap(final AbstractMapTest<K, V> main) {
-            super("SortedMap.SubMap", main);
+        public TestSubMap(final AbstractSortedMapTest<K, V, ? extends SortedRangedMap<K, V, ?>> main) {
+            super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Entry<K, V> entry : sm.entrySet()) {
                 this.subSortedKeys.add(entry.getKey());
@@ -385,13 +363,13 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
         }
 
         @Override
-        public IterableSortedMap<K, V> makeObject() {
+        public SortedRangedMap<K, V, ?> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return ((IterableSortedMap<K, V>) main.makeObject()).subMap(fromKey, toKey);
+            return main.makeObject().subMap(fromKey, toKey);
         }
         @Override
-        public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).subMap(fromKey, toKey);
+        public SortedRangedMap<K, V, ?> makeFullMap() {
+            return main.makeFullMap().subMap(fromKey, toKey);
         }
 
         @Test
@@ -418,14 +396,6 @@ public abstract class AbstractSortedMapTest<K, V> extends AbstractMapTest<K, V> 
 //                (java.io.Serializable) map,
 //                "D:/dev/collections/data/test/TransformedSortedMap.fullCollection.version3.1.SubMapView.obj");
 //        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SortedMap<K, V> getMap() {
-        return (SortedMap<K, V>) super.getMap();
     }
 
     /**

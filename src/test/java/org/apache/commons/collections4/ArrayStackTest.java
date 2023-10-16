@@ -31,10 +31,6 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation") // we test a deprecated class
 public class ArrayStackTest<E> extends AbstractArrayListTest<E> {
 
-    public ArrayStackTest() {
-        super(ArrayStackTest.class.getSimpleName());
-    }
-
     @Override
     public ArrayStack<E> makeObject() {
         return new ArrayStack<>();

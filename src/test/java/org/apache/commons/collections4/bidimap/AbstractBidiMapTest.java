@@ -31,27 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Abstract test class for {@link BidiMap} methods and contracts.
  */
-public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public AbstractBidiMapTest(final String testName) {
-        super(testName);
-    }
-
-    /**
-     * Override to create a full {@code BidiMap} other than the default.
-     *
-     * @return a full {@code BidiMap} implementation.
-     */
-    @Override
-    public BidiMap<K, V, ?> makeFullMap() {
-        return (BidiMap<K, V, ?>) super.makeFullMap();
-    }
-
-    /**
-     * Override to return the empty BidiMap.
-     */
-    @Override
-    public abstract BidiMap<K, V, ?> makeObject();
+public abstract class AbstractBidiMapTest<K, V, TMap extends BidiMap<K, V, ?>>
+        extends AbstractIterableMapTest<K, V, TMap> {
 
     /**
      * Override to indicate to AbstractTestMap this is a BidiMap.
@@ -377,14 +358,6 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         assertFalse(map.inverseBidiMap().containsKey(value), "Value was not removed from inverse map.");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public BidiMap<K, V, ?> getMap() {
-        return (BidiMap<K, V, ?>) super.getMap();
-    }
-
     @Nested
     public class TestBidiMapEntrySet extends TestMapEntrySet {
 
@@ -484,12 +457,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
     }
 
     @Disabled
-    public static class TestInverseBidiMap<K, V> extends AbstractBidiMapTest<V, K> {
+    public static class TestInverseBidiMap<K, V> extends AbstractBidiMapTest<V, K, BidiMap<V, K, ?>> {
 
-        final AbstractBidiMapTest<K, V> main;
+        final AbstractBidiMapTest<K, V, ?> main;
 
-        public TestInverseBidiMap(final AbstractBidiMapTest<K, V> main) {
-            super("TestInverseBidiMap");
+        public TestInverseBidiMap(final AbstractBidiMapTest<K, V, ?> main) {
             this.main = main;
         }
 
@@ -576,10 +548,6 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
 
     @Nested
     public class TestBidiMapIterator extends AbstractMapIteratorTest<K, V> {
-
-        public TestBidiMapIterator() {
-            super("TestBidiMapIterator");
-        }
 
         @Override
         public V[] addSetValues() {

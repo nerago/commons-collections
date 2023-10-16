@@ -34,17 +34,13 @@ import org.junit.jupiter.api.Test;
  * @since 3.0
  */
 @SuppressWarnings("boxing")
-public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V> {
+public class LazyMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     private static final int FACTORY = 42;
     private static final Factory<Integer> defaultFactory = FactoryUtils.constantFactory(FACTORY);
 
     @SuppressWarnings("unchecked")
     private final V FACTORY_V = (V) (Integer) 42;
-
-    public LazyMapTest() {
-        super(LazyMapTest.class.getSimpleName());
-    }
 
     @Override
     @SuppressWarnings("unchecked")

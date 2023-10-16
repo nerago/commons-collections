@@ -50,7 +50,7 @@ import org.junit.jupiter.api.TestFactory;
  * @since 3.0
  */
 @SuppressWarnings("boxing")
-public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
+public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V, LazySortedMap<K, V>> {
 
     private static class ReverseStringComparator implements Comparator<String> {
 
@@ -65,10 +65,6 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     private static final Factory<Integer> defaultFactory = FactoryUtils.constantFactory(FACTORY);
 
     protected final Comparator<String> reverseStringComparator = new ReverseStringComparator();
-
-    public LazySortedMapTest() {
-        super("");
-    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -224,7 +220,7 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         static final int SUBSIZE = 6;
         final K toKey;
 
-        public TestLazyHeadMap(final AbstractMapTest<K, V> main) {
+        public TestLazyHeadMap(final AbstractMapTest<K, V, LazySortedMap<K, V>> main) {
             super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Map.Entry<K, V> entry : sm.entrySet()) {
@@ -239,11 +235,11 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         @Override
         public LazySortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return (LazySortedMap<K, V>) ((LazySortedMap<K, V>) main.makeObject()).headMap(toKey);
+            return main.makeObject().headMap(toKey);
         }
         @Override
-        public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).headMap(toKey);
+        public LazySortedMap<K, V> makeFullMap() {
+            return main.makeFullMap().headMap(toKey);
         }
 
         @Test
@@ -266,7 +262,7 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         final K fromKey;
         final K invalidKey;
 
-        public TestLazyTailMap(final AbstractMapTest<K, V> main) {
+        public TestLazyTailMap(final AbstractMapTest<K, V, LazySortedMap<K, V>> main) {
             super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Map.Entry<K, V> entry : sm.entrySet()) {
@@ -282,11 +278,11 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         @Override
         public LazySortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return (LazySortedMap<K, V>) ((SortedMap<K, V>) main.makeObject()).tailMap(fromKey);
+            return main.makeObject().tailMap(fromKey);
         }
         @Override
-        public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).tailMap(fromKey);
+        public LazySortedMap<K, V> makeFullMap() {
+            return main.makeFullMap().tailMap(fromKey);
         }
 
         @Test
@@ -309,7 +305,7 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         final K fromKey;
         final K toKey;
 
-        public TestLazySubMap(final AbstractMapTest<K, V> main) {
+        public TestLazySubMap(final AbstractMapTest<K, V, LazySortedMap<K, V>> main) {
             super(main);
             final Map<K, V> sm = main.makeFullMap();
             for (final Map.Entry<K, V> entry : sm.entrySet()) {
@@ -332,11 +328,11 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
         @Override
         public LazySortedMap<K, V> makeObject() {
             // done this way so toKey is correctly set in the returned map
-            return (LazySortedMap<K, V>) ((SortedMap<K, V>) main.makeObject()).subMap(fromKey, toKey);
+            return main.makeObject().subMap(fromKey, toKey);
         }
         @Override
-        public SortedMap<K, V> makeFullMap() {
-            return ((SortedMap<K, V>) main.makeFullMap()).subMap(fromKey, toKey);
+        public LazySortedMap<K, V> makeFullMap() {
+            return main.makeFullMap().subMap(fromKey, toKey);
         }
 
         @Test
@@ -355,12 +351,12 @@ public class LazySortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
     }
 
     public abstract static class TestLazyViewMap<K, V> extends LazySortedMapTest<K, V> {
-        protected final AbstractMapTest<K, V> main;
+        protected final AbstractMapTest<K, V, LazySortedMap<K, V>> main;
         protected final List<K> subSortedKeys = new ArrayList<>();
         protected final List<V> subSortedValues = new ArrayList<>();
         protected final List<V> subSortedNewValues = new ArrayList<>();
 
-        public TestLazyViewMap(final AbstractMapTest<K, V> main) {
+        public TestLazyViewMap(final AbstractMapTest<K, V, LazySortedMap<K, V>> main) {
             this.main = main;
         }
         @Override

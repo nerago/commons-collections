@@ -18,7 +18,6 @@ package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedBidiMap;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -39,11 +38,10 @@ import org.apache.commons.collections4.SortedBidiMap;
  * @since 3.0
  */
 public abstract class AbstractOrderedBidiMapDecorator<K, V,
-            Decorated extends OrderedBidiMap<K, V, DecoratedInverse>,
-            DecoratedInverse extends OrderedBidiMap<V, K, Decorated>,
-            RegularMap extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
-            InverseMap extends AbstractOrderedBidiMapDecorator<V, K, DecoratedInverse, Decorated, InverseMap, RegularMap>>
-        extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>
+            Decorated extends OrderedBidiMap<K, V, ?>,
+            DecoratedInverse extends OrderedBidiMap<V, K, ?>,
+            InverseMap extends AbstractOrderedBidiMapDecorator<V, K, ?, ?, ?>>
+        extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, InverseMap>
         implements OrderedBidiMap<K, V, InverseMap> {
 
     private static final long serialVersionUID = 7010751296610809092L;

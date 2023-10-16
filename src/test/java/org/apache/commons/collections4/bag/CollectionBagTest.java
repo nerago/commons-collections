@@ -19,8 +19,6 @@ package org.apache.commons.collections4.bag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +26,6 @@ import java.util.Collection;
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.IterationBehaviour;
-import org.junit.jupiter.api.Test;
 
 /**
  * Test class for {@link CollectionBag}.
@@ -39,14 +36,6 @@ import org.junit.jupiter.api.Test;
  * @since 4.0
  */
 public class CollectionBagTest<T> extends AbstractCollectionBagTest<T> {
-
-    /**
-     * JUnit constructor.
-     */
-    public CollectionBagTest() {
-        super(CollectionBagTest.class.getSimpleName());
-    }
-
 
     @Override
     public Bag<T> makeObject() {

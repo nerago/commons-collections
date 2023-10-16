@@ -19,10 +19,6 @@ public class EmptyMapTest extends AbstractObjectTest {
     private static final String THREE = "four";
     private static final String TEN = "10";
 
-    public EmptyMapTest() {
-        super("EmptyMapTest");
-    }
-
     @Override
     public EmptyMap<String, String> makeObject() {
         return EmptyMap.emptyMap();
@@ -34,23 +30,19 @@ public class EmptyMapTest extends AbstractObjectTest {
     }
 
     @Nested
-    public class IterableSortedMapTest extends AbstractIterableSortedMapTest<String, String> {
-        public IterableSortedMapTest() {
-            super("IterableSortedMapTest");
-        }
-
+    public class IterableSortedMapTest extends AbstractIterableSortedMapTest<String, String, IterableSortedMap<String, String, ?>> {
         @Override
         public CollectionCommonsRole collectionRole() {
             return CollectionCommonsRole.CONCRETE;
         }
 
         @Override
-        public IterableSortedMap<String, String> makeObject() {
+        public IterableSortedMap<String, String, ?> makeObject() {
             return EmptyMapTest.this.makeObject();
         }
 
         @Override
-        public IterableSortedMap<String, String> makeFullMap() {
+        public IterableSortedMap<String, String, ?> makeFullMap() {
             // fake for passing other tests
             return UnmodifiableSortedMap.unmodifiableSortedMap(new SingletonMap<>(ONE, TWO));
         }
@@ -129,7 +121,7 @@ public class EmptyMapTest extends AbstractObjectTest {
         }
 
         @Nested
-        public class NestedIterableTests extends AbstractIterableSortedMapTest<String, String>.NestedIterableTests {
+        public class NestedIterableTests extends AbstractIterableSortedMapTest<String, String, ?>.NestedIterableTests {
             @Override
             @Test
             @Disabled

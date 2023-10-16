@@ -23,10 +23,6 @@ public class ObjectArrayListIterator2Test<E> extends AbstractListIteratorTest<E>
 
     protected String[] testArray = { "One", "Two", "Three" };
 
-    public ObjectArrayListIterator2Test() {
-        super(ObjectArrayListIterator2Test.class.getSimpleName());
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public ObjectArrayListIterator<E> makeEmptyIterator() {

@@ -39,15 +39,11 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class TransformedSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
-
-    public TransformedSortedMapTest() {
-        super(TransformedSortedMapTest.class.getSimpleName());
-    }
+public class TransformedSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V, IterableSortedMap<K, V, ?>> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public IterableSortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V, ?> makeObject() {
         return TransformedSortedMap.transformingSortedMap(new TreeMap<K, V>(),
                 (Transformer<? super K, ? extends K>) TransformerUtils.nopTransformer(),
                 (Transformer<? super V, ? extends V>) TransformerUtils.nopTransformer());

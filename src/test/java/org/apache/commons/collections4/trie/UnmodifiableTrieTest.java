@@ -33,14 +33,10 @@ import org.junit.jupiter.api.Test;
  *
  * @since 4.0
  */
-public class UnmodifiableTrieTest<V> extends AbstractIterableSortedMapTest<String, V> {
-
-    public UnmodifiableTrieTest() {
-        super(UnmodifiableTrieTest.class.getSimpleName());
-    }
+public class UnmodifiableTrieTest<V> extends AbstractIterableSortedMapTest<String, V, Trie<String, V, ?>> {
 
     @Override
-    public Trie<String, V> makeObject() {
+    public Trie<String, V, ?> makeObject() {
         return UnmodifiableTrie.unmodifiableTrie(new PatriciaTrie<V>());
     }
 
@@ -70,8 +66,8 @@ public class UnmodifiableTrieTest<V> extends AbstractIterableSortedMapTest<Strin
     }
 
     @Override
-    public Trie<String, V> makeFullMap() {
-        final Trie<String, V> m = new PatriciaTrie<>();
+    public Trie<String, V, ?> makeFullMap() {
+        final Trie<String, V, ?> m = new PatriciaTrie<>();
         addSampleMappings(m);
         return UnmodifiableTrie.unmodifiableTrie(m);
     }
@@ -84,7 +80,7 @@ public class UnmodifiableTrieTest<V> extends AbstractIterableSortedMapTest<Strin
 
     @Test
     public void testDecorateFactory() {
-        final Trie<String, V> trie = makeFullMap();
+        final Trie<String, V, ?> trie = makeFullMap();
         assertSame(trie, UnmodifiableTrie.unmodifiableTrie(trie));
 
         assertThrows(NullPointerException.class, () -> UnmodifiableTrie.unmodifiableTrie(null));

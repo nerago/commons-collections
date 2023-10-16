@@ -42,10 +42,6 @@ public class UnmodifiableSortedSetTest<E> extends AbstractSortedSetTest<E> {
     protected UnmodifiableSortedSet<E> set = null;
     protected ArrayList<E> array = null;
 
-    public UnmodifiableSortedSetTest() {
-        super(UnmodifiableSortedSetTest.class.getSimpleName());
-    }
-
     @Override
     public SortedSet<E> makeObject() {
         return UnmodifiableSortedSet.unmodifiableSortedSet(new TreeSet<E>());

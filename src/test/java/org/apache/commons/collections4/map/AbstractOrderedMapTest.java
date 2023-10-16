@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.comparators.NullComparator;
@@ -40,30 +39,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Abstract test class for {@link OrderedMap} methods and contracts.
  */
-public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractOrderedMapTest(final String testName) {
-        super(testName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract OrderedMap<K, V> makeObject();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OrderedMap<K, V> makeFullMap() {
-        return (OrderedMap<K, V>) super.makeFullMap();
-    }
+public abstract class AbstractOrderedMapTest<K, V, TMap extends OrderedMap<K, V>>
+        extends AbstractIterableMapTest<K, V, TMap> {
 
     /**
      * OrderedMap uses TreeMap as its known comparison.
@@ -186,10 +163,6 @@ public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTe
 
     @Nested
     public class InnerTestOrderedMapIterator extends AbstractOrderedMapIteratorTest<K, V> {
-        public InnerTestOrderedMapIterator() {
-            super("InnerTestOrderedMapIterator");
-        }
-
         @Override
         public boolean supportsRemove() {
             return AbstractOrderedMapTest.this.isRemoveSupported();
@@ -235,13 +208,4 @@ public abstract class AbstractOrderedMapTest<K, V> extends AbstractIterableMapTe
             AbstractOrderedMapTest.this.verify();
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OrderedMap<K, V> getMap() {
-        return (OrderedMap<K, V>) super.getMap();
-    }
-
 }

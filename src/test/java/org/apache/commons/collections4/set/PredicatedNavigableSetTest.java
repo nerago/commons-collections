@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedNavigableSetTest<E> extends AbstractNavigableSetTest<E> {
 
-    public PredicatedNavigableSetTest() {
-        super(PredicatedNavigableSetTest.class.getSimpleName());
-    }
-
     protected Predicate<E> truePredicate = TruePredicate.<E>truePredicate();
 
     @Override

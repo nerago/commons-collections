@@ -38,15 +38,11 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class PredicatedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
+public class PredicatedMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     protected static final Predicate<Object> truePredicate = TruePredicate.<Object>truePredicate();
 
     protected static final Predicate<Object> testPredicate = o -> o instanceof String;
-
-    public PredicatedMapTest() {
-        super(PredicatedMapTest.class.getSimpleName());
-    }
 
     protected IterableMap<K, V> decorateMap(final Map<K, V> map, final Predicate<? super K> keyPredicate,
         final Predicate<? super V> valuePredicate) {
@@ -55,11 +51,11 @@ public class PredicatedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     @Override
     public IterableMap<K, V> makeObject() {
-        return decorateMap(new HashMap<K, V>(), truePredicate, truePredicate);
+        return decorateMap(new HashMap<>(), truePredicate, truePredicate);
     }
 
     public IterableMap<K, V> makeTestMap() {
-        return decorateMap(new HashMap<K, V>(), testPredicate, testPredicate);
+        return decorateMap(new HashMap<>(), testPredicate, testPredicate);
     }
 
     @Override

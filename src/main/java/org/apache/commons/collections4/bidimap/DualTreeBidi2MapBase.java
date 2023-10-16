@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
         extends AbstractNavigableMapDecorator<K, V, NavigableMap<K, V>, DualTreeBidi2MapBase<K, V>>
-        implements NavigableExtendedBidiMap<K, V, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<V, K>> {
+        implements NavigableExtendedBidiMap<K, V, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<V, K>> {
     protected static final boolean treeMapImplementsRemove2 = checkNotDefault("remove", Object.class, Object.class);
     protected static final boolean treeMapImplementsReplace3 = checkNotDefault("replace", Object.class, Object.class, Object.class);
     protected static final boolean treeMapImplementsPutIfAbsent = checkNotDefault("putIfAbsent", Object.class, Object.class);
@@ -839,7 +839,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
 
         @Override
-        protected NavigableBoundSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+        protected NavigableRangedSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
             return new KeySetUsingKeyMapSubSet<>(subSet, range, parent);
         }
 
@@ -890,7 +890,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
 
         @Override
-        protected NavigableBoundSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+        protected NavigableRangedSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
             return new KeySetUsingKeyMapSubSet<>(subSet, range, parent);
         }
 

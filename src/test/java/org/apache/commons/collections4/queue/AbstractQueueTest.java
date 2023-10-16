@@ -51,15 +51,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractQueueTest<E> extends AbstractCollectionTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractQueueTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      *  Returns true if the collections produced by
      *  {@link #makeObject()} and {@link #makeFullCollection()}
      *  support the <code>set operation.<p>

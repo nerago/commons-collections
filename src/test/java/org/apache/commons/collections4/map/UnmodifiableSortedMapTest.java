@@ -34,14 +34,10 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class UnmodifiableSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
-
-    public UnmodifiableSortedMapTest() {
-        super(UnmodifiableSortedMapTest.class.getSimpleName());
-    }
+public class UnmodifiableSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V, IterableSortedMap<K, V, ?>> {
 
     @Override
-    public IterableSortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V, ?> makeObject() {
         return UnmodifiableSortedMap.unmodifiableSortedMap(new TreeMap<K, V>());
     }
 
@@ -66,7 +62,7 @@ public class UnmodifiableSortedMapTest<K, V> extends AbstractIterableSortedMapTe
     }
 
     @Override
-    public IterableSortedMap<K, V> makeFullMap() {
+    public IterableSortedMap<K, V, ?> makeFullMap() {
         final SortedMap<K, V> m = new TreeMap<>();
         addSampleMappings(m);
         return UnmodifiableSortedMap.unmodifiableSortedMap(m);

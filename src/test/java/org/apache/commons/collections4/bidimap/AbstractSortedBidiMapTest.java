@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.junit.jupiter.api.Test;
 
@@ -34,14 +36,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * Abstract test class for {@link SortedBidiMap} methods and contracts.
  */
-public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V> {
+public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>, TMap extends SortedBidiMap<K, V, ?, ?>>
+        extends AbstractOrderedBidiMapTest<K, V, TMap> {
 
     protected List<K> sortedKeys;
     protected List<V> sortedValues = new ArrayList<>();
     protected List<V> sortedNewValues = new ArrayList<>();
 
-    public AbstractSortedBidiMapTest(final String testName) {
-        super(testName);
+    public AbstractSortedBidiMapTest() {
         sortedKeys = getAsList(getSampleKeys());
         sortedKeys.sort(null);
         sortedKeys = Collections.unmodifiableList(sortedKeys);
@@ -55,22 +57,6 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         sortedNewValues.addAll(getAsList(getNewSampleValues()));
     }
 
-//    public AbstractTestSortedBidiMap() {
-//        super();
-//        sortedKeys.addAll(Arrays.asList(getSampleValues()));
-//        Collections.sort(sortedKeys);
-//        sortedKeys = Collections.unmodifiableList(sortedKeys);
-//
-//        Map map = new TreeMap();
-//        for (int i = 0; i < getSampleKeys().length; i++) {
-//            map.put(getSampleValues()[i], getSampleKeys()[i]);
-//        }
-//        sortedValues.addAll(map.values());
-//        sortedValues = Collections.unmodifiableList(sortedValues);
-//
-//        sortedNewValues.addAll(Arrays.asList(getNewSampleValues()));
-//    }
-
     @Override
     public boolean isAllowNullKey() {
         return false;
@@ -81,18 +67,9 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public abstract SortedBidiMap<K, V> makeObject();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SortedBidiMap<K, V> makeFullMap() {
-        return (SortedBidiMap<K, V>) super.makeFullMap();
+    public CollectionCommonsRole collectionRole() {
+        return null;
     }
 
     @Override
@@ -103,7 +80,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
     @Test
     public void testBidiHeadMapContains() {
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K toKey = it.next();
@@ -131,7 +108,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         int size = sm.size();
         final K first = it.next();
@@ -246,7 +223,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K second = it.next();
@@ -293,7 +270,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K second = it.next();
@@ -364,7 +341,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K second = it.next();
@@ -419,7 +396,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K second = it.next();
@@ -490,7 +467,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K second = it.next();
@@ -540,7 +517,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
     @Test
     public void testBidiTailMapContains() {
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K fromKey = it.next();
@@ -572,7 +549,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         it.next();
         it.next();
@@ -621,7 +598,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         it.next();
         it.next();
@@ -666,7 +643,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         it.next();
         it.next();
@@ -716,7 +693,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
     @Test
     public void testBidiSubMapContains() {
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         final K first = it.next();
         final K fromKey = it.next();
@@ -755,7 +732,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         it.next();
         final K fromKey = it.next();
@@ -812,7 +789,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         it.next();
         it.next();
@@ -858,7 +835,7 @@ public abstract class AbstractSortedBidiMapTest<K extends Comparable<K>, V exten
         }
 
         // extra test as other tests get complex
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
         final Iterator<K> it = sm.keySet().iterator();
         it.next();
         it.next();

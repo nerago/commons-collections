@@ -53,7 +53,6 @@ import org.junit.jupiter.api.Test;
 import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
 import static org.apache.commons.collections4.TestUtils.assertThrowsOptional;
 import static org.apache.commons.collections4.TestUtils.assertThrowsOrFalse;
-import static org.apache.commons.collections4.TestUtils.assertThrowsOrNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -175,15 +174,6 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      *  still matches the confirmed collection.
      */
     private Collection<E> confirmed;
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractCollectionTest(final String testName) {
-        super(testName);
-    }
 
     /**
      *  Specifies whether equal elements in the collection are, in fact,

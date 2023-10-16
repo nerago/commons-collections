@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class HashSetValuedHashMapTest<K, V> extends AbstractMultiValuedMapTest<K, V> {
 
-    public HashSetValuedHashMapTest() {
-        super(HashSetValuedHashMapTest.class.getSimpleName());
-    }
-
     @Override
     public SetValuedMap<K, V> makeObject() {
         return new HashSetValuedHashMap<>();

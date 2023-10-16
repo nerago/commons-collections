@@ -35,11 +35,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * JUnit tests.
  */
-public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
+public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V, LRUMap<K, V>> {
 
-    public LRUMapTest() {
-        super(LRUMapTest.class.getSimpleName());
-    }
     @Override
     public LRUMap<K, V> makeObject() {
         return new LRUMap<>();
@@ -66,14 +63,6 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Override
     protected IterationBehaviour getIterationBehaviour() {
         return IterationBehaviour.CONSISTENT_SEQUENCE_UNTIL_MODIFY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LRUMap<K, V> getMap() {
-        return (LRUMap<K, V>) super.getMap();
     }
 
     @Test
@@ -588,7 +577,7 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         final LRUMap<Object, Thread> map = new LRUMap<>(10000);
 
         final Map<Throwable, String> exceptions = new HashMap<>();
-        final ThreadGroup tg = new ThreadGroup(getName()) {
+        final ThreadGroup tg = new ThreadGroup("testSynchronizedRemoveFromMapIterator") {
             @Override
             public void uncaughtException(final Thread t, final Throwable e) {
                 exceptions.put(e, t.getName());
@@ -672,7 +661,7 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         final Map<Object, Thread> map = new LRUMap<>(10000);
 
         final Map<Throwable, String> exceptions = new HashMap<>();
-        final ThreadGroup tg = new ThreadGroup(getName()) {
+        final ThreadGroup tg = new ThreadGroup("testSynchronizedRemoveFromEntrySet") {
             @Override
             public void uncaughtException(final Thread t, final Throwable e) {
                 exceptions.put(e, t.getName());
@@ -751,7 +740,7 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         final Map<Object, Thread> map = new LRUMap<>(10000);
 
         final Map<Throwable, String> exceptions = new HashMap<>();
-        final ThreadGroup tg = new ThreadGroup(getName()) {
+        final ThreadGroup tg = new ThreadGroup("testSynchronizedRemoveFromKeySet") {
             @Override
             public void uncaughtException(final Thread t, final Throwable e) {
                 exceptions.put(e, t.getName());
@@ -835,7 +824,7 @@ public class LRUMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
         final Map<Object, Thread> map = new LRUMap<>(10000);
 
         final Map<Throwable, String> exceptions = new HashMap<>();
-        final ThreadGroup tg = new ThreadGroup(getName()) {
+        final ThreadGroup tg = new ThreadGroup("testSynchronizedRemoveFromValues") {
             @Override
             public void uncaughtException(final Thread t, final Throwable e) {
                 exceptions.put(e, t.getName());

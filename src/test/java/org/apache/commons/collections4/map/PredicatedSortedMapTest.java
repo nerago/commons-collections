@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class PredicatedSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
+public class PredicatedSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V, IterableSortedMap<K, V, ?>> {
 
     private class ReverseStringComparator implements Comparator<K> {
         @Override
@@ -58,17 +58,13 @@ public class PredicatedSortedMapTest<K, V> extends AbstractIterableSortedMapTest
 
     protected final Comparator<K> reverseStringComparator = new ReverseStringComparator();
 
-    public PredicatedSortedMapTest() {
-        super(PredicatedSortedMapTest.class.getSimpleName());
-    }
-
-    protected IterableSortedMap<K, V> decorateMap(final SortedMap<K, V> map, final Predicate<? super K> keyPredicate,
+    protected IterableSortedMap<K, V, ?> decorateMap(final SortedMap<K, V> map, final Predicate<? super K> keyPredicate,
         final Predicate<? super V> valuePredicate) {
         return PredicatedSortedMap.predicatedSortedMap(map, keyPredicate, valuePredicate);
     }
 
     @Override
-    public IterableSortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V, ?> makeObject() {
         return decorateMap(new TreeMap<K, V>(), truePredicate, truePredicate);
     }
 

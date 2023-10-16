@@ -63,7 +63,7 @@ import org.apache.commons.collections4.trie.analyzer.StringKeyAnalyzer;
  * @see <a href="https://www.imperialviolet.org/binary/critbit.pdf">Crit-Bit Tree</a>
  * @since 4.0
  */
-public class PatriciaTrie<V, SubMap extends IterableSortedMap<String, V, SubMap>> extends AbstractPatriciaTrie<String, V, SubMap> {
+public class PatriciaTrie<V> extends AbstractPatriciaTrie<String, V, IterableSortedMap<String, V, ?>> {
 
     private static final long serialVersionUID = 4446367780901817838L;
 

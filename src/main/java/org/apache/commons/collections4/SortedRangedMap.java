@@ -18,7 +18,7 @@ package org.apache.commons.collections4;
 
 import java.util.SortedMap;
 
-public interface SortedRangedMap<K, V, SubMap extends SortedMap<K, V>>
+public interface SortedRangedMap<K, V, SubMap extends SortedRangedMap<K, V, ?>>
          extends SortedMap<K, V> {
     @Override
     default SubMap subMap(final K fromKey, final K toKey) {

@@ -27,10 +27,10 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests TreeMap.
  */
-public abstract class AbstractTreeMapTest<K, V> extends AbstractMapTest<K, V> {
+public abstract class AbstractTreeMapTest<K, V> extends AbstractMapTest<K, V, TreeMap<K, V>> {
 
     public AbstractTreeMapTest(final String testName) {
-        super(testName);
+        super();
     }
 
     @Override

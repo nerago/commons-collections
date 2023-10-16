@@ -6,10 +6,6 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
 import java.util.Set;
 
 public class HashedSetTest<E> extends AbstractSetTest<E> {
-    public HashedSetTest() {
-        super("HashedSetTest");
-    }
-
     @Override
     public Set<E> makeObject() {
         return new HashedSet<>();

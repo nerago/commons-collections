@@ -33,7 +33,7 @@ import org.apache.commons.collections4.Trie;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractBitwiseTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+public abstract class AbstractBitwiseTrie<K, V, SubMap extends IterableSortedMap<K, V, ?>>
         extends AbstractMap<K, V>
         implements Trie<K, V, SubMap> {
 

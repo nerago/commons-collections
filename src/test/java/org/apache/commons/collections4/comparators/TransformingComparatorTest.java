@@ -33,14 +33,6 @@ import org.junit.jupiter.api.Test;
 public class TransformingComparatorTest extends AbstractComparatorTest<Integer> {
 
     //
-    // Initialization and busywork
-    //
-
-    public TransformingComparatorTest() {
-        super(TransformingComparatorTest.class.getSimpleName());
-    }
-
-    //
     // Set up and tear down
     //
 

@@ -861,7 +861,7 @@ public class MapUtilsTest {
         map.put("foo", "foov");
         map.put("bar", "barv");
         map.put("baz", "bazv");
-        final IterableSortedMap<String, String> iMap = MapUtils.iterableSortedMap(map);
+        final IterableSortedMap<String, String, ?> iMap = MapUtils.iterableSortedMap(map);
         assertEquals(map, iMap);
         assertNotSame(map, iMap);
         assertSame(iMap, MapUtils.iterableMap(iMap));

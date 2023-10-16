@@ -29,11 +29,7 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
  *
  * @since 3.0
  */
-public class FixedSizeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public FixedSizeMapTest() {
-        super(FixedSizeMapTest.class.getSimpleName());
-    }
+public class FixedSizeMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     @Override
     public IterableMap<K, V> makeObject() {

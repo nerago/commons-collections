@@ -17,20 +17,15 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.junit.jupiter.api.Test;
 
 /**
  * JUnit tests.
  */
-public class DualTreeBidi2MapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
+public class DualTreeBidi2MapTest<K extends Comparable<K>, V extends Comparable<V>>
+        extends AbstractSortedBidiMapTest<K, V, SortedBidiMap<K, V, ?, ?>> {
 
-    public DualTreeBidi2MapTest() {
-        super(DualTreeBidi2MapTest.class.getSimpleName());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DualTreeBidi2Map<K, V> makeObject() {
         return new DualTreeBidi2Map<>();

@@ -19,9 +19,8 @@ package org.apache.commons.collections4;
 import java.util.Comparator;
 
 public interface SortedBidiMap<K, V,
-            SubMap extends SortedBidiMap<K, V, SubMap, SubMap, ?>,
-            RegularMap extends SortedBidiMap<K, V, SubMap, RegularMap, InverseMap>,
-            InverseMap extends SortedBidiMap<V, K, ?, InverseMap, RegularMap>>
+            SubMap extends SortedBidiMap<K, V, ?, ?>,
+        InverseMap extends SortedBidiMap<V, K, ?, ?>>
         extends OrderedBidiMap<K, V, InverseMap>,
                 IterableSortedMap<K, V, SubMap> {
     /**
@@ -29,4 +28,6 @@ public interface SortedBidiMap<K, V,
      * @return Comparator&lt;? super V&gt;
      */
     Comparator<? super V> valueComparator();
+
+    SortedMapRange<V> getValueRange();
 }

@@ -41,11 +41,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
-
-    public ListOrderedMapTest() {
-        super(ListOrderedMapTest.class.getSimpleName());
-    }
+public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V, ListOrderedMap<K, V>> {
 
     @Override
     public ListOrderedMap<K, V> makeObject() {
@@ -448,11 +444,6 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
     @Nested
     public class TestKeyListView extends AbstractListTest<K> {
-
-        TestKeyListView() {
-            super("TestKeyListView");
-        }
-
         @Override
         public List<K> makeObject() {
             return ListOrderedMapTest.this.makeObject().keyList();
@@ -501,10 +492,6 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 
     @Nested
     public class TestValueListView extends AbstractListTest<V> {
-
-        TestValueListView() {
-            super("TestValueListView");
-        }
 
         @Override
         public List<V> makeObject() {
@@ -555,25 +542,6 @@ public class ListOrderedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Override
     public String getCompatibilityVersion() {
         return "4";
-    }
-
-//    public void testCreate() throws Exception {
-//        resetEmpty();
-//        writeExternalFormToDisk(
-//            (java.io.Serializable) map,
-//            "src/test/resources/data/test/ListOrderedMap.emptyCollection.version4.obj");
-//        resetFull();
-//        writeExternalFormToDisk(
-//            (java.io.Serializable) map,
-//            "src/test/resources/data/test/ListOrderedMap.fullCollection.version4.obj");
-//    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ListOrderedMap<K, V> getMap() {
-        return (ListOrderedMap<K, V>) super.getMap();
     }
 
 }

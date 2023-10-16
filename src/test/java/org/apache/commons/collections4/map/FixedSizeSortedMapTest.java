@@ -28,19 +28,15 @@ import java.util.TreeMap;
  *
  * @since 3.0
  */
-public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V> {
-
-    public FixedSizeSortedMapTest() {
-        super(FixedSizeSortedMapTest.class.getSimpleName());
-    }
+public class FixedSizeSortedMapTest<K, V> extends AbstractIterableSortedMapTest<K, V, IterableSortedMap<K, V, ?>> {
 
     @Override
-    public IterableSortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V, ?> makeObject() {
         return FixedSizeSortedMap.fixedSizeSortedMap(new TreeMap<K, V>());
     }
 
     @Override
-    public IterableSortedMap<K, V> makeFullMap() {
+    public IterableSortedMap<K, V, ?> makeFullMap() {
         final SortedMap<K, V> map = new TreeMap<>();
         addSampleMappings(map);
         return FixedSizeSortedMap.fixedSizeSortedMap(map);

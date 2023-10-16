@@ -34,10 +34,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedSortedBagTest<T> extends AbstractSortedBagTest<T> {
 
-    public TransformedSortedBagTest() {
-        super(TransformedSortedBagTest.class.getSimpleName());
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public SortedBag<T> makeObject() {

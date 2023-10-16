@@ -26,7 +26,7 @@ import java.util.SortedMap;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public interface Trie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
+public interface Trie<K, V, SubMap extends IterableSortedMap<K, V, ?>>
         extends IterableSortedMap<K, V, SubMap> {
 
     /**

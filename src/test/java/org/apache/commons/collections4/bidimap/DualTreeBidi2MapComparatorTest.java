@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.NavigableExtendedBidiMap;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.comparators.ComparableComparator;
 import org.apache.commons.collections4.comparators.ReverseComparator;
@@ -31,17 +32,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * JUnit tests.
  */
 @SuppressWarnings("boxing")
-public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
-
-    public DualTreeBidi2MapComparatorTest() {
-        super(DualTreeBidi2MapComparatorTest.class.getSimpleName());
-    }
+public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends Comparable<V>>
+        extends AbstractSortedBidiMapTest<K, V, NavigableExtendedBidiMap<K, V, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<V, K>>> {
 
     @Override
-    public DualTreeBidi2Map<K, V> makeObject() {
+    public NavigableExtendedBidiMap<K, V, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<V, K>> makeObject() {
         return new DualTreeBidi2Map<>(
-                new ReverseComparator<>(ComparableComparator.<K>comparableComparator()),
-                new ReverseComparator<>(ComparableComparator.<V>comparableComparator()));
+                new ReverseComparator<K>(ComparableComparator.comparableComparator()),
+                new ReverseComparator<V>(ComparableComparator.comparableComparator()));
     }
 
     @Override
@@ -52,7 +50,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
     @Test
     public void testComparator() {
         resetEmpty();
-        final SortedBidiMap<K, V> bidi = (SortedBidiMap<K, V>) map;
+        final SortedBidiMap<K, V, ?, ?> bidi = map;
         assertNotNull(bidi.comparator());
         assertTrue(bidi.comparator() instanceof ReverseComparator);
     }
@@ -70,7 +68,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
 
     @Test
     public void testSerializeDeserializeCheckComparator() throws Exception {
-        final SortedBidiMap<?, ?> obj = makeObject();
+        final SortedBidiMap<?, ?, ?, ?> obj = makeObject();
         if (obj instanceof Serializable && isTestSerialization()) {
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             final ObjectOutputStream out = new ObjectOutputStream(buffer);
@@ -81,7 +79,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
             final Object dest = in.readObject();
             in.close();
 
-            final SortedBidiMap<?, ?> bidi = (SortedBidiMap<?, ?>) dest;
+            final SortedBidiMap<?, ?, ?, ?> bidi = (SortedBidiMap<?, ?, ?, ?>) dest;
             assertNotNull(obj.comparator());
             assertNotNull(bidi.comparator());
             assertTrue(bidi.comparator() instanceof ReverseComparator);
@@ -118,7 +116,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
 
     @Test
     public void testSortOrder() throws Exception {
-        final SortedBidiMap<K, V> sm = makeFullMap();
+        final SortedBidiMap<K, V, ?, ?> sm = makeFullMap();
 
         // Sort by the comparator used in the makeEmptyBidiMap() method
         List<K> newSortedKeys = getAsList(getSampleKeys());

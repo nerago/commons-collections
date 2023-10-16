@@ -18,7 +18,7 @@ package org.apache.commons.collections4.bidimap;
 
 import java.util.Comparator;
 
-import org.apache.commons.collections4.SortedExtendedBidiMap;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 
 /**
@@ -40,13 +40,12 @@ import org.apache.commons.collections4.SortedMapRange;
  * @since 3.0
  */
 public abstract class AbstractSortedBidiMapDecorator<K, V,
-            Decorated extends SortedExtendedBidiMap<K, V, Decorated, Decorated, DecoratedInverse>,
-            DecoratedInverse extends SortedExtendedBidiMap<V, K, DecoratedInverse, DecoratedInverse, Decorated>,
-            SubMap extends AbstractSortedBidiMapDecorator<K, V, Decorated, DecoratedInverse, SubMap, SubMap, ?>,
-            RegularMap extends AbstractSortedBidiMapDecorator<K, V, Decorated, DecoratedInverse, SubMap, RegularMap, InverseMap>,
-            InverseMap extends AbstractSortedBidiMapDecorator<V, K, DecoratedInverse, Decorated, ?, InverseMap, RegularMap>>
-        extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>
-        implements SortedExtendedBidiMap<K, V, SubMap, RegularMap, InverseMap> {
+            Decorated extends SortedBidiMap<K, V, ?, ?>,
+            DecoratedInverse extends SortedBidiMap<V, K, ?, ?>,
+            SubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?>,
+            InverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?>>
+        extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, InverseMap>
+        implements SortedBidiMap<K, V, SubMap, InverseMap> {
 
     private static final long serialVersionUID = -2025553015999206418L;
 

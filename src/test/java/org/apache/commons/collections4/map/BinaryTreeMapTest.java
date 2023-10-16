@@ -39,14 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * JUnit tests.
  */
-public class BinaryTreeMapTest<K extends Comparable<K>, V> extends AbstractIterableSortedMapTest<K, V> {
-
-    public BinaryTreeMapTest() {
-        super(BinaryTreeMapTest.class.getSimpleName());
-    }
+public class BinaryTreeMapTest<K extends Comparable<K>, V> extends AbstractIterableSortedMapTest<K, V, IterableSortedMap<K, V, ?>> {
 
     @Override
-    public IterableSortedMap<K, V> makeObject() {
+    public IterableSortedMap<K, V, ?> makeObject() {
         return new BinaryTreeMap<>();
     }
 
@@ -297,20 +293,4 @@ public class BinaryTreeMapTest<K extends Comparable<K>, V> extends AbstractItera
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/BinaryTreeMap.fullCollection.version4.obj");
 //    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SortedMap<K, V> getMap() {
-        return super.getMap();
-    }
-
-    /**
-     * Test for <a href="https://issues.apache.org/jira/browse/COLLECTIONS-323">COLLECTIONS-323</a>.
-     */
-//    @Test
-//    public void testInitialCapacityZero() {
-//        final BinaryTreeMap<String, String> map = new BinaryTreeMap<>(0);
-//        assertEquals(1, map.data.length);
-//    }
 }

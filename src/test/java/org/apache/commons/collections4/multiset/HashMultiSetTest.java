@@ -28,10 +28,6 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
  */
 public class HashMultiSetTest<T> extends AbstractMultiSetTest<T> {
 
-    public HashMultiSetTest() {
-        super(HashMultiSetTest.class.getSimpleName());
-    }
-
     @Override
     public MultiSet<T> makeObject() {
         return new HashMultiSet<>();

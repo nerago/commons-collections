@@ -19,7 +19,6 @@ package org.apache.commons.collections4.bidimap;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.*;
 
 import org.apache.commons.collections4.*;
@@ -48,7 +47,7 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
  */
 public class DualTreeBidiMap<K, V>
         extends AbstractDualBidiMap<K, V, DualTreeBidiMap<K, V>, DualTreeBidiMap<V, K>, NavigableMap<K, V>, NavigableMap<V, K>>
-        implements SortedBidiMap<K, V, DualTreeBidiMap<K, V>, DualTreeBidiMap<K, V>, DualTreeBidiMap<V, K>> {
+        implements SortedBidiMap<K, V, DualTreeBidiMap<K, V>, DualTreeBidiMap<V, K>> {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361809L;
@@ -175,6 +174,11 @@ public class DualTreeBidiMap<K, V>
     @Override
     public SortedMapRange<K> getKeyRange() {
         return SortedMapRange.full(comparator);
+    }
+
+    @Override
+    public SortedMapRange<V> getValueRange() {
+        return SortedMapRange.full(valueComparator);
     }
 
     /**

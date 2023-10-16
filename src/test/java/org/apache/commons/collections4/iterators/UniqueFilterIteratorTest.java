@@ -38,10 +38,6 @@ public class UniqueFilterIteratorTest<E> extends AbstractIteratorTest<E> {
 
     protected List<E> list1 = null;
 
-    public UniqueFilterIteratorTest() {
-        super(UniqueFilterIteratorTest.class.getSimpleName());
-    }
-
     @BeforeEach
     @SuppressWarnings("unchecked")
     public void setUp() {

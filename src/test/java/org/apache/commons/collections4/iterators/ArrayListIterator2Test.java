@@ -21,9 +21,6 @@ package org.apache.commons.collections4.iterators;
  */
 public class ArrayListIterator2Test<E> extends ArrayIterator2Test<E> {
 
-    public ArrayListIterator2Test() {
-    }
-
     @Override
     public ArrayListIterator<E> makeEmptyIterator() {
         return new ArrayListIterator<>(new int[0]);

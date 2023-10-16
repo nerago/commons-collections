@@ -37,12 +37,6 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("boxing")
 public class CollatingIteratorTest extends AbstractIteratorTest<Integer> {
 
-    //------------------------------------------------------------ Conventional
-
-    public CollatingIteratorTest() {
-        super(CollatingIteratorTest.class.getSimpleName());
-    }
-
     //--------------------------------------------------------------- Lifecycle
 
     private Comparator<Integer> comparator = null;

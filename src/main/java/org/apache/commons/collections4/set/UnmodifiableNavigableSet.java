@@ -25,7 +25,7 @@ import java.util.NavigableSet;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
-import org.apache.commons.collections4.NavigableBoundSet;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
@@ -77,7 +77,7 @@ public final class UnmodifiableNavigableSet<E>
     }
 
     @Override
-    protected NavigableBoundSet<E> decorateDerived(final NavigableSet<E> subSet, final SortedMapRange<E> range) {
+    protected NavigableRangedSet<E> decorateDerived(final NavigableSet<E> subSet, final SortedMapRange<E> range) {
         return null;
     }
 

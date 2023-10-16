@@ -36,10 +36,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableOrderedMapIteratorTest<K, V> extends AbstractOrderedMapIteratorTest<K, V> {
 
-    public UnmodifiableOrderedMapIteratorTest() {
-        super(UnmodifiableOrderedMapIteratorTest.class.getSimpleName());
-    }
-
     @Override
     public OrderedMapIterator<K, V> makeEmptyIterator() {
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(

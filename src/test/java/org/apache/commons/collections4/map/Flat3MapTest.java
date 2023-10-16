@@ -34,7 +34,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
@@ -42,13 +41,12 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.function.Try;
 import org.junit.platform.commons.util.ReflectionUtils;
 
 /**
  * JUnit tests.
  */
-public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
+public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     private static final Integer ONE = Integer.valueOf(1);
     private static final Integer TWO = Integer.valueOf(2);
@@ -56,10 +54,6 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
     private static final String TEN = "10";
     private static final String TWENTY = "20";
     private static final String THIRTY = "30";
-
-    public Flat3MapTest() {
-        super(Flat3MapTest.class.getSimpleName());
-    }
 
     @Override
     public Flat3Map<K, V> makeObject() {
@@ -396,10 +390,6 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
 
     @Nested
     public class TestFlatMapIterator extends AbstractMapIteratorTest<K, V> {
-        public TestFlatMapIterator() {
-            super("TestFlatMapIterator");
-        }
-
         @Override
         public V[] addSetValues() {
             return Flat3MapTest.this.getNewSampleValues();
@@ -891,11 +881,7 @@ public class Flat3MapTest<K, V> extends AbstractIterableMapTest<K, V> {
     }
 
     @Nested
-    public class TestSmallMap extends AbstractIterableMapTest<K, V> {
-        public TestSmallMap() {
-            super("TestSmallMap");
-        }
-
+    public class TestSmallMap extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
         @Override
         public Flat3Map<K, V> makeObject() {
             return new Flat3Map<>();

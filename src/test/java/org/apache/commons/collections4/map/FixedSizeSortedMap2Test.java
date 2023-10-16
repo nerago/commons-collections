@@ -29,11 +29,7 @@ import java.util.TreeMap;
  *
  * @since 3.0
  */
-public class FixedSizeSortedMap2Test<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public FixedSizeSortedMap2Test() {
-        super(FixedSizeSortedMap2Test.class.getSimpleName());
-    }
+public class FixedSizeSortedMap2Test<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     @Override
     public IterableMap<K, V> makeObject() {

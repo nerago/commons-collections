@@ -57,15 +57,6 @@ import org.junit.jupiter.api.*;
 public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractListTest(final String testName) {
-        super(testName);
-    }
-
-    /**
      *  Returns true if the collections produced by
      *  {@link #makeObject()} and {@link #makeFullCollection()}
      *  support the <code>set operation.<p>
@@ -1194,7 +1185,6 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
         protected final AbstractListTest<E> outer;
 
         public BulkSubListTests(final AbstractListTest<E> outer) {
-            super("");
             this.outer = outer;
         }
 
@@ -1396,10 +1386,6 @@ public abstract class AbstractListTest<E> extends AbstractCollectionTest<E> {
 
     @Nested
     public class TestListIterator extends AbstractListIteratorTest<E> {
-        public TestListIterator() {
-            super("TestListIterator");
-        }
-
         @Override
         public E addSetValue() {
             return AbstractListTest.this.getOtherElements()[0];

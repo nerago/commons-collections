@@ -23,38 +23,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.Unmodifiable;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
 /**
  * JUnit tests.
  */
-public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
-
-    public UnmodifiableBidiMapTest() {
-        super(UnmodifiableBidiMapTest.class.getSimpleName());
-    }
+public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V, BidiMap<K, V, ?>> {
 
     @Override
-    public BidiMap<K, V> makeObject() {
+    public BidiMap<K, V, ?> makeObject() {
         return UnmodifiableBidiMap.unmodifiableBidiMap(new DualHashBidiMap<K, V>());
     }
 
     @Override
-    public BidiMap<K, V> makeFullMap() {
-        final BidiMap<K, V> bidi = new DualHashBidiMap<>();
+    public BidiMap<K, V, ?> makeFullMap() {
+        final BidiMap<K, V, ?> bidi = new DualHashBidiMap<>();
         addSampleMappings(bidi);
         return UnmodifiableBidiMap.unmodifiableBidiMap(bidi);
-    }
-
-    @Override
-    public Map<K, V> makeConfirmedMap() {
-        return new HashMap<>();
     }
 
     @Override
@@ -90,7 +79,7 @@ public class UnmodifiableBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
 
     @Test
     public void testDecorateFactory() {
-        final BidiMap<K, V> map = makeFullMap();
+        final BidiMap<K, V, ?> map = makeFullMap();
         assertSame(map, UnmodifiableBidiMap.unmodifiableBidiMap(map));
 
         assertThrows(NullPointerException.class, () -> UnmodifiableBidiMap.unmodifiableBidiMap(null));

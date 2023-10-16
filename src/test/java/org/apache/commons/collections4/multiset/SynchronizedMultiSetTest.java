@@ -28,10 +28,6 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
  */
 public class SynchronizedMultiSetTest<T> extends AbstractMultiSetTest<T> {
 
-    public SynchronizedMultiSetTest() {
-        super(SynchronizedMultiSetTest.class.getSimpleName());
-    }
-
     @Override
     public MultiSet<T> makeObject() {
         return SynchronizedMultiSet.synchronizedMultiSet(new HashMultiSet<T>());

@@ -31,7 +31,7 @@ public class TrieUtilsTest {
 
     @Test
     public void testUnmodifiableTrie() {
-        final Trie<String, Object> trie = TrieUtils.unmodifiableTrie(new PatriciaTrie<>());
+        final Trie<String, Object, ?> trie = TrieUtils.unmodifiableTrie(new PatriciaTrie<>());
         assertTrue(trie instanceof UnmodifiableTrie, "Returned object should be an UnmodifiableTrie.");
 
         assertThrows(NullPointerException.class, () -> TrieUtils.unmodifiableTrie(null));

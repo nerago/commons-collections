@@ -34,10 +34,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TreeListTest<E> extends AbstractListTest<E> {
 
-    public TreeListTest() {
-        super(TreeListTest.class.getSimpleName());
-    }
-
     @Override
     public CollectionCommonsRole collectionRole() {
         return CollectionCommonsRole.CONCRETE;

@@ -37,11 +37,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Abstract test class for {@link OrderedBidiMap} methods and contracts.
  */
-public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTest<K, V> {
-
-    public AbstractOrderedBidiMapTest(final String testName) {
-        super(testName);
-    }
+public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiMap<K, V, ?>>
+        extends AbstractBidiMapTest<K, V, TMap> {
 
     @Override
     protected IterationBehaviour getIterationBehaviour() {
@@ -51,9 +48,9 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testFirstKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = getMap();
+        OrderedBidiMap<K, V, ?> bidi = getMap();
 
-        final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
+        final OrderedBidiMap<K, V, ?> finalBidi = bidi;
         assertThrows(NoSuchElementException.class, () -> finalBidi.firstKey());
 
         resetFull();
@@ -65,9 +62,9 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testLastKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = getMap();
+        OrderedBidiMap<K, V, ?> bidi = getMap();
 
-        final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
+        final OrderedBidiMap<K, V, ?> finalBidi = bidi;
         assertThrows(NoSuchElementException.class, () -> finalBidi.lastKey());
 
         resetFull();
@@ -82,7 +79,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testNextKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map;
+        OrderedBidiMap<K, V, ?> bidi = map;
         assertNull(bidi.nextKey(getOtherKeys()[0]));
         if (!isAllowNullKey()) {
             try {
@@ -93,7 +90,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         }
 
         resetFull();
-        bidi = (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) map;
+        bidi = map;
         final Iterator<K> it = confirmed.keySet().iterator();
         K confirmedLast = it.next();
         while (it.hasNext()) {
@@ -104,7 +101,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         assertNull(bidi.nextKey(confirmedLast));
 
         if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
+            final OrderedBidiMap<K, V, ?> finalBidi = bidi;
             assertThrows(NullPointerException.class, () -> finalBidi.nextKey(null));
 
         } else {
@@ -115,7 +112,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
     @Test
     public void testPreviousKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> bidi = getMap();
+        OrderedBidiMap<K, V, ?> bidi = getMap();
         assertNull(bidi.previousKey(getOtherKeys()[0]));
         if (!isAllowNullKey()) {
             try {
@@ -139,7 +136,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         assertNull(bidi.previousKey(confirmedLast));
 
         if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> finalBidi = bidi;
+            final OrderedBidiMap<K, V, ?> finalBidi = bidi;
             assertThrows(NullPointerException.class, () -> finalBidi.previousKey(null));
 
         } else {
@@ -229,20 +226,8 @@ public abstract class AbstractOrderedBidiMapTest<K, V> extends AbstractBidiMapTe
         assertTrue(mapIterator2.hasPrevious());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> getMap() {
-        return (OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>>) super.getMap();
-    }
-
     @Nested
     public class TestBidiOrderedMapIterator extends AbstractMapIteratorTest<K, V> {
-
-        public TestBidiOrderedMapIterator() {
-            super("TestBidiOrderedMapIterator");
-        }
 
         @Override
         public V[] addSetValues() {

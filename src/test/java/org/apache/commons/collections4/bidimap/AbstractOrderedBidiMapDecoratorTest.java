@@ -22,7 +22,6 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.OrderedBidiMap;
-import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 
 /**
@@ -32,17 +31,13 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
  * @param <V> the type of the values in this map
  */
 public class AbstractOrderedBidiMapDecoratorTest<K, V>
-        extends AbstractOrderedBidiMapTest<K, V> {
-
-    public AbstractOrderedBidiMapDecoratorTest() {
-        super(AbstractOrderedBidiMapDecoratorTest.class.getSimpleName());
-    }
+        extends AbstractOrderedBidiMapTest<K, V, OrderedBidiMap<K, V, ?>> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public OrderedBidiMap<K, V, SortedBidiMap<K, V, ?, ?, ?>> makeObject() {
+    public OrderedBidiMap<K, V, ?> makeObject() {
         return new TestOrderedBidiMap<>();
     }
 
@@ -89,15 +84,13 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
     /**
      * Simple class to actually test.
      */
-    private static final class TestOrderedBidiMap<K, V> extends AbstractOrderedBidiMapDecorator<K, V> {
-
-        private TestOrderedBidiMap<V, K> inverse = null;
-
+    private static final class TestOrderedBidiMap<K, V>
+            extends AbstractOrderedBidiMapDecorator<K, V, OrderedBidiMap<K, V, ?>, OrderedBidiMap<V, K, ?>, TestOrderedBidiMap<V, K>> {
         TestOrderedBidiMap() {
-            super(new DualTreeBidiMap<K, V>());
+            super(new DualTreeBidiMap<>());
         }
 
-        TestOrderedBidiMap(final OrderedBidiMap<K, V, SortedBidiMap<K, V, SubMap>> map) {
+        TestOrderedBidiMap(final OrderedBidiMap<K, V, ?> map) {
             super(map);
         }
 
@@ -105,14 +98,9 @@ public class AbstractOrderedBidiMapDecoratorTest<K, V>
             super(new DualTreeBidiMap<K, V>());
             putAll(map);
         }
-
         @Override
-        public OrderedBidiMap<V, K, SortedBidiMap<V, K, SubMap>> inverseBidiMap() {
-            if (inverse == null) {
-                inverse = new TestOrderedBidiMap<>(decorated().inverseBidiMap());
-                inverse.inverse = this;
-            }
-            return inverse;
+        protected TestOrderedBidiMap<V, K> decorateInverse(OrderedBidiMap<V, K, ?> inverse) {
+            return new TestOrderedBidiMap<>(inverse);
         }
     }
 }

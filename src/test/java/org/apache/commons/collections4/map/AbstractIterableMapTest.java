@@ -32,30 +32,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Abstract test class for {@link IterableMap} methods and contracts.
  */
-public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test name
-     */
-    public AbstractIterableMapTest(final String testName) {
-        super(testName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract IterableMap<K, V> makeObject();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IterableMap<K, V> makeFullMap() {
-        return (IterableMap<K, V>) super.makeFullMap();
-    }
+public abstract class AbstractIterableMapTest<K, V, TMap extends IterableMap<K, V>>
+        extends AbstractMapTest<K, V, TMap> {
 
     @Test
     public void testFailFastEntrySet() {
@@ -222,10 +200,6 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
 
     @Nested
     public class InnerTestMapIterator extends AbstractMapIteratorTest<K, V> {
-        public InnerTestMapIterator() {
-            super("InnerTestMapIterator");
-        }
-
         @Override
         public V[] addSetValues() {
             return AbstractIterableMapTest.this.getNewSampleValues();
@@ -283,13 +257,5 @@ public abstract class AbstractIterableMapTest<K, V> extends AbstractMapTest<K, V
 //      resetFull();
 //      writeExternalFormToDisk((Serializable) map, "D:/dev/collections/data/test/HashedMap.fullCollection.version3.obj");
 //  }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IterableMap<K, V> getMap() {
-        return (IterableMap<K, V>) super.getMap();
-    }
 
 }

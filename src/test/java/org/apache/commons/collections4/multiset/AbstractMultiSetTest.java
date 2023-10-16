@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,15 +63,6 @@ import org.junit.jupiter.api.Test;
  * @since 4.1
  */
 public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> {
-
-    /**
-     * JUnit constructor.
-     *
-     * @param testName  the test class name
-     */
-    public AbstractMultiSetTest(final String testName) {
-        super(testName);
-    }
 
     /**
      * Returns an empty {@link ArrayList}.
@@ -628,10 +617,6 @@ public abstract class AbstractMultiSetTest<T> extends AbstractCollectionTest<T> 
      */
     @Nested
     public class TestMultiSetUniqueSet extends AbstractSetTest<T> {
-        public TestMultiSetUniqueSet() {
-            super("");
-        }
-
         @Override
         public T[] getFullElements() {
             return AbstractMultiSetTest.this.getFullElements();

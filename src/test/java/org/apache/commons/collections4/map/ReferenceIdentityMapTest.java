@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for ReferenceIdentityMap.
  */
-public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V> {
+public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     private static final Integer I1A = new Integer(1); // Cannot use valueOf here
     private static final Integer I1B = new Integer(1);
@@ -53,10 +53,6 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
     WeakReference<K> keyReference;
 
     WeakReference<V> valueReference;
-
-    public ReferenceIdentityMapTest() {
-        super(ReferenceIdentityMapTest.class.getSimpleName());
-    }
 
     @SuppressWarnings("unchecked")
     private Map<K, V> buildRefMap() {
@@ -388,7 +384,7 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
     }
 
     @Nested
-    public class TestMapEntrySet extends AbstractMapTest<K, V>.TestMapEntrySet {
+    public class TestMapEntrySet extends AbstractMapTest<K, V, ?>.TestMapEntrySet {
         @Test
         @Disabled("don't work for reference collection")
         @Override

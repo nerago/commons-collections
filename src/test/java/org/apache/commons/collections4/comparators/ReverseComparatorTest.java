@@ -34,10 +34,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ReverseComparatorTest extends AbstractComparatorTest<Integer> {
 
-    public ReverseComparatorTest() {
-        super(ReverseComparatorTest.class.getSimpleName());
-    }
-
     /**
      * For the purposes of this test, return a
      * ReverseComparator that wraps the java.util.Collections.reverseOrder()

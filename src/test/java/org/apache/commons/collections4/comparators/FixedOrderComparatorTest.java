@@ -52,14 +52,6 @@ public class FixedOrderComparatorTest extends AbstractComparatorTest<String> {
     };
 
     //
-    // Initialization and busywork
-    //
-
-    public FixedOrderComparatorTest() {
-        super(FixedOrderComparatorTest.class.getSimpleName());
-    }
-
-    //
     // Set up and tear down
     //
 

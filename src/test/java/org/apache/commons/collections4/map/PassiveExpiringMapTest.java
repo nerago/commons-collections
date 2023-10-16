@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.PassiveExpiringMap.ExpirationPolicy;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 4.0
  */
-public class PassiveExpiringMapTest<K, V> extends AbstractMapTest<K, V> {
+public class PassiveExpiringMapTest<K, V> extends AbstractMapTest<K, V, Map<K, V>> {
 
     private static class TestExpirationPolicy
         implements ExpirationPolicy<Integer, String> {
@@ -60,10 +59,6 @@ public class PassiveExpiringMapTest<K, V> extends AbstractMapTest<K, V> {
 
             return 0;
         }
-    }
-
-    public PassiveExpiringMapTest() {
-        super(PassiveExpiringMapTest.class.getSimpleName());
     }
 
 //    public void testCreate() throws Exception {

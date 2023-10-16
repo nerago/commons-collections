@@ -35,11 +35,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class UnmodifiableMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public UnmodifiableMapTest() {
-        super(UnmodifiableMapTest.class.getSimpleName());
-    }
+public class UnmodifiableMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     @Override
     public IterableMap<K, V> makeObject() {

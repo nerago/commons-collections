@@ -38,10 +38,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedBagTest<T> extends AbstractBagTest<T> {
 
-    public PredicatedBagTest() {
-        super(PredicatedBagTest.class.getSimpleName());
-    }
-
     protected Predicate<T> stringPredicate() {
         return o -> o instanceof String;
     }

@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.trie;
 
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Trie;
@@ -45,18 +46,14 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSortedMapTest<String, V> {
-    public AbstractPatriciaTrieTest(String testName) {
-        super(testName);
-    }
-
+public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSortedMapTest<String, V, Trie<String, V, ?>> {
     @Override
     public boolean isToStringLikeCommonMaps() {
         return false;
     }
 
     @Override
-    public abstract Trie<String, V> makeObject();
+    public abstract Trie<String, V, ?> makeObject();
 
     @Test
     public void testPrefixMap() {
@@ -375,7 +372,7 @@ public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSorted
 
     @Test
     public void testPrefixMapClear() {
-        final Trie<String, Integer> trie = new PatriciaTrie<>();
+        final Trie<String, Integer, ?> trie = new PatriciaTrie<>();
         trie.put("Anna", 1);
         trie.put("Anael", 2);
         trie.put("Analu", 3);
@@ -397,7 +394,7 @@ public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSorted
 
     @Test
     public void testPrefixMapClearNothing() {
-        final Trie<String, Integer> trie = new PatriciaTrie<>();
+        final Trie<String, Integer, ?> trie = new PatriciaTrie<>();
         final SortedMap<String, Integer> prefixMap = trie.prefixMap("And");
         assertEquals(new HashSet<String>(), prefixMap.keySet());
         assertEquals(new ArrayList<Integer>(0), new ArrayList<>(prefixMap.values()));
@@ -412,7 +409,7 @@ public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSorted
 
     @Test
     public void testPrefixMapClearUsingRemove() {
-        final Trie<String, Integer> trie = new PatriciaTrie<>();
+        final Trie<String, Integer, ?> trie = new PatriciaTrie<>();
         trie.put("Anna", 1);
         trie.put("Anael", 2);
         trie.put("Analu", 3);
@@ -454,7 +451,7 @@ public abstract class AbstractPatriciaTrieTest<V> extends AbstractIterableSorted
 //            while (entries.size() > 1)
 //                entries.remove(0);
 
-            Trie<String, V> trie = makeObject();
+            Trie<String, V, ?> trie = makeObject();
             for (String str : entries) {
                 trie.put(str, (V) str);
             }

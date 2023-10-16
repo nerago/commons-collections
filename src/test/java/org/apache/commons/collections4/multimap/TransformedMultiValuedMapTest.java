@@ -36,10 +36,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedMultiValuedMapTest<K, V> extends AbstractMultiValuedMapTest<K, V> {
 
-    public TransformedMultiValuedMapTest() {
-        super(TransformedMultiValuedMapTest.class.getSimpleName());
-    }
-
     @Override
     public MultiValuedMap<K, V> makeObject() {
         return TransformedMultiValuedMap.transformingMap(new ArrayListValuedHashMap<K, V>(),

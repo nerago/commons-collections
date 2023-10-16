@@ -25,18 +25,10 @@ import java.util.List;
  */
 public abstract class AbstractNullComparatorTest extends AbstractComparatorTest<Integer> {
 
-    public AbstractNullComparatorTest(final String testName) {
-        super(testName);
-    }
-
     /**
      *  Test the NullComparator with nulls high, using comparable comparator
      **/
     public static class TestNullComparator1 extends AbstractNullComparatorTest {
-
-        public TestNullComparator1() {
-            super(TestNullComparator1.class.getSimpleName());
-        }
 
         @Override
         public Comparator<Integer> makeObject() {
@@ -75,10 +67,6 @@ public abstract class AbstractNullComparatorTest extends AbstractComparatorTest<
      *  Test the NullComparator with nulls low using the comparable comparator
      **/
     public static class TestNullComparator2 extends AbstractNullComparatorTest {
-
-        public TestNullComparator2() {
-            super(TestNullComparator2.class.getSimpleName());
-        }
 
         @Override
         public Comparator<Integer> makeObject() {

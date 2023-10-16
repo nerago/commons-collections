@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableCollectionTest<E> extends AbstractCollectionTest<E> {
 
-    public UnmodifiableCollectionTest() {
-        super(UnmodifiableCollectionTest.class.getSimpleName());
-    }
-
     @Override
     public Collection<E> makeObject() {
         return UnmodifiableCollection.unmodifiableCollection(new ArrayList<E>());

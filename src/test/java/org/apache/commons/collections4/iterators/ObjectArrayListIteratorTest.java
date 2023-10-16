@@ -31,9 +31,6 @@ import org.junit.jupiter.api.Test;
  */
 public class ObjectArrayListIteratorTest<E> extends ObjectArrayIteratorTest<E> {
 
-    public ObjectArrayListIteratorTest() {
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public ObjectArrayListIterator<E> makeEmptyIterator() {

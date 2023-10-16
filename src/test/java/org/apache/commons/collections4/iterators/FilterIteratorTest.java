@@ -41,11 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class FilterIteratorTest<E> extends AbstractIteratorTest<E> {
 
-    /** Creates new TestFilterIterator */
-    public FilterIteratorTest() {
-        super(FilterIteratorTest.class.getSimpleName());
-    }
-
     private String[] array;
     private List<E> list;
     private FilterIterator<E> iterator;

@@ -33,15 +33,11 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * JUnit tests.
  */
-public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
+public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V, OrderedMap<K, V>> {
 
     private static final Integer ONE = Integer.valueOf(1);
     private static final Integer TWO = Integer.valueOf(2);
     private static final String TEN = "10";
-
-    public SingletonMapTest() {
-        super(SingletonMapTest.class.getSimpleName());
-    }
 
     @Override
     public OrderedMap<K, V> makeObject() {
@@ -51,7 +47,7 @@ public class SingletonMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
-    protected Map<K, V> makeObjectCopy(Map<K, V> map) {
+    protected Map<K, V> makeObjectCopy(final Map<K, V> map) {
         return new SingletonMap<>(map);
     }
 

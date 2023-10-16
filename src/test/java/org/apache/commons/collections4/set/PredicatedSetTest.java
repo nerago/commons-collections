@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedSetTest<E> extends AbstractSetTest<E> {
 
-    public PredicatedSetTest() {
-        super(PredicatedSetTest.class.getSimpleName());
-    }
-
     protected Predicate<E> truePredicate = TruePredicate.<E>truePredicate();
 
     protected PredicatedSet<E> decorateSet(final Set<E> set, final Predicate<? super E> predicate) {

@@ -40,10 +40,9 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K, V, DecoratedInverse>,
-                                                     DecoratedInverse extends BidiMap<V, K, Decorated>,
-                                                     RegularMap extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, RegularMap, InverseMap>,
-                                                     InverseMap extends AbstractBidiMapDecorator<V, K, DecoratedInverse, Decorated, InverseMap, RegularMap>>
+public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K, V, ?>,
+                                                     DecoratedInverse extends BidiMap<V, K, ?>,
+                                                     InverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?>>
         extends AbstractMapDecorator<K, V, Decorated>
         implements BidiMap<K, V, InverseMap> {
 
@@ -80,10 +79,11 @@ public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K
         return decorated().removeValue(value);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public final InverseMap inverseBidiMap() {
         if (inverse == null) {
-            inverse = decorateInverse(decorated().inverseBidiMap());
+            inverse = decorateInverse((DecoratedInverse) decorated().inverseBidiMap());
         }
         return inverse;
     }

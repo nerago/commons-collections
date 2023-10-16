@@ -23,10 +23,8 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -35,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LongObjectMapTest extends AbstractObjectTest {
     public LongObjectMapTest() {
-        super("LongObjectMapTest");
+        super();
     }
 
     @Override
@@ -211,11 +209,7 @@ public class LongObjectMapTest extends AbstractObjectTest {
     }
 
     @Nested
-    public class CheckMapAdapter extends AbstractMapTest<Long, String> {
-        public CheckMapAdapter() {
-            super("CheckMapAdapter");
-        }
-
+    public class CheckMapAdapter extends AbstractMapTest<Long, String, Map<Long, String>> {
         @Override
         public boolean isCopyConstructorCheckable() {
             return false;

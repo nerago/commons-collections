@@ -46,15 +46,6 @@ import org.junit.jupiter.api.TestFactory;
 public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
 
     /**
-     * JUnit constructor.
-     *
-     * @param name  name for test
-     */
-    public AbstractSortedSetTest(final String name) {
-        super(name);
-    }
-
-    /**
      * Verification extension, will check the order of elements,
      * the sets should already be verified equal.
      */
@@ -168,7 +159,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public class BulkTestSortedSetSubSet extends TestSortedSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestSortedSetSubSet() {
-            super("BulkTestSortedSetSubSet");
             final int loBound = AbstractSortedSetTest.this.getFullElements().length / 3;
             final int hiBound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
             lowBound = loBound;
@@ -195,7 +185,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public class BulkTestSortedSetHeadSet extends TestSortedSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestSortedSetHeadSet() {
-            super("BulkTestSortedSetHeadSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3 * 2;
             highBound = bound;
             fullElements = (E[]) new Object[bound];
@@ -219,7 +208,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
     public class BulkTestSortedSetTailSet extends TestSortedSetSubSet {
         @SuppressWarnings("unchecked")
         public BulkTestSortedSetTailSet() {
-            super("bulkTestSortedSetTailSet");
             final int bound = AbstractSortedSetTest.this.getFullElements().length / 3;
             lowBound = bound;
             final E[] allElements = AbstractSortedSetTest.this.getFullElements();
@@ -243,10 +231,6 @@ public abstract class AbstractSortedSetTest<E> extends AbstractSetTest<E> {
         protected int highBound;
         protected E[] fullElements;
         protected E[] otherElements;
-
-        public TestSortedSetSubSet(String name) {
-            super(name);
-        }
 
         @Override
         public boolean isNullSupported() {

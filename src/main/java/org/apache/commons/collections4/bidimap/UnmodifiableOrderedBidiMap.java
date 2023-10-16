@@ -24,10 +24,8 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
@@ -44,13 +42,12 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableOrderedBidiMap<K, V,
-            Decorated extends OrderedBidiMap<K, V, DecoratedInverse>,
-            DecoratedInverse extends OrderedBidiMap<V, K, Decorated>>
+            Decorated extends OrderedBidiMap<K, V, ?>,
+            DecoratedInverse extends OrderedBidiMap<V, K, ?>>
         extends AbstractOrderedBidiMapDecorator<K, V,
             Decorated,
             DecoratedInverse,
-            UnmodifiableOrderedBidiMap<K, V, Decorated, DecoratedInverse>,
-            UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, Decorated>>
+            UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, ?>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -193,7 +190,7 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      *
      * @return an inverted unmodifiable bidirectional map
      */
-    public UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, Decorated> inverseOrderedBidiMap() {
+    public UnmodifiableOrderedBidiMap<V, K, ?, ?> inverseOrderedBidiMap() {
         return inverseBidiMap();
     }
 

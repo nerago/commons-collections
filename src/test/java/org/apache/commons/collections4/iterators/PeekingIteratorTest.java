@@ -41,10 +41,6 @@ public class PeekingIteratorTest<E> extends AbstractIteratorTest<E> {
 
     private List<E> testList;
 
-    public PeekingIteratorTest() {
-        super(PeekingIteratorTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */

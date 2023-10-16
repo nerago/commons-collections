@@ -23,10 +23,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractCollectionBagTest<T> extends AbstractCollectionTest<T> {
-    public AbstractCollectionBagTest(String testName) {
-        super(testName);
-    }
-
     @Override
     public abstract Bag<T> makeObject();
 

@@ -22,17 +22,11 @@ import org.apache.commons.collections4.SortedBidiMap;
 /**
  * JUnit tests.
  */
-public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractSortedBidiMapTest<K, V> {
+public class DualTreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>>
+        extends AbstractSortedBidiMapTest<K, V, SortedBidiMap<K, V, ?, ?>> {
 
-    public DualTreeBidiMapTest() {
-        super(DualTreeBidiMapTest.class.getSimpleName());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public SortedBidiMap<K, V> makeObject() {
+    public SortedBidiMap<K, V, ?, ?> makeObject() {
         return new DualTreeBidiMap<>();
     }
 

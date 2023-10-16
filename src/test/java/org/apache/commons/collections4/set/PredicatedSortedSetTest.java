@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedSortedSetTest<E> extends AbstractSortedSetTest<E> {
 
-    public PredicatedSortedSetTest() {
-        super(PredicatedSortedSetTest.class.getSimpleName());
-    }
-
     protected Predicate<E> truePredicate = TruePredicate.<E>truePredicate();
 
     @Override

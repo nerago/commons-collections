@@ -34,11 +34,7 @@ import org.junit.jupiter.api.Test;
 /**
  * JUnit tests.
  */
-public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
-
-    public LinkedMapTest() {
-        super(LinkedMapTest.class.getSimpleName());
-    }
+public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V, LinkedMap<K, V>> {
 
     @Override
     public LinkedMap<K, V> makeObject() {
@@ -239,10 +235,6 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
     @Nested
     public class TestListView extends AbstractListTest<K> {
 
-        TestListView() {
-            super("TestListView");
-        }
-
         @Override
         public List<K> makeObject() {
             return LinkedMapTest.this.makeObject().asList();
@@ -299,14 +291,6 @@ public class LinkedMapTest<K, V> extends AbstractOrderedMapTest<K, V> {
 //        resetFull();
 //        writeExternalFormToDisk((java.io.Serializable) map, "src/test/resources/data/test/LinkedMap.fullCollection.version4.obj");
 //    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LinkedMap<K, V> getMap() {
-        return (LinkedMap<K, V>) super.getMap();
-    }
 
     /**
      * Test for <a href="https://issues.apache.org/jira/browse/COLLECTIONS-323">COLLECTIONS-323</a>.

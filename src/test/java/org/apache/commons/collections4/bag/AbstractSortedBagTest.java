@@ -31,10 +31,6 @@ import org.apache.commons.collections4.SortedBag;
  */
 public abstract class AbstractSortedBagTest<T> extends AbstractBagTest<T> {
 
-    public AbstractSortedBagTest(final String testName) {
-        super(testName);
-    }
-
     /**
      * Verification extension, will check the order of elements,
      * the sets should already be verified equal.

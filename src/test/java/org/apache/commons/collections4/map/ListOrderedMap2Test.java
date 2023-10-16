@@ -37,11 +37,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.1
  */
-public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
-
-    public ListOrderedMap2Test() {
-        super(ListOrderedMap2Test.class.getSimpleName());
-    }
+public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V, ListOrderedMap<K, V>> {
 
     @Override
     public ListOrderedMap<K, V> makeObject() {
@@ -49,7 +45,7 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
     }
 
     @Override
-    protected Map<K, V> makeObjectCopy(Map<K, V> map) {
+    protected Map<K, V> makeObjectCopy(final Map<K, V> map) {
         return ListOrderedMap.listOrderedMap(map);
     }
 
@@ -181,11 +177,6 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
 
     @Nested
     public class TestListView extends AbstractListTest<K> {
-
-        TestListView() {
-            super("TestListView");
-        }
-
         @Override
         public List<K> makeObject() {
             return ListOrderedMap2Test.this.makeObject().asList();
@@ -241,12 +232,4 @@ public class ListOrderedMap2Test<K, V> extends AbstractOrderedMapTest<K, V> {
 //            (java.io.Serializable) map,
 //            "D:/dev/collections/data/test/ListOrderedMap.fullCollection.version3.1.obj");
 //    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ListOrderedMap<K, V> getMap() {
-        return (ListOrderedMap<K, V>) super.getMap();
-    }
 }

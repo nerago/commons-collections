@@ -16,7 +16,7 @@
  */
 package org.apache.commons.collections4.set;
 
-import org.apache.commons.collections4.NavigableBoundSet;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.Iterator;
@@ -33,7 +33,7 @@ import java.util.NavigableSet;
  */
 public abstract class AbstractNavigableSetDecorator<E>
         extends AbstractSortedSetDecorator<E>
-        implements NavigableBoundSet<E> {
+        implements NavigableRangedSet<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = 20150528L;
@@ -67,7 +67,7 @@ public abstract class AbstractNavigableSetDecorator<E>
         return (NavigableSet<E>) super.decorated();
     }
 
-    protected abstract NavigableBoundSet<E> decorateDerived(NavigableSet<E> subSet, SortedMapRange<E> range);
+    protected abstract NavigableRangedSet<E> decorateDerived(NavigableSet<E> subSet, SortedMapRange<E> range);
 
     @Override
     public SortedMapRange<E> getRange() {
@@ -105,7 +105,7 @@ public abstract class AbstractNavigableSetDecorator<E>
     }
 
     @Override
-    public NavigableBoundSet<E> descendingSet() {
+    public NavigableRangedSet<E> descendingSet() {
         return decorateDerived(decorated().descendingSet(), getRange().reversed());
     }
 
@@ -115,34 +115,34 @@ public abstract class AbstractNavigableSetDecorator<E>
     }
 
     @Override
-    public NavigableBoundSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement,
-                                       final boolean toInclusive) {
+    public NavigableRangedSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement,
+                                        final boolean toInclusive) {
         return decorateDerived(decorated().subSet(fromElement, fromInclusive, toElement, toInclusive),
                 getRange().subRange(fromElement, fromInclusive, toElement, toInclusive));
     }
 
     @Override
-    public NavigableBoundSet<E> headSet(final E toElement, final boolean inclusive) {
+    public NavigableRangedSet<E> headSet(final E toElement, final boolean inclusive) {
         return decorateDerived(decorated().headSet(toElement, inclusive), getRange().head(toElement, inclusive));
     }
 
     @Override
-    public NavigableBoundSet<E> tailSet(final E fromElement, final boolean inclusive) {
+    public NavigableRangedSet<E> tailSet(final E fromElement, final boolean inclusive) {
         return decorateDerived(decorated().tailSet(fromElement, inclusive), getRange().tail(fromElement, inclusive));
     }
 
     @Override
-    public NavigableBoundSet<E> subSet(final E fromElement, final E toElement) {
-        return NavigableBoundSet.super.subSet(fromElement, toElement);
+    public NavigableRangedSet<E> subSet(final E fromElement, final E toElement) {
+        return NavigableRangedSet.super.subSet(fromElement, toElement);
     }
 
     @Override
-    public NavigableBoundSet<E> headSet(final E toElement) {
-        return NavigableBoundSet.super.headSet(toElement);
+    public NavigableRangedSet<E> headSet(final E toElement) {
+        return NavigableRangedSet.super.headSet(toElement);
     }
 
     @Override
-    public NavigableBoundSet<E> tailSet(final E fromElement) {
-        return NavigableBoundSet.super.tailSet(fromElement);
+    public NavigableRangedSet<E> tailSet(final E fromElement) {
+        return NavigableRangedSet.super.tailSet(fromElement);
     }
 }

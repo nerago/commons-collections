@@ -27,12 +27,8 @@ import org.apache.commons.collections4.trie.analyzer.StringKeyAnalyzer;
  */
 public class GeneralRadixTrieTest<V extends Comparable<V>> extends AbstractPatriciaTrieTest<V> {
 
-    public GeneralRadixTrieTest() {
-        super(GeneralRadixTrieTest.class.getSimpleName());
-    }
-
     @Override
-    public Trie<String, V> makeObject() {
+    public Trie<String, V, ?> makeObject() {
         return new GeneralRadixTrie<>(new StringKeyAnalyzer());
     }
 

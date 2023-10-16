@@ -18,7 +18,7 @@ package org.apache.commons.collections4;
 
 import java.util.NavigableMap;
 
-public interface NavigableRangedMap<K, V, SubMap extends NavigableRangedMap<K, V, SubMap>>
+public interface NavigableRangedMap<K, V, SubMap extends NavigableRangedMap<K, V, ?>>
         extends NavigableMap<K, V>, IterableSortedMap<K, V, SubMap> {
     @Override
     default SubMap subMap(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {

@@ -39,10 +39,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedNavigableSetTest<E> extends AbstractNavigableSetTest<E> {
 
-    public TransformedNavigableSetTest() {
-        super(TransformedNavigableSetTest.class.getSimpleName());
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public NavigableSet<E> makeObject() {

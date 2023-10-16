@@ -32,11 +32,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for the {@link CaseInsensitiveMap} implementation.
  */
-public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public CaseInsensitiveMapTest() {
-        super(CaseInsensitiveMapTest.class.getSimpleName());
-    }
+public class CaseInsensitiveMapTest<K, V> extends AbstractIterableMapTest<K, V, CaseInsensitiveMap<K, V>> {
 
     @Override
     public String getCompatibilityVersion() {

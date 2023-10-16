@@ -36,14 +36,10 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.0
  */
-public class CompositeMapTest<K, V> extends AbstractIterableMapTest<K, V> {
+public class CompositeMapTest<K, V> extends AbstractIterableMapTest<K, V, CompositeMap<K, V>> {
 
     /** used as a flag in MapMutator tests */
     private boolean pass = false;
-
-    public CompositeMapTest() {
-        super(CompositeMapTest.class.getSimpleName());
-    }
 
     @Override
     public boolean isSpecificValueRemoveSupported() {

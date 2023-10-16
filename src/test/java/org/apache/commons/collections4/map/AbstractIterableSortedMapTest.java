@@ -16,42 +16,22 @@
  */
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.BulkTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
-import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Nested;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-
-public abstract class AbstractIterableSortedMapTest<K, V> extends AbstractSortedMapTest<K, V> {
-    public AbstractIterableSortedMapTest(final String testName) {
-        super(testName);
-    }
-
-    @Override
-    public abstract IterableSortedMap<K, V> makeObject();
-
-    @Override
-    public IterableSortedMap<K, V> makeFullMap() {
-        return (IterableSortedMap<K, V>) super.makeFullMap();
-    }
+public abstract class AbstractIterableSortedMapTest<K, V, TMap extends IterableSortedMap<K, V, ?>>
+        extends AbstractSortedMapTest<K, V, TMap> {
 
     @Nested
-    public class NestedIterableTests extends AbstractIterableMapTest<K, V> {
-        public NestedIterableTests() {
-            super("NestedIterableTests");
-        }
-
+    public class NestedIterableTests extends AbstractIterableMapTest<K, V, IterableSortedMap<K, V, ?>> {
         @Override
-        public IterableMap<K, V> makeObject() {
+        public IterableSortedMap<K, V, ?> makeObject() {
             return AbstractIterableSortedMapTest.this.makeObject();
         }
         @Override
-        public IterableMap<K, V> makeFullMap() {
+        public IterableSortedMap<K, V, ?> makeFullMap() {
             return AbstractIterableSortedMapTest.this.makeFullMap();
         }
 

@@ -37,10 +37,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableSortedBagTest<E> extends AbstractSortedBagTest<E> {
 
-    public UnmodifiableSortedBagTest() {
-        super(UnmodifiableSortedBagTest.class.getSimpleName());
-    }
-
     @Override
     public SortedBag<E> makeObject() {
         return UnmodifiableSortedBag.unmodifiableSortedBag(new TreeBag<E>());

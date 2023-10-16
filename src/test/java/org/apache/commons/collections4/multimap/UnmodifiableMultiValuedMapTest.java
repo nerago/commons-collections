@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableMultiValuedMapTest<K, V> extends AbstractMultiValuedMapTest<K, V> {
 
-    public UnmodifiableMultiValuedMapTest() {
-        super(UnmodifiableMultiValuedMapTest.class.getSimpleName());
-    }
-
     /**
      * Assert the given map contains all added values after it was initialized
      * with makeFullMap(). See COLLECTIONS-769.

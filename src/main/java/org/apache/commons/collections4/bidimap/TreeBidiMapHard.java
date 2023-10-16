@@ -86,7 +86,7 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractExtendedBidiMap<K, V, TreeBidiMapHard.TreeBidiSubMap<K, V>, TreeBidiMapHard<K, V>, TreeBidiMapHard.Inverse<K, V>> {
+        extends AbstractExtendedBidiMap<K, V, TreeBidiMapHard.TreeBidiSubMap<K, V>, TreeBidiMapHard.Inverse<K, V>> {
 
     private static final long serialVersionUID = -1641463319195982234L;
 
@@ -2655,7 +2655,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * The inverse map implementation.
      */
     public static final class Inverse<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractExtendedBidiMap<V, K, TreeBidiSubMap<V, K>, Inverse<K, V>, TreeBidiMapHard<K, V>> {
+            extends AbstractExtendedBidiMap<V, K, TreeBidiSubMap<V, K>, TreeBidiMapHard<K, V>> {
 
         private static final long serialVersionUID = -5940400507869486450L;
         private final TreeBidiMapHard<K, V> parent;
@@ -2814,7 +2814,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     public static final class TreeBidiSubMap<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractExtendedBidiMap<K, V, TreeBidiSubMap<K, V>, TreeBidiSubMap<K, V>, TreeBidiSubMap<V, K>> {
+            extends AbstractExtendedBidiMap<K, V, TreeBidiSubMap<K, V>, TreeBidiSubMap<V, K>> {
 
         private static final long serialVersionUID = 7793720431038658603L;
         private final TreeBidiMapHard<K, V> parent;

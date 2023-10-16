@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.map.AbstractHashedMap.HashEntry;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceEntry;
@@ -47,11 +48,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for ReferenceMap.
  */
-public class ReferenceMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public ReferenceMapTest() {
-        super(ReferenceMapTest.class.getSimpleName());
-    }
+public class ReferenceMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     @Override
     public ReferenceMap<K, V> makeObject() {

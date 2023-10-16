@@ -39,10 +39,6 @@ public class UnmodifiableIteratorTest<E> extends AbstractIteratorTest<E> {
     protected String[] testArray = { "One", "Two", "Three" };
     protected List<E> testList;
 
-    public UnmodifiableIteratorTest() {
-        super(UnmodifiableIteratorTest.class.getSimpleName());
-    }
-
     /**
      * {@inheritDoc}
      */

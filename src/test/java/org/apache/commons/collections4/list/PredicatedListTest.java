@@ -38,10 +38,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PredicatedListTest<E> extends AbstractListTest<E> {
 
-    public PredicatedListTest() {
-        super(PredicatedListTest.class.getSimpleName());
-    }
-
     protected Predicate<E> truePredicate = TruePredicate.<E>truePredicate();
 
     protected List<E> decorateList(final List<E> list, final Predicate<E> predicate) {

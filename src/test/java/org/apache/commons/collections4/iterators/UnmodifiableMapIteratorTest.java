@@ -35,10 +35,6 @@ import org.junit.jupiter.api.Test;
  */
 public class UnmodifiableMapIteratorTest<K, V> extends AbstractMapIteratorTest<K, V> {
 
-    public UnmodifiableMapIteratorTest() {
-        super(UnmodifiableMapIteratorTest.class.getSimpleName());
-    }
-
     @Override
     public MapIterator<K, V> makeEmptyIterator() {
         return UnmodifiableMapIterator.unmodifiableMapIterator(new DualHashBidiMap<K, V>().mapIterator());

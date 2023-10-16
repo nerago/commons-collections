@@ -36,15 +36,11 @@ import org.junit.jupiter.api.Test;
  *
  * @since 3.2
  */
-public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V> {
+public class DefaultedMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     protected final Factory<V> nullFactory = FactoryUtils.<V>nullFactory();
     protected final Transformer<K, V> nullTransformer = TransformerUtils.<K, V>nullTransformer();
     private static final Factory<Integer> oneFactory = FactoryUtils.constantFactory(1);
-
-    public DefaultedMapTest() {
-        super(DefaultedMapTest.class.getSimpleName());
-    }
 
     @Override
     @SuppressWarnings("unchecked")

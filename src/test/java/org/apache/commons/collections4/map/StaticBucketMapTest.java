@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
 
@@ -29,11 +30,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests.
  * {@link StaticBucketMap}.
  */
-public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V> {
-
-    public StaticBucketMapTest() {
-        super(StaticBucketMapTest.class.getSimpleName());
-    }
+public class StaticBucketMapTest<K, V> extends AbstractIterableMapTest<K, V, IterableMap<K, V>> {
 
     @Override
     public StaticBucketMap<K, V> makeObject() {

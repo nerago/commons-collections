@@ -47,8 +47,7 @@ public final class UnmodifiableBidiMap<K, V,
         extends AbstractBidiMapDecorator<K, V,
             Decorated,
             DecoratedInverse,
-            UnmodifiableBidiMap<K, V, Decorated, DecoratedInverse>,
-            UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated>>
+        UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated>>
         implements Unmodifiable {
 
     /** Serialization version */

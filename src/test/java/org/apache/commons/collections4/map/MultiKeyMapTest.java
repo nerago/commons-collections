@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.Map;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.Test;
 /**
  * JUnit tests.
  */
-public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? extends K>, V> {
+public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? extends K>, V, MultiKeyMap<K, V>> {
 
     static final Integer I1 = Integer.valueOf(1);
     static final Integer I2 = Integer.valueOf(2);
@@ -45,10 +46,6 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
     static final Integer I6 = Integer.valueOf(6);
     static final Integer I7 = Integer.valueOf(7);
     static final Integer I8 = Integer.valueOf(8);
-
-    public MultiKeyMapTest() {
-        super(MultiKeyMapTest.class.getSimpleName());
-    }
 
     @Override
     public MultiKeyMap<K, V> makeObject() {
@@ -496,12 +493,4 @@ public class MultiKeyMapTest<K, V> extends AbstractIterableMapTest<MultiKey<? ex
 //            (java.io.Serializable) map,
 //            "src/test/resources/data/test/MultiKeyMap.fullCollection.version4.obj");
 //    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MultiKeyMap<K, V> getMap() {
-        return (MultiKeyMap<K, V>) super.getMap();
-    }
 }

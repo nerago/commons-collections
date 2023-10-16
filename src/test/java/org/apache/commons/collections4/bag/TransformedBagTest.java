@@ -35,10 +35,6 @@ import org.junit.jupiter.api.Test;
  */
 public class TransformedBagTest<T> extends AbstractBagTest<T> {
 
-    public TransformedBagTest() {
-        super(TransformedBagTest.class.getSimpleName());
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public Bag<T> makeObject() {
