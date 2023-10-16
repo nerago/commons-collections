@@ -29,8 +29,11 @@ import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -63,7 +66,8 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "OverlyComplexClass"})
 public final class BinaryTreeMap<K extends Comparable<K>, V>
-        extends AbstractIterableSortedMap<K, V> {
+        extends AbstractIterableSortedMap<K, V>
+        implements Externalizable, Cloneable {
 
     private static final long serialVersionUID = 5398917388048351226L;
     
@@ -1047,33 +1051,29 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     /**
      * Reads the content of the stream.
      *
-     * @param stream the input stream
+     * @param in the input data
      * @throws IOException            if an error occurs while reading from the stream
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
-    @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
-    private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException {
-        stream.defaultReadObject();
-        final int size = stream.readInt();
+    @SuppressWarnings("unchecked")  // This will fail at runtime if the stream is incorrect
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        final int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            final K k = (K) stream.readObject();
-            final V v = (V) stream.readObject();
+            final K k = (K) in.readObject();
+            final V v = (V) in.readObject();
             put(k, v);
         }
     }
 
-    /**
-     * Writes the content to the stream for serialization.
-     *
-     * @param stream the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream stream) throws IOException {
-        stream.defaultWriteObject();
-        stream.writeInt(this.size());
-        for (final Entry<K, V> entry : entrySet()) {
-            stream.writeObject(entry.getKey());
-            stream.writeObject(entry.getValue());
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeInt(this.size());
+
+        final OrderedMapIterator<K, V> it = mapIterator();
+        while (it.hasNext()) {
+            out.writeObject(it.next());
+            out.writeObject(it.getValue());
         }
     }
 

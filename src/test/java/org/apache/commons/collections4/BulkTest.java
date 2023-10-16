@@ -135,35 +135,12 @@ import java.util.stream.Stream;
  *  The ordinary {@link TestSuite} constructor doesn't know how to
  *  interpret bulk test methods.
  */
-public class BulkTest implements Cloneable {
-
-    // Note:  BulkTest is Cloneable to make it easier to construct
-    // BulkTest instances for simple test methods that are defined in
-    // anonymous inner classes.  Basically we don't have to worry about
-    // finding weird constructors.  (And even if we found them, technically
-    // it'd be illegal for anyone but the outer class to invoke them).
-    // Given one BulkTest instance, we can just clone it and reset the
-    // method name for every simple test it defines.
-
+public class BulkTest {
     /** Path to test data resources */
     protected static final String TEST_DATA_PATH = "src/test/resources/org/apache/commons/collections4/data/test/";
 
     /** Path to test properties resources */
     public static final String TEST_PROPERTIES_PATH = "src/test/resources/org/apache/commons/collections4/properties/";
-
-    /**
-     *  Creates a clone of this {@code BulkTest}.<P>
-     *
-     *  @return  a clone of this {@code BulkTest}
-     */
-    @Override
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (final CloneNotSupportedException e) {
-            throw new Error(); // should never happen
-        }
-    }
 
     public <N> DynamicNode getDynamicTests() {
         final Class<? extends BulkTest> type = getClass();

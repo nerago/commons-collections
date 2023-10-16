@@ -30,6 +30,7 @@ import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
+import org.apache.commons.collections4.functors.PrototypeFactory;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.junit.jupiter.api.AfterEach;
@@ -2599,7 +2600,7 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
         if (!isCopyConstructorCheckable())
             return;
 
-        confirmed = makeConfirmedMap();
+        confirmed = makeObject();
         map = (TMap) makeObjectCopy(confirmed);
         views();
         assertNotSame(confirmed, map);
@@ -2614,7 +2615,7 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
         if (!isCopyConstructorCheckable())
             return;
 
-        confirmed = makeConfirmedFullMap();
+        confirmed = makeFullMap();
         map = (TMap) makeObjectCopy(confirmed);
         views();
         assertNotSame(confirmed, map);
@@ -2622,6 +2623,34 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
         assertNotSame(confirmed.keySet(), map.keySet());
         assertNotSame(confirmed.entrySet(), map.entrySet());
         verify();
+    }
+
+    @Test
+    public void testCloneEmpty() {
+        confirmed = makeObject();
+        if (confirmed instanceof Cloneable) {
+            map = (TMap) PrototypeFactory.prototypeFactory(confirmed).create();
+            views();
+            assertNotSame(confirmed, map);
+            assertNotSame(confirmed.values(), map.values());
+            assertNotSame(confirmed.keySet(), map.keySet());
+            assertNotSame(confirmed.entrySet(), map.entrySet());
+            verify();
+        }
+    }
+
+    @Test
+    public void testCloneFull() {
+        confirmed = makeFullMap();
+        if (confirmed instanceof Cloneable) {
+            map = (TMap) PrototypeFactory.prototypeFactory(confirmed).create();
+            views();
+            assertNotSame(confirmed, map);
+            assertNotSame(confirmed.values(), map.values());
+            assertNotSame(confirmed.keySet(), map.keySet());
+            assertNotSame(confirmed.entrySet(), map.entrySet());
+            verify();
+        }
     }
 
     /**
