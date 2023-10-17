@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -115,8 +115,8 @@ public class FixedSizeSortedMap<K, V>
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(map);
     }
 
@@ -128,8 +128,8 @@ public class FixedSizeSortedMap<K, V>
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         map = (SortedMap<K, V>) in.readObject(); // (1)
     }
 

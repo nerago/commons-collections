@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -85,7 +81,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
  * @since 3.1
  */
 public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K>, V, AbstractHashedMap<MultiKey<? extends K>, V>>
-        implements Serializable, Cloneable {
+        implements Cloneable {
 
     /** Serialisation version */
     private static final long serialVersionUID = -1788199231038721040L;
@@ -866,30 +862,6 @@ public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K
     @Override
     public MapIterator<MultiKey<? extends K>, V> mapIterator() {
         return decorated().mapIterator();
-    }
-
-    /**
-     * Write the map out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        setMap((AbstractHashedMap<MultiKey<? extends K>, V>) in.readObject());
     }
 
 }

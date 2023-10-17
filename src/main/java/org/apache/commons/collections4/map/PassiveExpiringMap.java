@@ -16,11 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.MapIterator;
-
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import org.apache.commons.collections4.MapIterator;
 
 /**
  * Decorates a {@code Map} to evict expired entries once their expiration
@@ -534,9 +534,8 @@ public class PassiveExpiringMap<K, V>
      */
     @SuppressWarnings("unchecked")
     // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in)
-        throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         map = (Map<K, V>) in.readObject(); // (1)
     }
 
@@ -546,9 +545,8 @@ public class PassiveExpiringMap<K, V>
      * @param out the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out)
-        throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(map);
     }
 

@@ -17,18 +17,13 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.apache.commons.collections4.Factory;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.functors.ConstantTransformer;
 import org.apache.commons.collections4.functors.FactoryTransformer;
@@ -73,7 +68,7 @@ import org.apache.commons.collections4.functors.FactoryTransformer;
  * @since 3.2
  * @see LazyMap
  */
-public class DefaultedMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> implements Serializable {
+public class DefaultedMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 19698628745827L;
@@ -177,8 +172,8 @@ public class DefaultedMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> im
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(map);
     }
 
@@ -190,8 +185,8 @@ public class DefaultedMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> im
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         map = (Map<K, V>) in.readObject();
     }
 

@@ -16,8 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import org.apache.commons.collections4.map.EmptyMap;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
@@ -25,6 +23,17 @@ import java.util.NavigableMap;
 import java.util.NoSuchElementException;
 import java.util.SortedMap;
 
+import org.apache.commons.collections4.map.EmptyMap;
+
+/**
+ * Represents the range of keys/values included in a given instance of sub collection.
+ * @param <K> the element object type (usually a key)
+ *
+ * @see SortedMap#subMap(Object, Object)
+ * @see NavigableMap#subMap(Object, boolean, Object, boolean)
+ * @see java.util.SortedSet#subSet(Object, Object)
+ * @see java.util.NavigableSet#subSet(Object, boolean, Object, boolean)
+ */
 public final class SortedMapRange<K> implements Serializable {
     private static final long serialVersionUID = 5904683499000042719L;
 

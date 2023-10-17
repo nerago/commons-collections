@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.multiset;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Array;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -480,7 +480,7 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
      * @throws IOException any of the usual I/O related exceptions
      */
     @Override
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    public final void writeExternal(final ObjectOutput out) throws IOException {
         out.writeInt(map.size());
         for (final Map.Entry<E, MutableInteger> entry : map.entrySet()) {
             out.writeObject(entry.getKey());
@@ -495,9 +495,9 @@ public abstract class AbstractMapMultiSet<E> extends AbstractMultiSet<E> {
      * @throws ClassNotFoundException if the stream contains an object which class can not be loaded
      * @throws ClassCastException if the stream does not contain the correct objects
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected void doReadObject(final ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         final int entrySize = in.readInt();
         for (int i = 0; i < entrySize; i++) {
             @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect

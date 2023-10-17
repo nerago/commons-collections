@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.trie;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,6 +29,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
@@ -47,7 +51,7 @@ public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMa
     /** Serialization version */
     private static final long serialVersionUID = -7156426030315945159L;
 
-    private final Trie<K, V, ?> delegate;
+    private Trie<K, V, ?> delegate;
 
     /**
      * Factory method to create an unmodifiable trie.
@@ -126,6 +130,11 @@ public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMa
 
     @Override
     public void putAll(final Map<? extends K, ? extends V> m) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
         throw new UnsupportedOperationException();
     }
 
@@ -245,4 +254,14 @@ public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMa
         return delegate.toString();
     }
 
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(delegate);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        delegate = (Trie<K, V, ?>) in.readObject();
+    }
 }

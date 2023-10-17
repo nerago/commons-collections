@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.list;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -41,30 +37,6 @@ public abstract class AbstractSerializableListDecorator<E>
      */
     protected AbstractSerializableListDecorator(final List<E> list) {
         super(list);
-    }
-
-    /**
-     * Write the list out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(decorated());
-    }
-
-    /**
-     * Read the list in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        setCollection((Collection<E>) in.readObject());
     }
 
 }

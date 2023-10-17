@@ -17,14 +17,26 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.AbstractCollection;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
+import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
@@ -322,7 +334,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @param map  the map to add
      * @throws NullPointerException if the map is null
      */
-    @SuppressWarnings("UseBulkOperation")
+    @SuppressWarnings({"UseBulkOperation", "unchecked"})
     private void _putAll(final Map<? extends K, ? extends V> map) {
         final int mapSize = map.size();
         if (mapSize == 0) {
@@ -330,9 +342,18 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         }
         final int newSize = (int) ((size + mapSize) / loadFactor + 1);
         ensureCapacity(calculateNewCapacity(newSize));
-        for (final Map.Entry<? extends K, ? extends V> entry: map.entrySet()) {
-            put(entry.getKey(), entry.getValue());
+        if (map instanceof IterableGet) {
+            putAll(((IterableGet<? extends K, ? extends V>) map).mapIterator());
+        } else {
+            for (final Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
+                put(entry.getKey(), entry.getValue());
+            }
         }
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        it.forEachRemaining(this::put);
     }
 
     /**
@@ -1629,7 +1650,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    protected void doWriteObject(final ObjectOutput out) throws IOException {
         out.writeFloat(loadFactor);
         out.writeInt(data.length);
         out.writeInt(size);
@@ -1637,6 +1658,11 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
             out.writeObject(it.next());
             out.writeObject(it.getValue());
         }
+    }
+
+    @Override
+    public final void writeExternal(final ObjectOutput out) throws IOException {
+        doWriteObject(out);
     }
 
     /**
@@ -1660,7 +1686,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    protected void doReadObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+    protected void doReadObject(final ObjectInput in) throws IOException, ClassNotFoundException {
         loadFactor = in.readFloat();
         final int capacity = in.readInt();
         final int size = in.readInt();
@@ -1672,6 +1698,11 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
             final V value = (V) in.readObject();
             put(key, value);
         }
+    }
+
+    @Override
+    public final void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        doReadObject(in);
     }
 
     /**

@@ -17,15 +17,12 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.Transformer;
 
 /**
@@ -54,16 +51,15 @@ import org.apache.commons.collections4.Transformer;
  * @since 3.0
  */
 public class TransformedMap<K, V>
-        extends AbstractInputCheckedMapDecorator<K, V, Map<K, V>>
-        implements Serializable {
+        extends AbstractInputCheckedMapDecorator<K, V, Map<K, V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 7023152376788900464L;
 
     /** The transformer to use for the key */
-    protected final Transformer<? super K, ? extends K> keyTransformer;
+    protected Transformer<? super K, ? extends K> keyTransformer;
     /** The transformer to use for the value */
-    protected final Transformer<? super V, ? extends V> valueTransformer;
+    protected Transformer<? super V, ? extends V> valueTransformer;
 
     /**
      * Factory method to create a transforming map.
@@ -141,9 +137,11 @@ public class TransformedMap<K, V>
      * @throws IOException if an error occurs while writing to the stream
      * @since 3.1
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(keyTransformer);
+        out.writeObject(valueTransformer);
+        super.writeExternal(out);
     }
 
     /**
@@ -155,9 +153,11 @@ public class TransformedMap<K, V>
      * @since 3.1
      */
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        map = (Map<K, V>) in.readObject(); // (1)
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        keyTransformer = (Transformer<? super K, ? extends K>) in.readObject();
+        valueTransformer = (Transformer<? super V, ? extends V>) in.readObject();
+        super.readExternal(in);
     }
 
     /**

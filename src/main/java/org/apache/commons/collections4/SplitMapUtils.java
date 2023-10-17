@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -110,6 +113,11 @@ public class SplitMapUtils {
         }
 
         @Override
+        public void putAll(final MapIterator<? extends K, ? extends V> it) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public V remove(final Object key) {
             return get.remove(key);
         }
@@ -133,6 +141,16 @@ public class SplitMapUtils {
                 it = new EntrySetToMapIteratorAdapter<>(get.entrySet());
             }
             return UnmodifiableMapIterator.unmodifiableMapIterator(it);
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            get.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            get.readExternal(in);
         }
     }
 
@@ -203,6 +221,11 @@ public class SplitMapUtils {
         }
 
         @Override
+        public void putAll(final MapIterator<? extends K, ? extends V> it) {
+            put.putAll(it);
+        }
+
+        @Override
         public V remove(final Object key) {
             throw new UnsupportedOperationException();
         }
@@ -215,6 +238,16 @@ public class SplitMapUtils {
         @Override
         public Collection<V> values() {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            put.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            put.readExternal(in);
         }
     }
 

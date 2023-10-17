@@ -16,12 +16,12 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
-
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Provide a basic {@link IterableMap} implementation.
@@ -47,17 +47,23 @@ public abstract class AbstractIterableMap<K, V> implements IterableMap<K, V> {
         if (mapToCopy instanceof IterableGet) {
             final IterableGet<? extends K, ? extends V> iterableMap = (IterableGet<? extends K, ? extends V>) mapToCopy;
             final MapIterator<? extends K, ? extends V> mapIterator = iterableMap.mapIterator();
-            while (mapIterator.hasNext()) {
-                final K key = mapIterator.next();
-                final V value = mapIterator.getValue();
-                put(key, value);
-            }
+            putAll(mapIterator);
+
         } else {
             final Iterator<? extends Entry<? extends K, ? extends V>> iterator = mapToCopy.entrySet().iterator();
             while (iterator.hasNext()) {
                 final Entry<? extends K, ? extends V> entry = iterator.next();
                 put(entry.getKey(), entry.getValue());
             }
+        }
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        while (it.hasNext()) {
+            final K key = it.next();
+            final V value = it.getValue();
+            put(key, value);
         }
     }
 }

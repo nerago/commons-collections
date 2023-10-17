@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
 
@@ -141,6 +142,11 @@ public abstract class AbstractBitwiseTrie<K, V, SubMap extends IterableSortedMap
         }
 
         return keyAnalyzer.compare(key, other) == 0;
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        it.forEachRemaining(this::put);
     }
 
     /**

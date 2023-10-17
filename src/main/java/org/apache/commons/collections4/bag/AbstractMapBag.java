@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.bag;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Comparator;
@@ -554,7 +554,7 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      * @param out the output stream
      * @throws IOException any of the usual I/O related exceptions
      */
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    protected void doWriteObject(final ObjectOutput out) throws IOException {
         out.writeInt(map.size());
         for (final Entry<E, MutableInteger> entry : map.entrySet()) {
             out.writeObject(entry.getKey());
@@ -570,7 +570,7 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      * @throws ClassNotFoundException if the stream contains an object which class can not be loaded
      * @throws ClassCastException if the stream does not contain the correct objects
      */
-    protected void doReadObject(final Map<E, MutableInteger> map, final ObjectInputStream in)
+    protected void doReadObject(final Map<E, MutableInteger> map, final ObjectInput in)
             throws IOException, ClassNotFoundException {
         this.map = map;
         final int entrySize = in.readInt();

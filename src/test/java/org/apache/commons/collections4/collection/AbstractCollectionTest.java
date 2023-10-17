@@ -53,7 +53,14 @@ import org.junit.jupiter.api.Test;
 import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
 import static org.apache.commons.collections4.TestUtils.assertThrowsOptional;
 import static org.apache.commons.collections4.TestUtils.assertThrowsOrFalse;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Abstract test class for {@link java.util.Collection} methods and contracts.

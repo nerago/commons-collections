@@ -16,7 +16,10 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
@@ -60,7 +63,7 @@ import java.util.stream.Stream;
  * @since 3.0
  */
 public abstract class AbstractCollectionDecorator<E>
-        implements Collection<E>, Serializable {
+        implements Collection<E>, Externalizable {
 
     /** Serialization version */
     private static final long serialVersionUID = 6249888059822088500L;
@@ -205,4 +208,14 @@ public abstract class AbstractCollectionDecorator<E>
         return decorated().toString();
     }
 
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(collection);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        collection = (Collection<E>) in.readObject();
+    }
 }

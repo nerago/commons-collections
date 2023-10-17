@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -36,6 +32,10 @@ import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.comparators.ComparableComparator;
 import org.apache.commons.collections4.comparators.ReverseComparator;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * JUnit tests.
@@ -105,7 +105,7 @@ public class DualTreeBidiMapComparatorTest<K extends Comparable<K>, V extends Co
         }
     }
 
-    private static class IntegerComparator implements Comparator<Integer>, Serializable{
+    private static class IntegerComparator implements Comparator<Integer>, Serializable {
         private static final long serialVersionUID = 1L;
         @Override
         public int compare(final Integer o1, final Integer o2) {

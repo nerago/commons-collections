@@ -17,12 +17,12 @@
 package org.apache.commons.collections4.splitmap;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.Put;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.map.LinkedMap;
@@ -67,15 +67,15 @@ import org.apache.commons.collections4.map.LinkedMap;
  * @see org.apache.commons.collections4.SplitMapUtils#writableMap(Put)
  */
 public class TransformedSplitMap<J, K, U, V> extends AbstractIterableGetMapDecorator<K, V>
-        implements Put<J, U>, Serializable {
+        implements Put<J, U> {
 
     /** Serialization version */
     private static final long serialVersionUID = 5966875321133456994L;
 
     /** The transformer to use for the key */
-    private final Transformer<? super J, ? extends K> keyTransformer;
+    private Transformer<? super J, ? extends K> keyTransformer;
     /** The transformer to use for the value */
-    private final Transformer<? super U, ? extends V> valueTransformer;
+    private Transformer<? super U, ? extends V> valueTransformer;
 
     /**
      * Factory method to create a transforming map.
@@ -123,9 +123,11 @@ public class TransformedSplitMap<J, K, U, V> extends AbstractIterableGetMapDecor
      * @param out the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(decorated());
+        out.writeObject(keyTransformer);
+        out.writeObject(valueTransformer);
     }
 
     /**
@@ -137,9 +139,11 @@ public class TransformedSplitMap<J, K, U, V> extends AbstractIterableGetMapDecor
      * @since 3.1
      */
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         map = (Map<K, V>) in.readObject(); // (1)
+        keyTransformer = (Transformer<? super J, ? extends K>) in.readObject();
+        valueTransformer = (Transformer<? super U, ? extends V>) in.readObject();
     }
 
     /**
@@ -205,6 +209,11 @@ public class TransformedSplitMap<J, K, U, V> extends AbstractIterableGetMapDecor
     @Override
     public void putAll(final Map<? extends J, ? extends U> mapToCopy) {
         decorated().putAll(transformMap(mapToCopy));
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends J, ? extends U> it) {
+        it.forEachRemaining(this::put);
     }
 
     @Override

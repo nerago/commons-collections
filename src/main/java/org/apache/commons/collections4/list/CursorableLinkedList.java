@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.list;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +54,7 @@ import java.util.ListIterator;
  * @see java.util.LinkedList
  * @since 1.0
  */
-public class CursorableLinkedList<E> extends AbstractLinkedList<E> implements Serializable {
+public class CursorableLinkedList<E> extends AbstractLinkedList<E> {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 8836393098519411393L;
@@ -350,29 +346,6 @@ public class CursorableLinkedList<E> extends AbstractLinkedList<E> implements Se
                 cursor.nodeInserted(node);
             }
         }
-    }
-
-    /**
-     * Serializes the data held in this object to the stream specified.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        doWriteObject(out);
-    }
-
-    /**
-     * Deserializes the data held in this object to the stream specified.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        doReadObject(in);
     }
 
     /**

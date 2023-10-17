@@ -21,7 +21,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.MapIterator;
@@ -198,6 +202,11 @@ public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualB
         for (final Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        it.forEachRemaining(this::put);
     }
 
     @Override

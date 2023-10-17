@@ -16,9 +16,6 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -186,16 +183,5 @@ public final class UnmodifiableSortedBidiMap<K, V>
     public OrderedMapIterator<K, V> mapIterator() {
         final OrderedMapIterator<K, V> it = decorated().mapIterator();
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
-    }
-
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(decorated());
-    }
-
-    @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        setMap((SortedBidiMap<K, V, ?, ?>) in.readObject());
     }
 }

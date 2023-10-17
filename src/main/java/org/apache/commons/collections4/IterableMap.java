@@ -16,15 +16,11 @@
  */
 package org.apache.commons.collections4;
 
-import java.io.Serializable;
-import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Defines a map that can be iterated directly without needing to create an entry set.
@@ -47,7 +43,7 @@ import java.util.function.Function;
  *
  * @since 3.0
  */
-public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, V>, Serializable {
+public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, V> {
     /***
      * {@inheritDoc}
      * <p>

@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.multimap;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,15 +117,16 @@ public class HashSetValuedHashMap<K, V> extends AbstractSetValuedMap<K, V>
         return new HashSet<>(initialSetCapacity);
     }
 
-    private void writeObject(final ObjectOutputStream oos) throws IOException {
-        oos.defaultWriteObject();
-        doWriteObject(oos);
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        doWriteObject(out);
     }
 
-    private void readObject(final ObjectInputStream ois) throws IOException, ClassNotFoundException {
-        ois.defaultReadObject();
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         setMap(new HashMap<K, HashSet<V>>());
-        doReadObject(ois);
+        doReadObject(in);
     }
 
 }

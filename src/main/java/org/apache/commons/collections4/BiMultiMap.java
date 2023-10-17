@@ -16,16 +16,16 @@
  */
 package org.apache.commons.collections4;
 
-import org.apache.commons.collections4.spliterators.MapSpliterator;
-
-import java.io.Serializable;
+import java.io.Externalizable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
-public interface BiMultiMap<K, V> extends Serializable {
+
+public interface BiMultiMap<K, V> extends Externalizable {
     // Query operations
 
     int size();
@@ -53,6 +53,8 @@ public interface BiMultiMap<K, V> extends Serializable {
     boolean addAll(Map<? extends K, ? extends V> map);
 
     boolean addAll(IterableMap<? extends K, ? extends V> map);
+
+    boolean addAll(MapIterator<? extends K, ? extends V> it);
 
     boolean addAll(BiMultiMap<? extends K, ? extends V> map);
 

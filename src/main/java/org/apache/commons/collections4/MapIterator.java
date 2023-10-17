@@ -17,6 +17,9 @@
 package org.apache.commons.collections4;
 
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Defines an iterator that operates over a {@code Map}.
@@ -108,6 +111,24 @@ public interface MapIterator<K, V> extends Iterator<K> {
      *  last call to {@code next()}
      */
     V setValue(V value);
+
+    /**
+     * Performs the given action for each remaining element until all elements
+     * have been processed or the action throws an exception.  Actions are
+     * performed in the order of iteration, if that order is specified.
+     * Exceptions thrown by the action are relayed to the caller.
+     * <p>
+     * As opposed to usual {@link #forEachRemaining(Consumer)} this provides both key and value
+     * while retaining the efficiency benefits of MapIterator.
+     *
+     * @param action The action to be performed for each element
+     * @throws NullPointerException if the specified action is null
+     */
+    default void forEachRemaining(final BiConsumer<? super K, ? super V> action) {
+        Objects.requireNonNull(action);
+        while (hasNext())
+            action.accept(next(), getValue());
+    }
 
     interface LongKeys<V> extends MapIterator<Long, V> {
         long nextLong();

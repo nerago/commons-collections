@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.ref.Reference;
 
 /**
@@ -76,7 +72,7 @@ import java.lang.ref.Reference;
  * @see java.lang.ref.Reference
  * @since 3.0 (previously in main package v2.1)
  */
-public class ReferenceIdentityMap<K, V> extends AbstractReferenceMap<K, V> implements Serializable {
+public class ReferenceIdentityMap<K, V> extends AbstractReferenceMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = -1266190134568365852L;
@@ -225,29 +221,6 @@ public class ReferenceIdentityMap<K, V> extends AbstractReferenceMap<K, V> imple
     @Override
     protected boolean isEqualValue(final Object value1, final Object value2) {
         return value1 == value2;
-    }
-
-    /**
-     * Write the map out using a custom routine.
-     *
-     * @param out the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        doWriteObject(out);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     *
-     * @param in the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        doReadObject(in);
     }
 
 }

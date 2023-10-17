@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.trie;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -37,9 +37,10 @@ import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MutableBoolean;
-import org.apache.commons.collections4.Reference;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.Reference;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 
@@ -2299,6 +2300,11 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
         }
 
         @Override
+        public void putAll(final MapIterator<? extends K, ? extends V> it) {
+            it.forEachRemaining(this::put);
+        }
+
+        @Override
         public Set<Map.Entry<K, V>> entrySet() {
             if (entrySet == null) {
                 entrySet = createEntrySet();
@@ -2317,7 +2323,8 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
     /**
      * A {@link RangeMap} that deals with {@link Entry}s.
      */
-    private class BoundedRangeMap extends RangeMap {
+    private final class BoundedRangeMap extends RangeMap {
+        private static final long serialVersionUID = 5993894592893398533L;
 
         /**
          * Creates a {@link BoundedRangeMap}.
@@ -2431,6 +2438,7 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
             return new RangeMapIterator(this.firstEntry());
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         protected SubMap createRangeMap(final SortedMapRange<K> keyRange) {
             return (SubMap) new BoundedRangeMap(keyRange);
@@ -2439,6 +2447,19 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
         @Override
         protected boolean inRange(final K key) {
             return keyRange.inRange(key);
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            out.writeObject(this.keyRange);
+            AbstractPatriciaTrie.this.writeExternal(out);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            keyRange = (SortedMapRange<K>) in.readObject();
+            AbstractPatriciaTrie.this.readExternal(in);
         }
 
         private final class RangeMapIterator extends TrieMapIterator {
@@ -2584,11 +2605,11 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
      */
     private final class PrefixRangeMap extends RangeMap {
 
-        private final K prefix;
+        private K prefix;
 
-        private final int offsetInBits;
+        private int offsetInBits;
 
-        private final int lengthInBits;
+        private int lengthInBits;
 
         private transient int expectedModCount;
 
@@ -2742,6 +2763,22 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
             AbstractPatriciaTrie.this.keySet().removeIf(this::inRange);
         }
 
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            out.writeObject(prefix);
+            out.writeInt(offsetInBits);
+            out.writeInt(lengthInBits);
+            AbstractPatriciaTrie.this.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            prefix = (K) in.readObject();
+            offsetInBits = in.readInt();
+            lengthInBits = in.readInt();
+            AbstractPatriciaTrie.this.readExternal(in);
+        }
+
         /**
          * An {@link Iterator} that holds a single {@link TrieEntry}.
          */
@@ -2840,13 +2877,12 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
      * Reads the content of the stream.
      */
     @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
-    private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException{
-        stream.defaultReadObject();
+    @Override public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException{
         root = new TrieEntry<>(null, null, -1);
-        final int size = stream.readInt();
+        final int size = in.readInt();
         for (int i = 0; i < size; i++){
-            final K k = (K) stream.readObject();
-            final V v = (V) stream.readObject();
+            final K k = (K) in.readObject();
+            final V v = (V) in.readObject();
             put(k, v);
         }
     }
@@ -2854,12 +2890,12 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
     /**
      * Writes the content to the stream for serialization.
      */
-    private void writeObject(final ObjectOutputStream stream) throws IOException{
-        stream.defaultWriteObject();
-        stream.writeInt(this.size());
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeInt(this.size());
         for (final Entry<K, V> entry : entrySet()) {
-            stream.writeObject(entry.getKey());
-            stream.writeObject(entry.getValue());
+            out.writeObject(entry.getKey());
+            out.writeObject(entry.getValue());
         }
     }
 

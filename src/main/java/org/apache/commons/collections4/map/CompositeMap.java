@@ -16,6 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,7 +49,7 @@ import org.apache.commons.collections4.set.CompositeSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class CompositeMap<K, V> extends AbstractIterableMap<K, V> implements Serializable {
+public class CompositeMap<K, V> extends AbstractIterableMap<K, V> implements Externalizable {
 
     private static final Map[] EMPTY_MAP_ARRAY = {};
 
@@ -501,6 +505,19 @@ public class CompositeMap<K, V> extends AbstractIterableMap<K, V> implements Ser
     @Override
     public String toString() {
         return "CompositeMap{" + Arrays.toString(composite) + '}';
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(composite);
+        out.writeObject(mutator);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        composite = (Map<K, V>[]) in.readObject();
+        mutator = (MapMutator<K, V>) in.readObject();
     }
 
     /**

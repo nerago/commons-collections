@@ -1,13 +1,8 @@
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.EverythingMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.iterators.EmptyIterator;
-import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
-import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
-import org.apache.commons.collections4.spliterators.MapSpliterator;
-
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -17,6 +12,15 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import org.apache.commons.collections4.EverythingMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.iterators.EmptyIterator;
+import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
+import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 /**
  * A {@code Map} implementation that holds no items and is always empty.
@@ -159,6 +163,11 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
 
     @Override
     public void putAll(final Map<? extends K, ? extends V> m) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
         throw new UnsupportedOperationException();
     }
 
@@ -358,5 +367,13 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     @Override
     public String toString() {
         return "[]";
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
     }
 }

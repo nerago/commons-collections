@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.AbstractSet;
@@ -90,13 +90,13 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  */
 public class ListOrderedMap<K, V>
         extends AbstractMapDecorator<K, V, Map<K, V>>
-        implements OrderedMap<K, V>, Serializable {
+        implements OrderedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 2728177751851003750L;
 
     /** Internal list to hold the sequence of objects */
-    private final List<K> insertOrder = new ArrayList<>();
+    private List<K> insertOrder = new ArrayList<>();
 
     /**
      * Factory method to create an ordered map.
@@ -142,9 +142,10 @@ public class ListOrderedMap<K, V>
      * @throws IOException if an error occurs while writing to the stream
      * @since 3.1
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(insertOrder);
+        super.writeExternal(out);
     }
 
     /**
@@ -156,9 +157,10 @@ public class ListOrderedMap<K, V>
      * @since 3.1
      */
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        map = (Map<K, V>) in.readObject(); // (1)
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        insertOrder = (List<K>) in.readObject();
+        super.readExternal(in);
     }
 
     // Implement OrderedMap

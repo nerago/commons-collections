@@ -16,19 +16,9 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.OrderedIterator;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
-import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.spliterators.AbstractTreeRangeSpliterator;
-import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
-import org.apache.commons.collections4.spliterators.MapSpliterator;
-
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -38,6 +28,17 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import org.apache.commons.collections4.KeyValue;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.OrderedIterator;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.spliterators.AbstractTreeRangeSpliterator;
+import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 
 
@@ -2037,17 +2038,17 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * Reads the content of the stream.
      *
-     * @param stream the input stream
+     * @param in the input stream
      * @throws IOException            if an error occurs while reading from the stream
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
-    private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException {
-        stream.defaultReadObject();
-        final int size = stream.readInt();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        final int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            final K k = (K) stream.readObject();
-            final V v = (V) stream.readObject();
+            final K k = (K) in.readObject();
+            final V v = (V) in.readObject();
             put(k, v);
         }
     }
@@ -2055,15 +2056,15 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     /**
      * Writes the content to the stream for serialization.
      *
-     * @param stream the output stream
+     * @param out the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream stream) throws IOException {
-        stream.defaultWriteObject();
-        stream.writeInt(this.size());
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeInt(this.size());
         for (final Entry<K, V> entry : entrySet()) {
-            stream.writeObject(entry.getKey());
-            stream.writeObject(entry.getValue());
+            out.writeObject(entry.getKey());
+            out.writeObject(entry.getValue());
         }
     }
 
@@ -2811,6 +2812,16 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public TreeBidiSubMap<V, K> subMap(final SortedMapRange<V> range) {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            parent.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            parent.readExternal(in);
+        }
     }
 
     public static final class TreeBidiSubMap<K extends Comparable<K>, V extends Comparable<V>>
@@ -2818,7 +2829,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         private static final long serialVersionUID = 7793720431038658603L;
         private final TreeBidiMapHard<K, V> parent;
-        private final SortedMapRange<K> keyRange;
+        private SortedMapRange<K> keyRange;
 
         TreeBidiSubMap(final TreeBidiMapHard<K, V> parent, final SortedMapRange<K> keyRange) {
             this.parent = parent;
@@ -2961,6 +2972,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public void putAll(final MapIterator<? extends K, ? extends V> it) {
+            it.forEachRemaining((k, v) -> {
+                verifyRange(k);
+                parent.put(k, v);
+            });
+        }
+
+        @Override
         public void clear() {
 
         }
@@ -3022,6 +3041,19 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public TreeBidiSubMap<V, K> inverseBidiMap() {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            parent.writeExternal(out);
+            out.writeObject(keyRange);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            parent.readExternal(in);
+            keyRange = (SortedMapRange<K>) in.readObject();
+        }
     }
 
     private static final class KeyMapSpliterator<K extends Comparable<K>, V extends Comparable<V>>
@@ -3029,7 +3061,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         private final TreeBidiMapHard<K, V> parent;
 
         private KeyMapSpliterator(final TreeBidiMapHard<K, V> parent) {
-            super();
             this.parent = parent;
         }
 

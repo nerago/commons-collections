@@ -16,21 +16,9 @@
  */
 package org.apache.commons.collections4.trie;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.IterableSortedMap;
-import org.apache.commons.collections4.OrderedMapIterator;
-import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SetUtils;
-import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.Trie;
-import org.apache.commons.collections4.iterators.TransformIterator;
-import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
-import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
-import org.apache.commons.collections4.map.EntrySetUtil;
-import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
-import org.apache.commons.collections4.spliterators.MapSpliterator;
-import org.apache.commons.collections4.spliterators.TransformSpliterator;
-
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Comparator;
@@ -45,14 +33,30 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.Trie;
+import org.apache.commons.collections4.iterators.TransformIterator;
+import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
+import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
+import org.apache.commons.collections4.map.EntrySetUtil;
+import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
+import org.apache.commons.collections4.spliterators.TransformSpliterator;
+
 // https://en.wikipedia.org/wiki/Radix_tree
 public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>, SubMap extends IterableSortedMap<K, V, SubMap>>
         extends AbstractIterableMapAlternate<K, V>
         implements Trie<K, V, SubMap> {
     private static final long serialVersionUID = -1993317552691676845L;
 
-    private transient final SortedMapRange<K> keyRange;
-    private transient final KeyAnalyzer<K> keyAnalyzer;
+    private transient SortedMapRange<K> keyRange;
+    private transient KeyAnalyzer<K> keyAnalyzer;
     private transient final TEntry<K, V> root;
     private transient int size;
     private transient int modCount;
@@ -542,6 +546,20 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>, 
 
             startIndex = diffBit + 1;
         }
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(keyAnalyzer);
+        out.writeObject(keyRange);
+        MapUtils.writeExternal(out, size, mapIterator());
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        keyAnalyzer = (KeyAnalyzer<K>) in.readObject();
+        keyRange = (SortedMapRange<K>) in.readObject();
+        putAll(MapUtils.readExternal(in));
     }
 
     private static final class TEntry<K, V> extends AbstractMapEntry<K, V> {

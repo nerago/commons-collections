@@ -18,8 +18,21 @@ package org.apache.commons.collections4.map;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -30,7 +43,6 @@ import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionTest;
 import org.apache.commons.collections4.collection.IterationBehaviour;
-import org.apache.commons.collections4.functors.PrototypeFactory;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
 import org.apache.commons.lang3.ObjectUtils;
@@ -40,7 +52,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Abstract test class for {@link java.util.Map} methods and contracts.
@@ -158,7 +177,7 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
     protected TMap map;
 
     /** Entry set of map created by reset(). */
-    protected Set<Map.Entry<K, V>> entrySet;
+    protected Set<Entry<K, V>> entrySet;
 
     /** Key set of map created by reset(). */
     protected Set<K> keySet;
@@ -2564,7 +2583,7 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
             return;
         }
         final Set<Map.Entry<K, V>> entrySet = getMap().entrySet();
-        final HashSet<Map.Entry<K, V>> comparisonSet = new HashSet<>(entrySet);
+        final HashSet<Entry<K, V>> comparisonSet = new HashSet<>(entrySet);
         try {
             assertFalse(entrySet.retainAll(comparisonSet));
         } catch (final UnsupportedOperationException e) {

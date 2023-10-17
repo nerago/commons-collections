@@ -17,9 +17,8 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -82,7 +81,7 @@ import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneable {
+public class Flat3Map<K, V> implements IterableMap<K, V>, Cloneable {
 
     /** Serialization version */
     private static final long serialVersionUID = -6701087419741928296L;
@@ -401,6 +400,15 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
         } else {
             convertToMap();
             delegateMap.putAll(map);
+        }
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        if (delegateMap != null) {
+            delegateMap.putAll(it);
+        } else {
+            it.forEachRemaining(this::put);
         }
     }
 
@@ -1050,8 +1058,8 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeInt(size());
         for (final MapIterator<?, ?> it = mapIterator(); it.hasNext();) {
             out.writeObject(it.next());  // key
@@ -1067,8 +1075,8 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Serializable, Cloneabl
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         final int count = in.readInt();
         if (count > 3) {
             delegateMap = createDelegateMap();

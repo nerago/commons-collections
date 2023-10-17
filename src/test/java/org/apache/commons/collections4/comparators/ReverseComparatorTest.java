@@ -16,8 +16,6 @@
  */
 package org.apache.commons.collections4.comparators;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -28,6 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for ReverseComparator.

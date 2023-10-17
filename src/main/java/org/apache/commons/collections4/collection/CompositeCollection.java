@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.commons.collections4.list.UnmodifiableList;

@@ -16,13 +16,26 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
-import java.util.*;
+import java.util.AbstractSet;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.KeyValue;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapRange;
@@ -65,7 +78,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     private static final long serialVersionUID = -8931271118676803261L;
 
     /** Singleton key */
-    private final K key;
+    private K key;
     /** Singleton value */
     private V value;
 
@@ -338,6 +351,11 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         default:
             throw new IllegalArgumentException("The map size must be 0 or 1");
         }
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        it.forEachRemaining(this::put);
     }
 
     /**
@@ -615,6 +633,19 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     @Override
     public EverythingMap<K, V> prefixMap(K key) {
         return null;
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(key);
+        out.writeObject(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        key = (K) in.readObject();
+        value = (V) in.readObject();
     }
 
     /**

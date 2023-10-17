@@ -1,12 +1,12 @@
 package org.apache.commons.collections4.bimulti;
 
-import org.apache.commons.collections4.BiMultiMap;
-import org.apache.commons.collections4.MultiSet;
-import org.apache.commons.collections4.MultiValuedMap;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.collections4.BiMultiMap;
+import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.MultiValuedMap;
 
 public abstract class AbstractBiMultiMap<K, V> implements BiMultiMap<K, V> {
     protected int entryCount;

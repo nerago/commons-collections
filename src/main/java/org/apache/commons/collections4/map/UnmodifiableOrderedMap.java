@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -46,8 +42,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecorator<K, V> implements
-        Unmodifiable, Serializable {
+public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecorator<K, V> implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
@@ -82,32 +77,6 @@ public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecora
         super((OrderedMap<K, V>) map);
     }
 
-    /**
-     * Write the map out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     * @since 3.1
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     * @since 3.1
-     */
-    @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        map = (OrderedMap<K, V>) in.readObject(); // (1)
-    }
-
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         final OrderedMapIterator<K, V> it = decorated().mapIterator();
@@ -135,47 +104,47 @@ public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecora
     }
 
     @Override
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    public boolean remove(final Object key, final Object value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 

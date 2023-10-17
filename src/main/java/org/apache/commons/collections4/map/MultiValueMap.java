@@ -16,10 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,7 +69,7 @@ import org.apache.commons.collections4.iterators.TransformIterator;
  * @deprecated since 4.1, use {@link org.apache.commons.collections4.MultiValuedMap MultiValuedMap} instead
  */
 @Deprecated
-public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, Object>> implements MultiMap<K, V>, Serializable {
+public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, Object>> implements MultiMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = -2214159910087182007L;
@@ -153,32 +153,6 @@ public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, 
             throw new IllegalArgumentException("The factory must not be null");
         }
         this.collectionFactory = collectionFactory;
-    }
-
-    /**
-     * Write the map out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     * @since 4.0
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     * @since 4.0
-     */
-    @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        map = (Map<K, Object>) in.readObject(); // (1)
     }
 
     /**
@@ -541,12 +515,12 @@ public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, 
     /**
      * Inner class that provides a simple reflection factory.
      */
-    private static class ReflectionFactory<T extends Collection<?>> implements Factory<T>, Serializable {
+    private static class ReflectionFactory<T extends Collection<?>> implements Factory<T>, Externalizable {
 
         /** Serialization version */
         private static final long serialVersionUID = 2986114157496788874L;
 
-        private final Class<T> clazz;
+        private Class<T> clazz;
 
         ReflectionFactory(final Class<T> clazz) {
             this.clazz = clazz;
@@ -561,9 +535,15 @@ public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, 
             }
         }
 
-        private void readObject(final ObjectInputStream is) throws IOException, ClassNotFoundException {
-            is.defaultReadObject();
+        @Override
+        public void writeExternal(ObjectOutput out) throws IOException {
+//            out.writeObject(clazz);
+        }
+
+        @Override
+        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
             // ensure that the de-serialized class is a Collection, COLLECTIONS-580
+            clazz = (Class<T>) in.readObject();
             if (clazz != null && !Collection.class.isAssignableFrom(clazz)) {
                 throw new UnsupportedOperationException();
             }

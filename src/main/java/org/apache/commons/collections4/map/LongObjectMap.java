@@ -16,23 +16,39 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.lang.reflect.Array;
+import java.util.AbstractCollection;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.PrimitiveIterator;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.LongConsumer;
+import java.util.function.Predicate;
+import java.util.stream.LongStream;
+import java.util.stream.StreamSupport;
+
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.ResettableIterator;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.LongStream;
-import java.util.stream.StreamSupport;
-
 @SuppressWarnings({"unused", "PublicMethodNotExposedInInterface"})
-public final class LongObjectMap<V> implements Serializable {
+public final class LongObjectMap<V> implements Externalizable {
     private static final long serialVersionUID = -8244029886089985815L;
 
     /** The default capacity to use */
@@ -785,8 +801,8 @@ public final class LongObjectMap<V> implements Serializable {
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeFloat(loadFactor);
         out.writeInt(data.length);
         out.writeInt(size);
@@ -804,8 +820,8 @@ public final class LongObjectMap<V> implements Serializable {
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         loadFactor = in.readFloat();
         final int capacity = in.readInt();
         final int size = in.readInt();
@@ -930,6 +946,11 @@ public final class LongObjectMap<V> implements Serializable {
         @Override
         public void putAll(final Map<? extends Long, ? extends V> m) {
             parent.putAll(m);
+        }
+
+        @Override
+        public void putAll(final MapIterator<? extends Long, ? extends V> it) {
+            it.forEachRemaining(this::put);
         }
 
         @Override
@@ -1092,6 +1113,16 @@ public final class LongObjectMap<V> implements Serializable {
                 entrySet = new EntrySet<>(parent);
             }
             return entrySet;
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            parent.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            parent.readExternal(in);
         }
     }
 

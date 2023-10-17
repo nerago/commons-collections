@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.SortedMap;
@@ -52,7 +55,7 @@ public abstract class AbstractSortedMapDecorator<K, V,
 
     private static final long serialVersionUID = 4710068155190191469L;
 
-    /** The map to decorate */
+    /** The range of this sub-map */
     transient SortedMapRange<K> keyRange;
 
     /**
@@ -125,6 +128,20 @@ public abstract class AbstractSortedMapDecorator<K, V,
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return SortedMapOrderedMapIterator.sortedMapIterator(decorated());
+    }
+
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(keyRange);
+        super.writeExternal(out);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        keyRange = (SortedMapRange<K>) in.readObject();
+        super.readExternal(in);
     }
 
     /** Simple wrapper class to decorate a SortedMap with IterableSortedMap interfaces but no changed behaviour */

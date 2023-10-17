@@ -17,9 +17,8 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 
 import org.apache.commons.collections4.BoundedMap;
@@ -64,7 +63,7 @@ import org.apache.commons.collections4.BoundedMap;
  * @since 3.0 (previously in main package v1.0)
  */
 public class LRUMap<K, V>
-        extends AbstractLinkedMap<K, V> implements BoundedMap<K, V>, Serializable, Cloneable {
+        extends AbstractLinkedMap<K, V> implements BoundedMap<K, V>, Cloneable {
 
     /** Serialisation version */
     private static final long serialVersionUID = -612114643488955218L;
@@ -478,36 +477,13 @@ public class LRUMap<K, V>
     }
 
     /**
-     * Write the map out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        doWriteObject(out);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     *
-     * @param in the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        doReadObject(in);
-    }
-
-    /**
      * Writes the data necessary for {@code put()} to work in deserialization.
      *
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
     @Override
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    protected void doWriteObject(final ObjectOutput out) throws IOException {
         out.writeInt(maxSize);
         super.doWriteObject(out);
     }
@@ -520,7 +496,7 @@ public class LRUMap<K, V>
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @Override
-    protected void doReadObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+    protected void doReadObject(final ObjectInput in) throws IOException, ClassNotFoundException {
         maxSize = in.readInt();
         super.doReadObject(in);
     }

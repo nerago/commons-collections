@@ -1,13 +1,9 @@
 package org.apache.commons.collections4.set;
 
-import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.iterators.EmptyIterator;
-
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +16,15 @@ import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.iterators.EmptyIterator;
+
+/**
+ * Slightly more efficient version of HashSet which implements Hash storage directly rather than nesting a HashMap.
+ * @param <E> element type stored
+ */
+public class HashedSet<E> implements Set<E>, Externalizable, Cloneable {
 
     private static final long serialVersionUID = -4842904738908370556L;
 
@@ -842,8 +846,8 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
      * @throws IOException if an error occurs while writing to the stream
      */
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeFloat(loadFactor);
         out.writeInt(data.length);
         out.writeInt(size);
@@ -860,8 +864,8 @@ public class HashedSet<E> implements Set<E>, Serializable, Cloneable {
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         loadFactor = in.readFloat();
         final int capacity = in.readInt();
         final int size = in.readInt();

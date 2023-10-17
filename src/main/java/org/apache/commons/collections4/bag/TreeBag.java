@@ -16,10 +16,10 @@
  */
 package org.apache.commons.collections4.bag;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
@@ -45,7 +45,7 @@ import org.apache.commons.collections4.SortedBag;
  * @param <E> the type of elements in this bag
  * @since 3.0 (previously in main package v2.0)
  */
-public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Serializable {
+public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Externalizable {
 
     /** Serial version lock */
     private static final long serialVersionUID = -7740146511091606676L;
@@ -123,8 +123,8 @@ public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Seria
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(comparator());
         super.doWriteObject(out);
     }
@@ -136,8 +136,8 @@ public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Seria
      * @throws IOException if an error occurs while reading from the stream
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         @SuppressWarnings("unchecked")  // This will fail at runtime if the stream is incorrect
         final Comparator<? super E> comp = (Comparator<? super E>) in.readObject();
         super.doReadObject(new TreeMap<>(comp), in);

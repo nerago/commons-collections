@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4;
 
+import java.io.Externalizable;
 import java.util.Collection;
 import java.util.Set;
 
@@ -28,7 +29,7 @@ import java.util.Set;
  * @since 4.0
  * @see Put
  */
-public interface Get<K, V> {
+public interface Get<K, V> extends Externalizable {
 
     /**
      * @param key key whose presence in this map is to be tested

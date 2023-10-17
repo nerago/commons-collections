@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -184,14 +184,14 @@ public final class UnmodifiableBidiMap<K, V,
         return new UnmodifiableBidiMap<>(inverse);
     }
 
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(decorated());
     }
 
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         setMap((Decorated) in.readObject());
     }
 

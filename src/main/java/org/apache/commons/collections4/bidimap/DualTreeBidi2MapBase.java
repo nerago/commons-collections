@@ -16,7 +16,33 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.*;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.TreeMap;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import org.apache.commons.collections4.IterableGet;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.NavigableExtendedBidiMap;
+import org.apache.commons.collections4.NavigableRangedSet;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.collection.DualTransformedCollection;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
@@ -24,11 +50,6 @@ import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
 import org.apache.commons.collections4.set.AbstractNavigableSetDecorator;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
-
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.function.*;
-import java.util.function.Predicate;
 
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
@@ -227,14 +248,10 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
-        if (mapToCopy instanceof IterableMap) {
-            final IterableMap<? extends K, ? extends V> iterableMap = (IterableMap<? extends K, ? extends V>) mapToCopy;
+        if (mapToCopy instanceof IterableGet) {
+            final IterableGet<? extends K,? extends V> iterableMap = (IterableGet<? extends K, ? extends V>) mapToCopy;
             final MapIterator<? extends K, ? extends V> mapIterator = iterableMap.mapIterator();
-            while (mapIterator.hasNext()) {
-                final K key = mapIterator.next();
-                final V value = mapIterator.getValue();
-                put(key, value);
-            }
+            putAll(mapIterator);
         } else {
             final Iterator<? extends Entry<? extends K, ? extends V>> iterator = mapToCopy.entrySet().iterator();
             while (iterator.hasNext()) {
@@ -243,6 +260,15 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             }
         }
         modified();
+    }
+
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> mapIterator) {
+        while (mapIterator.hasNext()) {
+            final K key = mapIterator.next();
+            final V value = mapIterator.getValue();
+            put(key, value);
+        }
     }
 
     @Override

@@ -16,9 +16,10 @@
  */
 package org.apache.commons.collections4.list;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Array;
 import java.util.AbstractList;
 import java.util.Collection;
@@ -43,7 +44,8 @@ import org.apache.commons.collections4.OrderedIterator;
  *
  * @since 3.0
  */
-public abstract class AbstractLinkedList<E> implements List<E> {
+public abstract class AbstractLinkedList<E> implements List<E>, Externalizable {
+    private static final long serialVersionUID = 3164086642142707330L;
 
     /*
      * Implementation notes:
@@ -601,6 +603,16 @@ public abstract class AbstractLinkedList<E> implements List<E> {
         return new LinkedSubListIterator<>(subList, fromIndex);
     }
 
+    @Override
+    public final void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        doReadObject(in);
+    }
+
+    @Override
+    public final void writeExternal(final ObjectOutput out) throws IOException {
+        doWriteObject(out);
+    }
+
     /**
      * Serializes the data held in this object to the stream specified.
      * <p>
@@ -610,7 +622,7 @@ public abstract class AbstractLinkedList<E> implements List<E> {
      * @param outputStream  the stream to write the object to
      * @throws IOException  if anything goes wrong
      */
-    protected void doWriteObject(final ObjectOutputStream outputStream) throws IOException {
+    protected void doWriteObject(final ObjectOutput outputStream) throws IOException {
         // Write the size so we know how many nodes to read back
         outputStream.writeInt(size());
         for (final E e : this) {
@@ -629,7 +641,7 @@ public abstract class AbstractLinkedList<E> implements List<E> {
      * @throws ClassNotFoundException  if a class read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    protected void doReadObject(final ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+    protected void doReadObject(final ObjectInput inputStream) throws IOException, ClassNotFoundException {
         init();
         final int size = inputStream.readInt();
         for (int i = 0; i < size; i++) {

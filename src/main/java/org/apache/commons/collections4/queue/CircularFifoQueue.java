@@ -16,10 +16,10 @@
  */
 package org.apache.commons.collections4.queue;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +55,7 @@ import org.apache.commons.collections4.IteratorUtils;
  * @since 4.0
  */
 public class CircularFifoQueue<E> extends AbstractCollection<E>
-    implements Queue<E>, BoundedCollection<E>, Serializable {
+    implements Queue<E>, BoundedCollection<E>, Externalizable {
 
     /** Serialization version. */
     private static final long serialVersionUID = -8423413834657610406L;
@@ -121,8 +121,8 @@ public class CircularFifoQueue<E> extends AbstractCollection<E>
      * @param out  the output stream
      * @throws IOException if an I/O error occurs while writing to the output stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeInt(size());
         for (final E e : this) {
             out.writeObject(e);
@@ -137,8 +137,8 @@ public class CircularFifoQueue<E> extends AbstractCollection<E>
      * @throws ClassNotFoundException if the class of a serialized object can not be found
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+@Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         elements = (E[]) new Object[maxElements];
         final int size = in.readInt();
         for (int i = 0; i < size; i++) {

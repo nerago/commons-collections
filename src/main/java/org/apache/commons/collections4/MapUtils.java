@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -28,6 +31,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -36,7 +40,7 @@ import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.map.AbstractHashedMap;
+import org.apache.commons.collections4.iterators.EmptyMapIterator;
 import org.apache.commons.collections4.map.AbstractMapDecorator;
 import org.apache.commons.collections4.map.AbstractSortedMapDecorator;
 import org.apache.commons.collections4.map.FixedSizeMap;
@@ -2013,6 +2017,76 @@ public class MapUtils {
             total += entryIterator.next().hashCode();
         }
         return total;
+    }
+
+    public static <V, K> void writeExternal(final ObjectOutput out, final int size, final MapIterator<K, V> iterator) throws IOException {
+        out.writeInt(size);
+        while (iterator.hasNext()) {
+            out.writeObject(iterator.next());
+            out.writeObject(iterator.getValue());
+        }
+    }
+
+    public static <V, K> MapIterator<K, V> readExternal(final ObjectInput in) throws IOException {
+        final int size = in.readInt();
+        if (size > 0) {
+            return new ExternalReadIterator<>(in, size);
+        } else {
+            return EmptyMapIterator.emptyMapIterator();
+        }
+    }
+
+    private static class ExternalReadIterator<K, V> implements MapIterator<K, V> {
+        private int remaining;
+        private final ObjectInput objectInput;
+        private K key;
+        private V value;
+
+        private ExternalReadIterator(final ObjectInput objectInput, final int size) {
+            this.remaining = size;
+            this.objectInput = objectInput;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return remaining > 0;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public K next() throws NoSuchElementException {
+            if (remaining-- > 0) {
+                try {
+                    key = (K) objectInput.readObject();
+                    value = (V) objectInput.readObject();
+                    return key;
+                } catch (ClassNotFoundException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public K getKey() {
+            return key;
+        }
+
+        @Override
+        public V getValue() {
+            return value;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public V setValue(final V value) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**

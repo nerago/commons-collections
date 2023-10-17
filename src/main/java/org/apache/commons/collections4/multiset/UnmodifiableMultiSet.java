@@ -16,9 +16,6 @@
  */
 package org.apache.commons.collections4.multiset;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -74,31 +71,6 @@ public final class UnmodifiableMultiSet<E>
     @SuppressWarnings("unchecked") // safe to upcast
     private UnmodifiableMultiSet(final MultiSet<? extends E> multiset) {
         super((MultiSet<E>) multiset);
-    }
-
-    /**
-     * Write the collection out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(decorated());
-    }
-
-    /**
-     * Read the collection in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     * @throws ClassCastException if deserialized object has wrong type
-     */
-    @SuppressWarnings("unchecked") // will throw CCE, see Javadoc
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        setCollection((Collection<E>) in.readObject());
     }
 
     @Override

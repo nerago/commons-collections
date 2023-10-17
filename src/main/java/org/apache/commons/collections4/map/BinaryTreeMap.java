@@ -16,6 +16,19 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -28,21 +41,6 @@ import org.apache.commons.collections4.spliterators.AbstractTreeRangeSpliterator
 import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
-
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.Comparator;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 
 
@@ -1416,7 +1414,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
     private class TreeSubMap extends AbstractIterableSortedMap<K, V> {
         private static final long serialVersionUID = 7793720431038658603L;
-        private final SortedMapRange<K> keyRange;
+        private SortedMapRange<K> keyRange;
 
         TreeSubMap(final SortedMapRange<K> keyRange) {
             this.keyRange = keyRange;
@@ -1558,6 +1556,19 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public SortedMapRange<K> getKeyRange() {
             return keyRange;
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            out.writeObject(keyRange);
+            BinaryTreeMap.this.writeExternal(out);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            keyRange = (SortedMapRange<K>) in.readObject();
+            BinaryTreeMap.this.readExternal(in);
         }
     }
 

@@ -17,9 +17,8 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,8 +43,7 @@ import org.apache.commons.collections4.BidiMap;
  * @since 3.0
  */
 public class DualHashBidiMap<K, V>
-        extends AbstractDualBidiMap<K, V, DualHashBidiMap<K, V>, DualHashBidiMap<V, K>, HashMap<K, V>, HashMap<V, K>>
-        implements Serializable {
+        extends AbstractDualBidiMap<K, V, DualHashBidiMap<K, V>, DualHashBidiMap<V, K>, HashMap<K, V>, HashMap<V, K>> {
 
     /** Ensure serialization compatibility */
     private static final long serialVersionUID = 721969328361808L;
@@ -89,13 +87,13 @@ public class DualHashBidiMap<K, V>
     }
 
     // Serialization
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(normalMap);
     }
 
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         normalMap = new HashMap<>();
         reverseMap = new HashMap<>();
         @SuppressWarnings("unchecked") // will fail at runtime if stream is incorrect

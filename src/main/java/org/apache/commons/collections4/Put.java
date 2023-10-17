@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4;
 
+import java.io.Externalizable;
 import java.util.Map;
 
 /**
@@ -34,7 +35,7 @@ import java.util.Map;
  * @since 4.0
  * @see Get
  */
-public interface Put<K, V> {
+public interface Put<K, V> extends Externalizable {
 
     /**
      * @see Map#clear()
@@ -61,5 +62,10 @@ public interface Put<K, V> {
      * @see Map#putAll(Map)
      */
     void putAll(Map<? extends K, ? extends V> t);
+
+    /**
+     * @param it mappings to be stored in this map
+     */
+    void putAll(MapIterator<? extends K, ? extends V> it);
 
 }

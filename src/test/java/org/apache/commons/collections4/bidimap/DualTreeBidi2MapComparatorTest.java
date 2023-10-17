@@ -16,6 +16,17 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeMap;
+
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.NavigableExtendedBidiMap;
 import org.apache.commons.collections4.SortedBidiMap;
@@ -23,10 +34,9 @@ import org.apache.commons.collections4.comparators.ComparableComparator;
 import org.apache.commons.collections4.comparators.ReverseComparator;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * JUnit tests.
@@ -86,7 +96,7 @@ public class DualTreeBidi2MapComparatorTest<K extends Comparable<K>, V extends C
         }
     }
 
-    private static class IntegerComparator implements Comparator<Integer>, Serializable{
+    private static class IntegerComparator implements Comparator<Integer>, Serializable {
         private static final long serialVersionUID = 1L;
         @Override
         public int compare(final Integer o1, final Integer o2) {

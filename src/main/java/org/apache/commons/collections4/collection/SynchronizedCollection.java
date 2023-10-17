@@ -16,7 +16,10 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
@@ -42,15 +45,15 @@ import java.util.function.Predicate;
  * @param <E> the type of the elements in the collection
  * @since 3.0
  */
-public class SynchronizedCollection<E> implements Collection<E>, Serializable {
+public class SynchronizedCollection<E> implements Collection<E>, Externalizable {
 
     /** Serialization version */
     private static final long serialVersionUID = 2412805092710877986L;
 
     /** The collection to decorate */
-    private final Collection<E> collection;
+    private Collection<E> collection;
     /** The object to lock on, needed for List/SortedSet views */
-    protected final Object lock;
+    protected Object lock;
 
     /**
      * Factory method to create a synchronized collection.
@@ -237,4 +240,15 @@ public class SynchronizedCollection<E> implements Collection<E>, Serializable {
         }
     }
 
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(collection);
+        out.writeObject(lock);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        collection = (Collection<E>) in.readObject();
+        lock = in.readObject();
+    }
 }

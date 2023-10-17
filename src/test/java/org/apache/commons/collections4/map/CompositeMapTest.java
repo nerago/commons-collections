@@ -16,11 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +24,11 @@ import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Extension of {@link AbstractMapTest} for exercising the
@@ -249,7 +249,7 @@ public class CompositeMapTest<K, V> extends AbstractIterableMapTest<K, V, Compos
                 }
             });
 
-        map.putAll(null);
+        map.putAll((Map<? extends K, ? extends V>) null);
         assertTrue(pass);
     }
 

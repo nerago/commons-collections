@@ -16,18 +16,38 @@
  */
 package org.apache.commons.collections4.multimap;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.*;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.AbstractCollection;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import org.apache.commons.collections4.*;
-import org.apache.commons.collections4.iterators.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SpliteratorUtils;
+import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.iterators.EmptyMapIterator;
+import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.multiset.AbstractMultiSet;
 import org.apache.commons.collections4.multiset.UnmodifiableMultiSet;
@@ -47,7 +67,7 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  * @param <V> the type of the values in this map
  * @since 4.1
  */
-public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, V>, Serializable {
+public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, V>, Externalizable {
 
     /** The values view */
     private transient Collection<V> valuesView;
@@ -1338,7 +1358,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
      * @param out the output stream
      * @throws IOException any of the usual I/O related exceptions
      */
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    protected void doWriteObject(final ObjectOutput out) throws IOException {
         out.writeInt(map.size());
         for (final Map.Entry<K, Collection<V>> entry : map.entrySet()) {
             out.writeObject(entry.getKey());
@@ -1356,7 +1376,7 @@ public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, 
      * @throws ClassNotFoundException if the stream contains an object which class can not be loaded
      * @throws ClassCastException if the stream does not contain the correct objects
      */
-    protected void doReadObject(final ObjectInputStream in)
+    protected void doReadObject(final ObjectInput in)
             throws IOException, ClassNotFoundException {
         final int entrySize = in.readInt();
         for (int i = 0; i < entrySize; i++) {

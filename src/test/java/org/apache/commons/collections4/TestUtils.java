@@ -16,13 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import org.junit.jupiter.api.function.Executable;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,6 +24,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+
+import org.junit.jupiter.api.function.Executable;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public final class TestUtils {
 

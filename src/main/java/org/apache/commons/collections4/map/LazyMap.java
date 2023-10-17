@@ -17,13 +17,10 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Collection;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -77,7 +74,7 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
     private static final long serialVersionUID = 7990956402564206740L;
 
     /** The factory to use to construct elements */
-    protected final Transformer<? super K, ? extends V> factory;
+    protected Transformer<? super K, ? extends V> factory;
 
     /**
      * Factory method to create a lazily instantiated map.
@@ -140,9 +137,10 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
      * @throws IOException if an error occurs while writing to the stream
      * @since 3.1
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(factory);
+        super.writeExternal(out);
     }
 
     /**
@@ -154,9 +152,10 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
      * @since 3.1
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        map = (Map<K, V>) in.readObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        factory = (Transformer<? super K, ? extends V>) in.readObject();
+        super.readExternal(in);
     }
 
     @Override

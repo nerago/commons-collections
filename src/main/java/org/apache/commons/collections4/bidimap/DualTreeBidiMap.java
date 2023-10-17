@@ -17,11 +17,21 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
-import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.NavigableMapOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
@@ -337,13 +347,13 @@ public class DualTreeBidiMap<K, V>
     }
 
     // Serialization
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(normalMap);
     }
 
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         normalMap = new TreeMap<>(comparator);
         reverseMap = new TreeMap<>(valueComparator);
         @SuppressWarnings("unchecked") // will fail at runtime if the stream is incorrect

@@ -16,10 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
-import org.apache.commons.collections4.IterableGet;
-import org.apache.commons.collections4.IterableMap;
-import org.apache.commons.collections4.MapIterator;
-
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +26,9 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import org.apache.commons.collections4.IterableGet;
+import org.apache.commons.collections4.MapIterator;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -144,6 +146,11 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
     }
 
     @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        it.forEachRemaining(this::put);
+    }
+
+    @Override
     public V remove(final Object key) {
         return decorated().remove(key);
     }
@@ -234,5 +241,16 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
     @Override
     public String toString() {
         return decorated().toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        map = (Decorated) in.readObject();
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(map);
     }
 }

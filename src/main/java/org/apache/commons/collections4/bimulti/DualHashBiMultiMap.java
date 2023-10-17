@@ -1,10 +1,26 @@
 package org.apache.commons.collections4.bimulti;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+
 import org.apache.commons.collections4.BiMultiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.ResettableIterator;
@@ -18,20 +34,6 @@ import org.apache.commons.collections4.set.HashedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
-
-import java.util.AbstractSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 @SuppressWarnings("CollectionDeclaredAsConcreteClass")
 public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
@@ -179,6 +181,11 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
     @Override
     public boolean addAll(final IterableMap<? extends K, ? extends V> map) {
         final MapIterator<? extends K, ? extends V> it = map.mapIterator();
+        return addAll(it);
+    }
+
+    @Override
+    public boolean addAll(final MapIterator<? extends K, ? extends V> it) {
         boolean changed = false;
         while (it.hasNext()) {
             final K key = it.next();
@@ -347,6 +354,16 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         entryCount = 0;
         keyMap.clear();
         valueMap.clear();
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        MapUtils.writeExternal(out, size(), mapIteratorEntries());
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        addAll(MapUtils.readExternal(in));
     }
 
     @Override

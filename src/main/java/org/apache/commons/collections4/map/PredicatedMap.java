@@ -16,12 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -56,8 +51,7 @@ import org.apache.commons.collections4.Predicate;
  * @since 3.0
  */
 public class PredicatedMap<K, V, Decorated extends Map<K, V>>
-        extends AbstractInputCheckedMapDecorator<K, V, Decorated>
-        implements Serializable {
+        extends AbstractInputCheckedMapDecorator<K, V, Decorated> {
 
     /** Serialization version */
     private static final long serialVersionUID = 7412622456128415156L;
@@ -103,32 +97,6 @@ public class PredicatedMap<K, V, Decorated extends Map<K, V>>
         this.keyPredicate = keyPredicate;
         this.valuePredicate = valuePredicate;
         map.forEach(this::validate);
-    }
-
-    /**
-     * Write the map out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     * @since 3.1
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(map);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     * @since 3.1
-     */
-    @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        map = (Decorated) in.readObject(); // (1)
     }
 
     /**

@@ -16,13 +16,18 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
-import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VALUE;
-
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.AbstractSet;
+import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -34,6 +39,9 @@ import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+
+import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
+import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VALUE;
 
 /**
  * Red-Black tree-based implementation of BidiMap where all objects added
@@ -406,6 +414,18 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         for (final Map.Entry<? extends K, ? extends V> e : map.entrySet()) {
             put(e.getKey(), e.getValue());
         }
+    }
+
+    /**
+     * Puts all the mappings from the specified iterator into this map.
+     * <p>
+     * All keys and values must implement {@code Comparable}.
+     *
+     * @param it  the iterator to copy from
+     */
+    @Override
+    public void putAll(final MapIterator<? extends K, ? extends V> it) {
+        it.forEachRemaining(this::put);
     }
 
     /**
@@ -1580,18 +1600,18 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Reads the content of the stream.
      *
-     * @param stream the input stream
+     * @param in the input stream
      * @throws IOException if an error occurs while reading from the stream
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
-    private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException{
-        stream.defaultReadObject();
+    @Override
+    public void readExternal(final ObjectInput in)  throws IOException, ClassNotFoundException{
         rootNode = new Node[2];
-        final int size = stream.readInt();
+        final int size = in.readInt();
         for (int i = 0; i < size; i++){
-            final K k =(K) stream.readObject();
-            final V v =(V) stream.readObject();
+            final K k = (K) in.readObject();
+            final V v = (V) in.readObject();
             put(k, v);
         }
     }
@@ -1599,15 +1619,15 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * Writes the content to the stream for serialization.
      *
-     * @param stream  the output stream
+     * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream stream) throws IOException{
-        stream.defaultWriteObject();
-        stream.writeInt(this.size());
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException{
+        out.writeInt(this.size());
         for (final Entry<K, V> entry : entrySet()) {
-            stream.writeObject(entry.getKey());
-            stream.writeObject(entry.getValue());
+            out.writeObject(entry.getKey());
+            out.writeObject(entry.getValue());
         }
     }
 
@@ -2730,6 +2750,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
+        public void putAll(final MapIterator<? extends V, ? extends K> it) {
+            it.forEachRemaining(this::put);
+        }
+
+        @Override
         public K remove(final Object key) {
             return TreeBidiMap.this.removeValue(key);
         }
@@ -2938,6 +2963,16 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public String toString() {
             return TreeBidiMap.this.doToString(VALUE);
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            TreeBidiMap.this.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            TreeBidiMap.this.readExternal(in);
         }
     }
 

@@ -16,10 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -45,7 +41,7 @@ import java.util.Map;
  * @since 3.0
  */
 public class IdentityMap<K, V>
-        extends AbstractHashedMap<K, V> implements Serializable, Cloneable {
+        extends AbstractHashedMap<K, V> implements Cloneable {
 
     /** Serialisation version */
     private static final long serialVersionUID = 2028493495224302329L;
@@ -182,22 +178,6 @@ public class IdentityMap<K, V>
     @Override
     public IdentityMap<K, V> clone() {
         return (IdentityMap<K, V>) super.clone();
-    }
-
-    /**
-     * Write the map out using a custom routine.
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        doWriteObject(out);
-    }
-
-    /**
-     * Read the map in using a custom routine.
-     */
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        doReadObject(in);
     }
 
 }

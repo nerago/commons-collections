@@ -16,10 +16,17 @@
  */
 package org.apache.commons.collections4.multiset;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.AbstractCollection;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections4.IteratorUtils;
@@ -34,7 +41,8 @@ import org.apache.commons.collections4.Transformer;
  * @param <E> the type held in the multiset
  * @since 4.1
  */
-public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implements MultiSet<E> {
+public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implements MultiSet<E>, Externalizable {
+    private static final long serialVersionUID = 4783921839835550442L;
 
     /** View of the elements */
     private transient Set<E> uniqueSet;
@@ -509,7 +517,8 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
      * @param out the output stream
      * @throws IOException any of the usual I/O related exceptions
      */
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeInt(entrySet().size());
         for (final Entry<E> entry : entrySet()) {
             out.writeObject(entry.getElement());
@@ -524,8 +533,9 @@ public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implemen
      * @throws ClassNotFoundException if the stream contains an object which class can not be loaded
      * @throws ClassCastException if the stream does not contain the correct objects
      */
-    protected void doReadObject(final ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         final int entrySize = in.readInt();
         for (int i = 0; i < entrySize; i++) {
             @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect

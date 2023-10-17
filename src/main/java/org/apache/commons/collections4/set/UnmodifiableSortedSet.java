@@ -16,9 +16,6 @@
  */
 package org.apache.commons.collections4.set;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -138,30 +135,6 @@ public final class UnmodifiableSortedSet<E>
     public SortedSet<E> tailSet(final E fromElement) {
         final SortedSet<E> tail = decorated().tailSet(fromElement);
         return unmodifiableSortedSet(tail);
-    }
-
-    /**
-     * Write the collection out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.writeObject(decorated());
-    }
-
-    /**
-     * Read the collection in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        setCollection((Collection<E>) in.readObject()); // (1)
     }
 
 }

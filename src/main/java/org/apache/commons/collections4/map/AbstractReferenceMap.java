@@ -17,8 +17,8 @@
 package org.apache.commons.collections4.map;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -33,11 +33,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
-import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
-import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 
 /**
  * An abstract implementation of a hash-based map that allows the entries to
@@ -1057,7 +1054,7 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * @throws IOException if an error occurs while writing to the stream
      */
     @Override
-    protected void doWriteObject(final ObjectOutputStream out) throws IOException {
+    protected void doWriteObject(final ObjectOutput out) throws IOException {
         out.writeInt(keyType.value);
         out.writeInt(valueType.value);
         out.writeBoolean(purgeValues);
@@ -1092,7 +1089,7 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected void doReadObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+    protected void doReadObject(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.keyType = ReferenceStrength.resolve(in.readInt());
         this.valueType = ReferenceStrength.resolve(in.readInt());
         this.purgeValues = in.readBoolean();

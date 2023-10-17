@@ -16,17 +16,30 @@
  */
 package org.apache.commons.collections4.list;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Array;
-import java.util.*;
-import java.util.function.*;
+import java.util.AbstractList;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.MutableBoolean;
+import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.OrderedIterator;
 
 /**
@@ -61,7 +74,7 @@ import org.apache.commons.collections4.OrderedIterator;
  *
  * @since 3.1
  */
-public class TreeList<E> extends AbstractList<E> implements Serializable {
+public class TreeList<E> extends AbstractList<E> implements Externalizable {
 //    add; toArray; iterator; insert; get; indexOf; remove
 //    TreeList = 1260;7360;3080;  160;   170;3400;  170;
 //   ArrayList =  220;1480;1760; 6870;    50;1540; 7200;
@@ -1625,8 +1638,8 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
      * @param out  the output stream
      * @throws IOException if an error occurs while writing to the stream
      */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
         // Write the size so we know how many nodes to read back
         out.writeInt(size());
         for (final E e : this) {
@@ -1642,9 +1655,8 @@ public class TreeList<E> extends AbstractList<E> implements Serializable {
      * @throws ClassNotFoundException if an object read from the stream can not be loaded
      */
     @SuppressWarnings("unchecked")
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         final int readSize = in.readInt();
         if (readSize > 0) {
             final ArrayList<E> temp = new ArrayList<>();
