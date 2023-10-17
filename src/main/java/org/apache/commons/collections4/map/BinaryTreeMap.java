@@ -172,8 +172,14 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             final int cmp = key.compareTo(node.getKey());
             if (cmp == 0) {
                 final V oldValue = node.value;
-                if (updateIfPresent && !Objects.equals(oldValue, value)) {
-                    updateValue(node, value);
+                if (oldValue == null) {
+                    if (addIfAbsent) {
+                        updateValue(node, value);
+                    }
+                } else if (!Objects.equals(oldValue, value)) {
+                    if (updateIfPresent) {
+                        updateValue(node, value);
+                    }
                 }
                 return oldValue;
             } else if (cmp < 0) {
@@ -222,7 +228,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             final int cmp = key.compareTo(node.getKey());
             if (cmp == 0) {
                 final V oldValue = node.getValue();
-                if (presentFunc != null) {
+                if (oldValue != null && presentFunc != null) {
                     final V newValue = presentFunc.apply(key, oldValue);
                     if (expectedModifications != modifications) {
                         throw new ConcurrentModificationException();
@@ -232,6 +238,14 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                     } else if (Objects.equals(oldValue, newValue)) {
                         return oldValue;
                     } else {
+                        updateValue(node, newValue);
+                        return newValue;
+                    }
+                } else if (oldValue == null && absentFunc != null) {
+                    final V newValue = absentFunc.apply(key);
+                    if (expectedModifications != modifications) {
+                        throw new ConcurrentModificationException();
+                    } else if (newValue != null || saveNulls) {
                         updateValue(node, newValue);
                         return newValue;
                     }

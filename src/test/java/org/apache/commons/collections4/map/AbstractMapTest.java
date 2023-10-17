@@ -862,9 +862,9 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
 
         resetFull();
         for (int i = 0; i < keys.length; i++) {
-            K key = keys[i];
-            V oldValue = values[i];
-            V replaceValue = newValues[i];
+            final K key = keys[i];
+            final V oldValue = values[i];
+            final V replaceValue = newValues[i];
             if (oldValue != null) {
                 assertEquals(oldValue, getMap().putIfAbsent(key, replaceValue),
                         "putIfAbsent should return existing value from map.");

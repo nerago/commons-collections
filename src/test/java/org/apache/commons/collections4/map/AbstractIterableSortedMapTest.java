@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.Map;
+
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.collection.IterationBehaviour;
@@ -33,6 +35,10 @@ public abstract class AbstractIterableSortedMapTest<K, V, TMap extends IterableS
         @Override
         public IterableSortedMap<K, V, ?> makeFullMap() {
             return AbstractIterableSortedMapTest.this.makeFullMap();
+        }
+        @Override
+        protected Map<K, V> makeObjectCopy(final Map<K, V> map) {
+            return AbstractIterableSortedMapTest.this.makeObjectCopy(map);
         }
 
         @Override
@@ -83,6 +89,18 @@ public abstract class AbstractIterableSortedMapTest<K, V, TMap extends IterableS
         @Override
         public boolean isTestSerialization() {
             return AbstractIterableSortedMapTest.this.isTestSerialization();
+        }
+        @Override
+        public boolean isFailFastExpected() {
+            return AbstractIterableSortedMapTest.this.isFailFastExpected();
+        }
+        @Override
+        public boolean isFailFastFunctionalExpected() {
+            return AbstractIterableSortedMapTest.this.isFailFastFunctionalExpected();
+        }
+        @Override
+        public boolean isTestFunctionalMethods() {
+            return AbstractIterableSortedMapTest.this.isTestFunctionalMethods();
         }
     }
 

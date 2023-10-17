@@ -507,7 +507,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
             final int cmp = key.compareTo(node.getKey());
             if (cmp == 0) {
                 final V oldValue = node.getValue();
-                if (presentFunc != null) {
+                if (oldValue != null && presentFunc != null) {
                     newValue = presentFunc.apply(key, oldValue);
                     if (expectedModifications != modifications) {
                         throw new ConcurrentModificationException();

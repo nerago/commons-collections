@@ -50,11 +50,6 @@ public class BinaryTreeMapTest<K extends Comparable<K>, V> extends AbstractItera
     }
 
     @Override
-    protected IterationBehaviour getIterationBehaviour() {
-        return IterationBehaviour.STABLE_SEQUENCE;
-    }
-
-    @Override
     public String getCompatibilityVersion() {
         return "4";
     }
