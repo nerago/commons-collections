@@ -33,6 +33,7 @@ import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.apache.commons.collections4.functors.PrototypeFactory;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.collections4.set.AbstractSetTest;
+import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -2629,7 +2630,7 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
     public void testCloneEmpty() {
         confirmed = makeObject();
         if (confirmed instanceof Cloneable) {
-            map = (TMap) PrototypeFactory.prototypeFactory(confirmed).create();
+            map = (TMap) ObjectUtils.clone(confirmed);
             views();
             assertNotSame(confirmed, map);
             assertNotSame(confirmed.values(), map.values());
@@ -2643,7 +2644,7 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
     public void testCloneFull() {
         confirmed = makeFullMap();
         if (confirmed instanceof Cloneable) {
-            map = (TMap) PrototypeFactory.prototypeFactory(confirmed).create();
+            map = (TMap) ObjectUtils.clone(confirmed);
             views();
             assertNotSame(confirmed, map);
             assertNotSame(confirmed.values(), map.values());
