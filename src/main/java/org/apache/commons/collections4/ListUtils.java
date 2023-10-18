@@ -25,13 +25,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 
 import org.apache.commons.collections4.bag.HashBag;
+import org.apache.commons.collections4.bits.VerySparseBitSet;
 import org.apache.commons.collections4.functors.DefaultEquator;
 import org.apache.commons.collections4.list.FixedSizeList;
 import org.apache.commons.collections4.list.LazyList;
 import org.apache.commons.collections4.list.PredicatedList;
 import org.apache.commons.collections4.list.TransformedList;
+import org.apache.commons.collections4.list.TreeList;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.apache.commons.collections4.sequence.CommandVisitor;
 import org.apache.commons.collections4.sequence.EditScript;
@@ -203,6 +207,40 @@ public class ListUtils {
      */
     public static <T> T getLast(final List<T> list) {
         return Objects.requireNonNull(list, "list").get(list.size() - 1);
+    }
+
+    public static <T> T binarySearchValue(final List<T> content, final ToLongFunction<T> elementToNum, final long target) {
+        int lo = 0, hi = content.size() - 1;
+        while (lo <= hi) {
+            final int mid = lo + (hi - lo) / 2;
+            final T item = content.get(mid);
+            final long value = elementToNum.applyAsLong(item);
+            if (value == target) {
+                return item;
+            } else if (value < target) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        }
+        return null;
+    }
+
+    public static <T> int binarySearchIndex(final List<T> content, final ToLongFunction<T> elementToNum, final long target) {
+        int lo = 0, hi = content.size() - 1;
+        while (lo <= hi) {
+            final int mid = lo + (hi - lo) / 2;
+            final T item = content.get(mid);
+            final long value = elementToNum.applyAsLong(item);
+            if (value == target) {
+                return mid;
+            } else if (value < target) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        }
+        return -1;
     }
 
     /**
