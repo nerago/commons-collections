@@ -1269,12 +1269,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     private final class EntryIteratorStandardByKey extends IteratorBase implements OrderedIterator<Entry<K, V>>, ResettableIterator<Entry<K, V>> {
         @Override
         public Entry<K, V> next() {
-            return navigateNext().copyEntryUnmodifiable();
+            return navigateNext();
         }
 
         @Override
         public Entry<K, V> previous() {
-            return navigatePrevious().copyEntryUnmodifiable();
+            return navigatePrevious();
         }
     }
 
@@ -1282,9 +1282,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * A node used to store the data.
      */
     private static final class Node<K extends Comparable<K>, V> implements Entry<K, V>, KeyValue<K, V> {
-
-        // TODO make finals (replacing)
-
         private final K key;
         private V value;
         private Node<K, V> leftNode;
@@ -1332,10 +1329,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         private void copyColor(final Node<K, V> node) {
             colorFlag = node.colorFlag;
-        }
-
-        private Entry<K, V> copyEntryUnmodifiable() {
-            return new UnmodifiableMapEntry<>(key, value);
         }
 
         /**
@@ -1396,7 +1389,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
                 return false;
             }
             final Entry<?, ?> e = (Entry<?, ?>) obj;
-            return key.equals(e.getKey()) && value.equals(e.getValue());
+            return Objects.equals(key, e.getKey()) && Objects.equals(value, e.getValue());
         }
 
         /**
