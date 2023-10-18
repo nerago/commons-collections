@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -28,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.collection.CompositeCollection;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 import org.apache.commons.collections4.set.CompositeSet;
 
 /**
@@ -49,7 +49,7 @@ import org.apache.commons.collections4.set.CompositeSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class CompositeMap<K, V> extends AbstractIterableMap<K, V> implements Externalizable {
+public class CompositeMap<K, V> extends AbstractIterableMap<K, V> implements SerializableTransitional {
 
     private static final Map[] EMPTY_MAP_ARRAY = {};
 

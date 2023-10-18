@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.bag;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Comparator;
 
 import org.apache.commons.collections4.Predicate;
@@ -103,6 +106,16 @@ public class PredicatedSortedBag<E> extends PredicatedBag<E> implements SortedBa
     @Override
     public Comparator<? super E> comparator() {
         return decorated().comparator();
+    }
+
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
     }
 
 }

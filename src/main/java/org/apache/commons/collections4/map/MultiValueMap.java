@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -33,6 +32,7 @@ import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.FunctorException;
 import org.apache.commons.collections4.MultiMap;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.commons.collections4.iterators.LazyIteratorChain;
@@ -515,7 +515,7 @@ public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, 
     /**
      * Inner class that provides a simple reflection factory.
      */
-    private static class ReflectionFactory<T extends Collection<?>> implements Factory<T>, Externalizable {
+    private static class ReflectionFactory<T extends Collection<?>> implements Factory<T>, SerializableTransitional {
 
         /** Serialization version */
         private static final long serialVersionUID = 2986114157496788874L;

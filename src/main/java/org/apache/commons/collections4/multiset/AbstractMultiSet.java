@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.multiset;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -33,6 +32,7 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.SpliteratorUtils;
 import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * Abstract implementation of the {@link MultiSet} interface to simplify the
@@ -41,7 +41,7 @@ import org.apache.commons.collections4.Transformer;
  * @param <E> the type held in the multiset
  * @since 4.1
  */
-public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implements MultiSet<E>, Externalizable {
+public abstract class AbstractMultiSet<E> extends AbstractCollection<E> implements MultiSet<E>, SerializableTransitional {
     private static final long serialVersionUID = 4783921839835550442L;
 
     /** View of the elements */

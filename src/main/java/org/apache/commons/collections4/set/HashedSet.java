@@ -1,6 +1,5 @@
 package org.apache.commons.collections4.set;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -18,13 +17,14 @@ import java.util.function.Predicate;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 
 /**
  * Slightly more efficient version of HashSet which implements Hash storage directly rather than nesting a HashMap.
  * @param <E> element type stored
  */
-public class HashedSet<E> implements Set<E>, Externalizable, Cloneable {
+public class HashedSet<E> implements Set<E>, SerializableTransitional, Cloneable {
 
     private static final long serialVersionUID = -4842904738908370556L;
 

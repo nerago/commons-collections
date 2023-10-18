@@ -17,10 +17,13 @@
 package org.apache.commons.collections4.bag;
 
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.collections4.MutableInteger;
 
 /**
  * Implements {@code Bag}, using a {@link HashMap} to provide the
@@ -58,26 +61,18 @@ public class HashBag<E> extends AbstractMapBag<E> {
         addAll(coll);
     }
 
-    /**
-     * Write the bag out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
     @Override
-    public void writeExternal(final ObjectOutput out) throws IOException {
-        super.doWriteObject(out);
+    protected Map<E, MutableInteger> createDefaultMap() {
+        return new HashMap<>();
     }
 
-    /**
-     * Read the bag in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    @Override
-    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        super.doReadObject(new HashMap<>(), in);
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
     }
 }

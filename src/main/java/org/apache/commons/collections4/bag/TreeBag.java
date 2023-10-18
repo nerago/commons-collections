@@ -16,12 +16,12 @@
  */
 package org.apache.commons.collections4.bag;
 
-import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -45,13 +45,13 @@ import org.apache.commons.collections4.SortedBag;
  * @param <E> the type of elements in this bag
  * @since 3.0 (previously in main package v2.0)
  */
-public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Externalizable {
+public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E> {
 
     /** Serial version lock */
     private static final long serialVersionUID = -7740146511091606676L;
 
     /**
-     * Constructs an empty {@link TreeBag}.
+     * Constructs an empty TreeBag.
      */
     public TreeBag() {
         super(new TreeMap<>());
@@ -68,7 +68,7 @@ public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Exter
     }
 
     /**
-     * Constructs a {@link TreeBag} containing all the members of the
+     * Constructs a TreeBag containing all the members of the
      * specified collection.
      *
      * @param coll the collection to copy into the bag
@@ -78,9 +78,12 @@ public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Exter
         addAll(coll);
     }
 
+    @Override
+    protected Map<E, MutableInteger> createDefaultMap() {
+        return new TreeMap<>();
+    }
+
     /**
-     * {@inheritDoc}
-     *
      * @throws IllegalArgumentException if the object to be added does not implement
      * {@link Comparable} and the {@link TreeBag} is using natural ordering
      * @throws NullPointerException if the specified key is null and this bag uses
@@ -117,30 +120,14 @@ public class TreeBag<E> extends AbstractMapBag<E> implements SortedBag<E>, Exter
         return (SortedMap<E, MutableInteger>) super.getMap();
     }
 
-    /**
-     * Write the bag out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    @Override
-    public void writeExternal(final ObjectOutput out) throws IOException {
-        out.writeObject(comparator());
-        super.doWriteObject(out);
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
     }
 
-    /**
-     * Read the bag in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     */
-    @Override
-    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        @SuppressWarnings("unchecked")  // This will fail at runtime if the stream is incorrect
-        final Comparator<? super E> comp = (Comparator<? super E>) in.readObject();
-        super.doReadObject(new TreeMap<>(comp), in);
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
     }
 
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.multimap;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -45,6 +44,7 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SpliteratorUtils;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
 import org.apache.commons.collections4.iterators.TransformIterator;
@@ -67,7 +67,7 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  * @param <V> the type of the values in this map
  * @since 4.1
  */
-public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, V>, Externalizable {
+public abstract class AbstractMultiValuedMap<K, V> implements MultiValuedMap<K, V>, SerializableTransitional {
 
     /** The values view */
     private transient Collection<V> valuesView;

@@ -16,10 +16,11 @@
  */
 package org.apache.commons.collections4;
 
-import java.io.Externalizable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * Defines a collection that counts the number of times an object appears in
@@ -45,7 +46,7 @@ import java.util.Set;
  * @param <E> the type of elements in this bag
  * @since 2.0
  */
-public interface Bag<E> extends Collection<E>, Externalizable {
+public interface Bag<E> extends Collection<E>, SerializableTransitional {
 
     /**
      * Returns the number of occurrences (cardinality) of the given

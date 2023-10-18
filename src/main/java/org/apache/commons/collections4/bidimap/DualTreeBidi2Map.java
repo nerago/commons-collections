@@ -16,13 +16,20 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import org.apache.commons.collections4.*;
-
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.ComparatorUtils;
+import org.apache.commons.collections4.SortedMapRange;
 
 
 /**

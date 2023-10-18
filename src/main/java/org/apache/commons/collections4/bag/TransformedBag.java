@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.bag;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Set;
 
 import org.apache.commons.collections4.Bag;
@@ -144,4 +147,13 @@ public class TransformedBag<E> extends TransformedCollection<E> implements Bag<E
         return TransformedSet.<E>transformingSet(set, transformer);
     }
 
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
+    }
 }

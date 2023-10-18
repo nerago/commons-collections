@@ -16,8 +16,9 @@
  */
 package org.apache.commons.collections4;
 
-import java.io.Externalizable;
 import java.util.Map;
+
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * The "write" subset of the {@link Map} interface.
@@ -35,7 +36,7 @@ import java.util.Map;
  * @since 4.0
  * @see Get
  */
-public interface Put<K, V> extends Externalizable {
+public interface Put<K, V> extends SerializableTransitional {
 
     /**
      * @see Map#clear()

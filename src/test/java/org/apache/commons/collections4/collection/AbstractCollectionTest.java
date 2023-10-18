@@ -1517,6 +1517,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
             setCollection((Collection<E>) readExternalFormFromDisk(getCanonicalEmptyCollectionName(getConfirmed())));
             assertTrue(getCollection().isEmpty(), "Collection should be empty");
+            assertEquals(confirmed.getClass(), collection.getClass(), "serialized test data doesn't produce same type");
             verify();
         }
     }
@@ -1536,6 +1537,7 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
             setCollection((Collection<E>) readExternalFormFromDisk(getCanonicalFullCollectionName(getConfirmed())));
             assertEquals(getConfirmed().size(), getCollection().size(), "Collection should be same size");
+            assertEquals(confirmed.getClass(), collection.getClass(), "serialized test data doesn't produce same type");
             verify();
         }
     }

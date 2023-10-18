@@ -63,7 +63,7 @@ import java.util.stream.Stream;
  * @since 3.0
  */
 public abstract class AbstractCollectionDecorator<E>
-        implements Collection<E>, Externalizable {
+        implements Collection<E>, SerializableTransitional {
 
     /** Serialization version */
     private static final long serialVersionUID = 6249888059822088500L;

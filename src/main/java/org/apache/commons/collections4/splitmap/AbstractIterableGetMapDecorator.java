@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.splitmap;
 
-import java.io.Externalizable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +33,7 @@ import org.apache.commons.collections4.map.EntrySetToMapIteratorAdapter;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractIterableGetMapDecorator<K, V> implements IterableGet<K, V>, Externalizable {
+public abstract class AbstractIterableGetMapDecorator<K, V> implements IterableGet<K, V> {
 
     /** The map to decorate */
     transient Map<K, V> map;

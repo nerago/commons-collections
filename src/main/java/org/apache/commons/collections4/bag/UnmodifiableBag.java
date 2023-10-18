@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.bag;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -141,4 +144,13 @@ public final class UnmodifiableBag<E>
         return UnmodifiableSet.<E>unmodifiableSet(set);
     }
 
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
+    }
 }

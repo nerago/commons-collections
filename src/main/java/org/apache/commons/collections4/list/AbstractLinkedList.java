@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.list;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -32,6 +31,7 @@ import java.util.Objects;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedIterator;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * An abstract implementation of a linked list which provides numerous points for
@@ -44,7 +44,7 @@ import org.apache.commons.collections4.OrderedIterator;
  *
  * @since 3.0
  */
-public abstract class AbstractLinkedList<E> implements List<E>, Externalizable {
+public abstract class AbstractLinkedList<E> implements List<E>, SerializableTransitional {
     private static final long serialVersionUID = 3164086642142707330L;
 
     /*

@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.queue;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -33,6 +32,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.collections4.BoundedCollection;
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * CircularFifoQueue is a first-in first-out queue with a fixed size that
@@ -55,7 +55,7 @@ import org.apache.commons.collections4.IteratorUtils;
  * @since 4.0
  */
 public class CircularFifoQueue<E> extends AbstractCollection<E>
-    implements Queue<E>, BoundedCollection<E>, Externalizable {
+    implements Queue<E>, BoundedCollection<E>, SerializableTransitional {
 
     /** Serialization version. */
     private static final long serialVersionUID = -8423413834657610406L;

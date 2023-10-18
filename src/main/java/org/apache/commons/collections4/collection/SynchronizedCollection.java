@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -45,7 +44,7 @@ import java.util.function.Predicate;
  * @param <E> the type of the elements in the collection
  * @since 3.0
  */
-public class SynchronizedCollection<E> implements Collection<E>, Externalizable {
+public class SynchronizedCollection<E> implements Collection<E>, SerializableTransitional {
 
     /** Serialization version */
     private static final long serialVersionUID = 2412805092710877986L;

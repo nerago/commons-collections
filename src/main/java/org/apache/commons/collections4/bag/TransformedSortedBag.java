@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.bag;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Comparator;
 
 import org.apache.commons.collections4.SortedBag;
@@ -128,4 +131,13 @@ public class TransformedSortedBag<E> extends TransformedBag<E> implements Sorted
         return getSortedBag().comparator();
     }
 
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
+    }
 }

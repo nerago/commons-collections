@@ -16,9 +16,10 @@
  */
 package org.apache.commons.collections4;
 
-import java.io.Externalizable;
 import java.util.Collection;
 import java.util.Set;
+
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * The "read" subset of the {@link java.util.Map} interface.
@@ -29,7 +30,7 @@ import java.util.Set;
  * @since 4.0
  * @see Put
  */
-public interface Get<K, V> extends Externalizable {
+public interface Get<K, V> extends SerializableTransitional {
 
     /**
      * @param key key whose presence in this map is to be tested

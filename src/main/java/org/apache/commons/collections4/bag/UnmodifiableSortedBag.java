@@ -18,7 +18,9 @@ package org.apache.commons.collections4.bag;
 
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -77,29 +79,14 @@ public final class UnmodifiableSortedBag<E>
         super(bag);
     }
 
-    /**
-     * Write the collection out using a custom routine.
-     *
-     * @param out  the output stream
-     * @throws IOException if an error occurs while writing to the stream
-     */
-    @Override
-    public void writeExternal(final ObjectOutput out) throws IOException {
-        out.writeObject(decorated());
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        writeExternal(out);
     }
 
-    /**
-     * Read the collection in using a custom routine.
-     *
-     * @param in  the input stream
-     * @throws IOException if an error occurs while reading from the stream
-     * @throws ClassNotFoundException if an object read from the stream can not be loaded
-     * @throws ClassCastException if deserialized object has wrong type
-     */
-    @SuppressWarnings("unchecked") // will throw CCE, see Javadoc
-    @Override
-    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        setCollection((Collection<E>) in.readObject());
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        readExternal(in);
     }
 
     @Override

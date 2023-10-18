@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4.list;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -41,6 +40,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.OrderedIterator;
+import org.apache.commons.collections4.collection.SerializableTransitional;
 
 /**
  * A {@code List} implementation that is optimised for fast insertions and
@@ -74,7 +74,7 @@ import org.apache.commons.collections4.OrderedIterator;
  *
  * @since 3.1
  */
-public class TreeList<E> extends AbstractList<E> implements Externalizable {
+public class TreeList<E> extends AbstractList<E> implements SerializableTransitional {
 //    add; toArray; iterator; insert; get; indexOf; remove
 //    TreeList = 1260;7360;3080;  160;   170;3400;  170;
 //   ArrayList =  220;1480;1760; 6870;    50;1540; 7200;

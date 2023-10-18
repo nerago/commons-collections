@@ -554,7 +554,7 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
      * @param out the output stream
      * @throws IOException any of the usual I/O related exceptions
      */
-    protected void doWriteObject(final ObjectOutput out) throws IOException {
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeInt(map.size());
         for (final Entry<E, MutableInteger> entry : map.entrySet()) {
             out.writeObject(entry.getKey());
@@ -564,15 +564,13 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
 
     /**
      * Read the map in using a custom routine.
-     * @param map the map to use
      * @param in the input stream
      * @throws IOException any of the usual I/O related exceptions
      * @throws ClassNotFoundException if the stream contains an object which class can not be loaded
      * @throws ClassCastException if the stream does not contain the correct objects
      */
-    protected void doReadObject(final Map<E, MutableInteger> map, final ObjectInput in)
-            throws IOException, ClassNotFoundException {
-        this.map = map;
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        map = createDefaultMap();
         final int entrySize = in.readInt();
         for (int i = 0; i < entrySize; i++) {
             @SuppressWarnings("unchecked") // This will fail at runtime if the stream is incorrect
@@ -582,6 +580,8 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
             size += count;
         }
     }
+
+    protected abstract Map<E, MutableInteger> createDefaultMap();
 
     /**
      * Compares this Bag to another. This Bag equals another Bag if it contains
