@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.collections4.map;
+package org.apache.commons.collections4.primitive;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.collection.IterationBehaviour;
+import org.apache.commons.collections4.map.AbstractMapTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -31,17 +32,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class LongObjectMapTest extends AbstractObjectTest {
-    public LongObjectMapTest() {
+public class LongToObjectMapTest extends AbstractObjectTest {
+    public LongToObjectMapTest() {
         super();
     }
 
     @Override
-    public LongObjectMap<String> makeObject() {
-        return new LongObjectMap<>();
+    public LongToObjectMap<String> makeObject() {
+        return new LongToObjectMap<>();
     }
 
-    protected LongObjectMap<String> map;
+    protected LongToObjectMap<String> map;
 
     protected Map<Long, String> confirmed;
 
@@ -64,12 +65,12 @@ public class LongObjectMapTest extends AbstractObjectTest {
     };
 
     void resetEmpty() {
-        map = new LongObjectMap<>();
+        map = new LongToObjectMap<>();
         confirmed = new HashMap<>();
     }
 
     void resetFull() {
-        map = new LongObjectMap<>();
+        map = new LongToObjectMap<>();
         confirmed = new HashMap<>();
         for (int i = 0; i < testKeys.length; ++i) {
             map.put(testKeys[i], testValues[i]);
@@ -256,7 +257,7 @@ public class LongObjectMapTest extends AbstractObjectTest {
 
         @Override
         public Map<Long, String> makeObject() {
-            return LongObjectMapTest.this.makeObject().asMap();
+            return LongToObjectMapTest.this.makeObject().asMap();
         }
     }
 }

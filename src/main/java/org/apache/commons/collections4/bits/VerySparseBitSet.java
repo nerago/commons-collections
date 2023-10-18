@@ -2,6 +2,8 @@
 
 package org.apache.commons.collections4.bits;
 
+import java.util.Objects;
+import java.util.TreeSet;
 import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.ListUtils;
@@ -11,11 +13,11 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     private static final int ENTRY_BITS = Long.SIZE;
     private static final long FULLY_SET =  0xffffffffffffffffL;
     private static final long HI_BIT_SET = 0x8000000000000000L;
-    private final TreeList<Entry> content;
+    private final TreeSet<SparseEntry> content;
 
     public VerySparseBitSet() {
-        content = new TreeList<>();
-        content.add(new Entry(0, 0));
+        content = new TreeSet<>();
+        content.add(new SparseEntry(0, 0));
     }
     
     private static int indexToBlockStart(final int bitIndex) {
@@ -28,13 +30,13 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
         }
     }
     
-    private Entry findEntry(final int index) {
-        if (index < 0) {
-            throw new IndexOutOfBoundsException();
-        }
-        final int blockStartIndex = indexToBlockStart(index);
-        return ListUtils.binarySearchValue(content, e -> e.startIndex, blockStartIndex);
-    }
+//    private SparseEntry findEntry(final int index) {
+//        if (index < 0) {
+//            throw new IndexOutOfBoundsException();
+//        }
+//        final int blockStartIndex = indexToBlockStart(index);
+//        return ListUtils.binarySearchValue(content, e -> e.startIndex, blockStartIndex);
+//    }
 
     private static long maskSingleSet(final int n) {
         return HI_BIT_SET >>> n;
@@ -61,7 +63,7 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      */
     @Override
     public boolean isEmpty() {
-        return content.size() == 1 && content.get(0).bits == 0;
+        return content.size() == 1 && content.first().bits == 0;
     }
 
     /**
@@ -70,12 +72,8 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      */
     @Override
     public int length() {
-        final Entry entry = ListUtils.getLast(content);
-        if (entry != null) {
-            return entry.lastIndex() + 1;
-        } else {
-            return 0;
-        }
+        final SparseEntry entry = content.last();
+        return entry.lastIndex() + 1;
     }
 
     /**
@@ -84,7 +82,7 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     @Override
     public int cardinality() {
         int result = 0;
-        for (final Entry e : content) {
+        for (final SparseEntry e : content) {
             result += Long.bitCount(e.bits);
         }
         return result;
@@ -100,7 +98,8 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      */
     @Override
     public boolean get(final int index) {
-        final Entry entry = findEntry(index);
+
+//        final SparseEntry entry = findEntry(index);
         if (entry != null) {
             return (entry.bits & maskSingleSet(index - entry.startIndex)) != 0;
         } else {
@@ -108,7 +107,7 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
         }
     }
 
-    private Entry getOrAddEntry(int blockStartBitIndex) {
+    private SparseEntry getOrAddEntry(int blockStartBitIndex) {
         int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
     }
 
@@ -118,7 +117,7 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
 
         final int blockStartBitIndex = indexToBlockStart(startIndex);
 
-        Entry entry = getOrAddEntry(blockStartBitIndex);
+        SparseEntry entry = getOrAddEntry(blockStartBitIndex);
 
 //        int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
 //
@@ -157,43 +156,43 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
 
 
     public void set0(final int startIndex, final int endIndex) {
-        checkRange(startIndex, endIndex);
-
-        final int blockStartIndex = indexToBlockStart(startIndex);
-        final int rangeLength = endIndex - startIndex;
-
-        int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
-
-        Entry entry;
-        if (listIndex == -1) {
-            entry = new Entry(blockStartIndex, 0);
-        } else {
-            entry = content.get(listIndex++);
-        }
-
-        if (startIndex == blockStartIndex && rangeLength < ENTRY_BITS) {
-            entry.bits |= maskFirstNSet(rangeLength);
-            return;
-        } else if (startIndex == blockStartIndex) {
-            entry.bits = FULLY_SET;
-        } else if (endIndex < entry.lastIndex()) {
-            entry.bits |= maskRangeSet(startIndex - entry.startIndex, endIndex - entry.startIndex);
-            return;
-        }
-
-//        Entry entry = content.get(listIndex);
-        while (true) {
-            final Entry entry = content.get(listIndex++);
-            if (entry.startIndex > endIndex) {
-                break;
-            }
-
-            if (endIndex >= entry.lastIndex()) {
-                entry.bits = FULLY_SET;
-            }
-
-
-        }
+//        checkRange(startIndex, endIndex);
+//
+//        final int blockStartIndex = indexToBlockStart(startIndex);
+//        final int rangeLength = endIndex - startIndex;
+//
+//        int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
+//
+//        Entry entry;
+//        if (listIndex == -1) {
+//            entry = new Entry(blockStartIndex, 0);
+//        } else {
+//            entry = content.get(listIndex++);
+//        }
+//
+//        if (startIndex == blockStartIndex && rangeLength < ENTRY_BITS) {
+//            entry.bits |= maskFirstNSet(rangeLength);
+//            return;
+//        } else if (startIndex == blockStartIndex) {
+//            entry.bits = FULLY_SET;
+//        } else if (endIndex < entry.lastIndex()) {
+//            entry.bits |= maskRangeSet(startIndex - entry.startIndex, endIndex - entry.startIndex);
+//            return;
+//        }
+//
+////        Entry entry = content.get(listIndex);
+//        while (true) {
+//            final Entry entry = content.get(listIndex++);
+//            if (entry.startIndex > endIndex) {
+//                break;
+//            }
+//
+//            if (endIndex >= entry.lastIndex()) {
+//                entry.bits = FULLY_SET;
+//            }
+//
+//
+//        }
     }
 
     /**
@@ -310,11 +309,11 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
         return null;
     }
 
-    private static final class Entry {
+    private static final class SparseEntry implements Comparable<SparseEntry> {
         final int startIndex;
         long bits;
 
-        private Entry(final int startIndex, final int bits) {
+        private SparseEntry(final int startIndex, final int bits) {
             this.startIndex = startIndex;
             this.bits = bits;
         }
@@ -325,6 +324,25 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
 
         public boolean fullyInRange(final int rangeStart, final int rangeEnd) {
             return rangeStart <= startIndex && lastIndex() <= rangeEnd;
+        }
+
+        @Override
+        public int compareTo(final SparseEntry other) {
+            return Integer.compare(startIndex, other.startIndex);
+        }
+
+        @Override
+        public boolean equals(final Object other) {
+            if (other instanceof SparseEntry) {
+                return startIndex == ((SparseEntry) other).startIndex;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return startIndex;
         }
     }
 }

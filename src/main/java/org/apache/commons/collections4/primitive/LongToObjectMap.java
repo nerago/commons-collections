@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.collections4.map;
+package org.apache.commons.collections4.primitive;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -39,8 +39,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.function.Predicate;
-import java.util.stream.LongStream;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
@@ -48,7 +46,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.ResettableIterator;
 
 @SuppressWarnings({"unused", "PublicMethodNotExposedInInterface"})
-public final class LongObjectMap<V> implements Externalizable {
+public final class LongToObjectMap<V> implements Externalizable {
     private static final long serialVersionUID = -8244029886089985815L;
 
     /** The default capacity to use */
@@ -78,7 +76,7 @@ public final class LongObjectMap<V> implements Externalizable {
     /**
      * Constructs a new empty map with default size and load factor.
      */
-    public LongObjectMap() {
+    public LongToObjectMap() {
         this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_THRESHOLD);
     }
 
@@ -90,7 +88,7 @@ public final class LongObjectMap<V> implements Externalizable {
      * @param threshold  the threshold, must be sensible
      */
     @SuppressWarnings("unchecked")
-    public LongObjectMap(final int initialCapacity, final float loadFactor, final int threshold) {
+    public LongToObjectMap(final int initialCapacity, final float loadFactor, final int threshold) {
         this.loadFactor = loadFactor;
         this.data = new LongHashEntry[initialCapacity];
         this.threshold = threshold;
@@ -103,7 +101,7 @@ public final class LongObjectMap<V> implements Externalizable {
      * @param initialCapacity  the initial capacity
      * @throws IllegalArgumentException if the initial capacity is negative
      */
-    public LongObjectMap(final int initialCapacity) {
+    public LongToObjectMap(final int initialCapacity) {
         this(initialCapacity, DEFAULT_LOAD_FACTOR);
     }
 
@@ -117,7 +115,7 @@ public final class LongObjectMap<V> implements Externalizable {
      * @throws IllegalArgumentException if the load factor is less than or equal to zero
      */
     @SuppressWarnings("unchecked")
-    public LongObjectMap(int initialCapacity, final float loadFactor) {
+    public LongToObjectMap(int initialCapacity, final float loadFactor) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException("Initial capacity must be a non negative number");
         }
@@ -136,7 +134,7 @@ public final class LongObjectMap<V> implements Externalizable {
      * @param map  the map to copy
      * @throws NullPointerException if the map is null
      */
-    public LongObjectMap(final Map<? extends Long, ? extends V> map) {
+    public LongToObjectMap(final Map<? extends Long, ? extends V> map) {
         this(Math.max(2 * map.size(), DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
         putAll(map);
     }
@@ -147,7 +145,7 @@ public final class LongObjectMap<V> implements Externalizable {
      * @param map  the map to copy
      * @throws NullPointerException if the map is null
      */
-    public LongObjectMap(final LongObjectMap<? extends V> map) {
+    public LongToObjectMap(final LongToObjectMap<? extends V> map) {
         this(Math.max(2 * map.size(), DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
         putAll(map);
     }
@@ -413,7 +411,7 @@ public final class LongObjectMap<V> implements Externalizable {
      *      *         this map does not permit null keys or values, and the
      *      *         specified map contains null keys or values
      */
-    public void putAll(final LongObjectMap<? extends V> map) {
+    public void putAll(final LongToObjectMap<? extends V> map) {
         if (checkPutAll(map.size())) {
             for (final LongHashEntry<? extends V> element : map.data) {
                 LongHashEntry<? extends V> entry = element;
@@ -549,7 +547,7 @@ public final class LongObjectMap<V> implements Externalizable {
      * @param action The action to be performed for each entry
      * @throws NullPointerException if the specified action is null
      */
-    public void forEach(final ConsumerWithLong<? super V> action) {
+    public void forEach(final LongObjConsumer<? super V> action) {
         Objects.requireNonNull(action);
         for (final LongHashEntry<V> element : data) {
             LongHashEntry<V> entry = element;
@@ -558,11 +556,6 @@ public final class LongObjectMap<V> implements Externalizable {
                 entry = entry.next;
             }
         }
-    }
-
-    @FunctionalInterface
-    public interface ConsumerWithLong<V> {
-        void accept(long k, V v);
     }
 
     public boolean containsEntry(final long key, final V value) {
@@ -584,7 +577,7 @@ public final class LongObjectMap<V> implements Externalizable {
         return remove(entry.getKey(), entry.getValue());
     }
 
-    public LongSet keySet() {
+    public LongCollection keySet() {
         if (keySet == null) {
             keySet = new KeySet(this);
         }
@@ -806,7 +799,7 @@ public final class LongObjectMap<V> implements Externalizable {
         out.writeFloat(loadFactor);
         out.writeInt(data.length);
         out.writeInt(size);
-        for (final MapIterator.LongKeys<V> it = mapIterator(); it.hasNext();) {
+        for (final MapIteratorLongToObject<V> it = mapIterator(); it.hasNext();) {
             out.writeLong(it.nextLong());
             out.writeObject(it.getValue());
         }
@@ -863,10 +856,10 @@ public final class LongObjectMap<V> implements Externalizable {
     private static final class MapAdapter<V> extends AbstractMap<Long, V> implements IterableMap<Long, V> {
         private static final long serialVersionUID = 7665757042811288057L;
 
-        private final LongObjectMap<V> parent;
+        private final LongToObjectMap<V> parent;
         private EntrySet<V> entrySet;
 
-        private MapAdapter(final LongObjectMap<V> parent) {
+        private MapAdapter(final LongToObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1090,7 +1083,7 @@ public final class LongObjectMap<V> implements Externalizable {
         }
 
         @Override
-        public MapIterator.LongKeys<V> mapIterator() {
+        public MapIteratorLongToObject<V> mapIterator() {
             return parent.mapIterator();
         }
 
@@ -1174,10 +1167,10 @@ public final class LongObjectMap<V> implements Externalizable {
         }
     }
 
-    private static final class KeySet<V> extends AbstractSet<Long> implements LongSet {
-        private final LongObjectMap<V> parent;
+    private static final class KeySet<V> extends AbstractSet<Long> implements LongCollection {
+        private final LongToObjectMap<V> parent;
 
-        private KeySet(final LongObjectMap<V> parent) {
+        private KeySet(final LongToObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1367,31 +1360,11 @@ public final class LongObjectMap<V> implements Externalizable {
         }
     }
 
-    public interface LongSet {
-        int size();
-        boolean isEmpty();
-        boolean contains(long k);
-        boolean remove(long k);
-
-        void forEach(LongConsumer action);
-        long[] toLongArray();
-        PrimitiveIterator.OfLong iterator();
-        Spliterator.OfLong spliterator();
-
-        default LongStream longStream() {
-            return StreamSupport.longStream(spliterator(), false);
-        }
-
-        default LongStream longParallelStream() {
-            return StreamSupport.longStream(spliterator(), true);
-        }
-    }
-
     private static final class EntrySet<V> extends AbstractSet<Map.Entry<Long, V>> {
         /** The parent map */
-        private final LongObjectMap<V> parent;
+        private final LongToObjectMap<V> parent;
 
-        private EntrySet(final LongObjectMap<V> parent) {
+        private EntrySet(final LongToObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1438,9 +1411,9 @@ public final class LongObjectMap<V> implements Externalizable {
 
     private static final class Values<V> extends AbstractCollection<V> {
         /** The parent map */
-        private final LongObjectMap<V> parent;
+        private final LongToObjectMap<V> parent;
 
-        private Values(final LongObjectMap<V> parent) {
+        private Values(final LongToObjectMap<V> parent) {
             this.parent = parent;
         }
 
@@ -1471,7 +1444,7 @@ public final class LongObjectMap<V> implements Externalizable {
         }
     }
 
-    public MapIterator.LongKeys<V> mapIterator() {
+    public MapIteratorLongToObject<V> mapIterator() {
         return new LongMapIterator();
     }
 
@@ -1590,7 +1563,7 @@ public final class LongObjectMap<V> implements Externalizable {
         }
     }
 
-    private class LongMapIterator extends LongBaseIterator implements MapIterator.LongKeys<V> {
+    private class LongMapIterator extends LongBaseIterator implements MapIteratorLongToObject<V> {
         @Override
         public long nextLong() {
             return nextEntry().key;
