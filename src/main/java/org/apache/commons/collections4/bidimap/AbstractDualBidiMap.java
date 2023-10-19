@@ -50,28 +50,28 @@ import org.apache.commons.collections4.map.EntrySetUtil;
  * @see DualTreeBidiMap
  * @since 3.0
  */
-public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualBidiMap<K, V, RegularMap, InverseMap, Decorated, DecoratedInverse>,
-                                                InverseMap extends AbstractDualBidiMap<V, K, InverseMap, RegularMap, DecoratedInverse, Decorated>,
-                                                Decorated extends Map<K, V>,
-                                                DecoratedInverse extends Map<V, K>>
-        implements BidiMap<K, V, InverseMap> {
+public abstract class AbstractDualBidiMap<K, V, TRegularMap extends AbstractDualBidiMap<K, V, TRegularMap, TInverseMap, TDecorated, TDecoratedInverse>,
+                                                TInverseMap extends AbstractDualBidiMap<V, K, TInverseMap, TRegularMap, TDecoratedInverse, TDecorated>,
+                                                TDecorated extends Map<K, V>,
+                                                TDecoratedInverse extends Map<V, K>>
+        implements BidiMap<K, V, TInverseMap> {
 
     private static final long serialVersionUID = -1349826221174067824L;
 
     /**
      * Normal delegate map.
      */
-    transient Decorated normalMap;
+    transient TDecorated normalMap;
 
     /**
      * Reverse delegate map.
      */
-    transient DecoratedInverse reverseMap;
+    transient TDecoratedInverse reverseMap;
 
     /**
      * Inverse view of this map.
      */
-    transient InverseMap inverseBidiMap;
+    transient TInverseMap inverseBidiMap;
 
     /**
      * View of the keys.
@@ -112,7 +112,7 @@ public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualB
      * @param reverseMap  the reverse direction map
      * @since 3.1
      */
-    protected AbstractDualBidiMap(final Decorated normalMap, final DecoratedInverse reverseMap) {
+    protected AbstractDualBidiMap(final TDecorated normalMap, final TDecoratedInverse reverseMap) {
         this.normalMap = normalMap;
         this.reverseMap = reverseMap;
     }
@@ -125,9 +125,9 @@ public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualB
      * @param reverseMap  the reverse direction map
      * @param inverseBidiMap  the inverse BidiMap
      */
-    protected AbstractDualBidiMap(final Decorated normalMap,
-                                  final DecoratedInverse reverseMap,
-                                  final InverseMap inverseBidiMap) {
+    protected AbstractDualBidiMap(final TDecorated normalMap,
+                                  final TDecoratedInverse reverseMap,
+                                  final TInverseMap inverseBidiMap) {
         this.normalMap = normalMap;
         this.reverseMap = reverseMap;
         this.inverseBidiMap = inverseBidiMap;
@@ -138,7 +138,7 @@ public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualB
      *
      * @return the bidi map
      */
-    protected abstract InverseMap createInverseBidiMap();
+    protected abstract TInverseMap createInverseBidiMap();
 
     // Map delegation
 
@@ -438,7 +438,7 @@ public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualB
     }
 
     @Override
-    public InverseMap inverseBidiMap() {
+    public TInverseMap inverseBidiMap() {
         if (inverseBidiMap == null) {
             inverseBidiMap = createInverseBidiMap();
         }
@@ -531,7 +531,7 @@ public abstract class AbstractDualBidiMap<K, V, RegularMap extends AbstractDualB
     /**
      * Inner class View.
      */
-    protected abstract static class View<K, V, E> extends AbstractCollectionDecorator<E> {
+    protected abstract static class View<K, V, E> extends AbstractCollectionDecorator<E, Collection<E>> {
 
         /** Generated serial version ID. */
         private static final long serialVersionUID = 4621510560119690639L;

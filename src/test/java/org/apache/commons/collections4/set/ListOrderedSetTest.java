@@ -22,17 +22,20 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionCommonsRole;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.collection.IterationBehaviour;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.support.ReflectionSupport;
 
 /**
  * Extension of {@link AbstractSetTest} for exercising the
@@ -192,7 +195,7 @@ public class ListOrderedSetTest<E>
         assertEquals(1, set.size());
         set.add((E) b); // will match but not replace A as equal
         assertEquals(1, set.size());
-        assertSame(a, set.decorated().iterator().next());
+        assertSame(a, reflectionGetDecorated(set).iterator().next());
         assertSame(a, set.iterator().next());
         assertSame(a, set.get(0));
         assertSame(a, set.asList().get(0));
@@ -292,4 +295,9 @@ public class ListOrderedSetTest<E>
 //        writeExternalFormToDisk((java.io.Serializable) getCollection(), "src/test/resources/data/test/ListOrderedSet.fullCollection.version4.obj");
 //    }
 
+    protected Set<?> reflectionGetDecorated(final Object object) {
+        final Optional<Method> method = ReflectionSupport.findMethod(object.getClass(), "decorated");
+        assertTrue(method.isPresent(), "couldn't");
+        return (Set<?>) ReflectionSupport.invokeMethod(method.get(), object);
+    }
 }

@@ -18,24 +18,24 @@ package org.apache.commons.collections4;
 
 import java.util.SortedMap;
 
-public interface SortedRangedMap<K, V, SubMap extends SortedRangedMap<K, V, ?>>
+public interface SortedRangedMap<K, V, TSubMap extends SortedRangedMap<K, V, ?>>
          extends SortedMap<K, V> {
     @Override
-    default SubMap subMap(final K fromKey, final K toKey) {
+    default TSubMap subMap(final K fromKey, final K toKey) {
         return subMap(getKeyRange().subRange(fromKey, toKey));
     }
 
     @Override
-    default SubMap headMap(final K toKey) {
+    default TSubMap headMap(final K toKey) {
         return subMap(getKeyRange().head(toKey));
     }
 
     @Override
-    default SubMap tailMap(final K fromKey) {
+    default TSubMap tailMap(final K fromKey) {
         return subMap(getKeyRange().tail(fromKey));
     }
 
-    SubMap subMap(SortedMapRange<K> range);
+    TSubMap subMap(SortedMapRange<K> range);
 
     /**
      * Range of keys included in this map instance (i.e. full map or sub map)

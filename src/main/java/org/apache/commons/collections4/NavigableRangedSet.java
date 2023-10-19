@@ -18,33 +18,38 @@ package org.apache.commons.collections4;
 
 import java.util.NavigableSet;
 
-public interface NavigableRangedSet<E> extends NavigableSet<E> {
-    SortedMapRange<E> getRange();
+public interface NavigableRangedSet<E, TSubSet extends NavigableRangedSet<E, ?>>
+        extends NavigableSet<E>, SortedRangedSet<E, TSubSet> {
+    @Override
+    default TSubSet subSet(final E fromElement, final boolean fromInclusive, final E toElement, final boolean toInclusive) {
+        return subSet(getRange().subRange(fromElement,fromInclusive,toElement,toInclusive));
+    }
 
     @Override
-    NavigableRangedSet<E> descendingSet();
+    default TSubSet headSet(final E toElement, final boolean inclusive) {
+        return subSet(getRange().head(toElement));
+    }
 
     @Override
-    NavigableRangedSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive);
+    default TSubSet tailSet(final E fromElement, final boolean inclusive) {
+        return subSet(getRange().tail(fromElement));
+    }
 
     @Override
-    NavigableRangedSet<E> headSet(E toElement, boolean inclusive);
-
-    @Override
-    NavigableRangedSet<E> tailSet(E fromElement, boolean inclusive);
-
-    @Override
-    default NavigableRangedSet<E> subSet(final E fromElement, final E toElement) {
+    default TSubSet subSet(final E fromElement, final E toElement) {
         return subSet(fromElement, true, toElement, false);
     }
 
     @Override
-    default NavigableRangedSet<E> headSet(final E toElement) {
+    default TSubSet headSet(final E toElement) {
         return headSet(toElement, false);
     }
 
     @Override
-    default NavigableRangedSet<E> tailSet(final E fromElement) {
+    default TSubSet tailSet(final E fromElement) {
         return tailSet(fromElement, true);
     }
+
+    @Override
+    TSubSet descendingSet();
 }

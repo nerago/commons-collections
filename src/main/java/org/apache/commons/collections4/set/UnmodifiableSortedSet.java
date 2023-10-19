@@ -22,6 +22,7 @@ import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
@@ -39,7 +40,7 @@ import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
  * @since 3.0
  */
 public final class UnmodifiableSortedSet<E>
-        extends AbstractSortedSetDecorator<E>
+        extends AbstractSortedSetDecorator<E, SortedSet<E>, UnmodifiableSortedSet<E>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -69,6 +70,16 @@ public final class UnmodifiableSortedSet<E>
      */
     private UnmodifiableSortedSet(final SortedSet<E> set) {
         super(set);
+    }
+
+    /**
+     * Constructor that wraps (not copies).
+     *
+     * @param set  the set to decorate, must not be null
+     * @throws NullPointerException if set is null
+     */
+    private UnmodifiableSortedSet(final SortedSet<E> set, SortedMapRange range) {
+        super(set, range);
     }
 
     @Override
@@ -120,21 +131,7 @@ public final class UnmodifiableSortedSet<E>
     }
 
     @Override
-    public SortedSet<E> subSet(final E fromElement, final E toElement) {
-        final SortedSet<E> sub = decorated().subSet(fromElement, toElement);
-        return unmodifiableSortedSet(sub);
+    protected UnmodifiableSortedSet<E> decorateDerived(final SortedSet<E> subMap, final SortedMapRange<E> range) {
+        return new UnmodifiableSortedSet<>(subMap, range);
     }
-
-    @Override
-    public SortedSet<E> headSet(final E toElement) {
-        final SortedSet<E> head = decorated().headSet(toElement);
-        return unmodifiableSortedSet(head);
-    }
-
-    @Override
-    public SortedSet<E> tailSet(final E fromElement) {
-        final SortedSet<E> tail = decorated().tailSet(fromElement);
-        return unmodifiableSortedSet(tail);
-    }
-
 }

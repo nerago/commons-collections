@@ -40,14 +40,14 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K, V, ?>,
-                                                     DecoratedInverse extends BidiMap<V, K, ?>,
-                                                     InverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?>>
-        extends AbstractMapDecorator<K, V, Decorated>
-        implements BidiMap<K, V, InverseMap> {
+public abstract class AbstractBidiMapDecorator<K, V, TDecorated extends BidiMap<K, V, ?>,
+                                                     TDecoratedInverse extends BidiMap<V, K, ?>,
+                                                     TInverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?>>
+        extends AbstractMapDecorator<K, V, TDecorated>
+        implements BidiMap<K, V, TInverseMap> {
 
     private static final long serialVersionUID = -3483039813600794480L;
-    private InverseMap inverse;
+    private TInverseMap inverse;
 
     /**
      * Constructor that wraps (not copies).
@@ -55,7 +55,7 @@ public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    protected AbstractBidiMapDecorator(final Decorated map) {
+    protected AbstractBidiMapDecorator(final TDecorated map) {
         super(map);
     }
 
@@ -81,14 +81,14 @@ public abstract class AbstractBidiMapDecorator<K, V, Decorated extends BidiMap<K
 
     @SuppressWarnings("unchecked")
     @Override
-    public final InverseMap inverseBidiMap() {
+    public final TInverseMap inverseBidiMap() {
         if (inverse == null) {
-            inverse = decorateInverse((DecoratedInverse) decorated().inverseBidiMap());
+            inverse = decorateInverse((TDecoratedInverse) decorated().inverseBidiMap());
         }
         return inverse;
     }
 
-    protected abstract InverseMap decorateInverse(DecoratedInverse inverse);
+    protected abstract TInverseMap decorateInverse(TDecoratedInverse inverse);
 
     @Override
     public Set<V> values() {

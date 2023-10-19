@@ -48,10 +48,10 @@ import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
  * @since 3.0
  */
 public abstract class AbstractSortedMapDecorator<K, V,
-                Decorated extends SortedMap<K, V>,
-                SubMap extends IterableSortedMap<K, V, SubMap>>
-        extends AbstractMapDecorator<K, V, Decorated>
-        implements IterableSortedMap<K, V, SubMap> {
+                TDecorated extends SortedMap<K, V>,
+                TSubMap extends IterableSortedMap<K, V, TSubMap>>
+        extends AbstractMapDecorator<K, V, TDecorated>
+        implements IterableSortedMap<K, V, TSubMap> {
 
     private static final long serialVersionUID = 4710068155190191469L;
 
@@ -71,7 +71,7 @@ public abstract class AbstractSortedMapDecorator<K, V,
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    public AbstractSortedMapDecorator(final Decorated map) {
+    public AbstractSortedMapDecorator(final TDecorated map) {
         super(map);
         this.keyRange = SortedMapRange.full(map.comparator());
     }
@@ -83,12 +83,12 @@ public abstract class AbstractSortedMapDecorator<K, V,
      * @param keyRange the range of keys accepted by the map
      * @throws NullPointerException if the map is null
      */
-    public AbstractSortedMapDecorator(final Decorated map, final SortedMapRange<K> keyRange) {
+    public AbstractSortedMapDecorator(final TDecorated map, final SortedMapRange<K> keyRange) {
         super(map);
         this.keyRange = Objects.requireNonNull(keyRange);
     }
 
-    protected abstract SubMap decorateDerived(final Decorated subMap, final SortedMapRange<K> keyRange);
+    protected abstract TSubMap decorateDerived(final TDecorated subMap, final SortedMapRange<K> keyRange);
 
     @Override
     public SortedMapRange<K> getKeyRange() {
@@ -111,7 +111,7 @@ public abstract class AbstractSortedMapDecorator<K, V,
     }
 
     @Override
-    public SubMap subMap(final SortedMapRange<K> range) {
+    public TSubMap subMap(final SortedMapRange<K> range) {
         return decorateDerived(range.applyToMap(decorated()), range);
     }
 

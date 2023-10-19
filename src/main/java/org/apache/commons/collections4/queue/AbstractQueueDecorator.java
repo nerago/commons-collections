@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.queue;
 
+import java.util.List;
 import java.util.Queue;
 
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
@@ -36,7 +37,7 @@ import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
  * @param <E> the type of the elements in the queue
  * @since 4.0
  */
-public abstract class AbstractQueueDecorator<E> extends AbstractCollectionDecorator<E>
+public abstract class AbstractQueueDecorator<E> extends AbstractCollectionDecorator<E, Queue<E>>
         implements Queue<E> {
 
     /** Serialization version */
@@ -57,17 +58,6 @@ public abstract class AbstractQueueDecorator<E> extends AbstractCollectionDecora
     protected AbstractQueueDecorator(final Queue<E> queue) {
         super(queue);
     }
-
-    /**
-     * Gets the queue being decorated.
-     *
-     * @return the decorated queue
-     */
-    @Override
-    protected Queue<E> decorated() {
-        return (Queue<E>) super.decorated();
-    }
-
 
     @Override
     public boolean offer(final E obj) {

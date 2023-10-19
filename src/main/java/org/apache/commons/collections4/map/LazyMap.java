@@ -161,14 +161,14 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
     @Override
     public V get(final Object key) {
         // create value for key if key is not currently in the map
-        if (!map.containsKey(key)) {
+        if (!decorated().containsKey(key)) {
             @SuppressWarnings("unchecked")
             final K castKey = (K) key;
             final V value = factory.transform(castKey);
-            map.put(castKey, value);
+            decorated().put(castKey, value);
             return value;
         }
-        return map.get(key);
+        return decorated().get(key);
     }
 
     @Override
@@ -179,12 +179,12 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
 
     @Override
     public V putIfAbsent(final K key, final V ignoreCallerValue) {
-        final V mapValue = map.get(key);
+        final V mapValue = decorated().get(key);
         if (mapValue != null) {
             return mapValue;
         } else {
             final V value = factory.transform(key);
-            map.put(key, value);
+            decorated().put(key, value);
             return value;
         }
     }
@@ -192,12 +192,12 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
     @Override
     public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
-        final V mapValue = map.get(key);
+        final V mapValue = decorated().get(key);
         if (mapValue != null) {
             return mapValue;
         } else {
             final V value = factory.transform(key);
-            map.put(key, value);
+            decorated().put(key, value);
             return value;
         }
     }
@@ -206,22 +206,22 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
     public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
-        final V oldMapValue = map.get(key);
-        if (oldMapValue == null && map.containsKey(key)) {
+        final V oldMapValue = decorated().get(key);
+        if (oldMapValue == null && decorated().containsKey(key)) {
             return null;
         } else if (oldMapValue != null) {
             final V newValue = remappingFunction.apply(key, oldMapValue);
             if (newValue != null) {
-                map.put(key, newValue);
+                decorated().put(key, newValue);
             } else {
-                map.remove(key);
+                decorated().remove(key);
             }
             return newValue;
         } else {
             final V factoryValue = factory.transform(key);
             final V newValue = remappingFunction.apply(key, factoryValue);
             if (newValue != null) {
-                map.put(key, newValue);
+                decorated().put(key, newValue);
             }
             return newValue;
         }
@@ -231,20 +231,20 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
     public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
-        final V oldMapValue = map.get(key);
+        final V oldMapValue = decorated().get(key);
         if (oldMapValue != null) {
             final V newValue = remappingFunction.apply(key, oldMapValue);
             if (newValue != null) {
-                map.put(key, newValue);
+                decorated().put(key, newValue);
             } else {
-                map.remove(key);
+                decorated().remove(key);
             }
             return newValue;
         } else {
             final V factoryValue = factory.transform(key);
             final V newValue = remappingFunction.apply(key, factoryValue);
             if (newValue != null) {
-                map.put(key, newValue);
+                decorated().put(key, newValue);
             }
             return newValue;
         }
@@ -255,21 +255,21 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
         Objects.requireNonNull(remappingFunction);
         Objects.requireNonNull(paramValue);
 
-        final V oldMapValue = map.get(key);
-        if (oldMapValue != null || map.containsKey(key)) {
+        final V oldMapValue = decorated().get(key);
+        if (oldMapValue != null || decorated().containsKey(key)) {
             final V initialValue = oldMapValue != null ? oldMapValue : factory.transform(key);
             final V newValue = remappingFunction.apply(initialValue, paramValue);
             if (newValue != null) {
-                map.put(key, newValue);
+                decorated().put(key, newValue);
             } else {
-                map.remove(key);
+                decorated().remove(key);
             }
             return newValue;
         } else {
             final V factoryValue = factory.transform(key);
             final V newValue = remappingFunction.apply(factoryValue, paramValue);
             if (newValue != null) {
-                map.put(key, newValue);
+                decorated().put(key, newValue);
             }
             return newValue;
         }
@@ -277,7 +277,7 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
 
     @Override
     public boolean remove(final Object key, final Object value) {
-        if (map.remove(key, value)) {
+        if (decorated().remove(key, value)) {
             return true;
         } else {
             @SuppressWarnings("unchecked")
@@ -288,19 +288,19 @@ public class LazyMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
 
     @Override
     public V replace(final K key, final V value) {
-        final boolean wasContained = map.containsKey(key);
-        final V oldValue = map.put(key, value);
+        final boolean wasContained = decorated().containsKey(key);
+        final V oldValue = decorated().put(key, value);
         return wasContained ? oldValue : factory.transform(key);
     }
 
     @Override
     public boolean replace(final K key, final V oldValue, final V newValue) {
-        final V mapValue = map.get(key);
-        final V currentValue = (mapValue != null || map.containsKey(key))
+        final V mapValue = decorated().get(key);
+        final V currentValue = (mapValue != null || decorated().containsKey(key))
                                ? mapValue
                                : factory.transform(key);
         if (Objects.equals(currentValue, oldValue)) {
-            map.put(key, newValue);
+            decorated().put(key, newValue);
             return true;
         }
         return false;

@@ -25,7 +25,7 @@ import java.util.Set;
  * @since 3.1
  */
 public abstract class AbstractSerializableSetDecorator<E>
-        extends AbstractSetDecorator<E> {
+        extends AbstractSetDecorator<E, Set<E>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 1229469966212206107L;

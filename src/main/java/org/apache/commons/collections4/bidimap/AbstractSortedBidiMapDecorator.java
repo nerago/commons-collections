@@ -40,12 +40,12 @@ import org.apache.commons.collections4.SortedMapRange;
  * @since 3.0
  */
 public abstract class AbstractSortedBidiMapDecorator<K, V,
-            Decorated extends SortedBidiMap<K, V, ?, ?>,
-            DecoratedInverse extends SortedBidiMap<V, K, ?, ?>,
-            SubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?>,
-            InverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?>>
-        extends AbstractOrderedBidiMapDecorator<K, V, Decorated, DecoratedInverse, InverseMap>
-        implements SortedBidiMap<K, V, SubMap, InverseMap> {
+            TDecorated extends SortedBidiMap<K, V, ?, ?>,
+            TDecoratedInverse extends SortedBidiMap<V, K, ?, ?>,
+            TSubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?>,
+            TInverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?>>
+        extends AbstractOrderedBidiMapDecorator<K, V, TDecorated, TDecoratedInverse, TInverseMap>
+        implements SortedBidiMap<K, V, TSubMap, TInverseMap> {
 
     private static final long serialVersionUID = -2025553015999206418L;
 
@@ -55,11 +55,11 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    public AbstractSortedBidiMapDecorator(final Decorated map) {
+    public AbstractSortedBidiMapDecorator(final TDecorated map) {
         super(map);
     }
 
-    protected abstract SubMap decorateDerived(final Decorated map);
+    protected abstract TSubMap decorateDerived(final TDecorated map);
 
     @Override
     public Comparator<? super K> comparator() {
@@ -72,7 +72,7 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
     }
 
     @Override
-    public SubMap subMap(final SortedMapRange<K> range) {
+    public TSubMap subMap(final SortedMapRange<K> range) {
         return decorateDerived(range.applyToMap(decorated()));
     }
 

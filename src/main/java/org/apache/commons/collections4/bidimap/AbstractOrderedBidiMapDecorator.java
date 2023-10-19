@@ -38,11 +38,11 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @since 3.0
  */
 public abstract class AbstractOrderedBidiMapDecorator<K, V,
-            Decorated extends OrderedBidiMap<K, V, ?>,
-            DecoratedInverse extends OrderedBidiMap<V, K, ?>,
-            InverseMap extends AbstractOrderedBidiMapDecorator<V, K, ?, ?, ?>>
-        extends AbstractBidiMapDecorator<K, V, Decorated, DecoratedInverse, InverseMap>
-        implements OrderedBidiMap<K, V, InverseMap> {
+            TDecorated extends OrderedBidiMap<K, V, ?>,
+            TDecoratedInverse extends OrderedBidiMap<V, K, ?>,
+            TInverseMap extends AbstractOrderedBidiMapDecorator<V, K, ?, ?, ?>>
+        extends AbstractBidiMapDecorator<K, V, TDecorated, TDecoratedInverse, TInverseMap>
+        implements OrderedBidiMap<K, V, TInverseMap> {
 
     private static final long serialVersionUID = 7010751296610809092L;
 
@@ -52,7 +52,7 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V,
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    protected AbstractOrderedBidiMapDecorator(final Decorated map) {
+    protected AbstractOrderedBidiMapDecorator(final TDecorated map) {
         super(map);
     }
 

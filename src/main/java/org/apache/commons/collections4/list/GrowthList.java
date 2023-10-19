@@ -57,7 +57,7 @@ import java.util.List;
  * @see LazyList
  * @since 3.2
  */
-public class GrowthList<E> extends AbstractSerializableListDecorator<E> {
+public class GrowthList<E> extends AbstractSerializableListDecorator<E, List<E>, List<E>> {
 
     /** Serialization version */
     private static final long serialVersionUID = -3620001881672L;
@@ -185,6 +185,11 @@ public class GrowthList<E> extends AbstractSerializableListDecorator<E> {
             decorated().addAll(Collections.<E>nCopies(index - size + 1, null));
         }
         return decorated().set(index, element);
+    }
+
+    @Override
+    protected List<E> decorateSubList(final List<E> subList) {
+        return subList; // doesn't decorate its sub-lists at all
     }
 
 }

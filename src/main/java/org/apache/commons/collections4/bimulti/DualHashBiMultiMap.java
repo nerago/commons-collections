@@ -426,7 +426,7 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
         return new MapIteratorForSets<>(this, valueMap, keyMap);
     }
 
-    private static final class SetView<S, O> extends AbstractSetDecorator<S> {
+    private static final class SetView<S, O> extends AbstractSetDecorator<S, Set<S>> {
         private static final long serialVersionUID = -994466265223876023L;
         private final DualHashBiMultiMap<?, ?> parent;
         private final Map<S, SlotSet<O>> primaryMap;

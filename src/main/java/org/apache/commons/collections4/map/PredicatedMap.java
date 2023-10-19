@@ -50,8 +50,8 @@ import org.apache.commons.collections4.Predicate;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class PredicatedMap<K, V, Decorated extends Map<K, V>>
-        extends AbstractInputCheckedMapDecorator<K, V, Decorated> {
+public class PredicatedMap<K, V, TDecorated extends Map<K, V>>
+        extends AbstractInputCheckedMapDecorator<K, V, TDecorated> {
 
     /** Serialization version */
     private static final long serialVersionUID = 7412622456128415156L;
@@ -91,7 +91,7 @@ public class PredicatedMap<K, V, Decorated extends Map<K, V>>
      * @param valuePredicate  the predicate to validate to values, null means no check
      * @throws NullPointerException if the map is null
      */
-    protected PredicatedMap(final Decorated map, final Predicate<? super K> keyPredicate,
+    protected PredicatedMap(final TDecorated map, final Predicate<? super K> keyPredicate,
                             final Predicate<? super V> valuePredicate) {
         super(map);
         this.keyPredicate = keyPredicate;

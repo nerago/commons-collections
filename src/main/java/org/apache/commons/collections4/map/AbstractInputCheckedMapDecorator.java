@@ -44,8 +44,8 @@ import org.apache.commons.collections4.set.AbstractSetDecorator;
  *
  * @since 3.1
  */
-abstract class AbstractInputCheckedMapDecorator<K, V, Decorated extends Map<K, V>>
-        extends AbstractMapDecorator<K, V, Decorated> {
+abstract class AbstractInputCheckedMapDecorator<K, V, TDecorated extends Map<K, V>>
+        extends AbstractMapDecorator<K, V, TDecorated> {
 
     private static final long serialVersionUID = 6321139819267289886L;
 
@@ -61,7 +61,7 @@ abstract class AbstractInputCheckedMapDecorator<K, V, Decorated extends Map<K, V
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if map is null
      */
-    protected AbstractInputCheckedMapDecorator(final Decorated map) {
+    protected AbstractInputCheckedMapDecorator(final TDecorated map) {
         super(map);
     }
 
@@ -101,15 +101,15 @@ abstract class AbstractInputCheckedMapDecorator<K, V, Decorated extends Map<K, V
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
         if (isSetValueChecking()) {
-            return new EntrySet(map.entrySet(), this);
+            return new EntrySet(decorated().entrySet(), this);
         }
-        return map.entrySet();
+        return decorated().entrySet();
     }
 
     /**
      * Implementation of an entry set that checks additions via setValue.
      */
-    private class EntrySet extends AbstractSetDecorator<Map.Entry<K, V>> {
+    private class EntrySet extends AbstractSetDecorator<Map.Entry<K, V>, Set<Map.Entry<K, V>>> {
 
         /** Generated serial version ID. */
         private static final long serialVersionUID = 4354731610923110264L;

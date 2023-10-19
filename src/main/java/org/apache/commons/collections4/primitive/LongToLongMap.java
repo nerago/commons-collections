@@ -64,6 +64,7 @@ public final class LongToLongMap implements Externalizable {
     private transient float loadFactor;
     /** The size of the map */
     private transient int size;
+    // TODO try with just a flat array?
     /** Map entries */
     private transient LongHashEntry[] data;
     /** Size at which to rehash */
@@ -570,6 +571,34 @@ public final class LongToLongMap implements Externalizable {
             }
         }
         return false;
+    }
+
+    public Long compute(final long key, final LongCompute remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        final int hashCode = hash(key);
+        final int index = hashIndex(hashCode, data.length);
+        LongHashEntry entry = data[index];
+        LongHashEntry previous = null;
+        while (entry != null) {
+            if (entry.key == key) {
+                final long oldValue = entry.value;
+                final Long newValue = remappingFunction.apply(key, true, oldValue);
+                if (newValue != null) {
+                    entry.value = newValue;
+                } else {
+                    removeMapping(entry, index, previous);
+                }
+                return newValue;
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+
+        final Long newValue = remappingFunction.apply(key, false, 0);
+        if (newValue != null) {
+            addMapping(index, hashCode, key, newValue);
+        }
+        return newValue;
     }
 
     /**
@@ -1806,44 +1835,24 @@ public final class LongToLongMap implements Externalizable {
 
         @Override
         public long getKeyLong() {
-            return 0;
+            if (current == null)
+                throw new IllegalStateException();
+            return current.key;
         }
 
         @Override
         public long getValueLong() {
-            return 0;
+            if (current == null)
+                throw new IllegalStateException();
+            return current.value;
         }
 
         @Override
-        public long setValue(long value) {
-            return 0;
+        public long setValue(final long value) {
+            if (current == null)
+                throw new IllegalStateException();
+            return current.setValueLong(value);
         }
-        
-//        @Override
-//        public long nextLong() {
-//            return nextEntry().key;
-//        }
-//
-//        @Override
-//        public long getValue() {
-//            if (current == null)
-//                throw new IllegalStateException();
-//            return current.value;
-//        }
-//
-//        @Override
-//        public long getKeyLong() {
-//            if (current == null)
-//                throw new IllegalStateException();
-//            return current.key;
-//        }
-
-//        @Override
-//        public long setValue(final long value) {
-//            if (current == null)
-//                throw new IllegalStateException();
-//            return current.setValue(value);
-//        }
     }
 
     private abstract class LongBaseSpliterator<T extends LongToLongMap.LongBaseSpliterator<T>> {

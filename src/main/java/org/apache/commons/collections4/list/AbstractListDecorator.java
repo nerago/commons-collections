@@ -31,7 +31,8 @@ import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
  * @param <E> the type of the elements in the list
  * @since 3.0
  */
-public abstract class AbstractListDecorator<E> extends AbstractCollectionDecorator<E>
+public abstract class AbstractListDecorator<E, TDecorated extends List<E>, TSubList extends List<E>>
+        extends AbstractCollectionDecorator<E, TDecorated>
         implements List<E> {
 
     /** Serialization version--necessary in an abstract class? */
@@ -50,18 +51,8 @@ public abstract class AbstractListDecorator<E> extends AbstractCollectionDecorat
      * @param list  the list to decorate, must not be null
      * @throws NullPointerException if list is null
      */
-    protected AbstractListDecorator(final List<E> list) {
+    protected AbstractListDecorator(final TDecorated list) {
         super(list);
-    }
-
-    /**
-     * Gets the list being decorated.
-     *
-     * @return the decorated list
-     */
-    @Override
-    protected List<E> decorated() {
-        return (List<E>) super.decorated();
     }
 
     @Override
@@ -121,8 +112,10 @@ public abstract class AbstractListDecorator<E> extends AbstractCollectionDecorat
     }
 
     @Override
-    public List<E> subList(final int fromIndex, final int toIndex) {
-        return decorated().subList(fromIndex, toIndex);
+    public final TSubList subList(final int fromIndex, final int toIndex) {
+        return decorateSubList(decorated().subList(fromIndex, toIndex));
     }
+
+    protected abstract TSubList decorateSubList(List<E> subList);
 
 }

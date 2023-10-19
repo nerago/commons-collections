@@ -36,7 +36,7 @@ import org.apache.commons.collections4.Bag;
  * @param <E> the type of elements in this bag
  * @since 4.0
  */
-public final class CollectionBag<E> extends AbstractBagDecorator<E> {
+public final class CollectionBag<E> extends AbstractBagDecorator<E, Bag<E>> {
 
     /** Serialization version */
     private static final long serialVersionUID = -2560033712679053143L;

@@ -54,7 +54,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  *
  * @since 3.0
  */
-public class SetUniqueList<E> extends AbstractSerializableListDecorator<E> {
+public class SetUniqueList<E> extends AbstractSerializableListDecorator<E, List<E>, List<E>> {
 
     /** Serialization version. */
     private static final long serialVersionUID = 7196982186153478694L;
@@ -347,10 +347,9 @@ public class SetUniqueList<E> extends AbstractSerializableListDecorator<E> {
      * subList can invalidate the parent list.
      */
     @Override
-    public List<E> subList(final int fromIndex, final int toIndex) {
-        final List<E> superSubList = super.subList(fromIndex, toIndex);
-        final Set<E> subSet = createSetBasedOnList(set, superSubList);
-        return ListUtils.unmodifiableList(new SetUniqueList<>(superSubList, subSet));
+    protected List<E> decorateSubList(final List<E> subList) {
+        final Set<E> subSet = createSetBasedOnList(set, subList);
+        return ListUtils.unmodifiableList(new SetUniqueList<>(subList, subSet));
     }
 
     /**

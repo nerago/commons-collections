@@ -64,7 +64,7 @@ import org.apache.commons.collections4.Transformer;
  * @see GrowthList
  * @since 3.0
  */
-public class LazyList<E> extends AbstractSerializableListDecorator<E> {
+public class LazyList<E> extends AbstractSerializableListDecorator<E, List<E>, LazyList<E>> {
 
     /** Serialization version */
     private static final long serialVersionUID = -3677737457567429713L;
@@ -166,13 +166,12 @@ public class LazyList<E> extends AbstractSerializableListDecorator<E> {
     }
 
     @Override
-    public List<E> subList(final int fromIndex, final int toIndex) {
-        final List<E> sub = decorated().subList(fromIndex, toIndex);
+    protected LazyList<E> decorateSubList(final List<E> subList) {
         if (factory != null) {
-            return new LazyList<>(sub, factory);
+            return new LazyList<>(subList, factory);
         }
         if (transformer != null) {
-            return new LazyList<>(sub, transformer);
+            return new LazyList<>(subList, transformer);
         }
         throw new IllegalStateException("Factory and Transformer are both null!");
     }

@@ -178,7 +178,7 @@ public class DualTreeBidiMap<K, V>
 
     @Override
     public DualTreeBidiMap<K, V> subMap(final SortedMapRange<K> range) {
-        return new ViewMap<>(range.applyToNavMap(normalMap), reverseMap, range);
+        return new ViewMap<>(range.applyToNavigableMap(normalMap), reverseMap, range);
     }
 
     @Override

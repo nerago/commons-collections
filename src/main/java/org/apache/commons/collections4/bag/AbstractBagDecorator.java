@@ -30,8 +30,8 @@ import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
  * @param <E> the type of elements in this bag
  * @since 3.0
  */
-public abstract class AbstractBagDecorator<E>
-        extends AbstractCollectionDecorator<E> implements Bag<E> {
+public abstract class AbstractBagDecorator<E, TDecorated extends Bag<E>>
+        extends AbstractCollectionDecorator<E, TDecorated> implements Bag<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = -3768146017343785417L;
@@ -49,18 +49,8 @@ public abstract class AbstractBagDecorator<E>
      * @param bag  the bag to decorate, must not be null
      * @throws NullPointerException if bag is null
      */
-    protected AbstractBagDecorator(final Bag<E> bag) {
+    protected AbstractBagDecorator(final TDecorated bag) {
         super(bag);
-    }
-
-    /**
-     * Gets the bag being decorated.
-     *
-     * @return the decorated bag
-     */
-    @Override
-    protected Bag<E> decorated() {
-        return (Bag<E>) super.decorated();
     }
 
     @Override

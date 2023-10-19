@@ -42,12 +42,12 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableOrderedBidiMap<K, V,
-            Decorated extends OrderedBidiMap<K, V, ?>,
-            DecoratedInverse extends OrderedBidiMap<V, K, ?>>
+            TDecorated extends OrderedBidiMap<K, V, ?>,
+            TDecoratedInverse extends OrderedBidiMap<V, K, ?>>
         extends AbstractOrderedBidiMapDecorator<K, V,
-            Decorated,
-            DecoratedInverse,
-            UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, ?>>
+            TDecorated,
+            TDecoratedInverse,
+            UnmodifiableOrderedBidiMap<V, K, TDecoratedInverse, ?>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -83,7 +83,7 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      */
     @SuppressWarnings("unchecked") // safe to upcast
     private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, ?> map) {
-        super((Decorated) map);
+        super((TDecorated) map);
     }
 
     @Override
@@ -175,8 +175,8 @@ public final class UnmodifiableOrderedBidiMap<K, V,
     }
 
     @Override
-    protected UnmodifiableOrderedBidiMap<V, K, DecoratedInverse, Decorated> decorateInverse(final DecoratedInverse decoratedInverse) {
-        return null;
+    protected UnmodifiableOrderedBidiMap<V, K, TDecoratedInverse, TDecorated> decorateInverse(final TDecoratedInverse inverse) {
+        return new UnmodifiableOrderedBidiMap<>(inverse);
     }
 
     @Override
@@ -215,6 +215,6 @@ public final class UnmodifiableOrderedBidiMap<K, V,
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        setMap((Decorated) in.readObject());
+        setMap((TDecorated) in.readObject());
     }
 }

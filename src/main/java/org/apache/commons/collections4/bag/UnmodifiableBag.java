@@ -44,7 +44,7 @@ import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
  * @since 3.0
  */
 public final class UnmodifiableBag<E>
-        extends AbstractBagDecorator<E> implements Unmodifiable {
+        extends AbstractBagDecorator<E, Bag<E>> implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = -1873799975157099624L;

@@ -46,7 +46,7 @@ import org.apache.commons.collections4.iterators.UnmodifiableIterator;
  * @since 3.0
  */
 public class FixedSizeList<E>
-        extends AbstractSerializableListDecorator<E>
+        extends AbstractSerializableListDecorator<E, List<E>, FixedSizeList<E>>
         implements BoundedCollection<E> {
 
     /** Serialization version */
@@ -164,9 +164,8 @@ public class FixedSizeList<E>
     }
 
     @Override
-    public List<E> subList(final int fromIndex, final int toIndex) {
-        final List<E> sub = decorated().subList(fromIndex, toIndex);
-        return new FixedSizeList<>(sub);
+    protected FixedSizeList<E> decorateSubList(final List<E> subList) {
+        return new FixedSizeList<>(subList);
     }
 
     /**

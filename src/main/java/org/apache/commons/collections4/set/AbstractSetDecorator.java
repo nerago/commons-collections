@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.set;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
@@ -29,8 +31,9 @@ import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
  * @param <E> the type of the elements in this set
  * @since 3.0
  */
-public abstract class AbstractSetDecorator<E> extends AbstractCollectionDecorator<E> implements
-        Set<E> {
+public abstract class AbstractSetDecorator<E, TDecorated extends Set<E>>
+        extends AbstractCollectionDecorator<E, TDecorated>
+        implements Set<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = -4678668309576958546L;
@@ -48,18 +51,8 @@ public abstract class AbstractSetDecorator<E> extends AbstractCollectionDecorato
      * @param set  the set to decorate, must not be null
      * @throws NullPointerException if set is null
      */
-    protected AbstractSetDecorator(final Set<E> set) {
+    protected AbstractSetDecorator(final TDecorated set) {
         super(set);
-    }
-
-    /**
-     * Gets the set being decorated.
-     *
-     * @return the decorated set
-     */
-    @Override
-    protected Set<E> decorated() {
-        return (Set<E>) super.decorated();
     }
 
     @Override

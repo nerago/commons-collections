@@ -95,15 +95,6 @@ public class FixedSizeSortedMap<K, V>
         super(map, keyRange);
     }
 
-    /**
-     * Gets the map being decorated.
-     *
-     * @return the decorated map
-     */
-    protected SortedMap<K, V> getSortedMap() {
-        return (SortedMap<K, V>) map;
-    }
-
     @Override
     protected FixedSizeSortedMap<K, V> decorateDerived(final SortedMap<K, V> subMap, final SortedMapRange<K> keyRange) {
         return new FixedSizeSortedMap<>(subMap, keyRange);
@@ -117,7 +108,7 @@ public class FixedSizeSortedMap<K, V>
      */
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
-        out.writeObject(map);
+        out.writeObject(decorated());
     }
 
     /**
@@ -130,15 +121,15 @@ public class FixedSizeSortedMap<K, V>
     @SuppressWarnings("unchecked") // (1) should only fail if input stream is incorrect
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        map = (SortedMap<K, V>) in.readObject(); // (1)
+        setMap((SortedMap<K, V>) in.readObject()); // (1)
     }
 
     @Override
     public V put(final K key, final V value) {
-        if (!map.containsKey(key)) {
+        if (!decorated().containsKey(key)) {
             throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
         }
-        return map.put(key, value);
+        return decorated().put(key, value);
     }
 
     @Override
@@ -146,13 +137,13 @@ public class FixedSizeSortedMap<K, V>
         if (!CollectionUtils.isSubCollection(mapToCopy.keySet(), keySet())) {
             throw new IllegalArgumentException(FixedSizeMap.EXCEPTION_NEW_KEY);
         }
-        map.putAll(mapToCopy);
+        decorated().putAll(mapToCopy);
     }
 
     @Override
     public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
-        if (map.containsKey(key)) {
+        if (decorated().containsKey(key)) {
             final V oldValue = get(key);
             if (oldValue != null) {
                 return oldValue;
@@ -197,17 +188,17 @@ public class FixedSizeSortedMap<K, V>
 
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return UnmodifiableSet.unmodifiableSet(map.entrySet());
+        return UnmodifiableSet.unmodifiableSet(decorated().entrySet());
     }
 
     @Override
     public Set<K> keySet() {
-        return UnmodifiableSet.unmodifiableSet(map.keySet());
+        return UnmodifiableSet.unmodifiableSet(decorated().keySet());
     }
 
     @Override
     public Collection<V> values() {
-        return UnmodifiableCollection.unmodifiableCollection(map.values());
+        return UnmodifiableCollection.unmodifiableCollection(decorated().values());
     }
 
     @Override
@@ -223,7 +214,7 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
-        if (map.containsKey(key)) {
+        if (decorated().containsKey(key)) {
             final V oldValue = get(key);
             if (oldValue == null) {
                 return null;
@@ -244,7 +235,7 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
-        if (map.containsKey(key)) {
+        if (decorated().containsKey(key)) {
             final V oldValue = get(key);
             final V newValue = remappingFunction.apply(key, oldValue);
             if (newValue != null) {
@@ -265,7 +256,7 @@ public class FixedSizeSortedMap<K, V>
     @Override
     public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
-        if (map.containsKey(key)) {
+        if (decorated().containsKey(key)) {
             final V oldValue = get(key);
             final V newValue = remappingFunction.apply(oldValue, value);
             if (newValue != null) {

@@ -588,7 +588,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        protected NavigableRangedSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+        protected BaseNavigableSet<K, K, V> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
             return new KeySetUsingValueMap<>(subSet, range, parent);
         }
     }

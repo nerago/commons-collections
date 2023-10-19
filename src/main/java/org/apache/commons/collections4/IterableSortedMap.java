@@ -26,7 +26,7 @@ import java.util.SortedMap;
  *
  * @since 4.0
  */
-public interface IterableSortedMap<K, V, SubMap extends IterableSortedMap<K, V, ?>>
-        extends SortedRangedMap<K, V, SubMap>, OrderedMap<K, V> {
+public interface IterableSortedMap<K, V, TSubMap extends IterableSortedMap<K, V, ?>>
+        extends SortedRangedMap<K, V, TSubMap>, OrderedMap<K, V> {
 
 }

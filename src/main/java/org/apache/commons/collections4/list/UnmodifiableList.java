@@ -26,7 +26,6 @@ import java.util.function.Predicate;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.iterators.UnmodifiableListIterator;
-import org.apache.commons.collections4.spliterators.AbstractSpliteratorDecorator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
 
 /**
@@ -41,7 +40,7 @@ import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
  * @since 3.0
  */
 public final class UnmodifiableList<E>
-        extends AbstractSerializableListDecorator<E>
+        extends AbstractSerializableListDecorator<E, List<E>, UnmodifiableList<E>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -155,8 +154,7 @@ public final class UnmodifiableList<E>
     }
 
     @Override
-    public List<E> subList(final int fromIndex, final int toIndex) {
-        final List<E> sub = decorated().subList(fromIndex, toIndex);
+    protected UnmodifiableList<E> decorateSubList(final List<E> sub) {
         return new UnmodifiableList<>(sub);
     }
 

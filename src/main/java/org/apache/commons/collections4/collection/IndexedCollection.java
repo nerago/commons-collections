@@ -19,10 +19,8 @@ package org.apache.commons.collections4.collection;
 import java.util.*;
 import java.util.function.Predicate;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.map.MultiValueMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 /**
@@ -51,7 +49,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
  *
  * @since 4.0
  */
-public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C> {
+public class IndexedCollection<K, C> extends AbstractCollectionDecorator<C, Collection<C>> {
 
     /** Serialization version */
     private static final long serialVersionUID = -5512610452568370038L;

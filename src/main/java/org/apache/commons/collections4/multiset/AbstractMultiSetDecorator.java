@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.multiset;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.MultiSet;
@@ -31,7 +32,7 @@ import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
  * @since 4.1
  */
 public abstract class AbstractMultiSetDecorator<E>
-        extends AbstractCollectionDecorator<E> implements MultiSet<E> {
+        extends AbstractCollectionDecorator<E, MultiSet<E>> implements MultiSet<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = 20150610L;
@@ -50,16 +51,6 @@ public abstract class AbstractMultiSetDecorator<E>
      */
     protected AbstractMultiSetDecorator(final MultiSet<E> multiset) {
         super(multiset);
-    }
-
-    /**
-     * Gets the multiset being decorated.
-     *
-     * @return the decorated multiset
-     */
-    @Override
-    protected MultiSet<E> decorated() {
-        return (MultiSet<E>) super.decorated();
     }
 
     @Override

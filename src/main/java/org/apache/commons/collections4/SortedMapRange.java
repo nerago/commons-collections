@@ -17,31 +17,34 @@
 package org.apache.commons.collections4;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.SortedMap;
+import java.util.SortedSet;
 
 import org.apache.commons.collections4.map.EmptyMap;
 
 /**
  * Represents the range of keys/values included in a given instance of sub collection.
- * @param <K> the element object type (usually a key)
+ * @param <T> the element object type (usually a key)
  *
  * @see SortedMap#subMap(Object, Object)
  * @see NavigableMap#subMap(Object, boolean, Object, boolean)
  * @see java.util.SortedSet#subSet(Object, Object)
  * @see java.util.NavigableSet#subSet(Object, boolean, Object, boolean)
  */
-public final class SortedMapRange<K> implements Serializable {
+public final class SortedMapRange<T> implements Serializable {
     private static final long serialVersionUID = 5904683499000042719L;
 
     /** The key to start from, null if the beginning. */
-    private final K fromKey;
+    private final T fromKey;
 
     /** The key to end at, null if till the end. */
-    private final K toKey;
+    private final T toKey;
 
     /** Whether the 'from' is inclusive. */
     private final boolean fromInclusive;
@@ -50,11 +53,11 @@ public final class SortedMapRange<K> implements Serializable {
     private final boolean toInclusive;
 
     /** Comparator which defines key order. */
-    private final Comparator<? super K> comparator;
+    private final Comparator<? super T> comparator;
 
-    private SortedMapRange(final K fromKey, final boolean fromInclusive,
-                           final K toKey, final boolean toInclusive,
-                           final Comparator<? super K> comparator) {
+    private SortedMapRange(final T fromKey, final boolean fromInclusive,
+                           final T toKey, final boolean toInclusive,
+                           final Comparator<? super T> comparator) {
         if (fromKey != null && toKey != null && comparator.compare(fromKey, toKey) > 0) {
             throw new IllegalArgumentException("fromKey > toKey");
         }
@@ -77,7 +80,7 @@ public final class SortedMapRange<K> implements Serializable {
     /**
      * Returns the FROM Key.
      */
-    public K getFromKey() {
+    public T getFromKey() {
         return fromKey;
     }
 
@@ -95,7 +98,7 @@ public final class SortedMapRange<K> implements Serializable {
     /**
      * Returns the TO Key.
      */
-    public K getToKey() {
+    public T getToKey() {
         return toKey;
     }
 
@@ -128,45 +131,45 @@ public final class SortedMapRange<K> implements Serializable {
         return fromKey == null && toKey == null && comparator == null;
     }
 
-    public SortedMapRange<K> subRange(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
+    public SortedMapRange<T> subRange(final T fromKey, final boolean fromInclusive, final T toKey, final boolean toInclusive) {
         if (fromKey == null && toKey == null) {
             throw new IllegalArgumentException("SortedMapRange sub must have a from or to");
         }
         return makeSubRange(fromKey, fromInclusive, toKey, toInclusive);
     }
 
-    public SortedMapRange<K> tail(final K fromKey, final boolean fromInclusive) {
+    public SortedMapRange<T> tail(final T fromKey, final boolean fromInclusive) {
         if (fromKey == null) {
             throw new IllegalArgumentException("SortedMapRange tail must have a from");
         }
         return makeSubRange(fromKey, fromInclusive, null, false);
     }
 
-    public SortedMapRange<K> head(final K toKey, final boolean toInclusive) {
+    public SortedMapRange<T> head(final T toKey, final boolean toInclusive) {
         if (toKey == null) {
             throw new IllegalArgumentException("SortedMapRange head must have a to");
         }
         return makeSubRange(null, false, toKey, toInclusive);
     }
 
-    public SortedMapRange<K> subRange(final K fromKey, final K toKey) {
+    public SortedMapRange<T> subRange(final T fromKey, final T toKey) {
         return subRange(fromKey, true, toKey, false);
     }
 
-    public SortedMapRange<K> tail(final K fromKey) {
+    public SortedMapRange<T> tail(final T fromKey) {
         return tail(fromKey, true);
     }
 
-    public SortedMapRange<K> head(final K toKey) {
+    public SortedMapRange<T> head(final T toKey) {
         return head(toKey, false);
     }
 
-    private int compare(final K a, final K b) {
+    private int compare(final T a, final T b) {
         assert a != null && b != null;
         return comparator.compare(a, b);
     }
 
-    private SortedMapRange<K> makeSubRange(final K fromKey, final boolean fromInclusive, final K toKey, final boolean toInclusive) {
+    private SortedMapRange<T> makeSubRange(final T fromKey, final boolean fromInclusive, final T toKey, final boolean toInclusive) {
         if (isEmpty()) {
             throw new IllegalArgumentException("Can't take sub range of an empty range");
         }
@@ -189,14 +192,14 @@ public final class SortedMapRange<K> implements Serializable {
     /**
      * Returns true if the provided key is greater than TO and less than FROM.
      */
-    public boolean inRange(final K key) {
+    public boolean inRange(final T key) {
         return inFromRange(key) && inToRange(key);
     }
 
     /**
      * Returns true if the provided key is in the FROM range of the {@link SortedMapRange}.
      */
-    public boolean inFromRange(final K key) {
+    public boolean inFromRange(final T key) {
         if (isEmpty() || key == null) {
             return false;
         } else if (fromKey == null) {
@@ -209,7 +212,7 @@ public final class SortedMapRange<K> implements Serializable {
         return ret > 0;
     }
 
-    public boolean rangeInFromRange(final K key, final boolean inclusive) {
+    public boolean rangeInFromRange(final T key, final boolean inclusive) {
         if (fromKey == null) {
             return true;
         }
@@ -224,7 +227,7 @@ public final class SortedMapRange<K> implements Serializable {
     /**
      * Returns true if the provided key is in the TO range of the {@link SortedMapRange}.
      */
-    public boolean inToRange(final K key) {
+    public boolean inToRange(final T key) {
         if (isEmpty() || key == null) {
             return false;
         } else if (toKey == null) {
@@ -237,7 +240,7 @@ public final class SortedMapRange<K> implements Serializable {
         return ret < 0;
     }
 
-    private boolean rangeInToRange(final K key, final boolean inclusive) {
+    private boolean rangeInToRange(final T key, final boolean inclusive) {
         if (toKey == null) {
             return true;
         }
@@ -249,15 +252,15 @@ public final class SortedMapRange<K> implements Serializable {
         return ret < 0;
     }
 
-    public SortedMapRange<K> reversed() {
+    public SortedMapRange<T> reversed() {
         if (isEmpty()) {
             return this;
         }
         return new SortedMapRange<>(toKey, toInclusive, fromKey, fromInclusive, comparator.reversed());
     }
 
-    public K applyMapFindFirstKey(final NavigableMap<K, ?> map) {
-        final Map.Entry<K, ?> entry;
+    public T applyMapFindFirstKey(final NavigableMap<T, ?> map) {
+        final Map.Entry<T, ?> entry;
         if (fromKey == null) {
             entry = map.firstEntry();
         } else {
@@ -268,14 +271,14 @@ public final class SortedMapRange<K> implements Serializable {
             }
         }
 
-        final K key = entry != null ? entry.getKey() : null;
+        final T key = entry != null ? entry.getKey() : null;
         if (key == null || !inRange(key)) {
             throw new NoSuchElementException();
         }
         return key;
     }
 
-    public <V> NavigableMap<K, V> applyToNavMap(final NavigableMap<K, V> map) {
+    public <V> NavigableMap<T, V> applyToNavigableMap(final NavigableMap<T, V> map) {
         if (fromKey != null && toKey != null) {
             return map.subMap(fromKey, fromInclusive, toKey, toInclusive);
         } else if (fromKey != null) {
@@ -290,21 +293,55 @@ public final class SortedMapRange<K> implements Serializable {
     }
 
     @SuppressWarnings("unchecked")
-    public <V, T extends SortedMap<K, V>> T applyToMap(final T map) {
+    public <V, M extends SortedMap<T, V>> M applyToMap(final M map) {
         if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
-            return (T) map.subMap(fromKey, toKey);
+            return (M) map.subMap(fromKey, toKey);
         } else if (fromKey != null && fromInclusive && toKey == null) {
-            return (T) map.tailMap(fromKey);
+            return (M) map.tailMap(fromKey);
         } else if (fromKey == null && toKey != null && !toInclusive) {
-            return (T) map.headMap(toKey);
+            return (M) map.headMap(toKey);
         } else if (map instanceof NavigableMap) {
-            return (T) applyToNavMap((NavigableMap<K, V>) map);
+            return (M) applyToNavigableMap((NavigableMap<T, V>) map);
         } else if (isFull()) {
             return map;
         } else if (isEmpty()) {
-            return (T) EmptyMap.emptyMap();
+            return (M) EmptyMap.emptyMap();
         } else {
             throw new IllegalArgumentException("range is not applicable to basic SortedMap");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public NavigableSet<T> applyToNavigableSet(final NavigableSet<T> set) {
+        if (fromKey != null && toKey != null) {
+            return set.subSet(fromKey, fromInclusive, toKey, toInclusive);
+        } else if (fromKey != null) {
+            return set.tailSet(fromKey, fromInclusive);
+        } else if (toKey != null) {
+            return set.headSet(toKey, toInclusive);
+        } else if (isFull()) {
+            return set;
+        } else {
+            return Collections.emptyNavigableSet();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <S extends SortedSet<T>> S applyToSet(final S set) {
+        if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
+            return (S) set.subSet(fromKey, toKey);
+        } else if (fromKey != null && fromInclusive && toKey == null) {
+            return (S) set.tailSet(fromKey);
+        } else if (fromKey == null && toKey != null && !toInclusive) {
+            return (S) set.headSet(toKey);
+        } else if (set instanceof NavigableSet) {
+            return (S) applyToNavigableSet((NavigableSet<T>) set);
+        } else if (isFull()) {
+            return set;
+        } else if (isEmpty()) {
+            return (S) EmptyMap.emptyMap();
+        } else {
+            throw new IllegalArgumentException("range is not applicable to basic SortedSet");
         }
     }
 }

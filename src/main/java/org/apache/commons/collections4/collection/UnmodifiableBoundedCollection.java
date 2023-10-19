@@ -18,6 +18,7 @@ package org.apache.commons.collections4.collection;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Predicate;
@@ -47,7 +48,7 @@ import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
  * @param <E> the type of elements in this collection
  * @since 3.0
  */
-public final class UnmodifiableBoundedCollection<E> extends AbstractCollectionDecorator<E>
+public final class UnmodifiableBoundedCollection<E> extends AbstractCollectionDecorator<E, BoundedCollection<E>>
         implements BoundedCollection<E>, Unmodifiable {
 
     /** Serialization version */
@@ -94,7 +95,7 @@ public final class UnmodifiableBoundedCollection<E> extends AbstractCollectionDe
                 break;  // normal loop exit
             }
             if (collection instanceof AbstractCollectionDecorator) {
-                collection = ((AbstractCollectionDecorator<E>) collection).decorated();
+                collection = ((AbstractCollectionDecorator<E, List<E>>) collection).decorated();
             } else if (collection instanceof SynchronizedCollection) {
                 collection = ((SynchronizedCollection<E>) collection).decorated();
             }
@@ -173,10 +174,5 @@ public final class UnmodifiableBoundedCollection<E> extends AbstractCollectionDe
     @Override
     public int maxSize() {
         return decorated().maxSize();
-    }
-
-    @Override
-    protected BoundedCollection<E> decorated() {
-        return (BoundedCollection<E>) super.decorated();
     }
 }

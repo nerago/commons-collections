@@ -49,14 +49,14 @@ import org.apache.commons.collections4.MapIterator;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
+public abstract class AbstractMapDecorator<K, V, TDecorated extends Map<K, V>>
         extends AbstractIterableMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 653816313916772204L;
 
     /** The map to decorate */
-    transient Decorated map;
+    protected transient TDecorated map;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -71,7 +71,7 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    protected AbstractMapDecorator(final Decorated map) {
+    protected AbstractMapDecorator(final TDecorated map) {
         this.map = Objects.requireNonNull(map, "map");
     }
 
@@ -80,7 +80,7 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
      *
      * @return the decorated map
      */
-    protected final Decorated decorated() {
+    protected final TDecorated decorated() {
         return map;
     }
 
@@ -91,7 +91,7 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
      *
      * @param map  the decorated collection
      */
-    protected void setMap(final Decorated map) {
+    protected void setMap(final TDecorated map) {
         this.map = map;
     }
 
@@ -246,7 +246,7 @@ public abstract class AbstractMapDecorator<K, V, Decorated extends Map<K, V>>
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        map = (Decorated) in.readObject();
+        map = (TDecorated) in.readObject();
     }
 
     @Override

@@ -21,6 +21,7 @@ import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.SortedSet;
 
 /**
  * Decorates another {@code NavigableSet} to provide additional behavior.
@@ -31,9 +32,9 @@ import java.util.NavigableSet;
  * @param <E> the type of the elements in the navigable set
  * @since 4.1
  */
-public abstract class AbstractNavigableSetDecorator<E>
-        extends AbstractSortedSetDecorator<E>
-        implements NavigableRangedSet<E> {
+public abstract class AbstractNavigableSetDecorator<E, TDecorated extends NavigableSet<E>, TSubSet extends AbstractNavigableSetDecorator<E, ?, ?>>
+        extends AbstractSortedSetDecorator<E, TDecorated, TSubSet>
+        implements NavigableRangedSet<E, TSubSet> {
 
     /** Serialization version */
     private static final long serialVersionUID = 20150528L;
@@ -52,22 +53,10 @@ public abstract class AbstractNavigableSetDecorator<E>
      * @param set  the set to decorate, must not be null
      * @throws NullPointerException if set is null
      */
-    protected AbstractNavigableSetDecorator(final NavigableSet<E> set, final SortedMapRange<E> range) {
+    protected AbstractNavigableSetDecorator(final TDecorated set, final SortedMapRange<E> range) {
         super(set);
         this.range = range;
     }
-
-    /**
-     * Gets the set being decorated.
-     *
-     * @return the decorated set
-     */
-    @Override
-    protected NavigableSet<E> decorated() {
-        return (NavigableSet<E>) super.decorated();
-    }
-
-    protected abstract NavigableRangedSet<E> decorateDerived(NavigableSet<E> subSet, SortedMapRange<E> range);
 
     @Override
     public SortedMapRange<E> getRange() {
@@ -104,9 +93,10 @@ public abstract class AbstractNavigableSetDecorator<E>
         return decorated().pollLast();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public NavigableRangedSet<E> descendingSet() {
-        return decorateDerived(decorated().descendingSet(), getRange().reversed());
+    public TSubSet descendingSet() {
+        return decorateDerived((TDecorated) decorated().descendingSet(), range.reversed());
     }
 
     @Override
@@ -114,35 +104,4 @@ public abstract class AbstractNavigableSetDecorator<E>
         return decorated().descendingIterator();
     }
 
-    @Override
-    public NavigableRangedSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement,
-                                        final boolean toInclusive) {
-        return decorateDerived(decorated().subSet(fromElement, fromInclusive, toElement, toInclusive),
-                getRange().subRange(fromElement, fromInclusive, toElement, toInclusive));
-    }
-
-    @Override
-    public NavigableRangedSet<E> headSet(final E toElement, final boolean inclusive) {
-        return decorateDerived(decorated().headSet(toElement, inclusive), getRange().head(toElement, inclusive));
-    }
-
-    @Override
-    public NavigableRangedSet<E> tailSet(final E fromElement, final boolean inclusive) {
-        return decorateDerived(decorated().tailSet(fromElement, inclusive), getRange().tail(fromElement, inclusive));
-    }
-
-    @Override
-    public NavigableRangedSet<E> subSet(final E fromElement, final E toElement) {
-        return NavigableRangedSet.super.subSet(fromElement, toElement);
-    }
-
-    @Override
-    public NavigableRangedSet<E> headSet(final E toElement) {
-        return NavigableRangedSet.super.headSet(toElement);
-    }
-
-    @Override
-    public NavigableRangedSet<E> tailSet(final E fromElement) {
-        return NavigableRangedSet.super.tailSet(fromElement);
-    }
 }

@@ -16,9 +16,15 @@
  */
 package org.apache.commons.collections4.set;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.SortedSet;
+
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 
 /**
  * Decorates another {@code SortedSet} to provide additional behavior.
@@ -29,12 +35,15 @@ import java.util.SortedSet;
  * @param <E> the type of the elements in the sorted set
  * @since 3.0
  */
-public abstract class AbstractSortedSetDecorator<E>
-        extends AbstractSetDecorator<E>
-        implements SortedSet<E> {
+public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends AbstractSortedSetDecorator<E, ?, ?>>
+        extends AbstractSetDecorator<E, TDecorated>
+        implements SortedRangedSet<E, TSubSet> {
 
     /** Serialization version */
     private static final long serialVersionUID = -3462240946294214398L;
+
+    /** The range of this sub-set */
+    transient SortedMapRange<E> range;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -49,33 +58,14 @@ public abstract class AbstractSortedSetDecorator<E>
      * @param set  the set to decorate, must not be null
      * @throws NullPointerException if set is null
      */
-    protected AbstractSortedSetDecorator(final Set<E> set) {
+    protected AbstractSortedSetDecorator(final TDecorated set) {
         super(set);
+        this.range = SortedMapRange.full(set.comparator());
     }
 
-    /**
-     * Gets the set being decorated.
-     *
-     * @return the decorated set
-     */
-    @Override
-    protected SortedSet<E> decorated() {
-        return (SortedSet<E>) super.decorated();
-    }
-
-    @Override
-    public SortedSet<E> subSet(final E fromElement, final E toElement) {
-        return decorated().subSet(fromElement, toElement);
-    }
-
-    @Override
-    public SortedSet<E> headSet(final E toElement) {
-        return decorated().headSet(toElement);
-    }
-
-    @Override
-    public SortedSet<E> tailSet(final E fromElement) {
-        return decorated().tailSet(fromElement);
+    protected AbstractSortedSetDecorator(final TDecorated set, final SortedMapRange<E> range) {
+        super(set);
+        this.range = range;
     }
 
     @Override
@@ -93,4 +83,34 @@ public abstract class AbstractSortedSetDecorator<E>
         return decorated().comparator();
     }
 
+    @Override
+    public SortedMapRange<E> getRange() {
+        return range;
+    }
+
+    protected abstract TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range);
+
+    @Override
+    public final TSubSet subSet(final SortedMapRange<E> range) {
+        return decorateDerived(range.applyToSet(decorated()), range);
+    }
+
+    // TODO remove, just for compile checks
+    @Override
+    public final TSubSet subSet(final E fromElement, final E toElement) {
+        return SortedRangedSet.super.subSet(fromElement, toElement);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        range = (SortedMapRange<E>) in.readObject();
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeObject(range);
+    }
 }

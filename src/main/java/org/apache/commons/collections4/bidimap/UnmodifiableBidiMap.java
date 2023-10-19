@@ -42,12 +42,12 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableBidiMap<K, V,
-            Decorated extends BidiMap<K, V, DecoratedInverse>,
-            DecoratedInverse extends BidiMap<V, K, Decorated>>
+            TDecorated extends BidiMap<K, V, TDecoratedInverse>,
+            TDecoratedInverse extends BidiMap<V, K, TDecorated>>
         extends AbstractBidiMapDecorator<K, V,
-            Decorated,
-            DecoratedInverse,
-        UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated>>
+            TDecorated,
+            TDecoratedInverse,
+            UnmodifiableBidiMap<V, K, TDecoratedInverse, TDecorated>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -82,7 +82,7 @@ public final class UnmodifiableBidiMap<K, V,
      */
     @SuppressWarnings("unchecked") // safe to upcast
     private UnmodifiableBidiMap(final BidiMap<? extends K, ? extends V, ?> map) {
-        super((Decorated) map);
+        super((TDecorated) map);
     }
 
     @Override
@@ -180,7 +180,7 @@ public final class UnmodifiableBidiMap<K, V,
     }
 
     @Override
-    protected UnmodifiableBidiMap<V, K, DecoratedInverse, Decorated> decorateInverse(final DecoratedInverse inverse) {
+    protected UnmodifiableBidiMap<V, K, TDecoratedInverse, TDecorated> decorateInverse(final TDecoratedInverse inverse) {
         return new UnmodifiableBidiMap<>(inverse);
     }
 
@@ -192,7 +192,7 @@ public final class UnmodifiableBidiMap<K, V,
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        setMap((Decorated) in.readObject());
+        setMap((TDecorated) in.readObject());
     }
 
 }

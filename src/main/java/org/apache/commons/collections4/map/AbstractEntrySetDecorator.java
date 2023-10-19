@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorator<Map.Entry<K, V>> {
+public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorator<Map.Entry<K, V>, Set<Map.Entry<K, V>>> {
     protected AbstractEntrySetDecorator(Set<Map.Entry<K, V>> set) {
         super(set);
     }

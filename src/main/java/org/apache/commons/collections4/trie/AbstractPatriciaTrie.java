@@ -52,8 +52,8 @@ import org.apache.commons.collections4.iterators.SingletonIterator;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMap<K, V, ?>>
-        extends AbstractBitwiseTrie<K, V, SubMap> {
+public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedMap<K, V, ?>>
+        extends AbstractBitwiseTrie<K, V, TSubMap> {
 
     private static final long serialVersionUID = 5155253417231339498L;
 
@@ -993,7 +993,7 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
     }
 
     @Override
-    public SubMap prefixMap(final K key) {
+    public TSubMap prefixMap(final K key) {
         return getPrefixMapByBits(key, 0, lengthInBits(key));
     }
 
@@ -1018,7 +1018,7 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
      * @return a {@link SortedMap} view of this {@link org.apache.commons.collections4.Trie} with all elements whose
      * key is prefixed by the search key
      */
-    private SubMap getPrefixMapByBits(final K key, final int offsetInBits, final int lengthInBits) {
+    private TSubMap getPrefixMapByBits(final K key, final int offsetInBits, final int lengthInBits) {
 
         final int offsetLength = offsetInBits + lengthInBits;
         if (offsetLength > lengthInBits(key)) {
@@ -1027,15 +1027,15 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
         }
 
         if (offsetLength == 0) {
-            return (SubMap) this;
+            return (TSubMap) this;
         }
 
-        return (SubMap) new PrefixRangeMap(key, offsetInBits, lengthInBits);
+        return (TSubMap) new PrefixRangeMap(key, offsetInBits, lengthInBits);
     }
 
     @Override
-    public SubMap subMap(final SortedMapRange<K> range) {
-        return (SubMap) new BoundedRangeMap(range);
+    public TSubMap subMap(final SortedMapRange<K> range) {
+        return (TSubMap) new BoundedRangeMap(range);
     }
 
     /**
@@ -2230,7 +2230,7 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
      * A range view of the {@link org.apache.commons.collections4.Trie}.
      */
     private abstract class RangeMap extends AbstractMap<K, V>
-            implements IterableSortedMap<K, V, SubMap> {
+            implements IterableSortedMap<K, V, TSubMap> {
 
         private static final long serialVersionUID = 5837026185237818383L;
         protected SortedMapRange<K> keyRange;
@@ -2313,11 +2313,11 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
         }
 
         @Override
-        public SubMap subMap(final SortedMapRange<K> range) {
+        public TSubMap subMap(final SortedMapRange<K> range) {
             return createRangeMap(range);
         }
 
-        protected abstract SubMap createRangeMap(SortedMapRange<K> range);
+        protected abstract TSubMap createRangeMap(SortedMapRange<K> range);
     }
 
     /**
@@ -2440,8 +2440,8 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
 
         @SuppressWarnings("unchecked")
         @Override
-        protected SubMap createRangeMap(final SortedMapRange<K> keyRange) {
-            return (SubMap) new BoundedRangeMap(keyRange);
+        protected TSubMap createRangeMap(final SortedMapRange<K> keyRange) {
+            return (TSubMap) new BoundedRangeMap(keyRange);
         }
 
         @Override
@@ -2630,7 +2630,7 @@ public abstract class AbstractPatriciaTrie<K, V, SubMap extends IterableSortedMa
         }
 
         @Override
-        protected SubMap createRangeMap(SortedMapRange<K> range) {
+        protected TSubMap createRangeMap(SortedMapRange<K> range) {
             return null;
         }
 

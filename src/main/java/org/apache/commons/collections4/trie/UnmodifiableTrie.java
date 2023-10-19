@@ -45,8 +45,8 @@ import org.apache.commons.collections4.map.UnmodifiableSortedMap;
  * @param <V> the type of the values in this map
  * @since 4.0
  */
-public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMap>>
-        implements Trie<K, V, SubMap>, Unmodifiable {
+public class UnmodifiableTrie<K, V, TSubMap extends IterableSortedMap<K, V, TSubMap>>
+        implements Trie<K, V, TSubMap>, Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = -7156426030315945159L;
@@ -204,13 +204,13 @@ public class UnmodifiableTrie<K, V, SubMap extends IterableSortedMap<K, V, SubMa
     }
 
     @Override
-    public SubMap subMap(final SortedMapRange<K> range) {
-        return (SubMap) UnmodifiableSortedMap.unmodifiableSortedMap(range.applyToMap(delegate));
+    public TSubMap subMap(final SortedMapRange<K> range) {
+        return (TSubMap) UnmodifiableSortedMap.unmodifiableSortedMap(range.applyToMap(delegate));
     }
 
     @Override
-    public SubMap prefixMap(final K key) {
-        return (SubMap) Collections.unmodifiableSortedMap(delegate.prefixMap(key));
+    public TSubMap prefixMap(final K key) {
+        return (TSubMap) Collections.unmodifiableSortedMap(delegate.prefixMap(key));
     }
 
     @Override

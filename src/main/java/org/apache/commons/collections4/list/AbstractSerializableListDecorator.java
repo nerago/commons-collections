@@ -23,8 +23,8 @@ import java.util.List;
  *
  * @since 3.1
  */
-public abstract class AbstractSerializableListDecorator<E>
-        extends AbstractListDecorator<E> {
+public abstract class AbstractSerializableListDecorator<E, TDecorated extends List<E>, TSubList extends List<E>>
+        extends AbstractListDecorator<E, TDecorated, TSubList> {
 
     /** Serialization version */
     private static final long serialVersionUID = 2684959196747496299L;
@@ -35,7 +35,7 @@ public abstract class AbstractSerializableListDecorator<E>
      * @param list  the list to decorate, must not be null
      * @throws NullPointerException if list is null
      */
-    protected AbstractSerializableListDecorator(final List<E> list) {
+    protected AbstractSerializableListDecorator(final TDecorated list) {
         super(list);
     }
 

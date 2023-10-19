@@ -40,10 +40,10 @@ import java.util.*;
  * @since 3.0
  */
 public abstract class AbstractNavigableMapDecorator<K, V,
-                Decorated extends NavigableMap<K, V>,
-                SubMap extends AbstractNavigableMapDecorator<K, V, Decorated, SubMap>>
-        extends AbstractSortedMapDecorator<K, V, Decorated, SubMap>
-        implements NavigableRangedMap<K, V, SubMap> {
+                TDecorated extends NavigableMap<K, V>,
+                TSubMap extends AbstractNavigableMapDecorator<K, V, TDecorated, TSubMap>>
+        extends AbstractSortedMapDecorator<K, V, TDecorated, TSubMap>
+        implements NavigableRangedMap<K, V, TSubMap> {
 
     private static final long serialVersionUID = 7643981107509930313L;
 
@@ -60,7 +60,7 @@ public abstract class AbstractNavigableMapDecorator<K, V,
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    protected AbstractNavigableMapDecorator(final Decorated map, final SortedMapRange<K> keyRange) {
+    protected AbstractNavigableMapDecorator(final TDecorated map, final SortedMapRange<K> keyRange) {
         super(map, keyRange);
     }
 
@@ -147,12 +147,12 @@ public abstract class AbstractNavigableMapDecorator<K, V,
     @SuppressWarnings("unchecked")
     @Override
     public NavigableMap<K, V> descendingMap() {
-        return decorateDerived((Decorated) decorated().descendingMap(), getKeyRange().reversed());
+        return decorateDerived((TDecorated) decorated().descendingMap(), getKeyRange().reversed());
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public SubMap subMap(final SortedMapRange<K> range) {
-        return decorateDerived((Decorated) range.applyToNavMap(decorated()), range);
+    public TSubMap subMap(final SortedMapRange<K> range) {
+        return decorateDerived((TDecorated) range.applyToNavigableMap(decorated()), range);
     }
 }

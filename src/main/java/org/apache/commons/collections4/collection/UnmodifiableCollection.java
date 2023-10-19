@@ -18,6 +18,7 @@ package org.apache.commons.collections4.collection;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
@@ -38,7 +39,7 @@ import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
  * @since 3.0
  */
 public final class UnmodifiableCollection<E>
-        extends AbstractCollectionDecorator<E>
+        extends AbstractCollectionDecorator<E, Collection<E>>
         implements Unmodifiable {
 
     /** Serialization version */

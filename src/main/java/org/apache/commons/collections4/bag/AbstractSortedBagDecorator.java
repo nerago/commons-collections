@@ -30,7 +30,8 @@ import org.apache.commons.collections4.SortedBag;
  * @since 3.0
  */
 public abstract class AbstractSortedBagDecorator<E>
-        extends AbstractBagDecorator<E> implements SortedBag<E> {
+        extends AbstractBagDecorator<E, SortedBag<E>>
+        implements SortedBag<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = -8223473624050467718L;
@@ -51,17 +52,6 @@ public abstract class AbstractSortedBagDecorator<E>
     protected AbstractSortedBagDecorator(final SortedBag<E> bag) {
         super(bag);
     }
-
-    /**
-     * Gets the bag being decorated.
-     *
-     * @return the decorated bag
-     */
-    @Override
-    protected SortedBag<E> decorated() {
-        return (SortedBag<E>) super.decorated();
-    }
-
 
     @Override
     public E first() {

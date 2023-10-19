@@ -38,7 +38,6 @@ import java.util.function.Supplier;
 import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.NavigableExtendedBidiMap;
-import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapRange;
@@ -796,7 +795,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected abstract static class BaseNavigableSet<E, K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractNavigableSetDecorator<E> {
+            extends AbstractNavigableSetDecorator<E, NavigableSet<E>, BaseNavigableSet<E, K, V>> {
         private static final long serialVersionUID = -1231087977922107905L;
 
         protected final DualTreeBidi2MapBase<K, V> parent;
@@ -865,7 +864,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
 
         @Override
-        protected NavigableRangedSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+        protected BaseNavigableSet<K, K, V> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
             return new KeySetUsingKeyMapSubSet<>(subSet, range, parent);
         }
 
@@ -916,7 +915,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         }
 
         @Override
-        protected NavigableRangedSet<K> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
+        protected BaseNavigableSet<K, K, V> decorateDerived(final NavigableSet<K> subSet, final SortedMapRange<K> range) {
             return new KeySetUsingKeyMapSubSet<>(subSet, range, parent);
         }
 
@@ -1037,7 +1036,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected static class EntrySetUsingKeyMap<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractSetDecorator<Entry<K, V>> {
+            extends AbstractSetDecorator<Entry<K, V>, Set<Entry<K, V>>> {
         private static final long serialVersionUID = -1069719982246820666L;
 
         protected final DualTreeBidi2MapBase<K, V> parent;

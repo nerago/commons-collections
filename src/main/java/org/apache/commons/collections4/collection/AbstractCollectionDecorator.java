@@ -16,12 +16,12 @@
  */
 package org.apache.commons.collections4.collection;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -62,14 +62,14 @@ import java.util.stream.Stream;
  * @param <E> the type of the elements in the collection
  * @since 3.0
  */
-public abstract class AbstractCollectionDecorator<E>
+public abstract class AbstractCollectionDecorator<E, TDecorated extends Collection<E>>
         implements Collection<E>, SerializableTransitional {
 
     /** Serialization version */
     private static final long serialVersionUID = 6249888059822088500L;
 
     /** The collection being decorated */
-    private Collection<E> collection;
+    private TDecorated collection;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -84,7 +84,7 @@ public abstract class AbstractCollectionDecorator<E>
      * @param collection  the collection to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    protected AbstractCollectionDecorator(final Collection<E> collection) {
+    protected AbstractCollectionDecorator(final TDecorated collection) {
         this.collection = Objects.requireNonNull(collection, "collection");
     }
 
@@ -94,7 +94,7 @@ public abstract class AbstractCollectionDecorator<E>
      *
      * @return the decorated collection
      */
-    protected Collection<E> decorated() {
+    protected TDecorated decorated() {
         return collection;
     }
 
@@ -105,10 +105,9 @@ public abstract class AbstractCollectionDecorator<E>
      *
      * @param coll  the decorated collection
      */
-    protected void setCollection(final Collection<E> coll) {
+    protected void setCollection(final TDecorated coll) {
         this.collection = coll;
     }
-
 
     @Override
     public boolean add(final E object) {
@@ -216,6 +215,6 @@ public abstract class AbstractCollectionDecorator<E>
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        collection = (Collection<E>) in.readObject();
+        collection = (TDecorated) in.readObject();
     }
 }
