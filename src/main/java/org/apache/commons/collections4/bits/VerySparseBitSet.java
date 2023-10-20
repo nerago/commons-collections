@@ -3,23 +3,21 @@
 package org.apache.commons.collections4.bits;
 
 import java.util.Objects;
+import java.util.PrimitiveIterator;
 import java.util.TreeSet;
 import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.list.TreeList;
+import org.apache.commons.collections4.primitive.LongToLongMap;
 
 public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     private static final int ENTRY_BITS = Long.SIZE;
     private static final long FULLY_SET =  0xffffffffffffffffL;
     private static final long HI_BIT_SET = 0x8000000000000000L;
-    private final TreeSet<SparseEntry> content;
+    private final LongToLongMap map = new LongToLongMap();
+    private int length;
 
-    public VerySparseBitSet() {
-        content = new TreeSet<>();
-        content.add(new SparseEntry(0, 0));
-    }
-    
     private static int indexToBlockStart(final int bitIndex) {
         return (bitIndex >>> 6) << 6;
     }
@@ -29,6 +27,13 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
             throw new IllegalArgumentException();
         }
     }
+
+    private static void checkRange(final int index) {
+        if (index < 0) {
+            throw new IllegalArgumentException();
+        }
+    }
+
     
 //    private SparseEntry findEntry(final int index) {
 //        if (index < 0) {
@@ -58,12 +63,16 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
         return FULLY_SET >>> n;
     }
 
+    private static Long nullIfZero(final long val) {
+        return val == 0 ? null : val;
+    }
+
     /**
      * Is bit set entirely clear.
      */
     @Override
     public boolean isEmpty() {
-        return content.size() == 1 && content.first().bits == 0;
+        return map.isEmpty();
     }
 
     /**
@@ -72,8 +81,7 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      */
     @Override
     public int length() {
-        final SparseEntry entry = content.last();
-        return entry.lastIndex() + 1;
+        return length;
     }
 
     /**
@@ -82,8 +90,9 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     @Override
     public int cardinality() {
         int result = 0;
-        for (final SparseEntry e : content) {
-            result += Long.bitCount(e.bits);
+        final PrimitiveIterator.OfLong it = map.valuesIterator();
+        while (it.hasNext()) {
+            result += Long.bitCount(it.next());
         }
         return result;
     }
@@ -98,101 +107,57 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      */
     @Override
     public boolean get(final int index) {
-
-//        final SparseEntry entry = findEntry(index);
-        if (entry != null) {
-            return (entry.bits & maskSingleSet(index - entry.startIndex)) != 0;
+        final int blockStartIndex = indexToBlockStart(index);
+        final Long bits = map.getOrDefaultNullable(blockStartIndex, null);
+        if (bits != null) {
+            return (bits & maskSingleSet(index - blockStartIndex)) != 0;
         } else {
             return false;
         }
     }
 
-    private SparseEntry getOrAddEntry(int blockStartBitIndex) {
-        int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
+    @Override
+    public void set(final int bitIndex) {
+        checkRange(bitIndex);
+        final int blockStart = indexToBlockStart(bitIndex);
+        final long mask = maskSingleSet(bitIndex - blockStart);
+        map.compute(blockStart, (key, present, oldValue) -> present ? (oldValue | mask) : mask);
     }
 
     @Override
     public void set(final int startIndex, final int endIndex) {
         checkRange(startIndex, endIndex);
 
-        final int blockStartBitIndex = indexToBlockStart(startIndex);
+        int blockStart = indexToBlockStart(startIndex);
+        final int lastBlockStart = indexToBlockStart(endIndex);
 
-        SparseEntry entry = getOrAddEntry(blockStartBitIndex);
+        if (blockStart == lastBlockStart) {
+            final long mask = maskRangeSet(startIndex - blockStart, endIndex - blockStart);
+            map.compute(blockStart, (key, present, oldValue) -> present ? (oldValue | mask) : mask);
+            return;
+        } else if (startIndex != blockStart) {
+            final long mask = maskFirstNClear(startIndex - blockStart);
+            map.compute(blockStart, (key, present, oldValue) -> (present ? (oldValue | mask) : mask));
+            blockStart += ENTRY_BITS;
+        }
 
-//        int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
-//
-//        Entry entry;
-//        if (listIndex == -1) {
-//            entry = new Entry(blockStartIndex, 0);
-//        } else {
-//            entry = content.get(listIndex++);
-//        }
+        while (blockStart + ENTRY_BITS < endIndex) {
+            map.put(blockStart, FULLY_SET);
+            blockStart += ENTRY_BITS;
+        }
 
-
-//        while (entry.startIndex < endIndex) {
-//            final Entry entry = content.get(listIndex++);
-//            if (entry.startIndex > endIndex) {
-//                break;
-//            }
-//
-//            if (endIndex >= entry.lastIndex()) {
-//                entry.bits = FULLY_SET;
-//            }
-//
-//
-//        }
-
-//        if (startIndex == blockStartIndex && rangeLength < ENTRY_BITS) {
-//            entry.bits |= maskFirstNSet(rangeLength);
-//            return;
-//        } else if (startIndex == blockStartIndex) {
-//            entry.bits = FULLY_SET;
-//        } else if (endIndex < entry.lastIndex()) {
-//            entry.bits |= maskRangeSet(startIndex - entry.startIndex, endIndex - entry.startIndex);
-//            return;
-//        }
-
+        if (blockStart <= endIndex) {
+            final long mask = maskFirstNSet(endIndex - blockStart + 1);
+            map.compute(blockStart, (key, present, oldValue) -> present ? (oldValue | mask) : mask);
+        }
     }
 
-
-    public void set0(final int startIndex, final int endIndex) {
-//        checkRange(startIndex, endIndex);
-//
-//        final int blockStartIndex = indexToBlockStart(startIndex);
-//        final int rangeLength = endIndex - startIndex;
-//
-//        int listIndex = ListUtils.binarySearchIndex(content, e -> e.startIndex, blockStartIndex);
-//
-//        Entry entry;
-//        if (listIndex == -1) {
-//            entry = new Entry(blockStartIndex, 0);
-//        } else {
-//            entry = content.get(listIndex++);
-//        }
-//
-//        if (startIndex == blockStartIndex && rangeLength < ENTRY_BITS) {
-//            entry.bits |= maskFirstNSet(rangeLength);
-//            return;
-//        } else if (startIndex == blockStartIndex) {
-//            entry.bits = FULLY_SET;
-//        } else if (endIndex < entry.lastIndex()) {
-//            entry.bits |= maskRangeSet(startIndex - entry.startIndex, endIndex - entry.startIndex);
-//            return;
-//        }
-//
-////        Entry entry = content.get(listIndex);
-//        while (true) {
-//            final Entry entry = content.get(listIndex++);
-//            if (entry.startIndex > endIndex) {
-//                break;
-//            }
-//
-//            if (endIndex >= entry.lastIndex()) {
-//                entry.bits = FULLY_SET;
-//            }
-//
-//
-//        }
+    @Override
+    public void clear(final int bitIndex) {
+        checkRange(bitIndex);
+        final int blockStart = indexToBlockStart(bitIndex);
+        final long mask = ~maskSingleSet(bitIndex - blockStart);
+        map.compute(blockStart, (key, present, oldValue) -> present ? nullIfZero(oldValue & mask) : null);
     }
 
     /**
@@ -202,8 +167,31 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      * @param endIndex   one-past the last bit to clear
      */
     @Override
-    public void clear(int startIndex, int endIndex) {
+    public void clear(final int startIndex, final int endIndex) {
+        checkRange(startIndex, endIndex);
 
+        int blockStart = indexToBlockStart(startIndex);
+        final int lastBlockStart = indexToBlockStart(endIndex);
+
+        if (blockStart == lastBlockStart) {
+            final long mask = ~maskRangeSet(startIndex - blockStart, endIndex - blockStart);
+            map.compute(blockStart, (key, present, oldValue) -> present ? nullIfZero(oldValue & mask) : null);
+            return;
+        } else if (startIndex != blockStart) {
+            final long mask = ~maskFirstNClear(startIndex - blockStart);
+            map.compute(blockStart, (key, present, oldValue) -> present ? nullIfZero(oldValue & mask) : null);
+            blockStart += ENTRY_BITS;
+        }
+
+        while (blockStart + ENTRY_BITS < endIndex) {
+            map.remove(blockStart);
+            blockStart += ENTRY_BITS;
+        }
+
+        if (blockStart <= endIndex) {
+            final long mask = ~maskFirstNSet(endIndex - blockStart + 1);
+            map.compute(blockStart, (key, present, oldValue) -> present ? nullIfZero(oldValue & mask) : null);
+        }
     }
 
     /**
@@ -213,8 +201,61 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      * @param endIndex   one-past the last bit to flip
      */
     @Override
-    public void flip(int startIndex, int endIndex) {
+    public void flip(final int startIndex, final int endIndex) {
+        checkRange(startIndex, endIndex);
 
+        int blockStart = indexToBlockStart(startIndex);
+        final int lastBlockStart = indexToBlockStart(endIndex);
+
+        if (blockStart == lastBlockStart) {
+            final long mask = maskRangeSet(startIndex - blockStart, endIndex - blockStart);
+            map.compute(blockStart, (key, present, oldValue) -> nullIfZero(present ? (oldValue ^ mask) : mask));
+            return;
+        } else if (startIndex != blockStart) {
+            final long mask = maskFirstNClear(startIndex - blockStart);
+            map.compute(blockStart, (key, present, oldValue) -> nullIfZero(present ? (oldValue ^ mask) : mask));
+            blockStart += ENTRY_BITS;
+        }
+
+        while (blockStart + ENTRY_BITS < endIndex) {
+            map.compute(blockStart, (key, present, oldValue) -> nullIfZero(present ? ~oldValue : FULLY_SET));
+            blockStart += ENTRY_BITS;
+        }
+
+        if (blockStart <= endIndex) {
+            final long mask = maskFirstNSet(endIndex - blockStart + 1);
+            map.compute(blockStart, (key, present, oldValue) -> nullIfZero(present ? (oldValue ^ mask) : mask));
+        }
+    }
+
+    @Override
+    public void clear() {
+        map.clear();
+        length = 0;
+    }
+
+    /**
+     * Returns the index of the first set bit starting at the index specified. -1 is returned if there
+     * are no more set bits.
+     *
+     * @param index
+     */
+    @Override
+    public int nextSetBit(final int index) {
+        checkRange(index);
+        // a linkedmap would be good right now
+        return 0;
+    }
+
+    /**
+     * Returns the index of the first clear bit starting at the index specified. -1 is returned if there
+     * are no more clear bits.
+     *
+     * @param index
+     */
+    @Override
+    public int nextClearBit(int index) {
+        return 0;
     }
 
     /**
@@ -229,17 +270,6 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     }
 
     /**
-     * Returns the index of the first set bit starting at the index specified. -1 is returned if there
-     * are no more set bits.
-     *
-     * @param index
-     */
-    @Override
-    public int nextSetBit(int index) {
-        return 0;
-    }
-
-    /**
      * Returns the index of the last clear bit before or on the index specified. -1 is returned if there
      * are no more clear bits.
      *
@@ -247,17 +277,6 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
      */
     @Override
     public int prevClearBit(int index) {
-        return 0;
-    }
-
-    /**
-     * Returns the index of the first clear bit starting at the index specified. -1 is returned if there
-     * are no more clear bits.
-     *
-     * @param index
-     */
-    @Override
-    public int nextClearBit(int index) {
         return 0;
     }
 
@@ -277,7 +296,6 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     public boolean intersects(VerySparseBitSet set) {
         return false;
     }
-
 
     @Override
     public void and(VerySparseBitSet set) {
@@ -307,42 +325,5 @@ public class VerySparseBitSet implements BitSetInterface<VerySparseBitSet> {
     @Override
     public IntStream stream() {
         return null;
-    }
-
-    private static final class SparseEntry implements Comparable<SparseEntry> {
-        final int startIndex;
-        long bits;
-
-        private SparseEntry(final int startIndex, final int bits) {
-            this.startIndex = startIndex;
-            this.bits = bits;
-        }
-
-        public int lastIndex() {
-            return startIndex + ENTRY_BITS - 1;
-        }
-
-        public boolean fullyInRange(final int rangeStart, final int rangeEnd) {
-            return rangeStart <= startIndex && lastIndex() <= rangeEnd;
-        }
-
-        @Override
-        public int compareTo(final SparseEntry other) {
-            return Integer.compare(startIndex, other.startIndex);
-        }
-
-        @Override
-        public boolean equals(final Object other) {
-            if (other instanceof SparseEntry) {
-                return startIndex == ((SparseEntry) other).startIndex;
-            } else {
-                return false;
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            return startIndex;
-        }
     }
 }

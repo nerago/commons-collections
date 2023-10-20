@@ -24,14 +24,14 @@ public interface BitSetInterface<T extends BitSetInterface> extends Bits, Clonea
     /**
      * Set the bit at {@code bitIndex} to specified value
      *
-     * @param bitIndex lower index
-     * @param endIndex one-past the last bit to flip
+     * @param bitIndex specified index
+     * @param value value of the bit to set
      */
     default void set(final int bitIndex, final boolean value) {
         if (value) {
-            set(bitIndex, bitIndex + 1);
+            set(bitIndex);
         } else {
-            clear(bitIndex, bitIndex + 1);
+            clear(bitIndex);
         }
     }
 
