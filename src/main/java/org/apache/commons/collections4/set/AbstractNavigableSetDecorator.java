@@ -104,4 +104,34 @@ public abstract class AbstractNavigableSetDecorator<E, TDecorated extends Naviga
         return decorated().descendingIterator();
     }
 
+    public static final class NullDecorator<E> extends AbstractNavigableSetDecorator<E, NavigableSet<E>, NullDecorator<E>> {
+        private static final long serialVersionUID = -2806194974152145578L;
+
+
+        /**
+         * Constructor that wraps (not copies).
+         *
+         * @param set   the set to decorate, must not be null
+         * @throws NullPointerException if set is null
+         */
+        public NullDecorator(final NavigableSet<E> set) {
+            super(set, SortedMapRange.full(set.comparator()));
+        }
+
+        /**
+         * Constructor that wraps (not copies).
+         *
+         * @param set   the set to decorate, must not be null
+         * @param range sub-set range
+         * @throws NullPointerException if set or range is null
+         */
+        public NullDecorator(final NavigableSet<E> set, final SortedMapRange<E> range) {
+            super(set, range);
+        }
+
+        @Override
+        protected NullDecorator<E> decorateDerived(final NavigableSet<E> subMap, final SortedMapRange<E> range) {
+            return new NullDecorator<>(subMap, range);
+        }
+    }
 }
