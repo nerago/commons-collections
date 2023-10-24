@@ -39,28 +39,9 @@ public class LazyListTest extends AbstractObjectTest {
         return new LazyList<>(new ArrayList<>(), dateFactory);
     }
 
-    @Test
     @Override
-    public void testSimpleSerialization() {
-        // Factory and Transformer are not serializable
-    }
-
-    @Test
-    @Override
-    public void testSerializeDeserializeThenCompare() {
-        // Factory and Transformer are not serializable
-    }
-
-    @Test
-    @Override
-    public void testCanonicalEmptyCollectionExists() {
-        // Factory and Transformer are not serializable
-    }
-
-    @Test
-    @Override
-    public void testCanonicalFullCollectionExists() {
-        // Factory and Transformer are not serializable
+    public boolean isTestSerialization() {
+        return false;
     }
 
     @Test

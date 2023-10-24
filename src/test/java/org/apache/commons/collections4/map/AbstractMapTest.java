@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import static org.apache.commons.collections4.TestSerializationUtils.writeExternalFormToDisk;
 import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsAnyOf;
 import static org.apache.commons.collections4.TestUtils.assertReturnsFalseOrThrowsNPE;
 import static org.apache.commons.collections4.TestUtils.assertReturnsNullOrThrowsAnyOf;
@@ -752,20 +753,22 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Test
     public void testEmptyMapCompatibility() throws Exception {
-        /*
-         * Create canonical objects with this code
-        Map map = makeEmptyMap();
-        if (!(map instanceof Serializable)) return;
+        final Map<K, V> map = makeObject();
 
-        writeExternalFormToDisk((Serializable) map, getCanonicalEmptyCollectionName(map));
-        */
+        // Create canonical objects with this code
+        // if (!(map instanceof Serializable)) return;
+        // writeExternalFormToDisk((Serializable) map, getCanonicalEmptyCollectionName(map));
 
         // test to make sure the canonical form has been preserved
-        final Map<K, V> map = makeObject();
         if (map instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
             @SuppressWarnings("unchecked")
             final Map<K, V> map2 = (Map<K, V>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalEmptyCollectionName(map));
             assertEquals(0, map2.size(), "Map is empty");
+            assertSame(map.getClass(), map2.getClass(), "Object has different type");
+            this.confirmed = map;
+            this.map = map2;
+            views();
+            verify();
         }
     }
 
@@ -775,20 +778,22 @@ public abstract class AbstractMapTest<K, V> extends AbstractObjectTest {
      */
     @Test
     public void testFullMapCompatibility() throws Exception {
-        /*
-         * Create canonical objects with this code
-        Map map = makeFullMap();
-        if (!(map instanceof Serializable)) return;
+        final Map<K, V> map = makeFullMap();
 
-        writeExternalFormToDisk((Serializable) map, getCanonicalFullCollectionName(map));
-        */
+        // Create canonical objects with this code
+        // if (!(map instanceof Serializable)) return;
+        // writeExternalFormToDisk((Serializable) map, getCanonicalFullCollectionName(map));
 
         // test to make sure the canonical form has been preserved
-        final Map<K, V> map = makeFullMap();
         if (map instanceof Serializable && !skipSerializedCanonicalTests() && isTestSerialization()) {
             @SuppressWarnings("unchecked")
             final Map<K, V> map2 = (Map<K, V>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(map));
             assertEquals(getSampleKeys().length, map2.size(), "Map is the right size");
+            assertSame(map.getClass(), map2.getClass(), "Object has different type");
+            this.confirmed = map;
+            this.map = map2;
+            views();
+            verify();
         }
     }
 

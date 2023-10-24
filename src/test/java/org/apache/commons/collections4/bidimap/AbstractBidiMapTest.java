@@ -592,6 +592,11 @@ public abstract class AbstractBidiMapTest<K, V> extends AbstractIterableMapTest<
         }
 
         @Override
+        public boolean isTestSerialization() {
+            return false;
+        }
+
+        @Override
         public DynamicNode inverseBidiMapTests() {
             return null;
         }
