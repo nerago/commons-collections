@@ -32,7 +32,7 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.SpliteratorUtils;
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 
 /**
  * Abstract implementation of the {@link MultiSet} interface to simplify the

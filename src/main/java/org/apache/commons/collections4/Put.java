@@ -18,8 +18,6 @@ package org.apache.commons.collections4;
 
 import java.util.Map;
 
-import org.apache.commons.collections4.collection.SerializableTransitional;
-
 /**
  * The "write" subset of the {@link Map} interface.
  * <p>

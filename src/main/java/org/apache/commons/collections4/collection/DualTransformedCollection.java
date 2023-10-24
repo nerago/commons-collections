@@ -16,12 +16,13 @@
  */
 package org.apache.commons.collections4.collection;
 
+import org.apache.commons.collections4.AbstractCommonsCollection;
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -37,20 +38,20 @@ import java.util.function.Predicate;
  * See also {@link TransformedCollection}.
  * </p>
  *
- * @param <S> the type of the elements stored in the collection
- * @param <I> the type of the elements external collection interface for the transformed collection
+ * @param <TStored> the type of the elements stored in the collection
+ * @param <TExternal> the type of the elements external collection interface for the transformed collection
  * @since X.X
  */
-public class DualTransformedCollection<I, S> implements Collection<I>, Serializable {
+public class DualTransformedCollection<TExternal, TStored> extends AbstractCommonsCollection<TExternal> implements Collection<TExternal>, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 4488366779197789058L;
 
     /** The transformer to use */
-    protected final Transformer<? super I, ? extends S> interfaceToStorage;
-    protected final Transformer<? super S, ? extends I> storageToInterface;
+    protected final Transformer<? super TExternal, ? extends TStored> interfaceToStorage;
+    protected final Transformer<? super TStored, ? extends TExternal> storageToInterface;
 
-    protected final Collection<S> collection;
+    protected final Collection<TStored> collection;
 
     public static <S, I> Collection<I> transformingCollection(final Collection<S> coll,
                                                               final Transformer<? super I, ? extends S> interfaceToStorage,
@@ -76,9 +77,9 @@ public class DualTransformedCollection<I, S> implements Collection<I>, Serializa
      * @param storageToInterface the transformer to use for conversion of outputs, must not be null
      * @throws NullPointerException if collection or transformer is null
      */
-    protected DualTransformedCollection(final Collection<S> collection,
-                                        final Transformer<? super I, ? extends S> interfaceToStorage,
-                                        final Transformer<? super S, ? extends I> storageToInterface) {
+    protected DualTransformedCollection(final Collection<TStored> collection,
+                                        final Transformer<? super TExternal, ? extends TStored> interfaceToStorage,
+                                        final Transformer<? super TStored, ? extends TExternal> storageToInterface) {
         this.collection = Objects.requireNonNull(collection);
         this.interfaceToStorage = Objects.requireNonNull(interfaceToStorage, "interfaceToStored");
         this.storageToInterface = Objects.requireNonNull(storageToInterface, "storedToInterface");
@@ -87,15 +88,15 @@ public class DualTransformedCollection<I, S> implements Collection<I>, Serializa
     /**
      * Original wrapped collection.
      */
-    public Collection<S> decorated() {
+    public Collection<TStored> decorated() {
         return collection;
     }
 
     @SuppressWarnings("unchecked")
-    private List<S> transformCollection(Collection<?> c) {
-        final List<S> list = new ArrayList<>(c.size());
+    private List<TStored> transformCollection(Collection<?> c) {
+        final List<TStored> list = new ArrayList<>(c.size());
         for (final Object item : c) {
-            list.add(interfaceToStorage.transform((I) item));
+            list.add(interfaceToStorage.transform((TExternal) item));
         }
         return list;
     }
@@ -113,24 +114,24 @@ public class DualTransformedCollection<I, S> implements Collection<I>, Serializa
     @Override
     @SuppressWarnings("unchecked")
     public boolean contains(Object o) {
-        return collection.contains(interfaceToStorage.transform((I) o));
+        return collection.contains(interfaceToStorage.transform((TExternal) o));
     }
 
     @Override
-    public boolean add(I o) {
+    public boolean add(TExternal o) {
         return collection.add(interfaceToStorage.transform(o));
     }
 
     @Override
-    public boolean addAll(Collection<? extends I> c) {
-        final List<S> list = transformCollection(c);
+    public boolean addAll(Collection<? extends TExternal> c) {
+        final List<TStored> list = transformCollection(c);
         return collection.addAll(list);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean remove(Object o) {
-        return collection.remove(interfaceToStorage.transform((I) o));
+        return collection.remove(interfaceToStorage.transform((TExternal) o));
     }
 
     @Override
@@ -140,72 +141,40 @@ public class DualTransformedCollection<I, S> implements Collection<I>, Serializa
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        final List<S> list = transformCollection(c);
+        final List<TStored> list = transformCollection(c);
         return collection.containsAll(list);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        final List<S> list = transformCollection(c);
+        final List<TStored> list = transformCollection(c);
         return collection.removeAll(list);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        final List<S> list = transformCollection(c);
+        final List<TStored> list = transformCollection(c);
         return collection.retainAll(list);
     }
 
 
     @Override
-    public void forEach(Consumer<? super I> action) {
+    public void forEach(Consumer<? super TExternal> action) {
         collection.forEach(s -> action.accept(storageToInterface.transform(s)));
     }
 
     @Override
-    public boolean removeIf(Predicate<? super I> filter) {
+    public boolean removeIf(Predicate<? super TExternal> filter) {
         return collection.removeIf(s -> filter.test(storageToInterface.transform(s)));
     }
 
     @Override
-    public Iterator<I> iterator() {
+    public Iterator<TExternal> iterator() {
         return new TransformIterator<>(collection.iterator(), storageToInterface);
     }
 
     @Override
-    public Spliterator<I> spliterator() {
+    public Spliterator<TExternal> spliterator() {
         return new TransformSpliterator<>(collection.spliterator(), storageToInterface);
-    }
-
-    @Override
-    public Object[] toArray() {
-        final Object[] result = new Object[collection.size()];
-        int i = 0;
-        for (Iterator<S> it = collection.iterator(); it.hasNext(); i++) {
-            result[i] = storageToInterface.transform(it.next());
-        }
-        return result;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T[] toArray(final T[] array) {
-        final int size = collection.size();
-        final Object[] result;
-        if (array.length >= size) {
-            result = array;
-        } else {
-            result = (Object[]) Array.newInstance(array.getClass().getComponentType(), size);
-        }
-
-        int i = 0;
-        for (Iterator<S> it = collection.iterator(); it.hasNext(); i++) {
-            result[i] = storageToInterface.transform(it.next());
-        }
-
-        if (result.length > size) {
-            result[size] = null;
-        }
-        return (T[]) result;
     }
 }

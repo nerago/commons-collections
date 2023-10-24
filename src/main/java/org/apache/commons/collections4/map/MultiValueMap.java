@@ -32,7 +32,7 @@ import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.FunctorException;
 import org.apache.commons.collections4.MultiMap;
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.commons.collections4.iterators.LazyIteratorChain;

@@ -24,9 +24,9 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiSet;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.map.EntrySetUtil;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.collections4.multiset.AbstractMultiSet;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
@@ -620,12 +620,12 @@ public class DualHashBiMultiMap<K, V> extends AbstractBiMultiMap<K, V> {
 
         @Override
         public Object[] toArray() {
-            return EntrySetUtil.toArrayUnmodifiable(parent.mapIteratorEntries(), size());
+            return ToArrayUtils.fromMapIteratorUnmodifiable(parent.mapIteratorEntries(), size());
         }
 
         @Override
         public <T> T[] toArray(final T[] array) {
-            return EntrySetUtil.toArrayUnmodifiable(parent.mapIteratorEntries(), size(), array);
+            return ToArrayUtils.fromMapIteratorUnmodifiable(parent.mapIteratorEntries(), size(), array);
         }
     }
 

@@ -25,6 +25,9 @@ import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.AbstractCommonsCollection;
+import org.apache.commons.collections4.SerializableTransitional;
+
 /**
  * Decorates another {@link Collection} to synchronize its behavior
  * for a multithreaded environment.
@@ -44,7 +47,7 @@ import java.util.function.Predicate;
  * @param <E> the type of the elements in the collection
  * @since 3.0
  */
-public class SynchronizedCollection<E> implements Collection<E>, SerializableTransitional {
+public class SynchronizedCollection<E> extends AbstractCommonsCollection<E> implements Collection<E>, SerializableTransitional {
 
     /** Serialization version */
     private static final long serialVersionUID = 2412805092710877986L;

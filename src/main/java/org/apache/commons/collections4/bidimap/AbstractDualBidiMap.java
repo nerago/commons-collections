@@ -30,11 +30,11 @@ import java.util.function.Predicate;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.map.EntrySetUtil;
 
 /**
  * Abstract {@link BidiMap} implemented using two maps.
@@ -837,15 +837,13 @@ public abstract class AbstractDualBidiMap<K, V, TRegularMap extends AbstractDual
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public Object[] toArray() {
-            return EntrySetUtil.toArrayUnmodifiable(decorated());
+            return ToArrayUtils.fromEntryCollectionUnmodifiable(decorated());
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public <T> T[] toArray(final T[] array) {
-            return EntrySetUtil.toArrayUnmodifiable(decorated(), array);
+            return ToArrayUtils.fromEntryCollectionUnmodifiable(decorated(), array);
         }
     }
 

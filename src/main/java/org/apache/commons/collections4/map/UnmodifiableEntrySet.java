@@ -20,6 +20,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
@@ -125,40 +126,13 @@ public final class UnmodifiableEntrySet<K, V>
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object[] toArray() {
-        final Object[] array = decorated().toArray();
-        for (int i = 0; i < array.length; i++) {
-            array[i] = new UnmodifiableMapEntry<>((Map.Entry<K, V>) array[i]);
-        }
-        return array;
+        return ToArrayUtils.fromEntryCollectionUnmodifiable(decorated());
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T[] toArray(final T[] array) {
-        Object[] result = array;
-        if (array.length > 0) {
-            // we must create a new array to handle multithreaded situations
-            // where another thread could access data before we decorate it
-            result = (Object[]) Array.newInstance(array.getClass().getComponentType(), 0);
-        }
-        result = decorated().toArray(result);
-        for (int i = 0; i < result.length; i++) {
-            result[i] = new UnmodifiableMapEntry<>((Map.Entry<K, V>) result[i]);
-        }
-
-        // check to see if result should be returned straight
-        if (result.length > array.length) {
-            return (T[]) result;
-        }
-
-        // copy back into input array to fulfill the method contract
-        System.arraycopy(result, 0, array, 0, result.length);
-        if (array.length > result.length) {
-            array[result.length] = null;
-        }
-        return array;
+        return ToArrayUtils.fromEntryCollectionUnmodifiable(decorated(), array);
     }
 
     /**

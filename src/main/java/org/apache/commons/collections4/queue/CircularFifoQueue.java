@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.collections4.BoundedCollection;
 import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 
 /**
  * CircularFifoQueue is a first-in first-out queue with a fixed size that

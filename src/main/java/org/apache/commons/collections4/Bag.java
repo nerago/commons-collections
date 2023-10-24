@@ -20,8 +20,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.commons.collections4.collection.SerializableTransitional;
-
 /**
  * Defines a collection that counts the number of times an object appears in
  * the collection.

@@ -31,7 +31,7 @@ import java.util.Objects;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedIterator;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 
 /**
  * An abstract implementation of a linked list which provides numerous points for

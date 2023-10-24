@@ -44,7 +44,7 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SpliteratorUtils;
 import org.apache.commons.collections4.Unmodifiable;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
 import org.apache.commons.collections4.iterators.TransformIterator;

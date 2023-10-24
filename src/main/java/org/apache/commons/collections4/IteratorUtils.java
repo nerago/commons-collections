@@ -16,7 +16,6 @@
  */
 package org.apache.commons.collections4;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -985,9 +984,7 @@ public class IteratorUtils {
      * @throws NullPointerException if iterator parameter is null
      */
     public static Object[] toArray(final Iterator<?> iterator) {
-        Objects.requireNonNull(iterator, "iterator");
-        final List<?> list = toList(iterator, 100);
-        return list.toArray();
+        return ToArrayUtils.fromIteratorUnknownSize(iterator);
     }
 
     /**
@@ -1004,12 +1001,7 @@ public class IteratorUtils {
      * @throws ArrayStoreException if the arrayClass is invalid
      */
     public static <E> E[] toArray(final Iterator<? extends E> iterator, final Class<E> arrayClass) {
-        Objects.requireNonNull(iterator, "iterator");
-        Objects.requireNonNull(arrayClass, "arrayClass");
-        final List<E> list = toList(iterator, 100);
-        @SuppressWarnings("unchecked")
-        final E[] array = (E[]) Array.newInstance(arrayClass, list.size());
-        return list.toArray(array);
+        return ToArrayUtils.fromIteratorUnknownSize(iterator, arrayClass);
     }
 
     /**

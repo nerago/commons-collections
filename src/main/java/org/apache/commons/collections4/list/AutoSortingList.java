@@ -36,7 +36,7 @@ public class AutoSortingList<E>
      * @return a new empty auto sorted map
      */
     public static <E extends Comparable<? super E>> List<E> autoSortingList() {
-        return new AutoSortingList<>(new ArrayList<>(), Comparator.naturalOrder());
+        return new AutoSortingList<E>(new ArrayList<>(), Comparator.naturalOrder());
     }
 
     /**

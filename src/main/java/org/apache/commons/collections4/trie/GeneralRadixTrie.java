@@ -40,11 +40,11 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
 import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
-import org.apache.commons.collections4.map.EntrySetUtil;
 import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
@@ -932,12 +932,12 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Object[] toArray() {
-            return EntrySetUtil.toArrayUnmodifiable(this);
+            return ToArrayUtils.fromEntryCollectionUnmodifiable(this);
         }
 
         @Override
         public <T> T[] toArray(T[] a) {
-            return EntrySetUtil.toArrayUnmodifiable(this, a);
+            return ToArrayUtils.fromEntryCollectionUnmodifiable(this, a);
         }
 
         @Override

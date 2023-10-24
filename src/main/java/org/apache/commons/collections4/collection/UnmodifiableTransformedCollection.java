@@ -16,13 +16,13 @@
  */
 package org.apache.commons.collections4.collection;
 
+import org.apache.commons.collections4.AbstractCommonsCollection;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -38,19 +38,19 @@ import java.util.function.Predicate;
  * See also {@link TransformedCollection}.
  * </p>
  *
- * @param <S> the type of the elements stored in the collection
- * @param <I> the type of the elements external collection interface for the transformed collection
+ * @param <TStored> the type of the elements stored in the collection
+ * @param <TExternal> the type of the elements external collection interface for the transformed collection
  * @since X.X
  */
-public class UnmodifiableTransformedCollection<S, I> implements Collection<I>, Serializable, Unmodifiable {
+public class UnmodifiableTransformedCollection<TStored, TExternal> extends AbstractCommonsCollection<TExternal> implements Serializable, Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 1708768617060537720L;
 
     /** The transformer to use */
-    protected final Transformer<? super S, ? extends I> transform;
+    protected final Transformer<? super TStored, ? extends TExternal> transform;
 
-    protected final Collection<S> collection;
+    protected final Collection<TStored> collection;
 
     public static <S, I> Collection<I> transformingCollection(final Collection<S> coll,
                                                               final Transformer<? super S, ? extends I> transform) {
@@ -64,8 +64,8 @@ public class UnmodifiableTransformedCollection<S, I> implements Collection<I>, S
      * @param transform the transformer to use for conversion of outputs, must not be null
      * @throws NullPointerException if collection or transformer is null
      */
-    protected UnmodifiableTransformedCollection(final Collection<S> collection,
-                                                final Transformer<? super S, ? extends I> transform) {
+    protected UnmodifiableTransformedCollection(final Collection<TStored> collection,
+                                                final Transformer<? super TStored, ? extends TExternal> transform) {
         this.collection = Objects.requireNonNull(collection);
         this.transform = Objects.requireNonNull(transform, "transform");
     }
@@ -73,7 +73,7 @@ public class UnmodifiableTransformedCollection<S, I> implements Collection<I>, S
     /**
      * Original wrapped collection.
      */
-    public Collection<S> decorated() {
+    public Collection<TStored> decorated() {
         return collection;
     }
 
@@ -94,8 +94,8 @@ public class UnmodifiableTransformedCollection<S, I> implements Collection<I>, S
      */
     @Override
     public boolean contains(Object obj) {
-        for (S stored : collection) {
-            I external = transform.transform(stored);
+        for (TStored stored : collection) {
+            TExternal external = transform.transform(stored);
             if (Objects.equals(external, obj))
                 return true;
         }
@@ -112,59 +112,27 @@ public class UnmodifiableTransformedCollection<S, I> implements Collection<I>, S
     }
 
     @Override
-    public void forEach(Consumer<? super I> action) {
+    public void forEach(Consumer<? super TExternal> action) {
         collection.forEach(s -> action.accept(transform.transform(s)));
     }
 
     @Override
-    public Iterator<I> iterator() {
+    public Iterator<TExternal> iterator() {
         return new TransformIterator<>(collection.iterator(), transform);
     }
 
     @Override
-    public Spliterator<I> spliterator() {
+    public Spliterator<TExternal> spliterator() {
         return new TransformSpliterator<>(collection.spliterator(), transform);
     }
 
     @Override
-    public Object[] toArray() {
-        final Object[] result = new Object[collection.size()];
-        int i = 0;
-        for (Iterator<S> it = collection.iterator(); it.hasNext(); i++) {
-            result[i] = transform.transform(it.next());
-        }
-        return result;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T[] toArray(final T[] array) {
-        final int size = collection.size();
-        final Object[] result;
-        if (array.length >= size) {
-            result = array;
-        } else {
-            result = (Object[]) Array.newInstance(array.getClass().getComponentType(), size);
-        }
-
-        int i = 0;
-        for (Iterator<S> it = collection.iterator(); it.hasNext(); i++) {
-            result[i] = transform.transform(it.next());
-        }
-
-        if (result.length > size) {
-            result[size] = null;
-        }
-        return (T[]) result;
-    }
-
-    @Override
-    public boolean add(final I object) {
+    public boolean add(final TExternal object) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean addAll(final Collection<? extends I> coll) {
+    public boolean addAll(final Collection<? extends TExternal> coll) {
         throw new UnsupportedOperationException();
     }
 
@@ -179,7 +147,7 @@ public class UnmodifiableTransformedCollection<S, I> implements Collection<I>, S
     }
 
     @Override
-    public boolean removeIf(final Predicate<? super I> filter) {
+    public boolean removeIf(final Predicate<? super TExternal> filter) {
         throw new UnsupportedOperationException();
     }
 

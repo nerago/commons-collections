@@ -19,8 +19,6 @@ package org.apache.commons.collections4;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.commons.collections4.collection.SerializableTransitional;
-
 /**
  * The "read" subset of the {@link java.util.Map} interface.
  *

@@ -19,7 +19,6 @@ package org.apache.commons.collections4.bag;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -31,6 +30,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import org.apache.commons.collections4.AbstractCommonsCollection;
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MutableInteger;
@@ -48,7 +48,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <E> the type of elements in this bag
  * @since 3.0 (previously DefaultMapBag v2.0)
  */
-public abstract class AbstractMapBag<E> implements Bag<E> {
+public abstract class AbstractMapBag<E> extends AbstractCommonsCollection<E> implements Bag<E> {
 
     /** The map to use to store the data */
     private transient Map<E, MutableInteger> map;
@@ -483,57 +483,14 @@ public abstract class AbstractMapBag<E> implements Bag<E> {
         return result;
     }
 
-    /**
-     * Returns an array of all of this bag's elements.
-     *
-     * @return an array of all of this bag's elements
-     */
     @Override
-    public Object[] toArray() {
-        final Object[] result = new Object[size()];
+    protected void fillArray(final Object[] array) {
         int i = 0;
         for (final E current : map.keySet()) {
             for (int index = getCount(current); index > 0; index--) {
-                result[i++] = current;
+                array[i++] = current;
             }
         }
-        return result;
-    }
-
-    /**
-     * Returns an array of all of this bag's elements.
-     * If the input array has more elements than are in the bag,
-     * trailing elements will be set to null.
-     *
-     * @param <T> the type of the array elements
-     * @param array the array to populate
-     * @return an array of all of this bag's elements
-     * @throws ArrayStoreException if the runtime type of the specified array is not
-     *   a supertype of the runtime type of the elements in this list
-     * @throws NullPointerException if the specified array is null
-     */
-    @Override
-    public <T> T[] toArray(T[] array) {
-        final int size = size();
-        if (array.length < size) {
-            @SuppressWarnings("unchecked") // safe as both are of type T
-            final T[] unchecked = (T[]) Array.newInstance(array.getClass().getComponentType(), size);
-            array = unchecked;
-        }
-
-        int i = 0;
-        for (final E current : map.keySet()) {
-            for (int index = getCount(current); index > 0; index--) {
-                // unsafe, will throw ArrayStoreException if types are not compatible, see javadoc
-                @SuppressWarnings("unchecked")
-                final T unchecked = (T) current;
-                array[i++] = unchecked;
-            }
-        }
-        while (i < array.length) {
-            array[i++] = null;
-        }
-        return array;
     }
 
     /**

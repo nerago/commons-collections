@@ -21,12 +21,13 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import org.apache.commons.collections4.SerializableTransitional;
 
 /**
  * Decorates another {@code Collection} to provide additional behavior.

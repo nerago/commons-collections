@@ -16,6 +16,7 @@
  */
 package org.apache.commons.collections4.map;
 
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
 
@@ -25,58 +26,33 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorator<Map.Entry<K, V>, Set<Map.Entry<K, V>>> {
-    protected AbstractEntrySetDecorator(Set<Map.Entry<K, V>> set) {
+    protected AbstractEntrySetDecorator(final Set<Map.Entry<K, V>> set) {
         super(set);
     }
 
-    protected Map.Entry<K, V> wrapEntry(Map.Entry<K, V> entry) {
+    protected Map.Entry<K, V> wrapEntry(final Map.Entry<K, V> entry) {
         return entry;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Object[] toArray() {
-        final Object[] array = super.toArray();
-        for (int i = 0; i < array.length; i++) {
-            array[i] = wrapEntry((Map.Entry<K, V>) array[i]);
-        }
-        return array;
+        return ToArrayUtils.transformed(super::toArray, this::wrapEntry);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T[] toArray(T[] array) {
-        Object[] result = array;
-        if (array.length > 0) {
-            // we must create a new array to handle multithreaded situations
-            // where another thread could access data before we decorate it
-            result = (Object[]) Array.newInstance(array.getClass().getComponentType(), 0);
-        }
-        result = super.toArray(result);
-        for (int i = 0; i < result.length; i++) {
-            result[i] = wrapEntry((Map.Entry<K, V>) result[i]);
-        }
-
-        // check to see if result should be returned straight
-        if (result.length > array.length) {
-            return (T[]) result;
-        }
-
-        // copy back into input array to fulfill the method contract
-        System.arraycopy(result, 0, array, 0, result.length);
-        if (array.length > result.length) {
-            array[result.length] = null;
-        }
-        return array;
+    public <T> T[] toArray(final T[] array) {
+        return ToArrayUtils.transformed(super::toArray, this::wrapEntry, array);
     }
 
     @Override
-    public boolean removeIf(Predicate<? super Map.Entry<K, V>> filter) {
+    public boolean removeIf(final Predicate<? super Map.Entry<K, V>> filter) {
         return super.removeIf(entry -> filter.test(wrapEntry(entry)));
     }
 
     @Override
-    public void forEach(Consumer<? super Map.Entry<K, V>> action) {
+    public void forEach(final Consumer<? super Map.Entry<K, V>> action) {
         super.forEach(entry -> action.accept(wrapEntry(entry)));
     }
 
@@ -86,7 +62,7 @@ public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorat
     }
 
     protected class EntryWrappingIterator extends AbstractIteratorDecorator<Map.Entry<K, V>> {
-        public EntryWrappingIterator(Iterator<Map.Entry<K, V>> iterator) {
+        public EntryWrappingIterator(final Iterator<Map.Entry<K, V>> iterator) {
             super(iterator);
         }
 
@@ -96,7 +72,7 @@ public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorat
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super Map.Entry<K, V>> action) {
+        public void forEachRemaining(final Consumer<? super Map.Entry<K, V>> action) {
             super.forEachRemaining(entry -> action.accept(wrapEntry(entry)));
         }
     }

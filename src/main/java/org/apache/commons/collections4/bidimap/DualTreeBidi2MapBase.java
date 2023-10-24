@@ -782,16 +782,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         public Spliterator<E> spliterator() {
             return super.spliterator();
         }
-
-        @Override
-        public Object[] toArray() {
-            return super.toArray();
-        }
-
-        @Override
-        public <T> T[] toArray(T[] array) {
-            return super.toArray(array);
-        }
     }
 
     protected abstract static class BaseNavigableSet<E, K extends Comparable<K>, V extends Comparable<V>>

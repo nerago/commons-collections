@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 
 /**

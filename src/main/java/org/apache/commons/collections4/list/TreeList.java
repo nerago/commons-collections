@@ -40,7 +40,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.MutableInteger;
 import org.apache.commons.collections4.OrderedIterator;
-import org.apache.commons.collections4.collection.SerializableTransitional;
+import org.apache.commons.collections4.SerializableTransitional;
 
 /**
  * A {@code List} implementation that is optimised for fast insertions and

@@ -1,4 +1,4 @@
-package org.apache.commons.collections4.collection;
+package org.apache.commons.collections4;
 
 import java.io.Externalizable;
 import java.io.IOException;

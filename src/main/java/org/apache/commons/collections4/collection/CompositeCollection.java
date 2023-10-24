@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.collection;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -25,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.AbstractCommonsCollection;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.commons.collections4.list.UnmodifiableList;
@@ -39,7 +39,7 @@ import org.apache.commons.collections4.list.UnmodifiableList;
  * @param <E> the type of the elements in the collection
  * @since 3.0
  */
-public class CompositeCollection<E> implements Collection<E>, Serializable {
+public class CompositeCollection<E> extends AbstractCommonsCollection<E> implements Collection<E>, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 8417515734108306801L;
@@ -156,50 +156,14 @@ public class CompositeCollection<E> implements Collection<E>, Serializable {
         return chain;
     }
 
-    /**
-     * Returns an array containing all of the elements in this composite.
-     *
-     * @return an object array of all the elements in the collection
-     */
     @Override
-    public Object[] toArray() {
-        final Object[] result = new Object[size()];
-        int i = 0;
-        for (final Iterator<E> it = iterator(); it.hasNext(); i++) {
-            result[i] = it.next();
-        }
-        return result;
-    }
-
-    /**
-     * Returns an object array, populating the supplied array if possible.
-     * See {@code Collection} interface for full details.
-     *
-     * @param <T>  the type of the elements in the collection
-     * @param array  the array to use, populating if possible
-     * @return an array of all the elements in the collection
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T[] toArray(final T[] array) {
-        final int size = size();
-        Object[] result = null;
-        if (array.length >= size) {
-            result = array;
-        } else {
-            result = (Object[]) Array.newInstance(array.getClass().getComponentType(), size);
-        }
-
+    protected void fillArray(final Object[] array) {
         int offset = 0;
         for (final Collection<E> item : all) {
             for (final E e : item) {
-                result[offset++] = e;
+                array[offset++] = e;
             }
         }
-        if (result.length > size) {
-            result[size] = null;
-        }
-        return (T[]) result;
     }
 
     /**
