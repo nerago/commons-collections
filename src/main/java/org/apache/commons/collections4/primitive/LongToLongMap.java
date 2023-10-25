@@ -1305,6 +1305,11 @@ public final class LongToLongMap implements Externalizable {
         }
 
         @Override
+        public boolean add(long v) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public boolean remove(final long k) {
             return parent.removeKey(k);
         }
@@ -1590,6 +1595,11 @@ public final class LongToLongMap implements Externalizable {
 
         @Override
         public boolean add(final Long aLong) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean add(final long v) {
             throw new UnsupportedOperationException();
         }
 

@@ -1291,6 +1291,11 @@ public final class LongToObjectMap<V> implements Externalizable {
         }
 
         @Override
+        public boolean add(final long v) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public boolean addAll(final Collection<? extends Long> c) {
             throw new UnsupportedOperationException();
         }

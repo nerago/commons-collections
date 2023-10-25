@@ -11,9 +11,11 @@ public interface LongCollection {
 
     boolean isEmpty();
 
-    boolean contains(long k);
+    boolean contains(long v);
 
-    boolean remove(long k);
+    boolean add(long v);
+
+    boolean remove(long v);
 
     void forEach(LongConsumer action);
 
