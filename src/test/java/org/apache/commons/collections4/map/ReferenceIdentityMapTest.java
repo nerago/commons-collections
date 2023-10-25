@@ -25,11 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.TestSerializationUtils;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -321,6 +323,19 @@ public class ReferenceIdentityMapTest<K, V> extends AbstractIterableMapTest<K, V
             @SuppressWarnings("unused")
             final byte[] b =  new byte[bytz];
             bytz = bytz * 2;
+        }
+    }
+
+    @Override
+    public void testFullMapCompatibility() throws Exception {
+        // test to make sure the canonical form has been preserved,
+        // don't go on with full verify because object identity will have changed, thus changing hashCodes etc
+        if (!skipSerializedCanonicalTests()) {
+            final Map<K, V> map = makeFullMap();
+            @SuppressWarnings("unchecked")
+            final Map<K, V> map2 = (Map<K, V>) TestSerializationUtils.readExternalFormFromDisk(getCanonicalFullCollectionName(map));
+            assertEquals(getSampleKeys().length, map2.size(), "Map is the right size");
+            assertSame(map.getClass(), map2.getClass(), "Object has different type");
         }
     }
 
