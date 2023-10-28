@@ -16,6 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.SequencedCollection;
+import java.util.SequencedMap;
+import java.util.SequencedSet;
+
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 
@@ -41,6 +45,7 @@ public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecor
         implements OrderedMap<K, V> {
 
     private static final long serialVersionUID = 6964783574989279065L;
+    private SequencedMap<K, V> reverse;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -77,6 +82,63 @@ public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecor
     @Override
     public K previousKey(final K key) {
         return decorated().previousKey(key);
+    }
+
+    @Override
+    public Entry<K, V> firstEntry() {
+        return decorated().firstEntry();
+    }
+
+    @Override
+    public Entry<K, V> lastEntry() {
+        return decorated().lastEntry();
+    }
+
+    @Override
+    public Entry<K, V> pollFirstEntry() {
+        return decorated().pollFirstEntry();
+    }
+
+    @Override
+    public Entry<K, V> pollLastEntry() {
+        return decorated().pollLastEntry();
+    }
+
+    @Override
+    public V putFirst(final K k, final V v) {
+        return decorated().putFirst(k, v);
+    }
+
+    @Override
+    public V putLast(final K k, final V v) {
+        return decorated().putLast(k, v);
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return decorated().sequencedKeySet();
+    }
+
+    @Override
+    public SequencedCollection<V> sequencedValues() {
+        return decorated().sequencedValues();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return decorated().sequencedEntrySet();
+    }
+
+    @Override
+    public SequencedMap<K, V> reversed() {
+        if (reverse == null) {
+            reverse = createReverse();
+        }
+        return reverse;
+    }
+
+    protected SequencedMap<K, V> createReverse() {
+        return new ReverseOrderedMap<>(this);
     }
 
     @Override

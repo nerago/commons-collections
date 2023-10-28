@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.commons.collections4.NavigableList;
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
 
 /**
@@ -118,4 +119,10 @@ public abstract class AbstractListDecorator<E, TDecorated extends List<E>, TSubL
 
     protected abstract TSubList decorateSubList(List<E> subList);
 
+    @Override
+    public NavigableList<E, AutoSortingList.AutoSortingSubList<E>, AutoSortingList.AutoSortedSubSet<E>> reversed() {
+        return makeReverse();
+    }
+
+    protected abstract NavigableList<E, AutoSortingList.AutoSortingSubList<E>, AutoSortingList.AutoSortedSubSet<E>> makeReverse();
 }

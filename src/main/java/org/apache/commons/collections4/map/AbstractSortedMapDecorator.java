@@ -19,8 +19,12 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
@@ -100,6 +104,44 @@ public abstract class AbstractSortedMapDecorator<K, V,
         return decorated().comparator();
     }
 
+    /**
+     * Sorted maps don't allow insert by position.
+     * @throws UnsupportedOperationException always
+     */
+    @Override
+    public final V putFirst(final K k, final V v) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Sorted maps don't allow insert by position.
+     * @throws UnsupportedOperationException always
+     */
+    @Override
+    public final V putLast(final K k, final V v) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Entry<K, V> firstEntry() {
+        return decorated().firstEntry();
+    }
+
+    @Override
+    public Entry<K, V> lastEntry() {
+        return decorated().lastEntry();
+    }
+
+    @Override
+    public Entry<K, V> pollFirstEntry() {
+        return decorated().pollFirstEntry();
+    }
+
+    @Override
+    public Entry<K, V> pollLastEntry() {
+        return decorated().pollLastEntry();
+    }
+
     @Override
     public K firstKey() {
         return decorated().firstKey();
@@ -108,6 +150,24 @@ public abstract class AbstractSortedMapDecorator<K, V,
     @Override
     public K lastKey() {
         return decorated().lastKey();
+    }
+
+    // just override to make final
+    @Override
+    public final TSubMap subMap(final K fromKey, final K toKey) {
+        return IterableSortedMap.super.subMap(fromKey, toKey);
+    }
+
+    // just override to make final
+    @Override
+    public final TSubMap headMap(final K toKey) {
+        return IterableSortedMap.super.headMap(toKey);
+    }
+
+    // just override to make final
+    @Override
+    public final TSubMap tailMap(final K fromKey) {
+        return IterableSortedMap.super.tailMap(fromKey);
     }
 
     @Override
@@ -126,10 +186,30 @@ public abstract class AbstractSortedMapDecorator<K, V,
     }
 
     @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return decorated().sequencedEntrySet();
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return decorated().sequencedKeySet();
+    }
+
+    @Override
+    public SequencedCollection<V> sequencedValues() {
+        return decorated().sequencedValues();
+    }
+
+    @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return SortedMapOrderedMapIterator.sortedMapIterator(decorated());
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public TSubMap reversed() {
+        return decorateDerived((TDecorated) decorated().reversed(), keyRange.reversed());
+    }
 
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {

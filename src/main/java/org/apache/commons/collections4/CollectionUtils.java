@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.bag.HashBag;
@@ -40,6 +42,9 @@ import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.apache.commons.collections4.iterators.CollatingIterator;
 import org.apache.commons.collections4.iterators.PermutationIterator;
+import org.apache.commons.collections4.map.SingletonMap;
+import org.apache.commons.collections4.set.EmptySet;
+import org.apache.commons.collections4.set.SingletonSet;
 
 /**
  * Provides utility methods and decorators for {@link Collection} instances.
@@ -216,7 +221,7 @@ public class CollectionUtils {
      * undesirable. This implementation only implements Collection.
      */
     @SuppressWarnings("rawtypes") // we deliberately use the raw type here
-    public static final Collection EMPTY_COLLECTION = Collections.emptyList();
+    public static final EmptySet EMPTY_COLLECTION = EmptySet.emptySet();
 
     /**
      * Don't allow instances.
@@ -232,7 +237,11 @@ public class CollectionUtils {
      * @return immutable empty collection
      */
     @SuppressWarnings("unchecked") // OK, empty collection is compatible with any type
-    public static <T> Collection<T> emptyCollection() {
+    public static <T> SequencedCollection<T> emptyCollection() {
+        return EMPTY_COLLECTION;
+    }
+
+    public static <T> EmptySet<T> emptySet() {
         return EMPTY_COLLECTION;
     }
 
@@ -246,6 +255,10 @@ public class CollectionUtils {
      */
     public static <T> Collection<T> emptyIfNull(final Collection<T> collection) {
         return collection == null ? CollectionUtils.<T>emptyCollection() : collection;
+    }
+
+    public static <E> SequencedSet<E> singleton(final E value) {
+        return new SingletonSet<>(value);
     }
 
     /**

@@ -87,4 +87,7 @@ public abstract class AbstractMapEntry<K, V> extends AbstractKeyValue<K, V> impl
                (getValue() == null ? 0 : getValue().hashCode());
     }
 
+    public Map.Entry<K, V> toUnmodifiableEntry() {
+        return new UnmodifiableMapEntry<>((Map.Entry<K, V>) this);
+    }
 }

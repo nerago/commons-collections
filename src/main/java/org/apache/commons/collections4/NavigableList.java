@@ -1,6 +1,7 @@
 package org.apache.commons.collections4;
 
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.Spliterator;
 
@@ -61,10 +62,32 @@ public interface NavigableList<E, TSubList extends List<E>, TSubSet extends Navi
      */
     int higherIndex(E e);
 
+    // override to give return type our preferred type
     @Override
     TSubList subList(int fromIndex, int toIndex);
 
-    default Spliterator<E> spliterator() {
-        return NavigableRangedSet.super.spliterator();
-    }
+    // override since super defaults might not take combined interface into account
+    @Override
+    NavigableList<E, TSubList, TSubSet> reversed();
+
+    // override since super defaults might not take combined interface into account
+    Spliterator<E> spliterator();
+
+    @Override
+    E getFirst();
+
+    @Override
+    E getLast();
+
+    @Override
+    void addFirst(final E e);
+
+    @Override
+    void addLast(final E e);
+
+    @Override
+    E removeFirst();
+
+    @Override
+    E removeLast();
 }

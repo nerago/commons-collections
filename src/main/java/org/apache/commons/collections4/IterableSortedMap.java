@@ -28,5 +28,6 @@ import java.util.SortedMap;
  */
 public interface IterableSortedMap<K, V, TSubMap extends IterableSortedMap<K, V, ?>>
         extends SortedRangedMap<K, V, TSubMap>, OrderedMap<K, V> {
-
+    @Override
+    TSubMap reversed();
 }

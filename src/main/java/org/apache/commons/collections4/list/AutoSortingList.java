@@ -131,6 +131,16 @@ public class AutoSortingList<E>
     }
 
     @Override
+    public void addFirst(final E object) {
+        add(object);
+    }
+
+    @Override
+    public void addLast(final E object) {
+        add(object);
+    }
+
+    @Override
     public E first() {
         if (!decorated().isEmpty()) {
             return decorated().get(0);
@@ -146,6 +156,16 @@ public class AutoSortingList<E>
         } else {
             throw new NoSuchElementException();
         }
+    }
+
+    @Override
+    public E getFirst() {
+        return first();
+    }
+
+    @Override
+    public E getLast() {
+        return last();
     }
 
     @Override
@@ -346,6 +366,16 @@ public class AutoSortingList<E>
     }
 
     @Override
+    public E removeFirst() {
+        return pollFirst();
+    }
+
+    @Override
+    public E removeLast() {
+        return pollLast();
+    }
+
+    @Override
     public AutoSortedSubSet<E> subSet(final SortedMapRange<E> range) {
         return new AutoSortedSubSet<>(this, range);
     }
@@ -357,12 +387,12 @@ public class AutoSortingList<E>
 
     @Override
     public ListIterator<E> listIterator() {
-        return new PartlyModifiableListIterator<>(decorated().listIterator());
+        return new ReadOrRemoveListIterator<>(decorated().listIterator());
     }
 
     @Override
     public ListIterator<E> listIterator(final int index) {
-        return new PartlyModifiableListIterator<>(decorated().listIterator(index));
+        return new ReadOrRemoveListIterator<>(decorated().listIterator(index));
     }
 
     @Override
@@ -373,6 +403,11 @@ public class AutoSortingList<E>
     @Override
     public Iterator<E> descendingIterator() {
         return new ReverseListIterator<>(decorated());
+    }
+
+    @Override
+    protected NavigableList<E, AutoSortingSubList<E>, AutoSortedSubSet<E>> makeReverse() {
+        return new ReverseNavigableList<>(this, getRange());
     }
 
     @Override
@@ -1412,21 +1447,9 @@ public class AutoSortingList<E>
         }
     }
 
-    private static final class PartlyModifiableListIterator<E> extends AbstractListIteratorDecorator<E> {
-        private E lastResult;
-
-        private PartlyModifiableListIterator(final ListIterator<E> decorated) {
+    private static final class ReadOrRemoveListIterator<E> extends AbstractListIteratorDecorator<E> {
+        private ReadOrRemoveListIterator(final ListIterator<E> decorated) {
             super(decorated);
-        }
-
-        @Override
-        public E next() {
-            return lastResult = super.next();
-        }
-
-        @Override
-        public E previous() {
-            return lastResult = super.previous();
         }
 
         /**

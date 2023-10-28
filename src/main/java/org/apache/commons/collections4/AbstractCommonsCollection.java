@@ -33,4 +33,9 @@ public abstract class AbstractCommonsCollection<E> implements Collection<E> {
     public <T> T[] toArray(final T[] array) {
         return ToArrayUtils.fromFunction(this::fillArray, size(), array);
     }
+
+    @Override
+    public boolean isEmpty() {
+        return size() == 0;
+    }
 }

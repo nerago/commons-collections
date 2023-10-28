@@ -19,13 +19,13 @@ package org.apache.commons.collections4.bidimap;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
@@ -39,6 +39,7 @@ import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 
 import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
 import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VALUE;
@@ -115,10 +116,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     private transient Node<K, V>[] rootNode;
     private transient int nodeCount;
     private transient int modifications;
-    private transient Set<K> keySet;
-    private transient Set<V> valuesSet;
-    private transient Set<Map.Entry<K, V>> entrySet;
+    private transient SequencedSet<K> keySet;
+    private transient SequencedSet<V> valuesSet;
+    private transient SequencedSet<Map.Entry<K, V>> entrySet;
     private transient Inverse inverse;
+    private transient Reverse reverse;
 
     /**
      * Constructs a new empty TreeBidiMap.
@@ -564,6 +566,62 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     /**
+     * Returns the first key-value mapping in this map or {@code null} if the map is empty.
+     *
+     * @return the first key-value mapping, or {@code null} if this map is empty
+     */
+    @Override
+    public Entry<K, V> firstEntry() {
+        if (nodeCount == 0) {
+            return null;
+        }
+        return leastNode(rootNode[KEY.ordinal()], KEY);
+    }
+
+    /**
+     * Returns the last key-value mapping in this map, or {@code null} if the map is empty.
+     *
+     * @return the last key-value mapping, or {@code null} if this map is empty
+     */
+    @Override
+    public Entry<K, V> lastEntry() {
+        if (nodeCount == 0) {
+            return null;
+        }
+        return greatestNode(rootNode[KEY.ordinal()], KEY);
+    }
+
+    /**
+     * Removes and returns the first key-value mapping in this map, or {@code null} if the map is empty.
+     *
+     * @return the removed first entry of this map, or {@code null} if this map is empty
+     */
+    @Override
+    public Entry<K, V> pollFirstEntry() {
+        if (nodeCount == 0) {
+            return null;
+        }
+        final Node<K, V> node = leastNode(rootNode[KEY.ordinal()], KEY);
+        doRedBlackDelete(node);
+        return node;
+    }
+
+    /**
+     * Removes and returns the last key-value mapping in this map, or {@code null} if the map is empty.
+     *
+     * @return the removed last entry of this map, or {@code null} if this map is empty
+     */
+    @Override
+    public Entry<K, V> pollLastEntry() {
+        if (nodeCount == 0) {
+            return null;
+        }
+        final Node<K, V> node = greatestNode(rootNode[KEY.ordinal()], KEY);
+        doRedBlackDelete(node);
+        return node;
+    }
+
+    /**
      * Gets the next key after the one specified.
      * <p>
      * The key must implement {@code Comparable}.
@@ -594,6 +652,26 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     /**
+     * Returns a {@code SequencedSet} view of the keys contained in this map in key order.
+     * <p>
+     * The set is backed by the map, so changes to the map are reflected in
+     * the set, and vice-versa. If the map is modified while an iteration over
+     * the set is in progress, the results of the iteration are undefined.
+     * <p>
+     * The set supports element removal, which removes the corresponding mapping
+     * from the map. It does not support the add or addAll operations.
+     *
+     * @return a set view of the keys contained in this map.
+     */
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        if (keySet == null) {
+            keySet = new KeyView(KEY);
+        }
+        return keySet;
+    }
+
+    /**
      * Returns a set view of the keys contained in this map in key order.
      * <p>
      * The set is backed by the map, so changes to the map are reflected in
@@ -607,10 +685,28 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public Set<K> keySet() {
-        if (keySet == null) {
-            keySet = new KeyView(KEY);
+        return sequencedKeySet();
+    }
+
+    /**
+     * Returns a set view of the values contained in this map in key order.
+     * The returned object can be cast to a Set.
+     * <p>
+     * The set is backed by the map, so changes to the map are reflected in
+     * the set, and vice-versa. If the map is modified while an iteration over
+     * the set is in progress, the results of the iteration are undefined.
+     * <p>
+     * The set supports element removal, which removes the corresponding mapping
+     * from the map. It does not support the add or addAll operations.
+     *
+     * @return a set view of the values contained in this map.
+     */
+    @Override
+    public SequencedSet<V> sequencedValues() {
+        if (valuesSet == null) {
+            valuesSet = new ValueView(KEY);
         }
-        return keySet;
+        return valuesSet;
     }
 
     /**
@@ -628,10 +724,67 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public Set<V> values() {
-        if (valuesSet == null) {
-            valuesSet = new ValueView(KEY);
+        return sequencedValues();
+    }
+
+    /**
+     * Inserts the given mapping into the map if it is not already present, or replaces the
+     * value of a mapping if it is already present (optional operation). After this operation
+     * completes normally, the given mapping will be present in this map, and it will be the
+     * first mapping in this map's encounter order.
+     * <p>
+     * Not supported for TreeBidiMap.
+     *
+     * @param k the key
+     * @param v the value
+     * @return the value previously associated with k, or null if none
+     * @throws UnsupportedOperationException if this collection implementation does not
+     *                                       support this operation
+     */
+    @Override
+    public V putFirst(final K k, final V v) {
+        throw new UnsupportedOperationException("TreeBidiMap sorts by key and can't insert by position");
+    }
+
+    /**
+     * Inserts the given mapping into the map if it is not already present, or replaces the
+     * value of a mapping if it is already present (optional operation). After this operation
+     * completes normally, the given mapping will be present in this map, and it will be the
+     * last mapping in this map's encounter order.
+     * <p>
+     * Not supported for TreeBidiMap.
+     *
+     * @param k the key
+     * @param v the value
+     * @return the value previously associated with k, or null if none
+     * @throws UnsupportedOperationException if this collection implementation does not
+     *                                       support this operation
+     */
+    @Override
+    public V putLast(final K k, final V v) {
+        throw new UnsupportedOperationException("TreeBidiMap sorts by key and can't insert by position");
+    }
+
+    /**
+     * Returns a {@code SequencedSet} view of the entries contained in this map in key order.
+     * For simple iteration through the map, the MapIterator is quicker.
+     * <p>
+     * The set is backed by the map, so changes to the map are reflected in
+     * the set, and vice-versa. If the map is modified while an iteration over
+     * the set is in progress, the results of the iteration are undefined.
+     * <p>
+     * The set supports element removal, which removes the corresponding mapping
+     * from the map. It does not support the add or addAll operations.
+     * The returned MapEntry objects do not support setValue.
+     *
+     * @return a set view of the values contained in this map.
+     */
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        if (entrySet == null) {
+            entrySet = new EntryView();
         }
-        return valuesSet;
+        return entrySet;
     }
 
     /**
@@ -650,10 +803,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        if (entrySet == null) {
-            entrySet = new EntryView();
-        }
-        return entrySet;
+        return sequencedEntrySet();
     }
 
     @Override
@@ -675,6 +825,14 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             inverse = new Inverse();
         }
         return inverse;
+    }
+
+    @Override
+    public OrderedBidiMap<K, V, ?> reversed() {
+        if (reverse == null) {
+            reverse = new Reverse();
+        }
+        return reverse;
     }
 
     /**
@@ -1634,7 +1792,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    abstract class View<E> extends AbstractSet<E> {
+    abstract class View<E> extends AbstractMapViewSortedSet<E, View<E>> {
 
         /** Whether to return KEY or VALUE order. */
         final DataElement orderType;
@@ -2639,11 +2797,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         private static final long serialVersionUID = -8331796932150921575L;
 
         /** Store the keySet once created. */
-        private Set<V> inverseKeySet;
+        private SequencedSet<V> inverseKeySet;
         /** Store the valuesSet once created. */
-        private Set<K> inverseValuesSet;
+        private SequencedSet<K> inverseValuesSet;
         /** Store the entrySet once created. */
-        private Set<Map.Entry<V, K>> inverseEntrySet;
+        private SequencedSet<Map.Entry<V, K>> inverseEntrySet;
 
         @Override
         public int size() {
@@ -2915,6 +3073,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public Set<V> keySet() {
+            return sequencedKeySet();
+        }
+
+        @Override
+        public SequencedSet<V> sequencedKeySet() {
             if (inverseKeySet == null) {
                 inverseKeySet = new ValueView(VALUE);
             }
@@ -2922,7 +3085,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public Set<K> values() {
+        public SequencedSet<K> sequencedValues() {
             if (inverseValuesSet == null) {
                 inverseValuesSet = new KeyView(VALUE);
             }
@@ -2930,11 +3093,21 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public Set<Map.Entry<V, K>> entrySet() {
+        public Set<K> values() {
+           return sequencedValues();
+        }
+
+        @Override
+        public SequencedSet<Entry<V, K>> sequencedEntrySet() {
             if (inverseEntrySet == null) {
                 inverseEntrySet = new InverseEntryView();
             }
             return inverseEntrySet;
+        }
+
+        @Override
+        public Set<Map.Entry<V, K>> entrySet() {
+           return sequencedEntrySet();
         }
 
         @Override
@@ -2974,6 +3147,14 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
             TreeBidiMap.this.readExternal(in);
         }
+
+        @Override
+        public OrderedBidiMap<V, K, ?> reversed() {
+            return null;
+        }
     }
 
+    class Reverse implements OrderedBidiMap<K, V, OrderedBidiMap> {
+
+    }
 }

@@ -73,4 +73,8 @@ public final class UnmodifiableMapEntry<K, V> extends AbstractMapEntry<K, V> imp
         throw new UnsupportedOperationException("setValue() is not supported");
     }
 
+    @Override
+    public Map.Entry<K, V> toUnmodifiableEntry() {
+        return this;
+    }
 }

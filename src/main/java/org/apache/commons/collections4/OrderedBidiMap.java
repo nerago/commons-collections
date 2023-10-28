@@ -16,6 +16,10 @@
  */
 package org.apache.commons.collections4;
 
+import java.util.SequencedCollection;
+import java.util.SequencedMap;
+import java.util.SequencedSet;
+
 /**
  * Defines a map that allows bidirectional lookup between key and values
  * and retains and provides access to an ordering.
@@ -33,4 +37,9 @@ public interface OrderedBidiMap<K, V, InverseMap extends OrderedBidiMap<V, K, ?>
         extends BidiMap<K, V, InverseMap>,
                 OrderedMap<K, V> {
 
+    @Override
+    OrderedBidiMap<K, V, ?> reversed();
+
+    @Override
+    SequencedSet<V> sequencedValues();
 }

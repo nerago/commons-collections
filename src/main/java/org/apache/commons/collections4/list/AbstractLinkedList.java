@@ -316,7 +316,7 @@ public abstract class AbstractLinkedList<E> implements List<E>, SerializableTran
         removeAllNodes();
     }
 
-
+    @Override
     public E getFirst() {
         final Node<E> node = header.next;
         if (node == header) {
@@ -325,6 +325,7 @@ public abstract class AbstractLinkedList<E> implements List<E>, SerializableTran
         return node.getValue();
     }
 
+    @Override
     public E getLast() {
         final Node<E> node = header.previous;
         if (node == header) {
@@ -333,16 +334,17 @@ public abstract class AbstractLinkedList<E> implements List<E>, SerializableTran
         return node.getValue();
     }
 
-    public boolean addFirst(final E o) {
+    @Override
+    public void addFirst(final E o) {
         addNodeAfter(header, o);
-        return true;
     }
 
-    public boolean addLast(final E o) {
+    @Override
+    public void addLast(final E o) {
         addNodeBefore(header, o);
-        return true;
     }
 
+    @Override
     public E removeFirst() {
         final Node<E> node = header.next;
         if (node == header) {
@@ -353,6 +355,7 @@ public abstract class AbstractLinkedList<E> implements List<E>, SerializableTran
         return oldValue;
     }
 
+    @Override
     public E removeLast() {
         final Node<E> node = header.previous;
         if (node == header) {
@@ -361,6 +364,11 @@ public abstract class AbstractLinkedList<E> implements List<E>, SerializableTran
         final E oldValue = node.getValue();
         removeNode(node);
         return oldValue;
+    }
+
+    @Override
+    public List<E> reversed() {
+        return List.super.reversed();
     }
 
     @Override

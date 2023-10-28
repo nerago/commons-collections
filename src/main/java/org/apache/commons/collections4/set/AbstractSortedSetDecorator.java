@@ -35,7 +35,7 @@ import org.apache.commons.collections4.SortedRangedSet;
  * @param <E> the type of the elements in the sorted set
  * @since 3.0
  */
-public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends AbstractSortedSetDecorator<E, ?, ?>>
+public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E, ?>>
         extends AbstractSetDecorator<E, TDecorated>
         implements SortedRangedSet<E, TSubSet> {
 
@@ -93,6 +93,12 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
     @Override
     public final TSubSet subSet(final SortedMapRange<E> range) {
         return decorateDerived(range.applyToSet(decorated()), range);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public TSubSet reversed() {
+        return decorateDerived((TDecorated) decorated().reversed(), range.reversed());
     }
 
     // TODO remove, just for compile checks

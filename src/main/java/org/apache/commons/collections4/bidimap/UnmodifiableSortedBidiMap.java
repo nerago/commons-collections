@@ -17,6 +17,8 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Map;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -157,19 +159,19 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
+    public SequencedSet<Entry<K, V>> entrySet() {
         final Set<Map.Entry<K, V>> set = super.entrySet();
         return UnmodifiableEntrySet.unmodifiableEntrySet(set);
     }
 
     @Override
-    public Set<K> keySet() {
+    public SequencedSet<K> keySet() {
         final Set<K> set = super.keySet();
         return UnmodifiableSet.unmodifiableSet(set);
     }
 
     @Override
-    public Set<V> values() {
+    public SequencedSet<V> values() {
         final Set<V> set = super.values();
         return UnmodifiableSet.unmodifiableSet(set);
     }

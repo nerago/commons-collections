@@ -29,7 +29,7 @@ public class EmptyMapSpliterator<K, V> implements MapSpliterator<K, V> {
     public static final MapSpliterator INSTANCE = new EmptyMapSpliterator();
 
     @SuppressWarnings("unchecked")
-    public static <V, K> MapSpliterator<K,V> emptyMapSpliterator() {
+    public static <K, V> MapSpliterator<K, V> emptyMapSpliterator() {
         return INSTANCE;
     }
 

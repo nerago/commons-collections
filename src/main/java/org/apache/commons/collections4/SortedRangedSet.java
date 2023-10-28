@@ -13,14 +13,17 @@ public interface SortedRangedSet<E, TSubSet extends SortedRangedSet<E, ?>>
 
     TSubSet subSet(SortedMapRange<E> range);
 
+    @Override
     default TSubSet subSet(final E fromElement, final E toElement) {
         return subSet(getRange().subRange(fromElement, toElement));
     }
 
+    @Override
     default TSubSet headSet(final E toElement) {
         return subSet(getRange().head(toElement));
     }
 
+    @Override
     default TSubSet tailSet(final E fromElement) {
         return subSet(getRange().tail(fromElement));
     }

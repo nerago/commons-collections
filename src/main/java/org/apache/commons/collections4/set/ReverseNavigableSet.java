@@ -7,17 +7,20 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.ToArrayUtils;
 
-public class ReverseNavigableSet<E> extends AbstractNavigableSetDecorator<E, NavigableSet<E>, AbstractNavigableSetDecorator<E, ?, ?>> {
-    public ReverseNavigableSet(final NavigableSet<E> set, final SortedMapRange<E> range) {
+public class ReverseNavigableSet<E, TDecorated extends NavigableSet<E>, TSubSet extends NavigableRangedSet<E, ?>>
+        extends AbstractNavigableSetDecorator<E, TDecorated, TSubSet> {
+    public ReverseNavigableSet(final TDecorated set, final SortedMapRange<E> range) {
         super(set, range.reversed());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected ReverseNavigableSet<E> decorateDerived(final NavigableSet<E> subMap, final SortedMapRange<E> range) {
-        return new ReverseNavigableSet<>(subMap, range);
+    protected TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range) {
+        return (TSubSet) new ReverseNavigableSet<>(subMap, range);
     }
 
     @Override
@@ -85,6 +88,11 @@ public class ReverseNavigableSet<E> extends AbstractNavigableSetDecorator<E, Nav
         return super.iterator();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public TSubSet reversed() {
+        return (TSubSet) new NullDecorator<>(decorated());
+    }
 
     /**
      * dumb iterator version, best we can do without knowing the internals of the decorated
@@ -105,9 +113,10 @@ public class ReverseNavigableSet<E> extends AbstractNavigableSetDecorator<E, Nav
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public AbstractNavigableSetDecorator<E, ?, ?> descendingSet() {
-        return new NullDecorator<>(decorated());
+    public TSubSet descendingSet() {
+        return (TSubSet) new NullDecorator<>(decorated());
     }
 }
 

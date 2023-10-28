@@ -49,4 +49,7 @@ public interface NavigableRangedMap<K, V, TSubMap extends NavigableRangedMap<K, 
     default TSubMap tailMap(final K fromKey) {
         return subMap(getKeyRange().tail(fromKey));
     }
+
+    @Override
+    TSubMap reversed();
 }

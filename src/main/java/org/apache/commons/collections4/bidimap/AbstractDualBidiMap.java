@@ -728,6 +728,7 @@ public abstract class AbstractDualBidiMap<K, V, TRegularMap extends AbstractDual
         @SuppressWarnings("unchecked")
         protected Values(final AbstractDualBidiMap<K, V, ?, ?, ?, ?> parent) {
             super(parent.normalMap.values(), parent);
+            // TODO that's not a set so may have wrong equals/hashcode defaults
         }
 
         @Override

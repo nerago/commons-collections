@@ -16,6 +16,8 @@
  */
 package org.apache.commons.collections4.bidimap;
 
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.BidiMap;
@@ -79,6 +81,11 @@ public abstract class AbstractBidiMapDecorator<K, V, TDecorated extends BidiMap<
         return decorated().removeValue(value);
     }
 
+    @Override
+    public Set<V> values() {
+        return (Set<V>) super.values();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public final TInverseMap inverseBidiMap() {
@@ -89,10 +96,4 @@ public abstract class AbstractBidiMapDecorator<K, V, TDecorated extends BidiMap<
     }
 
     protected abstract TInverseMap decorateInverse(TDecoratedInverse inverse);
-
-    @Override
-    public Set<V> values() {
-        return decorated().values();
-    }
-
 }

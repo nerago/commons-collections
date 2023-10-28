@@ -26,6 +26,7 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.TreeMap;
@@ -513,15 +514,17 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     @Override
     public final NavigableSet<K> navigableKeySet() {
-        if (keySet == null)
+        if (keySet == null) {
             keySet = createKeySet(false);
+        }
         return keySet;
     }
 
     @Override
     public final NavigableSet<K> descendingKeySet() {
-        if (keySetDescending == null)
+        if (keySetDescending == null) {
             keySetDescending = createKeySet(true);
+        }
         return keySetDescending;
     }
 
@@ -531,17 +534,34 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public final Set<Entry<K, V>> entrySet() {
-        if (entrySet == null)
+    public final SequencedSet<K> sequencedKeySet() {
+        return navigableKeySet();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        if (entrySet == null) {
             entrySet = createEntrySet();
+        }
         return entrySet;
     }
 
     @Override
-    public final Set<V> values() {
-        if (valueSet == null)
+    public final SequencedSet<Entry<K, V>> entrySet() {
+        return sequencedEntrySet();
+    }
+
+    @Override
+    public SequencedSet<V> sequencedValues() {
+        if (valueSet == null) {
             valueSet = createValueSet();
+        }
         return valueSet;
+    }
+
+    @Override
+    public final SequencedSet<V> values() {
+        return sequencedValues();
     }
 
     protected abstract NavigableSet<K> createKeySet(boolean descending);

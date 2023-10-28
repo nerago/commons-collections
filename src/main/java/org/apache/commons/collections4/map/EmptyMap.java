@@ -8,11 +8,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Set;
+import java.util.SequencedSet;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -318,18 +319,43 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public Set<K> keySet() {
-        return Collections.emptySet();
+    public SequencedSet<K> keySet() {
+        return CollectionUtils.emptySet();
     }
 
     @Override
-    public Set<V> values() {
-        return Collections.emptySet();
+    public SequencedSet<K> sequencedKeySet() {
+        return CollectionUtils.emptySet();
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
-        return Collections.emptySet();
+    public SequencedSet<V> values() {
+        return CollectionUtils.emptySet();
+    }
+
+    @Override
+    public SequencedSet<V> sequencedValues() {
+        return CollectionUtils.emptySet();
+    }
+
+    @Override
+    public V firstValue() {
+        return null;
+    }
+
+    @Override
+    public V lastValue() {
+        return null;
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return CollectionUtils.emptySet();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return CollectionUtils.emptySet();
     }
 
     @Override
@@ -375,5 +401,10 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+    }
+
+    @Override
+    public EverythingMap<K, V> reversed() {
+        return this;
     }
 }

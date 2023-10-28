@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4;
 
+
+import java.util.SequencedMap;
+
 /**
  * Defines a map that maintains order and allows both forward and backward
  * iteration through that order.
@@ -25,7 +28,7 @@ package org.apache.commons.collections4;
  *
  * @since 3.0
  */
-public interface OrderedMap<K, V> extends IterableMap<K, V> {
+public interface OrderedMap<K, V> extends IterableMap<K, V>, SequencedMap<K, V> {
 
     /**
      * Obtains an {@code OrderedMapIterator} over the map.

@@ -21,18 +21,18 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.AbstractSet;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.SequencedSet;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
@@ -417,9 +417,14 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the entrySet view
      */
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public SequencedSet<Entry<K, V>> entrySet() {
         final Map.Entry<K, V> entry = new TiedMapEntry<>(this, getKey());
-        return Collections.singleton(entry);
+        return CollectionUtils.singleton(entry);
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return entrySet();
     }
 
     /**
@@ -430,8 +435,13 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the keySet view
      */
     @Override
-    public Set<K> keySet() {
-        return Collections.singleton(key);
+    public SequencedSet<K> keySet() {
+        return CollectionUtils.singleton(key);
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return keySet();
     }
 
     /**
@@ -442,8 +452,18 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the values view
      */
     @Override
-    public Set<V> values() {
+    public SequencedSet<V> values() {
         return new SingletonValues<>(this);
+    }
+
+    @Override
+    public V firstValue() {
+        return null;
+    }
+
+    @Override
+    public V lastValue() {
+        return null;
     }
 
     /**
@@ -646,6 +666,16 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         key = (K) in.readObject();
         value = (V) in.readObject();
+    }
+
+    @Override
+    public EverythingMap<K, V> reversed() {
+        return this;
+    }
+
+    @Override
+    public SequencedSet<V> sequencedValues() {
+        return null;
     }
 
     /**

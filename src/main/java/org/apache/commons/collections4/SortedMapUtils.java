@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.SequencedMap;
 import java.util.SortedMap;
 
 public final class SortedMapUtils {

@@ -199,7 +199,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public final Set<K> keySet() {
+    public Set<K> keySet() {
         if (keySet != null)
             return keySet;
         keySet = createKeySet();
@@ -207,7 +207,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public final Set<Map.Entry<K, V>> entrySet() {
+    public Set<Map.Entry<K, V>> entrySet() {
         if (entrySet != null)
             return entrySet;
         entrySet = createEntrySet();

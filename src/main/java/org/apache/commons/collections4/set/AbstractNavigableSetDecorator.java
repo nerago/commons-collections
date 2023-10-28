@@ -21,7 +21,6 @@ import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.Iterator;
 import java.util.NavigableSet;
-import java.util.SortedSet;
 
 /**
  * Decorates another {@code NavigableSet} to provide additional behavior.
@@ -32,7 +31,7 @@ import java.util.SortedSet;
  * @param <E> the type of the elements in the navigable set
  * @since 4.1
  */
-public abstract class AbstractNavigableSetDecorator<E, TDecorated extends NavigableSet<E>, TSubSet extends AbstractNavigableSetDecorator<E, ?, ?>>
+public abstract class AbstractNavigableSetDecorator<E, TDecorated extends NavigableSet<E>, TSubSet extends NavigableRangedSet<E, ?>>
         extends AbstractSortedSetDecorator<E, TDecorated, TSubSet>
         implements NavigableRangedSet<E, TSubSet> {
 

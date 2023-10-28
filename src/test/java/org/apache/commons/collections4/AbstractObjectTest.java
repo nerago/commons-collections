@@ -376,6 +376,8 @@ public abstract class AbstractObjectTest extends BulkTest {
         if (collectionRole == CollectionCommonsRole.UNMODIFIABLE) {
             assertTrue(object instanceof Unmodifiable, name + " not Unmodifiable");
         }
+
+        checkJDK21(object);
     }
 
     private void checkSerialization(final Object object) throws Exception {
@@ -394,5 +396,29 @@ public abstract class AbstractObjectTest extends BulkTest {
                     + serialValue + " which is a duplicate of " + serializationIds.get(serialValue).getName());
         }
         serializationIds.put(serialValue, type);
+    }
+
+    private void checkJDK21(final Object object) throws Exception {
+        if (haveSequencedCollections()) {
+            checkSequencedCollectionInterface(object);
+        }
+
+    }
+
+    private boolean haveSequencedCollections() throws ClassNotFoundException {
+        final Class<?> sequencedCollection = getClass().getClassLoader().loadClass("java.util.SequencedCollection");
+        final Class<?> sequencedMap = getClass().getClassLoader().loadClass("java.util.SequencedMap");
+        if (sequencedCollection == null && sequencedMap == null) {
+            return false;
+        }
+        assertNotNull(sequencedCollection);
+        assertNotNull(sequencedMap);
+        return true;
+    }
+
+    protected void checkSequencedCollectionInterface(final Object object) {
+        // expect overridden by relevant tests
+        assertFalse(object instanceof java.util.SequencedCollection);
+        assertFalse(object instanceof java.util.SequencedMap);
     }
 }
