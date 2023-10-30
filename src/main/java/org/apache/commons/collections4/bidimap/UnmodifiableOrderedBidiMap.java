@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Map;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -29,6 +30,7 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
+import org.apache.commons.collections4.map.UnmodifiableSequencedEntrySet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -41,13 +43,14 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableOrderedBidiMap<K, V,
-            TDecorated extends OrderedBidiMap<K, V, ?>,
-            TDecoratedInverse extends OrderedBidiMap<V, K, ?>>
+public final class UnmodifiableOrderedBidiMap<K, V>
         extends AbstractOrderedBidiMapDecorator<K, V,
-            TDecorated,
-            TDecoratedInverse,
-            UnmodifiableOrderedBidiMap<V, K, TDecoratedInverse, ?>>
+            OrderedBidiMap<K, V, ?>,
+            OrderedBidiMap<V, K, ?>,
+            UnmodifiableOrderedBidiMap<V, K>,
+            SequencedSet<K>,
+            SequencedSet<Map.Entry<K, V>>,
+            SequencedSet<V>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -66,7 +69,7 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      * @since 4.0
      */
     public static <K, V> OrderedBidiMap<K, V, ?> unmodifiableOrderedBidiMap(
-            final OrderedBidiMap<? extends K, ? extends V, ?> map) {
+            final OrderedBidiMap<K, V, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
             final OrderedBidiMap<K, V, ?> tmpMap = (OrderedBidiMap<K, V, ?>) map;
@@ -82,8 +85,8 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<? extends K, ? extends V, ?> map) {
-        super((TDecorated) map);
+    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<K, V, ?> map) {
+        super(map);
     }
 
     @Override
@@ -152,21 +155,37 @@ public final class UnmodifiableOrderedBidiMap<K, V,
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        final Set<Map.Entry<K, V>> set = super.entrySet();
-        return UnmodifiableEntrySet.unmodifiableEntrySet(set);
-    }
-
-    @Override
-    public Set<K> keySet() {
+    public SequencedSet<K> sequencedKeySet() {
         final Set<K> set = super.keySet();
         return UnmodifiableSet.unmodifiableSet(set);
     }
 
     @Override
-    public Set<V> values() {
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        final Set<Map.Entry<K, V>> set = super.entrySet();
+        return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(set);
+    }
+
+    @Override
+    public SequencedSet<V> sequencedValues() {
+
         final Set<V> set = super.values();
         return UnmodifiableSet.unmodifiableSet(set);
+    }
+
+    @Override
+    public SequencedSet<K> keySet() {
+        return sequencedKeySet();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return sequencedEntrySet();
+    }
+
+    @Override
+    public SequencedSet<V> values() {
+        return sequencedValues();
     }
 
     @Override
@@ -175,7 +194,7 @@ public final class UnmodifiableOrderedBidiMap<K, V,
     }
 
     @Override
-    protected UnmodifiableOrderedBidiMap<V, K, TDecoratedInverse, TDecorated> decorateInverse(final TDecoratedInverse inverse) {
+    protected UnmodifiableOrderedBidiMap<V, K> decorateInverse(final OrderedBidiMap<V, K, ?> inverse) {
         return new UnmodifiableOrderedBidiMap<>(inverse);
     }
 
@@ -190,7 +209,7 @@ public final class UnmodifiableOrderedBidiMap<K, V,
      *
      * @return an inverted unmodifiable bidirectional map
      */
-    public UnmodifiableOrderedBidiMap<V, K, ?, ?> inverseOrderedBidiMap() {
+    public UnmodifiableOrderedBidiMap<V, K> inverseOrderedBidiMap() {
         return inverseBidiMap();
     }
 
@@ -215,6 +234,6 @@ public final class UnmodifiableOrderedBidiMap<K, V,
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        setMap((TDecorated) in.readObject());
+        setMap((OrderedBidiMap<K, V, ?>) in.readObject());
     }
 }

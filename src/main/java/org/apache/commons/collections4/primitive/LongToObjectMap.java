@@ -1258,7 +1258,7 @@ public final class LongToObjectMap<V> implements Externalizable {
             for (final LongHashEntry<?> element : parent.data) {
                 LongHashEntry<?> entry = element;
                 while (entry != null) {
-                    array[index++] = entry.key;
+                    array[index++] = (Long) entry.key;
                     entry = entry.next;
                 }
             }

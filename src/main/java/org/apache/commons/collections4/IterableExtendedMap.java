@@ -18,9 +18,7 @@ package org.apache.commons.collections4;
 
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -33,8 +31,6 @@ public interface IterableExtendedMap<K, V> extends IterableMap<K, V> {
 
     @Override
     V getOrDefault(Object key, V defaultValue);
-
-    boolean containsEntry(Object key, Object value);
 
     @Override
     V put(K key, V value);

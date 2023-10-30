@@ -253,7 +253,7 @@ public final class SortedMapRange<T> implements Serializable {
     }
 
     public SortedMapRange<T> reversed() {
-        if (isEmpty()) {
+        if (isEmpty() || isFull()) {
             return this;
         }
         return new SortedMapRange<>(toKey, toInclusive, fromKey, fromInclusive, comparator.reversed());

@@ -5,17 +5,16 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.SequencedSet;
-import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
 
-public final class EmptySet<E> implements SequencedSet<E>, SortedRangedSet<E, SortedRangedSet<E, ?>> {
+public final class EmptySet<E> implements SequencedSet<E>, NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
     private static final Object[] EMPTY_ARRAY = new Object[0];
     @SuppressWarnings("rawtypes")
     private static final EmptySet instance = new EmptySet();
@@ -26,7 +25,12 @@ public final class EmptySet<E> implements SequencedSet<E>, SortedRangedSet<E, So
     }
 
     @Override
-    public SortedSet<E> reversed() {
+    public NavigableRangedSet<E, ?> reversed() {
+        return this;
+    }
+
+    @Override
+    public NavigableRangedSet<E, ?> descendingSet() {
         return this;
     }
 
@@ -76,8 +80,43 @@ public final class EmptySet<E> implements SequencedSet<E>, SortedRangedSet<E, So
     }
 
     @Override
+    public E lower(E e) {
+        return null;
+    }
+
+    @Override
+    public E floor(E e) {
+        return null;
+    }
+
+    @Override
+    public E ceiling(E e) {
+        return null;
+    }
+
+    @Override
+    public E higher(E e) {
+        return null;
+    }
+
+    @Override
+    public E pollFirst() {
+        return null;
+    }
+
+    @Override
+    public E pollLast() {
+        return null;
+    }
+
+    @Override
     public Iterator<E> iterator() {
         return EmptyIterator.emptyIterator();
+    }
+
+    @Override
+    public Iterator<E> descendingIterator() {
+        return iterator();
     }
 
     @Override
@@ -164,7 +203,7 @@ public final class EmptySet<E> implements SequencedSet<E>, SortedRangedSet<E, So
     }
 
     @Override
-    public SortedRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
+    public NavigableRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
         return this;
     }
 }

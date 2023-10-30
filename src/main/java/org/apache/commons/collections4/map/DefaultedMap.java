@@ -19,9 +19,11 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.collections4.Factory;
 import org.apache.commons.collections4.Transformer;
@@ -68,7 +70,7 @@ import org.apache.commons.collections4.functors.FactoryTransformer;
  * @since 3.2
  * @see LazyMap
  */
-public class DefaultedMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>> {
+public class DefaultedMap<K, V> extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 19698628745827L;

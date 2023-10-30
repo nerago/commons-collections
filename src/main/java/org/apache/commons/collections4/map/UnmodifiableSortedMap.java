@@ -16,10 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Set;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -28,6 +28,7 @@ import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
+import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -44,7 +45,8 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableSortedMap<K, V>
-        extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, UnmodifiableSortedMap<K, V>>
+        extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, UnmodifiableSortedMap<K, V>,
+            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -159,18 +161,18 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        return UnmodifiableEntrySet.unmodifiableEntrySet(super.entrySet());
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(decorated().sequencedEntrySet());
     }
 
     @Override
-    public Set<K> keySet() {
-        return UnmodifiableSet.unmodifiableSet(super.keySet());
+    public SequencedSet<K> sequencedKeySet() {
+        return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedKeySet());
     }
 
     @Override
-    public Collection<V> values() {
-        return UnmodifiableCollection.unmodifiableCollection(super.values());
+    public SequencedCollection<V> sequencedValues() {
+        return UnmodifiableSequencedCollection.unmodifiableCollection(decorated().sequencedValues());
     }
 
     @Override

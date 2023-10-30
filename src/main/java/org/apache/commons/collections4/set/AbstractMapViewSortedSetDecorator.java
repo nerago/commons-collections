@@ -49,12 +49,6 @@ public abstract class AbstractMapViewSortedSetDecorator<E, TDecorated extends So
         return decorateDerived((TDecorated) decorated.reversed(), range.reversed());
     }
 
-    // TODO remove, just for compile checks
-    @Override
-    public final TSubSet subSet(final E fromElement, final E toElement) {
-        return super.subSet(fromElement, toElement);
-    }
-
     @Override
     public E first() {
         return decorated.first();

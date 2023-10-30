@@ -46,6 +46,8 @@ public interface Get<K, V> extends SerializableTransitional {
      */
     boolean containsValue(Object value);
 
+    boolean containsMapping(Object key, Object value);
+
     /**
      * @return a set view of the mappings contained in this map
      * @see java.util.Map#entrySet()

@@ -56,6 +56,8 @@ public interface Put<K, V> extends SerializableTransitional {
      */
     Object put(K key, V value);
 
+    boolean removeMapping(Object key, Object value);
+
     /**
      * @param t mappings to be stored in this map
      * @see Map#putAll(Map)

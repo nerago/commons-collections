@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
@@ -55,6 +56,7 @@ import org.apache.commons.collections4.map.TransformedMap;
 import org.apache.commons.collections4.map.TransformedSortedMap;
 import org.apache.commons.collections4.map.UnmodifiableMap;
 import org.apache.commons.collections4.map.UnmodifiableSortedMap;
+import org.apache.commons.collections4.set.AbstractNavigableSetDecorator;
 
 /**
  * Provides utility methods and decorators for {@link Map} and {@link SortedMap} instances.
@@ -1237,9 +1239,7 @@ public class MapUtils {
      */
     public static <K, V> IterableMap<K, V> iterableMap(final Map<K, V> map) {
         Objects.requireNonNull(map, "map");
-        return map instanceof IterableMap ? (IterableMap<K, V>) map : new AbstractMapDecorator<K, V, Map<K, V>>(map) {
-            // empty
-        };
+        return map instanceof IterableMap ? (IterableMap<K, V>) map : new AbstractMapDecorator.NullDecorator(map);
     }
 
     /**
@@ -1731,6 +1731,14 @@ public class MapUtils {
      */
     public static int size(final Map<?, ?> map) {
         return map == null ? 0 : map.size();
+    }
+
+    public static boolean containsMapping(final Map<?, ?> map, final Object key, final Object value) {
+        if (value == null) {
+            return map.containsKey(key) && map.get(key) == null;
+        } else {
+            return value.equals(map.get(key));
+        }
     }
 
     /**

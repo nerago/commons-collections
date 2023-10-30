@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.map;
 
 import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -44,8 +45,9 @@ import org.apache.commons.collections4.set.AbstractSetDecorator;
  *
  * @since 3.1
  */
-abstract class AbstractInputCheckedMapDecorator<K, V, TDecorated extends Map<K, V>>
-        extends AbstractMapDecorator<K, V, TDecorated> {
+abstract class AbstractInputCheckedMapDecorator<K, V,
+            TDecorated extends Map<K, V>>
+        extends AbstractMapDecorator<K, V, TDecorated, Set<K>, Set<Map.Entry<K, V>>, Collection<V>> {
 
     private static final long serialVersionUID = 6321139819267289886L;
 
@@ -99,7 +101,7 @@ abstract class AbstractInputCheckedMapDecorator<K, V, TDecorated extends Map<K, 
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         if (isSetValueChecking()) {
             return new EntrySet(decorated().entrySet(), this);
         }

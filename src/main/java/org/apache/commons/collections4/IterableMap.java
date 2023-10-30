@@ -97,4 +97,15 @@ public interface IterableMap<K, V> extends Map<K, V>, Put<K, V>, IterableGet<K, 
             }
         }
     }
+
+    // TODO avoid this default, would be nice to integrate better
+    @Override
+    default boolean containsMapping(final Object key, final Object value) {
+        return MapUtils.containsMapping(this, key, value);
+    }
+
+    @Override
+    default boolean removeMapping(final Object key, final Object value) {
+        return remove(key, value);
+    }
 }

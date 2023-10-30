@@ -20,12 +20,14 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
 import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.SequencedSet;
 import java.util.Spliterator;
 
@@ -90,7 +92,25 @@ public abstract class AbstractExtendedBidiMap<K, V,
         return (SortedRangedSet<Entry<K, V>, ?>) super.entrySet();
     }
 
-    protected final class AbsExMapValues extends AbstractMapViewSortedSet<V, SortedRangedSet<V, ?>> {
+    protected abstract class AbsExMapView<E, TSubSet extends SortedRangedSet<E, ?>>
+            extends AbstractMapViewSortedSet<E, TSubSet> {
+        @Override
+        public final int size() {
+            return AbstractExtendedBidiMap.this.size();
+        }
+
+        @Override
+        public final boolean isEmpty() {
+            return AbstractExtendedBidiMap.this.isEmpty();
+        }
+
+        @Override
+        public final void clear() {
+            AbstractExtendedBidiMap.this.clear();
+        }
+    }
+
+    protected final class AbsExMapValues extends AbsExMapView<V, SortedRangedSet<V, ?>> {
         @Override
         public SortedMapRange<V> getRange() {
             return AbstractExtendedBidiMap.this.getValueRange();
@@ -99,17 +119,17 @@ public abstract class AbstractExtendedBidiMap<K, V,
         @Override
         public SortedRangedSet<V, ?> subSet(final SortedMapRange<V> range) {
             // TODO consider adding a Map.valuesSubMap interface
-            TInverseMap a = inverseBidiMap();
-            TInverseMap b = a.subMap(range);
-            TSubMap c = b.inverseBidiMap();
-            SequencedSet<V> d = c.values();
-
             return inverseBidiMap().subMap(range).inverseBidiMap().values();
         }
 
         @Override
         public Iterator<V> iterator() {
             return new AbsIterMapValueIterator<>(mapIterator());
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return new TransformMapSpliterator<>(mapSpliterator(), (k, v) -> v);
         }
 
         @Override
@@ -128,21 +148,6 @@ public abstract class AbstractExtendedBidiMap<K, V,
         }
 
         @Override
-        public Spliterator<V> spliterator() {
-            return new TransformMapSpliterator<>(mapSpliterator(), (k, v) -> v);
-        }
-
-        @Override
-        public int size() {
-            return AbstractExtendedBidiMap.this.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return AbstractExtendedBidiMap.this.isEmpty();
-        }
-
-        @Override
         public boolean contains(final Object o) {
             return AbstractExtendedBidiMap.this.containsValue(o);
         }
@@ -151,23 +156,17 @@ public abstract class AbstractExtendedBidiMap<K, V,
         public boolean remove(Object o) {
             return AbstractExtendedBidiMap.this.removeValueAsBoolean(o);
         }
-
-        @Override
-        public void clear() {
-            AbstractExtendedBidiMap.this.clear();
-        }
     }
 
-    private class AbsExMapKeys extends AbstractMapViewSortedSet<K, AbsExMapKeys> implements SequencedSet<K> {
-
+    private class AbsExMapKeys extends AbsExMapView<K, SortedRangedSet<K, ?>> {
         @Override
         public SortedMapRange<K> getRange() {
             return AbstractExtendedBidiMap.this.getKeyRange();
         }
 
         @Override
-        public AbsExMapKeys subSet(SortedMapRange<K> range) {
-            return null;
+        public SortedRangedSet<K, ?> subSet(final SortedMapRange<K> range) {
+            return subMap(range).keySet();
         }
 
         @Override
@@ -186,18 +185,62 @@ public abstract class AbstractExtendedBidiMap<K, V,
         }
 
         @Override
-        public int size() {
-            return AbstractExtendedBidiMap.this.size();
-        }
-
-        @Override
         public boolean contains(Object o) {
             return AbstractExtendedBidiMap.this.containsKey(o);
         }
 
         @Override
         public Iterator<K> iterator() {
-            return null;
+            return mapIterator();
+        }
+
+        @Override
+        public Spliterator<K> spliterator() {
+            return new TransformMapSpliterator<>(mapSpliterator(), (k, v) -> k);
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            return AbstractExtendedBidiMap.this.removeAsBoolean(o);
+        }
+    }
+
+    private class AbsExMapEntries extends AbsExMapView<Entry<K, V>, SortedRangedSet<Entry<K, V>, ?>> {
+        @Override
+        public SortedMapRange<Entry<K, V>> getRange() {
+            final SortedMapRange<K> range = AbstractExtendedBidiMap.this.getKeyRange();
+            final SortedMapRange<Entry<K, V>> entryRangeFull = SortedMapRange.full(comparator());
+            return entryRangeFull.subRange(new UnmodifiableMapEntry<>(range.getFromKey(), null), range.isFromInclusive(),
+                                           new UnmodifiableMapEntry<>(range.getToKey(), null), range.isToInclusive());
+        }
+
+        @Override
+        public SortedRangedSet<Entry<K, V>, ?> subSet(final SortedMapRange<Entry<K, V>> range) {
+            final SortedMapRange<K> parentKeyRange = AbstractExtendedBidiMap.this.getKeyRange();
+            final SortedMapRange<K> subKeyRange = parentKeyRange.subRange(range.getFromKey().getKey(), range.isFromInclusive(),
+                    range.getToKey().getKey(), range.isToInclusive());
+            return subMap(subKeyRange).entrySet();
+        }
+
+        @Override
+        public Comparator<? super Entry<K, V>> comparator() {
+            final Comparator<? super K> keyComparator = AbstractExtendedBidiMap.this.comparator();
+            return Entry.comparingByKey(keyComparator);
+        }
+
+        @Override
+        public Entry<K, V> first() {
+            return AbstractExtendedBidiMap.this.firstEntry();
+        }
+
+        @Override
+        public Entry<K, V> last() {
+            return AbstractExtendedBidiMap.this.lastEntry();
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            return false;
         }
 
         @Override
@@ -206,13 +249,9 @@ public abstract class AbstractExtendedBidiMap<K, V,
         }
 
         @Override
-        public void clear() {
-
+        public Iterator<Entry<K, V>> iterator() {
+            return entryIterator();
         }
-    }
-    private class AbsExMapEntries extends AbstractMapViewSortedSet<Entry<K, V>, AbsExMapEntries> implements SequencedSet<Entry<K, V>> {
-
-
     }
 
 }

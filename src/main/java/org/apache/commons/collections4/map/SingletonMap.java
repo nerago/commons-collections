@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
-import java.util.SequencedSet;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -36,11 +35,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 import org.apache.commons.collections4.keyvalue.TiedMapEntry;
+import org.apache.commons.collections4.set.SingletonSet;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.SingletonMapSpliterator;
 import org.apache.commons.collections4.spliterators.SingletonSpliterator;
@@ -257,7 +259,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public boolean containsEntry(final Object key, final Object value) {
+    public boolean containsMapping(final Object key, final Object value) {
         return isEqualKey(key) && isEqualValue(value);
     }
 
@@ -395,17 +397,17 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public boolean removeAsBoolean(Object key) {
+    public boolean removeAsBoolean(final Object key) {
         return false;
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    public boolean remove(final Object key, final Object value) {
         return false;
     }
 
     @Override
-    public boolean removeValueAsBoolean(Object value) {
+    public boolean removeValueAsBoolean(final Object value) {
         return false;
     }
 
@@ -417,13 +419,13 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the entrySet view
      */
     @Override
-    public SequencedSet<Entry<K, V>> entrySet() {
+    public SortedRangedSet<Entry<K, V>, ?> entrySet() {
         final Map.Entry<K, V> entry = new TiedMapEntry<>(this, getKey());
-        return CollectionUtils.singleton(entry);
+        return new SingletonSet<>(entry);
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
         return entrySet();
     }
 
@@ -435,12 +437,12 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the keySet view
      */
     @Override
-    public SequencedSet<K> keySet() {
-        return CollectionUtils.singleton(key);
+    public NavigableRangedSet<K, ?> keySet() {
+        return new SingletonSet<>(key);
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
+    public NavigableRangedSet<K, ?> sequencedKeySet() {
         return keySet();
     }
 
@@ -452,18 +454,23 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the values view
      */
     @Override
-    public SequencedSet<V> values() {
+    public NavigableRangedSet<V, ?> values() {
         return new SingletonValues<>(this);
     }
 
     @Override
+    public NavigableRangedSet<V, ?> sequencedValues() {
+        return values();
+    }
+
+    @Override
     public V firstValue() {
-        return null;
+        return value;
     }
 
     @Override
     public V lastValue() {
-        return null;
+        return value;
     }
 
     /**
@@ -561,88 +568,88 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public Entry<K, V> lowerEntry(K key) {
+    public Entry<K, V> lowerEntry(final K key) {
         return null;
     }
 
     @Override
-    public K lowerKey(K key) {
+    public K lowerKey(final K key) {
         return null;
     }
 
     @Override
-    public Entry<K, V> floorEntry(K key) {
+    public Entry<K, V> floorEntry(final K key) {
+        return isEqualKey(key) ? this : null;
+    }
+
+    @Override
+    public K floorKey(final K key) {
         return null;
     }
 
     @Override
-    public K floorKey(K key) {
+    public Entry<K, V> ceilingEntry(final K key) {
+        return isEqualKey(key) ? this : null;
+    }
+
+    @Override
+    public K ceilingKey(final K key) {
         return null;
     }
 
     @Override
-    public Entry<K, V> ceilingEntry(K key) {
+    public Entry<K, V> higherEntry(final K key) {
         return null;
     }
 
     @Override
-    public K ceilingKey(K key) {
-        return null;
-    }
-
-    @Override
-    public Entry<K, V> higherEntry(K key) {
-        return null;
-    }
-
-    @Override
-    public K higherKey(K key) {
+    public K higherKey(final K key) {
         return null;
     }
 
     @Override
     public Entry<K, V> firstEntry() {
-        return null;
+        return this;
     }
 
     @Override
     public Entry<K, V> lastEntry() {
-        return null;
+        return this;
     }
 
     @Override
     public Entry<K, V> pollFirstEntry() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Entry<K, V> pollLastEntry() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public NavigableMap<K, V> descendingMap() {
-        return null;
+        return this;
     }
 
     @Override
     public NavigableSet<K> navigableKeySet() {
-        return null;
+        return keySet();
     }
 
     @Override
     public NavigableSet<K> descendingKeySet() {
-        return null;
+        return keySet();
     }
 
     @Override
     public SortedMapRange<V> getValueRange() {
-        return null;
+        return SortedMapRange.full(null);
     }
 
     @Override
     public EverythingMap<V, K> inverseBidiMap() {
-        return null;
+        return new SingletonMap<>(value, key);
     }
 
     @Override
@@ -651,19 +658,19 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public EverythingMap<K, V> prefixMap(K key) {
-        return null;
+    public EverythingMap<K, V> prefixMap(final K key) {
+        return isEqualKey(key) ? this : EmptyMap.emptyMap();
     }
 
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(key);
         out.writeObject(value);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         key = (K) in.readObject();
         value = (V) in.readObject();
     }
@@ -671,11 +678,6 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     @Override
     public EverythingMap<K, V> reversed() {
         return this;
-    }
-
-    @Override
-    public SequencedSet<V> sequencedValues() {
-        return null;
     }
 
     /**
@@ -766,7 +768,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * Values implementation for the SingletonMap.
      * This class is needed as values is a view that must update as the map updates.
      */
-    static class SingletonValues<V> extends AbstractSet<V> implements Serializable {
+    static class SingletonValues<V> extends AbstractSet<V> implements NavigableRangedSet<V, NavigableRangedSet<V, ?>>, Serializable {
         private static final long serialVersionUID = -3689524741863047872L;
         private final SingletonMap<?, V> parent;
 
@@ -790,14 +792,80 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         public void clear() {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public V lower(V v) {
+            return null;
+        }
+
+        @Override
+        public V floor(V v) {
+            return va;
+        }
+
+        @Override
+        public V ceiling(V v) {
+            return null;
+        }
+
+        @Override
+        public V higher(V v) {
+            return null;
+        }
+
+        @Override
+        public V pollFirst() {
+            return null;
+        }
+
+        @Override
+        public V pollLast() {
+            return null;
+        }
+
         @Override
         public Iterator<V> iterator() {
             return new SingletonIterator<>(parent.getValue(), false);
         }
 
         @Override
+        public Comparator<? super V> comparator() {
+            return null;
+        }
+
+        @Override
+        public V first() {
+            return null;
+        }
+
+        @Override
+        public V last() {
+            return null;
+        }
+
+        @Override
         public Spliterator<V> spliterator() {
             return new SingletonSpliterator<>(parent.getValue());
+        }
+
+        @Override
+        public NavigableRangedSet<V, ?> descendingSet() {
+            return this;
+        }
+
+        @Override
+        public Iterator<V> descendingIterator() {
+            return null;
+        }
+
+        @Override
+        public SortedMapRange<V> getRange() {
+            return null;
+        }
+
+        @Override
+        public NavigableRangedSet<V, ?> subSet(SortedMapRange<V> range) {
+            return null;
         }
     }
 

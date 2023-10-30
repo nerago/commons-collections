@@ -89,7 +89,7 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  * @since 3.0
  */
 public class ListOrderedMap<K, V>
-        extends AbstractMapDecorator<K, V, Map<K, V>>
+        extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
         implements OrderedMap<K, V> {
 
     /** Serialization version */

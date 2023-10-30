@@ -23,12 +23,11 @@ import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.NavigableSet;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.ComparatorUtils;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 
 
@@ -140,17 +139,16 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableSet<K> createKeySet(final boolean descending) {
+    protected NavigableRangedSet<K, ?> createKeySet(final boolean descending) {
         return new KeySetUsingKeyMapFullRange<>(this, descending);
     }
 
     @Override
-    protected Set<V> createValueSet() {
+    protected NavigableRangedSet<V, ?> createValueSet() {
         return new ValueSetUsingKeyEntrySetFullRange<>(this);
     }
-
     @Override
-    protected Set<Entry<K, V>> createEntrySet() {
+    protected NavigableRangedSet<Entry<K, V>, ?> createEntrySet() {
         return new EntrySetUsingKeyMap<>(this);
     }
 }

@@ -1368,7 +1368,7 @@ public final class LongToLongMap implements Externalizable {
             for (final LongHashEntry element : parent.data) {
                 LongHashEntry entry = element;
                 while (entry != null) {
-                    array[index++] = entry.key;
+                    array[index++] = (Long) entry.key;
                     entry = entry.next;
                 }
             }
@@ -1566,7 +1566,7 @@ public final class LongToLongMap implements Externalizable {
             for (final LongHashEntry element : parent.data) {
                 LongHashEntry entry = element;
                 while (entry != null) {
-                    array[index++] = entry.value;
+                    array[index++] = (Long) entry.value;
                     entry = entry.next;
                 }
             }

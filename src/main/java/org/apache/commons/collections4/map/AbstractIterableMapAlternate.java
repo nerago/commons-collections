@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.IterableExtendedMap;
-import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MapUtils;
@@ -307,7 +306,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
                 return false;
             }
             final Entry<?, ?> entry = (Entry<?, ?>) obj;
-            return AbstractIterableMapAlternate.this.containsEntry(entry.getKey(), entry.getValue());
+            return AbstractIterableMapAlternate.this.containsMapping(entry.getKey(), entry.getValue());
         }
 
         @Override

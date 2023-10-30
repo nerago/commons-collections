@@ -17,17 +17,18 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Map;
-import java.util.SequencedCollection;
-import java.util.SequencedSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
+import org.apache.commons.collections4.map.UnmodifiableSequencedEntrySet;
+import org.apache.commons.collections4.map.UnmodifiableSortedEntrySet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -45,7 +46,10 @@ public final class UnmodifiableSortedBidiMap<K, V>
             SortedBidiMap<K, V, ?, ?>,
             SortedBidiMap<V, K, ?, ?>,
             UnmodifiableSortedBidiMap<K, V>,
-            UnmodifiableSortedBidiMap<V, K>>
+            UnmodifiableSortedBidiMap<V, K>,
+            SortedRangedSet<K, ?>,
+            SortedRangedSet<Map.Entry<K, V>, ?>,
+            SortedRangedSet<V, ?>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -159,26 +163,30 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> entrySet() {
-        final Set<Map.Entry<K, V>> set = super.entrySet();
-        return UnmodifiableEntrySet.unmodifiableEntrySet(set);
+    public K removeValue(final Object value) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public SequencedSet<K> keySet() {
+    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
+        return UnmodifiableSortedEntrySet.unmodifiableEntrySet(decorated().sequencedEntrySet());
+    }
+
+    @Override
+    public SortedRangedSet<K, ?> sequencedKeySet() {
         final Set<K> set = super.keySet();
         return UnmodifiableSet.unmodifiableSet(set);
     }
 
     @Override
-    public SequencedSet<V> values() {
+    public SortedRangedSet<V, ?> sequencedValues() {
         final Set<V> set = super.values();
         return UnmodifiableSet.unmodifiableSet(set);
     }
 
     @Override
-    public K removeValue(final Object value) {
-        throw new UnsupportedOperationException();
+    public UnmodifiableSortedBidiMap<K, V> reversed() {
+        return new UnmodifiableSortedBidiMap<>(decorated().reversed());
     }
 
     @Override

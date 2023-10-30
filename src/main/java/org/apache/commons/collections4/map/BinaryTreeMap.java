@@ -140,7 +140,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
      * @throws NullPointerException if the key is null
      */
     @Override
-    public boolean containsEntry(final Object key, final Object value) {
+    public boolean containsMapping(final Object key, final Object value) {
         final Node<K, V> entry = lookupKey(checkKey(key));
         if (entry != null) {
             return Objects.equals(entry.getValue(), value);
@@ -1442,7 +1442,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
 
         @Override
         public AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-            return null;
+            return new TreeSubMap(range);
+        }
+
+        @Override
+        protected AbstractIterableSortedMap<K, V> createReversed() {
+            return new TreeSubMapReverse(keyRange.reversed());
         }
 
         @Override
@@ -1463,7 +1468,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        public boolean containsEntry(final Object keyObject, final Object value) {
+        public boolean containsMapping(final Object keyObject, final Object value) {
             final K key = checkKey(keyObject);
             if (keyRange.inRange(key)) {
                 final Node<K, V> node = lookupKey(key);
@@ -1562,6 +1567,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
             keyRange = (SortedMapRange<K>) in.readObject();
             BinaryTreeMap.this.readExternal(in);
+        }
+    }
+
+    private class TreeSubMapReverse extends TreeSubMap {
+        TreeSubMapReverse(final SortedMapRange<K> keyRange) {
+            super(keyRange);
         }
     }
 

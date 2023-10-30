@@ -39,6 +39,7 @@ import java.util.function.Supplier;
 import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.NavigableExtendedBidiMap;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapRange;
@@ -49,11 +50,12 @@ import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
 import org.apache.commons.collections4.set.AbstractNavigableSetDecorator;
-import org.apache.commons.collections4.set.AbstractSetDecorator;
+import org.apache.commons.collections4.set.AbstractSequencedSetDecorator;
 
 @SuppressWarnings("ClassWithTooManyFields")
 public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractNavigableMapDecorator<K, V, NavigableMap<K, V>, DualTreeBidi2MapBase<K, V>>
+        extends AbstractNavigableMapDecorator<K, V, NavigableMap<K, V>, DualTreeBidi2MapBase<K, V>,
+            NavigableRangedSet<K, ?>, NavigableRangedSet<Map.Entry<K, V>, ?>, NavigableRangedSet<V, ?>>
         implements NavigableExtendedBidiMap<K, V, DualTreeBidi2MapBase<K, V>, DualTreeBidi2MapBase<V, K>> {
     protected static final boolean treeMapImplementsRemove2 = checkNotDefault("remove", Object.class, Object.class);
     protected static final boolean treeMapImplementsReplace3 = checkNotDefault("replace", Object.class, Object.class, Object.class);
@@ -69,10 +71,10 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
     private DualTreeBidi2MapBase<V, K> inverseBidiMap;
     private DualTreeBidi2MapBase<K,V> descendingBidiMap;
-    private NavigableSet<K> keySet;
-    private NavigableSet<K> keySetDescending;
-    private Set<V> valueSet;
-    private Set<Entry<K, V>> entrySet;
+    private NavigableRangedSet<K, ?> keySet;
+    private NavigableRangedSet<K, ?> keySetDescending;
+    private NavigableRangedSet<V, ?> valueSet;
+    private NavigableRangedSet<Entry<K, V>, ?> entrySet;
 
     protected DualTreeBidi2MapBase(final NavigableMap<K, V> keyMap, final SortedMapRange<K> keyRange,
                                    final NavigableMap<V, K> valueMap, final SortedMapRange<V> valueRange) {
@@ -172,6 +174,16 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         valueMapRemoveChecked(value, key);
         modified();
         return key;
+    }
+
+    @Override
+    public V firstValue() {
+        return valueMap.firstKey();
+    }
+
+    @Override
+    public V lastValue() {
+        return valueMap.lastKey();
     }
 
     protected boolean removeValueViaCollection(final Object valueObject) {
@@ -513,7 +525,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public final NavigableSet<K> navigableKeySet() {
+    public final NavigableRangedSet<K, ?> navigableKeySet() {
         if (keySet == null) {
             keySet = createKeySet(false);
         }
@@ -521,7 +533,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public final NavigableSet<K> descendingKeySet() {
+    public final NavigableRangedSet<K, ?> descendingKeySet() {
         if (keySetDescending == null) {
             keySetDescending = createKeySet(true);
         }
@@ -529,17 +541,12 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public final Set<K> keySet() {
+    public final NavigableRangedSet<K, ?> sequencedKeySet() {
         return navigableKeySet();
     }
 
     @Override
-    public final SequencedSet<K> sequencedKeySet() {
-        return navigableKeySet();
-    }
-
-    @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+    public final NavigableRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
         if (entrySet == null) {
             entrySet = createEntrySet();
         }
@@ -547,37 +554,22 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     @Override
-    public final SequencedSet<Entry<K, V>> entrySet() {
-        return sequencedEntrySet();
-    }
-
-    @Override
-    public SequencedSet<V> sequencedValues() {
+    public final NavigableRangedSet<V, ?> sequencedValues() {
         if (valueSet == null) {
             valueSet = createValueSet();
         }
         return valueSet;
     }
 
-    @Override
-    public final SequencedSet<V> values() {
-        return sequencedValues();
-    }
+    protected abstract NavigableRangedSet<K, ?> createKeySet(boolean descending);
 
-    protected abstract NavigableSet<K> createKeySet(boolean descending);
+    protected abstract NavigableRangedSet<V, ?> createValueSet();
 
-    protected abstract Set<V> createValueSet();
-
-    protected abstract Set<Entry<K, V>> createEntrySet();
+    protected abstract NavigableRangedSet<Entry<K, V>, ?> createEntrySet();
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new DualTreeMapIterator<>(keyMap, this);
-    }
-
-    @Override
-    public DualTreeBidi2MapBase<K, V> subMap(final SortedMapRange<K> range) {
-        return (DualTreeBidi2MapBase<K, V>) super.subMap(range);
     }
 
     protected boolean updateValueMapDuringKeyMapIteration(final K key, final V oldValue, final V newValue) {
@@ -985,7 +977,8 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected static class ValueSetUsingKeyEntrySetFullRange<K extends Comparable<K>, V extends Comparable<V>>
-            extends BaseTransformedEntrySet<V, K, V> {
+            extends BaseTransformedEntrySet<V, K, V>
+            implements NavigableRangedSet<V, NavigableRangedSet<V, ?>> {
         private static final long serialVersionUID = 5296117687879550829L;
 
         private final DualTreeBidi2Map<K, V> parent;
@@ -1008,6 +1001,71 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         @Override
         public boolean contains(final Object object) {
             return parent.containsValue(object);
+        }
+
+        @Override
+        public V lower(V v) {
+            return null;
+        }
+
+        @Override
+        public V floor(V v) {
+            return null;
+        }
+
+        @Override
+        public V ceiling(V v) {
+            return null;
+        }
+
+        @Override
+        public V higher(V v) {
+            return null;
+        }
+
+        @Override
+        public V pollFirst() {
+            return null;
+        }
+
+        @Override
+        public V pollLast() {
+            return null;
+        }
+
+        @Override
+        public NavigableRangedSet<V, ?> descendingSet() {
+            return null;
+        }
+
+        @Override
+        public Iterator<V> descendingIterator() {
+            return null;
+        }
+
+        @Override
+        public SortedMapRange<V> getRange() {
+            return null;
+        }
+
+        @Override
+        public NavigableRangedSet<V, ?> subSet(SortedMapRange<V> range) {
+            return null;
+        }
+
+        @Override
+        public Comparator<? super V> comparator() {
+            return null;
+        }
+
+        @Override
+        public V first() {
+            return null;
+        }
+
+        @Override
+        public V last() {
+            return null;
         }
     }
 
@@ -1046,14 +1104,61 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     protected static class EntrySetUsingKeyMap<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractSetDecorator<Entry<K, V>, Set<Entry<K, V>>> {
+            extends AbstractSequencedSetDecorator<Entry<K, V>, SequencedSet<Entry<K, V>>, NavigableRangedSet<Entry<K, V>, ?>>
+            implements NavigableRangedSet<Entry<K, V>, NavigableRangedSet<Entry<K, V>, ?>> {
         private static final long serialVersionUID = -1069719982246820666L;
 
         protected final DualTreeBidi2MapBase<K, V> parent;
 
         protected EntrySetUsingKeyMap(final DualTreeBidi2MapBase<K, V> parent) {
-            super(parent.keyMap.entrySet());
+            super(parent.keyMap.sequencedEntrySet());
             this.parent = parent;
+        }
+
+        protected EntrySetUsingKeyMap(final DualTreeBidi2MapBase<K, V> parent, SequencedSet<Entry<K, V>> set) {
+            super(set);
+            this.parent = parent;
+        }
+
+        @Override
+        protected NavigableRangedSet<Entry<K, V>, ?> decorateReverse(final SequencedSet<Entry<K, V>> subMap) {
+            return new EntrySetUsingKeyMap<>(parent, subMap);
+        }
+
+        @Override
+        public Entry<K, V> lower(final Entry<K, V> entry) {
+            return parent.lowerEntry(entry.getKey());
+        }
+
+        @Override
+        public Entry<K, V> floor(Entry<K, V> entry) {
+            return parent.floorEntry(entry.getKey());
+        }
+
+        @Override
+        public Entry<K, V> ceiling(Entry<K, V> entry) {
+            return parent.ceilingEntry(entry.getKey());
+        }
+
+        @Override
+        public Entry<K, V> higher(Entry<K, V> entry) {
+            return parent.higherEntry(entry.getKey());
+        }
+
+        @Override
+        public Entry<K, V> pollFirst() {
+            final Entry<K, V> entry = parent.firstEntry();
+            if (entry != null) {
+                parent.remove(entry.getKey(), entry.getValue());
+                return entry;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public Entry<K, V> pollLast() {
+            return null;
         }
 
         @Override
@@ -1125,6 +1230,46 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             if (modified)
                 parent.modified();
             return modified;
+        }
+
+        @Override
+        public Comparator<? super Entry<K, V>> comparator() {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> first() {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> last() {
+            return null;
+        }
+
+        @Override
+        public NavigableRangedSet<Entry<K, V>, ?> reversed() {
+            return super.reversed();
+        }
+
+        @Override
+        public NavigableRangedSet<Entry<K, V>, ?> descendingSet() {
+            return null;
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> descendingIterator() {
+            return null;
+        }
+
+        @Override
+        public SortedMapRange<Entry<K, V>> getRange() {
+            return null;
+        }
+
+        @Override
+        public NavigableRangedSet<Entry<K, V>, ?> subSet(SortedMapRange<Entry<K, V>> range) {
+            return null;
         }
     }
 

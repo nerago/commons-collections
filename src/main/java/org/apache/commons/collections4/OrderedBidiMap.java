@@ -42,4 +42,11 @@ public interface OrderedBidiMap<K, V, InverseMap extends OrderedBidiMap<V, K, ?>
 
     @Override
     SequencedSet<V> sequencedValues();
+
+    // just override to avoid their default for now
+    @Override
+    SequencedSet<K> sequencedKeySet();
+
+    @Override
+    SequencedSet<Entry<K, V>> sequencedEntrySet();
 }

@@ -16,9 +16,12 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.SequencedCollection;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
+import java.util.Set;
 
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -41,7 +44,12 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecorator<K, V, OrderedMap<K, V>>
+public abstract class AbstractOrderedMapDecorator<K, V,
+            TDecorated extends OrderedMap<K, V>,
+            TKeySet extends SequencedSet<K>,
+            TEntrySet extends SequencedSet<Map.Entry<K, V>>,
+            TValueSet extends SequencedCollection<V>>
+        extends AbstractMapDecorator<K, V, TDecorated, TKeySet, TEntrySet, TValueSet>
         implements OrderedMap<K, V> {
 
     private static final long serialVersionUID = 6964783574989279065L;
@@ -60,7 +68,7 @@ public abstract class AbstractOrderedMapDecorator<K, V> extends AbstractMapDecor
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    public AbstractOrderedMapDecorator(final OrderedMap<K, V> map) {
+    public AbstractOrderedMapDecorator(final TDecorated map) {
         super(map);
     }
 

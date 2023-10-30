@@ -1,12 +1,10 @@
 package org.apache.commons.collections4;
 
 import java.util.List;
-import java.util.NavigableSet;
-import java.util.SortedSet;
 import java.util.Spliterator;
 
-public interface NavigableList<E, TSubList extends List<E>, TSubSet extends NavigableRangedSet<E, ?>>
-        extends NavigableRangedSet<E, TSubSet>, List<E> {
+public interface NavigableList<E, TSubList extends NavigableList<E, ?>>
+        extends NavigableRangedSet<E, TSubList>, List<E> {
     /**
      * Returns the index of the last element in this list strictly less than the
      * given element -1 if there is no such location.
@@ -68,7 +66,12 @@ public interface NavigableList<E, TSubList extends List<E>, TSubSet extends Navi
 
     // override since super defaults might not take combined interface into account
     @Override
-    NavigableList<E, TSubList, TSubSet> reversed();
+    TSubList reversed();
+
+    @Override
+    default TSubList descendingSet() {
+        return reversed();
+    }
 
     // override since super defaults might not take combined interface into account
     Spliterator<E> spliterator();

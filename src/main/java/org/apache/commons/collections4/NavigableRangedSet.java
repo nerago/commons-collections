@@ -51,5 +51,10 @@ public interface NavigableRangedSet<E, TSubSet extends NavigableRangedSet<E, ?>>
     }
 
     @Override
+    default TSubSet reversed() {
+        return descendingSet();
+    }
+
+    @Override
     TSubSet descendingSet();
 }

@@ -14,22 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.collections4.list;
+package org.apache.commons.collections4.collection;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.Objects;
+import java.util.SequencedCollection;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.BoundedCollection;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
-import org.apache.commons.collections4.iterators.UnmodifiableListIterator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
 
 /**
- * Decorates another {@code List} to ensure it can't be altered.
+ * {@link UnmodifiableSequencedCollection} decorates another
+ * {@link BoundedCollection} to ensure it can't be altered.
+ * <p>
+ * If a BoundedCollection is first wrapped in some other collection decorator,
+ * such as synchronized or predicated, the BoundedCollection methods are no
+ * longer accessible.
+ * The factory on this class will attempt to retrieve the bounded nature by
+ * examining the package scope variables.
+ * </p>
  * <p>
  * This class is Serializable from Commons Collections 3.1.
  * </p>
@@ -37,42 +46,40 @@ import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
  * Attempts to modify it will result in an UnsupportedOperationException.
  * </p>
  *
- * @since 3.0
+ * @param <E> the type of elements in this collection
+ * @since X.X
  */
-public final class UnmodifiableList<E>
-        extends AbstractSerializableListDecorator<E, List<E>, UnmodifiableList<E>>
-        implements Unmodifiable {
+public final class UnmodifiableSequencedCollection<E> extends AbstractSequencedCollectionDecorator<E> implements Unmodifiable {
 
     /** Serialization version */
-    private static final long serialVersionUID = 6595182819922443652L;
+    private static final long serialVersionUID = -7112672385450340330L;
 
     /**
-     * Factory method to create an unmodifiable list.
+     * Factory method to create an unmodifiable bounded collection.
      *
-     * @param <E> the type of the elements in the list
-     * @param list  the list to decorate, must not be null
-     * @return a new unmodifiable list
-     * @throws NullPointerException if list is null
+     * @param <E> the type of the elements in the collection
+     * @param coll  the {@code BoundedCollection} to decorate, must not be null
+     * @return a new unmodifiable bounded collection
+     * @throws NullPointerException if {@code coll} is {@code null}
      * @since 4.0
      */
-    public static <E> List<E> unmodifiableList(final List<? extends E> list) {
-        if (list instanceof Unmodifiable) {
+    public static <E> SequencedCollection<E> unmodifiableSequencedCollection(final SequencedCollection<E> coll) {
+        if (coll instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final List<E> tmpList = (List<E>) list;
-            return tmpList;
+            final SequencedCollection<E> tmpColl = (SequencedCollection<E>) coll;
+            return tmpColl;
         }
-        return new UnmodifiableList<>(list);
+        return new UnmodifiableSequencedCollection<>(coll);
     }
 
     /**
      * Constructor that wraps (not copies).
      *
-     * @param list  the list to decorate, must not be null
-     * @throws NullPointerException if list is null
+     * @param coll  the collection to decorate, must not be null
+     * @throws NullPointerException if coll is null
      */
-    @SuppressWarnings("unchecked") // safe to upcast
-    public UnmodifiableList(final List<? extends E> list) {
-        super((List<E>) list);
+    private UnmodifiableSequencedCollection(final SequencedCollection<E> coll) {
+        super(coll);
     }
 
     @Override
@@ -81,7 +88,17 @@ public final class UnmodifiableList<E>
     }
 
     @Override
-    public boolean add(final Object object) {
+    public Spliterator<E> spliterator() {
+        return new UnmodifiableSpliterator<>(decorated().spliterator());
+    }
+
+    @Override
+    public SequencedCollection<E> reversed() {
+        return new UnmodifiableSequencedCollection<>(decorated().reversed());
+    }
+
+    @Override
+    public boolean add(final E object) {
         throw new UnsupportedOperationException();
     }
 
@@ -100,9 +117,6 @@ public final class UnmodifiableList<E>
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * @since 4.4
-     */
     @Override
     public boolean removeIf(final Predicate<? super E> filter) {
         throw new UnsupportedOperationException();
@@ -119,47 +133,22 @@ public final class UnmodifiableList<E>
     }
 
     @Override
-    public ListIterator<E> listIterator() {
-        return UnmodifiableListIterator.unmodifiableListIterator(decorated().listIterator());
-    }
-
-    @Override
-    public ListIterator<E> listIterator(final int index) {
-        return UnmodifiableListIterator.unmodifiableListIterator(decorated().listIterator(index));
-    }
-
-    @Override
-    public Spliterator<E> spliterator() {
-        return new UnmodifiableSpliterator<>(decorated().spliterator());
-    }
-
-    @Override
-    public void add(final int index, final E object) {
+    public void addFirst(E e) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean addAll(final int index, final Collection<? extends E> coll) {
+    public void addLast(E e) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public E remove(final int index) {
+    public E removeFirst() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public E set(final int index, final E object) {
+    public E removeLast() {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected UnmodifiableList<E> decorateSubList(final List<E> sub) {
-        return new UnmodifiableList<>(sub);
-    }
-
-    @Override
-    protected UnmodifiableList<E> makeReverse() {
-        return new UnmodifiableList<>(decorated().reversed());
     }
 }

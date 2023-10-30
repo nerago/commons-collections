@@ -41,13 +41,12 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableBidiMap<K, V,
-            TDecorated extends BidiMap<K, V, TDecoratedInverse>,
-            TDecoratedInverse extends BidiMap<V, K, TDecorated>>
+public final class UnmodifiableBidiMap<K, V>
         extends AbstractBidiMapDecorator<K, V,
-            TDecorated,
-            TDecoratedInverse,
-            UnmodifiableBidiMap<V, K, TDecoratedInverse, TDecorated>>
+            BidiMap<K, V, ?>,
+            BidiMap<V, K, ?>,
+            UnmodifiableBidiMap<V, K>,
+            Set<K>, Set<Map.Entry<K, V>>, Set<V>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -65,7 +64,7 @@ public final class UnmodifiableBidiMap<K, V,
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> BidiMap<K, V, ?> unmodifiableBidiMap(final BidiMap<? extends K, ? extends V, ?> map) {
+    public static <K, V> BidiMap<K, V, ?> unmodifiableBidiMap(final BidiMap<K, V, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
             final BidiMap<K, V, ?> tmpMap = (BidiMap<K, V, ?>) map;
@@ -81,8 +80,8 @@ public final class UnmodifiableBidiMap<K, V,
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableBidiMap(final BidiMap<? extends K, ? extends V, ?> map) {
-        super((TDecorated) map);
+    private UnmodifiableBidiMap(final BidiMap<K, V, ?> map) {
+        super(map);
     }
 
     @Override
@@ -180,7 +179,7 @@ public final class UnmodifiableBidiMap<K, V,
     }
 
     @Override
-    protected UnmodifiableBidiMap<V, K, TDecoratedInverse, TDecorated> decorateInverse(final TDecoratedInverse inverse) {
+    protected UnmodifiableBidiMap<V, K> decorateInverse(final BidiMap<V, K, ?> inverse) {
         return new UnmodifiableBidiMap<>(inverse);
     }
 
@@ -192,7 +191,7 @@ public final class UnmodifiableBidiMap<K, V,
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        setMap((TDecorated) in.readObject());
+        setMap((BidiMap<K, V, ?>) in.readObject());
     }
 
 }

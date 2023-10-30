@@ -186,4 +186,8 @@ public class LazyList<E> extends AbstractSerializableListDecorator<E, List<E>, L
         throw new IllegalStateException("Factory and Transformer are both null!");
     }
 
+    @Override
+    protected LazyList<E> makeReverse() {
+        return decorateSubList(decorated().reversed());
+    }
 }

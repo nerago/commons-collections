@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.map.EntrySetToMapIteratorAdapter;
 
 /**
@@ -70,6 +71,11 @@ public abstract class AbstractIterableGetMapDecorator<K, V> implements IterableG
     @Override
     public boolean containsValue(final Object value) {
         return decorated().containsValue(value);
+    }
+
+    @Override
+    public boolean containsMapping(final Object key, final Object value) {
+        return MapUtils.containsMapping(decorated(), key, value);
     }
 
     @Override

@@ -45,7 +45,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableMap<K, V>
-        extends AbstractMapDecorator<K, V, Map<K, V>>
+        extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
         implements Unmodifiable {
 
     /** Serialization version */

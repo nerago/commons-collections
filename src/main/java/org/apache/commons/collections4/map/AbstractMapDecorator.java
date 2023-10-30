@@ -28,7 +28,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableGet;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -49,7 +51,9 @@ import org.apache.commons.collections4.MapIterator;
  * @param <V> the type of the values in the map
  * @since 3.0
  */
-public abstract class AbstractMapDecorator<K, V, TDecorated extends Map<K, V>>
+public abstract class AbstractMapDecorator<K, V,
+            TDecorated extends Map<K, V>,
+            TKeySet extends Set<K>, TEntrySet extends Set<Map.Entry<K, V>>, TValueSet extends Collection<V>>
         extends AbstractIterableMap<K, V> {
 
     /** Serialization version */
@@ -111,8 +115,8 @@ public abstract class AbstractMapDecorator<K, V, TDecorated extends Map<K, V>>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        return decorated().entrySet();
+    public TEntrySet entrySet() {
+        return (TEntrySet) decorated().entrySet();
     }
 
     @Override
@@ -131,8 +135,8 @@ public abstract class AbstractMapDecorator<K, V, TDecorated extends Map<K, V>>
     }
 
     @Override
-    public Set<K> keySet() {
-        return decorated().keySet();
+    public TKeySet keySet() {
+        return (TKeySet) decorated().keySet();
     }
 
     @Override
@@ -211,8 +215,8 @@ public abstract class AbstractMapDecorator<K, V, TDecorated extends Map<K, V>>
     }
 
     @Override
-    public Collection<V> values() {
-        return decorated().values();
+    public TValueSet values() {
+        return (TValueSet) decorated().values();
     }
 
     @SuppressWarnings("unchecked")
@@ -252,5 +256,13 @@ public abstract class AbstractMapDecorator<K, V, TDecorated extends Map<K, V>>
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(map);
+    }
+
+    public static class NullDecorator<K, V> extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>> {
+        private static final long serialVersionUID = 4507418465986588966L;
+
+        public NullDecorator(final Map<K, V> map) {
+            super(map);
+        }
     }
 }

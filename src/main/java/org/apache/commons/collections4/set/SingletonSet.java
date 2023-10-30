@@ -6,11 +6,13 @@ import java.util.Iterator;
 import java.util.Objects;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 
-public class SingletonSet<E> extends AbstractCommonsSortedSet<E, SortedRangedSet<E, ?>> {
+public class SingletonSet<E>
+        extends AbstractCommonsSortedSet<E, NavigableRangedSet<E, ?>>
+        implements NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
     private final E value;
 
     public SingletonSet(final E value) {
@@ -18,8 +20,8 @@ public class SingletonSet<E> extends AbstractCommonsSortedSet<E, SortedRangedSet
     }
 
     @Override
-    public SortedRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
-        return range.inRange(value) ? this : CollectionUtils.emptySet();
+    public NavigableRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
+        return range.inRange(value) ? this : EmptySet.emptySet();
     }
 
     @Override
@@ -48,8 +50,43 @@ public class SingletonSet<E> extends AbstractCommonsSortedSet<E, SortedRangedSet
     }
 
     @Override
+    public E lower(E e) {
+        return null;
+    }
+
+    @Override
+    public E floor(E e) {
+        return Objects.equals(value, e) ? value : null;
+    }
+
+    @Override
+    public E ceiling(E e) {
+        return Objects.equals(value, e) ? value : null;
+    }
+
+    @Override
+    public E higher(E e) {
+        return null;
+    }
+
+    @Override
+    public E pollFirst() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public E pollLast() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Iterator<E> iterator() {
         return new SingletonIterator<>(value);
+    }
+
+    @Override
+    public Iterator<E> descendingIterator() {
+        return iterator();
     }
 
     @Override
@@ -75,5 +112,10 @@ public class SingletonSet<E> extends AbstractCommonsSortedSet<E, SortedRangedSet
     @Override
     public final SortedMapRange<E> getRange() {
         return SortedMapRange.full(null);
+    }
+
+    @Override
+    public NavigableRangedSet<E, ?> descendingSet() {
+        return this;
     }
 }

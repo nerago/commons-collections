@@ -38,6 +38,7 @@ public abstract class AbstractListDecorator<E, TDecorated extends List<E>, TSubL
 
     /** Serialization version--necessary in an abstract class? */
     private static final long serialVersionUID = 4500739654952315623L;
+    private TSubList reversed;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -113,16 +114,19 @@ public abstract class AbstractListDecorator<E, TDecorated extends List<E>, TSubL
     }
 
     @Override
-    public final TSubList subList(final int fromIndex, final int toIndex) {
+    public TSubList subList(final int fromIndex, final int toIndex) {
         return decorateSubList(decorated().subList(fromIndex, toIndex));
     }
 
     protected abstract TSubList decorateSubList(List<E> subList);
 
     @Override
-    public NavigableList<E, AutoSortingList.AutoSortingSubList<E>, AutoSortingList.AutoSortedSubSet<E>> reversed() {
-        return makeReverse();
+    public final TSubList reversed() {
+        if (reversed == null) {
+            reversed = makeReverse();
+        }
+        return reversed;
     }
 
-    protected abstract NavigableList<E, AutoSortingList.AutoSortingSubList<E>, AutoSortingList.AutoSortedSubSet<E>> makeReverse();
+    protected abstract TSubList makeReverse();
 }

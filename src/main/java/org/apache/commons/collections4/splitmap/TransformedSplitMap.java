@@ -217,6 +217,11 @@ public class TransformedSplitMap<J, K, U, V> extends AbstractIterableGetMapDecor
     }
 
     @Override
+    public boolean removeMapping(final Object key, final Object value) {
+        return decorated().remove(key, value);
+    }
+
+    @Override
     public void clear() {
         decorated().clear();
     }

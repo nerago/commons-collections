@@ -17,6 +17,8 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 
 
 import java.util.*;
@@ -145,6 +147,26 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         valueMapRemoveChecked(value, key);
         modified();
         return true;
+    }
+
+    @Override
+    public V firstValue() {
+        final Entry<V, K> entry = valueMap.firstEntry();
+        if (keyMap.containsKey(entry.getValue())) {
+            return entry.getKey();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public V lastValue() {
+        final Entry<V, K> entry = valueMap.lastEntry();
+        if (keyMap.containsKey(entry.getValue())) {
+            return entry.getKey();
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -549,7 +571,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableSet<K> createKeySet(final boolean descending) {
+    protected NavigableRangedSet<K, ?> createKeySet(final boolean descending) {
         if (valueRange.isFull())
             return new KeySetUsingKeyMapSubSet<>(this, descending);
         else
@@ -557,7 +579,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected Set<V> createValueSet() {
+    protected NavigableRangedSet<V, ?> createValueSet() {
         if (valueRange.isFull())
             return new ValueSetUsingKeyEntrySetSubSet<>(this);
         else
@@ -565,7 +587,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected Set<Entry<K, V>> createEntrySet() {
+    protected NavigableRangedSet<Entry<K, V>, ?> createEntrySet() {
         if (valueRange.isFull())
             return new EntrySetUsingKeyMap<>(this);
         else
@@ -621,15 +643,17 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private abstract static class BaseUsingBoth<E, K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractCollection<E>
-            implements NavigableSet<E> {
+            extends AbstractMapViewSortedSet<E, NavigableRangedSet<E, ?>>
+            implements NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
         protected final DualTreeBidi2MapSubMap<K, V> parent;
+        protected final SortedMapRange<E> range;
         private final boolean descending;
         protected final NavigableMap<K, V> keyMap;
         protected final Map<V, K> valueMap;
 
-        public BaseUsingBoth(final DualTreeBidi2MapSubMap<K,V> parent, final boolean descending) {
+        public BaseUsingBoth(final DualTreeBidi2MapSubMap<K, V> parent, final SortedMapRange<E> range, final boolean descending) {
             this.parent = parent;
+            this.range = range;
             this.descending = descending;
             this.keyMap = descending ? parent.keyMap.descendingMap() : parent.keyMap;
             this.valueMap = parent.valueMap;
@@ -639,7 +663,12 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
 
         protected abstract K toKey(E element);
 
-        protected abstract NavigableSet<E> createSimilar(DualTreeBidi2MapSubMap<K,V> parent, boolean descending);
+        protected abstract NavigableRangedSet<E, ?> createSimilar(DualTreeBidi2MapSubMap<K, V> parent, boolean descending);
+
+        @Override
+        public SortedMapRange<E> getRange() {
+            return range;
+        }
 
         @Override
         public int size() {
@@ -722,61 +751,28 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public boolean retainAll(final Collection<?> c) {
-            return parent.collectionRemoveIf(entry -> !c.contains(toResult(entry)));
-        }
-
-        @Override
-        public boolean removeAll(final Collection<?> c) {
-            return parent.collectionRemoveIf(entry -> c.contains(toResult(entry)));
-        }
-
-        @Override
-        public NavigableSet<E> descendingSet() {
+        public NavigableRangedSet<E, ?> descendingSet() {
             return createSimilar(parent, !descending);
         }
 
-        // TODO followup using range better
         @Override
-        public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement, final boolean toInclusive) {
-            return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.subMap(toKey(fromElement), fromInclusive, toKey(toElement), toInclusive), descending);
+        public NavigableRangedSet<E, ?> reversed() {
+            return descendingSet();
         }
 
         @Override
-        public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
-            return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.headMap(toKey(toElement), inclusive), descending);
-        }
-
-        @Override
-        public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
-            return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.tailMap(toKey(fromElement), inclusive), descending);
-        }
-
-        @Override
-        public SortedSet<E> subSet(final E fromElement, final E toElement) {
-            return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.subMap(toKey(fromElement), toKey(toElement)), descending);
-        }
-
-        @Override
-        public SortedSet<E> headSet(final E toElement) {
-            return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.headMap(toKey(toElement)), descending);
-        }
-
-        @Override
-        public SortedSet<E> tailSet(final E fromElement) {
-            return createSimilar((DualTreeBidi2MapSubMap<K, V>) parent.tailMap(toKey(fromElement)), descending);
-        }
-
-        @Override
-        public boolean addAll(final Collection<? extends E> coll) {
-            throw new UnsupportedOperationException();
+        public NavigableRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
+            return createSimilar(
+                    (DualTreeBidi2MapSubMap<K, V>)
+                    parent.subMap(toKey(range.getFromKey()), range.isFromInclusive(), toKey(range.getToKey()), range.isToInclusive()),
+                    descending);
         }
     }
 
     private static final class KeySetUsingBoth<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseUsingBoth<K, K, V> {
         public KeySetUsingBoth(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
-            super(parent, descending);
+            super(parent, parent.getKeyRange(), descending);
         }
 
         @Override
@@ -790,7 +786,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        protected NavigableSet<K> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
+        protected NavigableRangedSet<K, ?> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
             return new KeySetUsingBoth<>(parent, descending);
         }
 
@@ -813,7 +809,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     private static final class EntrySetUsingBoth<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseUsingBoth<Entry<K, V>, K, V> {
         public EntrySetUsingBoth(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
-            super(parent, descending);
+            super(parent, toEntryRange(parent.getKeyRange(), parent), descending);
         }
 
         @Override
@@ -827,7 +823,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        protected NavigableSet<Entry<K, V>> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
+        protected NavigableRangedSet<Entry<K, V>, ?> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
             return new EntrySetUsingBoth<>(parent, descending);
         }
 
@@ -844,6 +840,13 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Comparator<? super Entry<K, V>> comparator() {
             return Entry.comparingByKey(parent.comparator());
+        }
+
+        private static <K extends Comparable<K>, V extends Comparable<V>> SortedMapRange<Entry<K, V>> toEntryRange(final SortedMapRange<K> keyRange,
+                                                                                                                   final DualTreeBidi2MapSubMap<K, V> parent) {
+            final SortedMapRange<Entry<K, V>> fullEntryRange = SortedMapRange.full(Entry.comparingByKey(parent.comparator()));
+            return fullEntryRange.subRange(new UnmodifiableMapEntry<>(keyRange.getFromKey(), null), keyRange.isFromInclusive(),
+                    new UnmodifiableMapEntry<>(keyRange.getToKey(), null), keyRange.isToInclusive());
         }
     }
 

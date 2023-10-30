@@ -66,7 +66,7 @@ import org.apache.commons.collections4.MapIterator;
  * @since 4.0
  */
 public class PassiveExpiringMap<K, V>
-    extends AbstractMapDecorator<K, V, Map<K, V>> {
+    extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>> {
 
     /**
      * A {@link org.apache.commons.collections4.map.PassiveExpiringMap.ExpirationPolicy ExpirationPolicy}

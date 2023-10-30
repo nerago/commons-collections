@@ -192,4 +192,8 @@ public class GrowthList<E> extends AbstractSerializableListDecorator<E, List<E>,
         return subList; // doesn't decorate its sub-lists at all
     }
 
+    @Override
+    protected List<E> makeReverse() {
+        return new GrowthList<>(decorated().reversed());
+    }
 }

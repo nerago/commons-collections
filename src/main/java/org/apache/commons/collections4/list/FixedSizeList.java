@@ -168,6 +168,11 @@ public class FixedSizeList<E>
         return new FixedSizeList<>(subList);
     }
 
+    @Override
+    protected FixedSizeList<E> makeReverse() {
+        return new FixedSizeList<>(decorated().reversed());
+    }
+
     /**
      * List iterator that only permits changes via set()
      */

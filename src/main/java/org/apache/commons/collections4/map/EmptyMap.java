@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.SequencedSet;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -18,6 +17,7 @@ import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
@@ -84,7 +84,7 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public boolean containsEntry(final Object key, final Object value) {
+    public boolean containsMapping(final Object key, final Object value) {
         return false;
     }
 
@@ -319,22 +319,22 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public SequencedSet<K> keySet() {
+    public SortedRangedSet<K, ?> keySet() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
+    public SortedRangedSet<K, ?> sequencedKeySet() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SequencedSet<V> values() {
+    public SortedRangedSet<V, ?> values() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SequencedSet<V> sequencedValues() {
+    public SortedRangedSet<V, ?> sequencedValues() {
         return CollectionUtils.emptySet();
     }
 
@@ -349,12 +349,12 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> entrySet() {
+    public SortedRangedSet<Entry<K, V>, ?> entrySet() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
         return CollectionUtils.emptySet();
     }
 

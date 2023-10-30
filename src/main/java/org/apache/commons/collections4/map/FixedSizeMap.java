@@ -62,7 +62,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public class FixedSizeMap<K, V>
-        extends AbstractMapDecorator<K, V, Map<K, V>>
+        extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
         implements BoundedMap<K, V> {
 
     /** Serialization version */

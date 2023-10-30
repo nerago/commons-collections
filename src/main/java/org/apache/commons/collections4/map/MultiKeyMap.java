@@ -16,8 +16,10 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -80,7 +82,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
  * @param <V> the type of the values in this map
  * @since 3.1
  */
-public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K>, V, AbstractHashedMap<MultiKey<? extends K>, V>>
+public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K>, V, AbstractHashedMap<MultiKey<? extends K>, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
         implements Cloneable {
 
     /** Serialisation version */

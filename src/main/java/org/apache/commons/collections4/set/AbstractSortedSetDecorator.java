@@ -36,7 +36,7 @@ import org.apache.commons.collections4.SortedRangedSet;
  * @since 3.0
  */
 public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E, ?>>
-        extends AbstractSetDecorator<E, TDecorated>
+        extends AbstractSequencedSetDecorator<E, TDecorated, TSubSet>
         implements SortedRangedSet<E, TSubSet> {
 
     /** Serialization version */
@@ -86,6 +86,11 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
     @Override
     public SortedMapRange<E> getRange() {
         return range;
+    }
+
+    @Override
+    protected final TSubSet decorateReverse(final TDecorated subMap) {
+        return decorateDerived(subMap, range.reversed());
     }
 
     protected abstract TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range);

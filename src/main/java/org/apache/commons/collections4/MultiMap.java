@@ -70,7 +70,8 @@ public interface MultiMap<K, V> extends IterableMap<K, Object> {
      * @throws NullPointerException if the key or value is null and null is invalid
      * @since 4.0 (signature in previous releases: V remove(K, V))
      */
-    boolean removeMapping(K key, V item);
+    @Override
+    boolean removeMapping(Object key, Object item);
 
     /**
      * Gets the number of keys in this map.

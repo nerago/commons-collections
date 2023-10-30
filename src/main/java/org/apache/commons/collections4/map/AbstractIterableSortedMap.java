@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
+
 import org.apache.commons.collections4.IterableExtendedMap;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -25,6 +28,8 @@ public abstract class AbstractIterableSortedMap<K extends Comparable<K>, V>
         extends AbstractIterableMapAlternate<K, V>
         implements IterableSortedMap<K, V, AbstractIterableSortedMap<K, V>>, IterableExtendedMap<K, V> {
     private static final long serialVersionUID = 8059244983988773629L;
+
+    private AbstractIterableSortedMap<K, V> reversed;
 
     @Override
     public abstract OrderedMapIterator<K, V> mapIterator();
@@ -43,5 +48,30 @@ public abstract class AbstractIterableSortedMap<K extends Comparable<K>, V>
 
     public final AbstractIterableSortedMap<K, V> tailMap(final K fromKey) {
         return IterableSortedMap.super.tailMap(fromKey);
+    }
+
+    @Override
+    public final SequencedSet<K> keySet() {
+        return sequencedKeySet();
+    }
+
+    @Override
+    public final SequencedSet<Entry<K, V>> entrySet() {
+        return sequencedEntrySet();
+    }
+
+    @Override
+    public final SequencedCollection<V> values() {
+        return sequencedValues();
+    }
+
+    protected abstract AbstractIterableSortedMap<K, V> createReversed();
+
+    @Override
+    public AbstractIterableSortedMap<K, V> reversed() {
+        if (reversed == null) {
+            reversed = createReversed();
+        }
+        return reversed;
     }
 }

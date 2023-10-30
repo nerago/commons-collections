@@ -17,9 +17,11 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Comparator;
+import java.util.Map;
 
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -42,9 +44,12 @@ import org.apache.commons.collections4.SortedMapRange;
 public abstract class AbstractSortedBidiMapDecorator<K, V,
             TDecorated extends SortedBidiMap<K, V, ?, ?>,
             TDecoratedInverse extends SortedBidiMap<V, K, ?, ?>,
-            TSubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?>,
-            TInverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?>>
-        extends AbstractOrderedBidiMapDecorator<K, V, TDecorated, TDecoratedInverse, TInverseMap>
+            TSubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?, ?, ?, ?>,
+            TInverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?, ?>,
+            TKeySet extends SortedRangedSet<K, ?>,
+            TEntrySet extends SortedRangedSet<Map.Entry<K, V>, ?>,
+            TValueSet extends SortedRangedSet<V, ?>>
+        extends AbstractOrderedBidiMapDecorator<K, V, TDecorated, TDecoratedInverse, TInverseMap, TKeySet, TEntrySet, TValueSet>
         implements SortedBidiMap<K, V, TSubMap, TInverseMap> {
 
     private static final long serialVersionUID = -2025553015999206418L;
@@ -84,5 +89,35 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
     @Override
     public SortedMapRange<V> getValueRange() {
         return decorated().getValueRange();
+    }
+
+    @Override
+    public TKeySet sequencedKeySet() {
+        return (TKeySet) decorated().sequencedKeySet();
+    }
+
+    @Override
+    public final TKeySet keySet() {
+        return sequencedKeySet();
+    }
+
+    @Override
+    public TEntrySet sequencedEntrySet() {
+        return (TEntrySet) decorated().sequencedEntrySet();
+    }
+
+    @Override
+    public final TEntrySet entrySet() {
+        return sequencedEntrySet();
+    }
+
+    @Override
+    public TValueSet sequencedValues() {
+        return (TValueSet) decorated().sequencedValues();
+    }
+
+    @Override
+    public final TValueSet values() {
+        return sequencedValues();
     }
 }

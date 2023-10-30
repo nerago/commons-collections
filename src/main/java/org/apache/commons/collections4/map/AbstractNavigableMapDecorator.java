@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.map;
 
 import org.apache.commons.collections4.NavigableRangedMap;
+import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 
 import java.util.*;
@@ -41,8 +42,11 @@ import java.util.*;
  */
 public abstract class AbstractNavigableMapDecorator<K, V,
                 TDecorated extends NavigableMap<K, V>,
-                TSubMap extends AbstractNavigableMapDecorator<K, V, TDecorated, TSubMap>>
-        extends AbstractSortedMapDecorator<K, V, TDecorated, TSubMap>
+                TSubMap extends AbstractNavigableMapDecorator<K, V, TDecorated, TSubMap, ?, ?, ?>,
+                TKeySet extends NavigableRangedSet<K, ?>,
+                TEntrySet extends NavigableRangedSet<Map.Entry<K, V>, ?>,
+                TValueSet extends SequencedCollection<V>>
+        extends AbstractSortedMapDecorator<K, V, TDecorated, TSubMap, TKeySet, TEntrySet, TValueSet>
         implements NavigableRangedMap<K, V, TSubMap> {
 
     private static final long serialVersionUID = 7643981107509930313L;

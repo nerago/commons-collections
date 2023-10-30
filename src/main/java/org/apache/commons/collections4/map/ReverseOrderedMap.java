@@ -22,7 +22,9 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 
 // see java.util.ReverseOrderSortedMapView
-public class ReverseOrderedMap<K, V> extends AbstractOrderedMapDecorator<K, V> {
+public final class ReverseOrderedMap<K, V>
+        extends AbstractOrderedMapDecorator<K, V, OrderedMap<K, V>,
+                                            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>> {
     /**
      * Constructor only used in deserialization, do not use otherwise.
      *

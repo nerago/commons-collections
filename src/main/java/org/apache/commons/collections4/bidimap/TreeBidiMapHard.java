@@ -164,7 +164,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @throws NullPointerException if the key is null
      */
     @Override
-    public boolean containsEntry(final Object key, final Object value) {
+    public boolean containsMapping(final Object key, final Object value) {
         checkValue(value);
         final Node<K, V> entry = lookupKey(checkKey(key));
         if (entry != null) {
@@ -2691,8 +2691,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public boolean containsEntry(final Object key, final Object value) {
-            return parent.containsEntry(value, key);
+        public boolean containsMapping(final Object key, final Object value) {
+            return parent.containsMapping(value, key);
         }
 
         @Override
@@ -2891,7 +2891,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public boolean containsEntry(final Object keyObject, final Object valueObject) {
+        public boolean containsMapping(final Object keyObject, final Object valueObject) {
             final K key = parent.checkKey(keyObject);
             final V value = parent.checkValue(valueObject);
             if (keyRange.inRange(key)) {

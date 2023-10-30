@@ -18,6 +18,8 @@ package org.apache.commons.collections4.map;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -27,6 +29,7 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
+import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -42,7 +45,9 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecorator<K, V> implements Unmodifiable {
+public final class UnmodifiableOrderedMap<K, V>
+        extends AbstractOrderedMapDecorator<K, V, OrderedMap<K, V>, SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
+        implements Unmodifiable {
 
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
@@ -149,21 +154,32 @@ public final class UnmodifiableOrderedMap<K, V> extends AbstractOrderedMapDecora
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        final Set<Map.Entry<K, V>> set = super.entrySet();
-        return UnmodifiableEntrySet.unmodifiableEntrySet(set);
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return sequencedEntrySet();
     }
 
     @Override
-    public Set<K> keySet() {
-        final Set<K> set = super.keySet();
-        return UnmodifiableSet.unmodifiableSet(set);
+    public SequencedSet<K> keySet() {
+        return sequencedKeySet();
     }
 
     @Override
-    public Collection<V> values() {
-        final Collection<V> coll = super.values();
-        return UnmodifiableCollection.unmodifiableCollection(coll);
+    public SequencedCollection<V> values() {
+        return sequencedValues();
     }
 
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(decorated().sequencedEntrySet());
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return UnmodifiableSequencedSet.unmodifiableSet(decorated().sequencedKeySet());
+    }
+
+    @Override
+    public SequencedCollection<V> sequencedValues() {
+        return UnmodifiableSequencedCollection.unmodifiableCollection(decorated().sequencedValues());
+    }
 }

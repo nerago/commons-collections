@@ -352,6 +352,12 @@ public class SetUniqueList<E> extends AbstractSerializableListDecorator<E, List<
         return ListUtils.unmodifiableList(new SetUniqueList<>(subList, subSet));
     }
 
+    @Override
+    protected List<E> makeReverse() {
+        // reverse will share the unique set object
+        return new SetUniqueList<>(decorated().reversed(), set);
+    }
+
     /**
      * Create a new {@link Set} with the same type as the provided {@code set}
      * and populate it with all elements of {@code list}.

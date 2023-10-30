@@ -22,6 +22,8 @@ import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.function.BiFunction;
@@ -65,7 +67,8 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public class FixedSizeSortedMap<K, V>
-        extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, FixedSizeSortedMap<K, V>>
+        extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, FixedSizeSortedMap<K, V>,
+                                           SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
         implements BoundedMap<K, V> {
 
     /** Serialization version */
@@ -187,17 +190,17 @@ public class FixedSizeSortedMap<K, V>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public SequencedSet<Entry<K, V>> entrySet() {
         return UnmodifiableSet.unmodifiableSet(decorated().entrySet());
     }
 
     @Override
-    public Set<K> keySet() {
+    public SequencedSet<K> keySet() {
         return UnmodifiableSet.unmodifiableSet(decorated().keySet());
     }
 
     @Override
-    public Collection<V> values() {
+    public SequencedCollection<V> values() {
         return UnmodifiableCollection.unmodifiableCollection(decorated().values());
     }
 

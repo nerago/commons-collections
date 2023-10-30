@@ -19,12 +19,11 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.SequencedCollection;
 import java.util.SequencedSet;
-import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
@@ -53,8 +52,11 @@ import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
  */
 public abstract class AbstractSortedMapDecorator<K, V,
                 TDecorated extends SortedMap<K, V>,
-                TSubMap extends IterableSortedMap<K, V, TSubMap>>
-        extends AbstractMapDecorator<K, V, TDecorated>
+                TSubMap extends IterableSortedMap<K, V, TSubMap>,
+                TKeySet extends SequencedSet<K>,
+                TEntrySet extends SequencedSet<Map.Entry<K, V>>,
+                TValueSet extends SequencedCollection<V>>
+        extends AbstractMapDecorator<K, V, TDecorated, TKeySet, TEntrySet, TValueSet>
         implements IterableSortedMap<K, V, TSubMap> {
 
     private static final long serialVersionUID = 4710068155190191469L;
@@ -182,22 +184,37 @@ public abstract class AbstractSortedMapDecorator<K, V,
 
     @Override
     public K nextKey(final K key) {
-        return SortedMapUtils.nextKey(this, key);
+        return SortedMapUtils.nextKey(decorated(), key);
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
-        return decorated().sequencedEntrySet();
+    public TEntrySet sequencedEntrySet() {
+        return (TEntrySet) decorated().sequencedEntrySet();
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
-        return decorated().sequencedKeySet();
+    public final TEntrySet entrySet() {
+        return sequencedEntrySet();
     }
 
     @Override
-    public SequencedCollection<V> sequencedValues() {
-        return decorated().sequencedValues();
+    public TKeySet sequencedKeySet() {
+        return (TKeySet) decorated().sequencedKeySet();
+    }
+
+    @Override
+    public final TKeySet keySet() {
+        return sequencedKeySet();
+    }
+
+    @Override
+    public TValueSet sequencedValues() {
+        return (TValueSet) decorated().sequencedValues();
+    }
+
+    @Override
+    public final TValueSet values() {
+        return sequencedValues();
     }
 
     @Override
@@ -225,7 +242,9 @@ public abstract class AbstractSortedMapDecorator<K, V,
     }
 
     /** Simple wrapper class to decorate a SortedMap with IterableSortedMap interfaces but no changed behaviour */
-    public static final class BasicWrapper<K, V> extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, BasicWrapper<K, V>> {
+    public static final class BasicWrapper<K, V>
+            extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, BasicWrapper<K, V>,
+                                                     SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>> {
         private static final long serialVersionUID = -4795013829872876714L;
 
         /** Default wrapping contractor

@@ -16,8 +16,7 @@
  */
 package org.apache.commons.collections4.bidimap;
 
-import java.util.SequencedCollection;
-import java.util.SequencedSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.BidiMap;
@@ -43,9 +42,12 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
  * @since 3.0
  */
 public abstract class AbstractBidiMapDecorator<K, V, TDecorated extends BidiMap<K, V, ?>,
-                                                     TDecoratedInverse extends BidiMap<V, K, ?>,
-                                                     TInverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?>>
-        extends AbstractMapDecorator<K, V, TDecorated>
+            TDecoratedInverse extends BidiMap<V, K, ?>,
+            TInverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?>,
+            TKeySet extends Set<K>,
+            TEntrySet extends Set<Map.Entry<K, V>>,
+            TValueSet extends Set<V>>
+        extends AbstractMapDecorator<K, V, TDecorated, TKeySet, TEntrySet, TValueSet>
         implements BidiMap<K, V, TInverseMap> {
 
     private static final long serialVersionUID = -3483039813600794480L;
@@ -79,11 +81,6 @@ public abstract class AbstractBidiMapDecorator<K, V, TDecorated extends BidiMap<
     @Override
     public K removeValue(final Object value) {
         return decorated().removeValue(value);
-    }
-
-    @Override
-    public Set<V> values() {
-        return (Set<V>) super.values();
     }
 
     @SuppressWarnings("unchecked")

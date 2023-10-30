@@ -161,7 +161,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public boolean containsEntry(final Object key, final Object valueObject) {
+    public boolean containsMapping(final Object key, final Object valueObject) {
         if (!(key instanceof Comparable<?>))
             return false;
         final V value = castValue(valueObject);
