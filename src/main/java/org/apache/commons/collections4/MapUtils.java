@@ -1482,7 +1482,7 @@ public class MapUtils {
      * @return an ordered map backed by the given map
      * @throws NullPointerException if the Map is null
      */
-    public static <K, V> OrderedMap<K, V> orderedMap(final Map<K, V> map) {
+    public static <K, V> OrderedMap<K, V, ?> orderedMap(final Map<K, V> map) {
         return ListOrderedMap.listOrderedMap(map);
     }
 

@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SequencedCollection;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -29,8 +30,8 @@ import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.collection.AbstractCollectionDecorator;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;

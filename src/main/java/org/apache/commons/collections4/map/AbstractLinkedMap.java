@@ -20,6 +20,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Spliterator;
 import java.util.Spliterators;
 
@@ -68,7 +70,7 @@ import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> implements OrderedMap<K, V> {
+public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
 
     /** Header in the linked list */
     transient LinkEntry<K, V> header;
@@ -196,6 +198,22 @@ public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> im
             throw new NoSuchElementException("Map is empty");
         }
         return header.before.getKey();
+    }
+
+    @Override
+    public Entry<K, V> firstEntry() {
+        if (size == 0) {
+            return null;
+        }
+        return header.after;
+    }
+
+    @Override
+    public Entry<K, V> lastEntry() {
+        if (size == 0) {
+            return null;
+        }
+        return header.before;
     }
 
     /**
@@ -339,15 +357,78 @@ public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> im
         return entry.after;
     }
 
+    @Override
+    public Entry<K, V> pollFirstEntry() {
+        return OrderedMap.super.pollFirstEntry();
+    }
+
+    @Override
+    public Entry<K, V> pollLastEntry() {
+        return OrderedMap.super.pollLastEntry();
+    }
+
+    @Override
+    public V putFirst(final K k, final V v) {
+        return OrderedMap.super.putFirst(k, v);
+    }
+
+    @Override
+    public V putLast(final K k, final V v) {
+        return OrderedMap.super.putLast(k, v);
+    }
+
+    @Override
+    public OrderedMap<K, V, ?> reversed() {
+        return null;
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return super.entrySet();
+    }
+
+    @Override
+    public SequencedSet<K> keySet() {
+        return super.keySet();
+    }
+
+    @Override
+    public SequencedCollection<V> values() {
+        return super.values();
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return keySet();
+    }
+
+    @Override
+    public SequencedCollection<V> sequencedValues() {
+        return values();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return entrySet();
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         if (size == 0) {
-            return EmptyOrderedMapIterator.<K, V>emptyOrderedMapIterator();
+            return EmptyOrderedMapIterator.emptyOrderedMapIterator();
         }
         return new LinkMapIterator<>(this);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        if (size == 0) {
+            return EmptyOrderedMapIterator.emptyOrderedMapIterator();
+        }
+        return new LinkMapIteratorDescending<>(this);
     }
 
     /**
@@ -395,6 +476,38 @@ public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> im
                 throw new IllegalStateException(AbstractHashedMap.SETVALUE_INVALID);
             }
             return current.setValue(value);
+        }
+    }
+
+    private static class LinkMapIteratorDescending<K, V> extends LinkMapIterator<K, V> {
+        protected LinkMapIteratorDescending(final AbstractLinkedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public void reset() {
+            last = null;
+            next = parent.header;
+        }
+
+        @Override
+        public K next() {
+            return super.previous();
+        }
+
+        @Override
+        public K previous() {
+            return super.next();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
         }
     }
 

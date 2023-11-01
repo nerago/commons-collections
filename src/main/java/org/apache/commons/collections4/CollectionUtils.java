@@ -19,7 +19,6 @@ package org.apache.commons.collections4;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -34,6 +33,7 @@ import java.util.SequencedSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.bag.HashBag;
+import org.apache.commons.collections4.collection.ArraySequencedCollection;
 import org.apache.commons.collections4.collection.PredicatedCollection;
 import org.apache.commons.collections4.collection.SynchronizedCollection;
 import org.apache.commons.collections4.collection.TransformedCollection;
@@ -42,7 +42,6 @@ import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.functors.TruePredicate;
 import org.apache.commons.collections4.iterators.CollatingIterator;
 import org.apache.commons.collections4.iterators.PermutationIterator;
-import org.apache.commons.collections4.map.SingletonMap;
 import org.apache.commons.collections4.set.EmptySet;
 import org.apache.commons.collections4.set.SingletonSet;
 
@@ -1670,6 +1669,42 @@ public class CollectionUtils {
             array[i] = tmp;
             j--;
             i++;
+        }
+    }
+
+    public static <E> E[] reverseArrayCopy(final E[] array) {
+        Objects.requireNonNull(array, "array");
+        final int len = array.length;
+        final Class<?> type = array.getClass();
+
+        @SuppressWarnings("unchecked")
+        final E[] result = (E[]) (type == Object[].class ? new Object[len] : Array.newInstance(type.getComponentType(), len));
+        return reverseArrayCopy(array, result, len);
+    }
+
+    public static <E> E[] reverseArrayCopy(final E[] src, final E[] dst, final int len) {
+        int i = 0;
+        int j = len - 1;
+        while (j >= 0) {
+            dst[i++] = src[j--];
+        }
+        return dst;
+    }
+
+    /**
+     * Reverses copy of given collection with reverse order.
+     * <p>
+     * Note: may actually be a set or list object.
+     *
+     * @param collection  the collection to reverse
+     * @return new collection with shallow copy of items in reverse order
+     */
+    @SuppressWarnings("unchecked")
+    public static <E> Collection<? extends E> reversedCollection(final Collection<? extends E> collection) {
+        if (collection instanceof SequencedCollection<? extends E>) {
+            return ((SequencedCollection<? extends E>) collection).reversed();
+        } else {
+            return ArraySequencedCollection.reverseSequencedCollection(collection);
         }
     }
 

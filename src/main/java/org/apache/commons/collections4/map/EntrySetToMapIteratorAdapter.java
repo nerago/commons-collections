@@ -19,6 +19,7 @@ package org.apache.commons.collections4.map;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.ResettableIterator;
@@ -33,8 +34,7 @@ import org.apache.commons.collections4.ResettableIterator;
  */
 public class EntrySetToMapIteratorAdapter<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
 
-    /** The adapted Map entry Set. */
-    protected final Set<Map.Entry<K, V>> entrySet;
+    protected transient Supplier<Iterator<Map.Entry<K, V>>> supplier;
 
     /** The resettable iterator in use. */
     protected transient Iterator<Map.Entry<K, V>> iterator;
@@ -47,7 +47,16 @@ public class EntrySetToMapIteratorAdapter<K, V> implements MapIterator<K, V>, Re
      * @param entrySet  the entrySet to adapt
      */
     public EntrySetToMapIteratorAdapter(final Set<Map.Entry<K, V>> entrySet) {
-        this.entrySet = entrySet;
+        this.supplier = entrySet::iterator;
+        reset();
+    }
+
+    /**
+     * Create a new EntrySetToMapIteratorAdapter.
+     * @param supplier creates new basic iterators similar to entrySet().iterator()
+     */
+    public EntrySetToMapIteratorAdapter(final Supplier<Iterator<Map.Entry<K, V>>> supplier) {
+        this.supplier = supplier;
         reset();
     }
 
@@ -97,7 +106,7 @@ public class EntrySetToMapIteratorAdapter<K, V> implements MapIterator<K, V>, Re
      */
     @Override
     public synchronized void reset() {
-        iterator = entrySet.iterator();
+        iterator = supplier.get();
         entry = null;
     }
 

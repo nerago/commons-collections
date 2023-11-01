@@ -16,15 +16,14 @@
  */
 package org.apache.commons.collections4.map;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.SequencedCollection;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
-import java.util.Set;
 
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -45,15 +44,16 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @since 3.0
  */
 public abstract class AbstractOrderedMapDecorator<K, V,
-            TDecorated extends OrderedMap<K, V>,
+            TDecorated extends OrderedMap<K, V, ?>,
+            TSubMap extends OrderedMap<K, V, ?>,
             TKeySet extends SequencedSet<K>,
             TEntrySet extends SequencedSet<Map.Entry<K, V>>,
-            TValueSet extends SequencedCollection<V>>
+            TValueSet extends SequencedCommonsCollection<V>>
         extends AbstractMapDecorator<K, V, TDecorated, TKeySet, TEntrySet, TValueSet>
-        implements OrderedMap<K, V> {
+        implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
 
     private static final long serialVersionUID = 6964783574989279065L;
-    private SequencedMap<K, V> reverse;
+    private TSubMap reverse;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -138,14 +138,14 @@ public abstract class AbstractOrderedMapDecorator<K, V,
     }
 
     @Override
-    public SequencedMap<K, V> reversed() {
+    public TSubMap reversed() {
         if (reverse == null) {
             reverse = createReverse();
         }
         return reverse;
     }
 
-    protected SequencedMap<K, V> createReverse() {
+    protected TSubMap createReverse() {
         return new ReverseOrderedMap<>(this);
     }
 
@@ -154,4 +154,8 @@ public abstract class AbstractOrderedMapDecorator<K, V,
         return decorated().mapIterator();
     }
 
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return decorated().descendingMapIterator();
+    }
 }

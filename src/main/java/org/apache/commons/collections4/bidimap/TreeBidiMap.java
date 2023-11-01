@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SequencedCollection;
 import java.util.SequencedSet;
 import java.util.Set;
 import java.util.Spliterator;
@@ -89,7 +90,7 @@ import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VA
  * @since 3.0 (previously DoubleOrderedMap v2.0)
  */
 public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
-    implements OrderedBidiMap<K, V, OrderedBidiMap<V, K, ?>> {
+    implements OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?, ?>, OrderedBidiMap<V, K, ?, ?>> {
 
     enum DataElement {
         KEY("key"), VALUE("value");
@@ -723,7 +724,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * @return a set view of the values contained in this map.
      */
     @Override
-    public Set<V> values() {
+    public SequencedCollection<V> values() {
         return sequencedValues();
     }
 
@@ -802,7 +803,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * @return a set view of the values contained in this map.
      */
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public SequencedSet<Entry<K, V>> entrySet() {
         return sequencedEntrySet();
     }
 
@@ -814,13 +815,21 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         return new ViewMapIterator(KEY);
     }
 
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        if (isEmpty()) {
+            return EmptyOrderedMapIterator.<K, V>emptyOrderedMapIterator();
+        }
+        return new DescendingViewMapIterator(KEY);
+    }
+
     /**
      * Gets the inverse map for comparison.
      *
      * @return the inverse map
      */
     @Override
-    public OrderedBidiMap<V, K, ?> inverseBidiMap() {
+    public OrderedBidiMap<V, K, ?, ?> inverseBidiMap() {
         if (inverse == null) {
             inverse = new Inverse();
         }
@@ -828,7 +837,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    public OrderedBidiMap<K, V, ?> reversed() {
+    public OrderedBidiMap<K, V, ?, ?> reversed() {
         if (reverse == null) {
             reverse = new Reverse();
         }
@@ -1994,13 +2003,13 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     abstract class ViewIterator {
 
         /** Whether to return KEY or VALUE order. */
-        private final DataElement orderType;
+        final DataElement orderType;
         /** The last node returned by the iterator. */
         Node<K, V> lastReturnedNode;
         /** The next node to be returned by the iterator. */
-        private Node<K, V> nextNode;
+        Node<K, V> nextNode;
         /** The previous node in the sequence returned by the iterator. */
-        private Node<K, V> previousNode;
+        Node<K, V> previousNode;
         /** The modification count. */
         private int expectedModifications;
 
@@ -2020,7 +2029,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
             previousNode = null;
         }
 
-        public final boolean hasNext() {
+        public boolean hasNext() {
             return nextNode != null;
         }
 
@@ -2171,6 +2180,72 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public V previous() {
             return navigatePrevious().getValue();
+        }
+    }
+
+    class DescendingViewMapIterator extends ViewMapIterator {
+        DescendingViewMapIterator(final DataElement orderType) {
+            super(orderType);
+        }
+
+        @Override
+        public void reset() {
+            previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            lastReturnedNode = null;
+            nextNode = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public K next() {
+            return super.previous();
+        }
+
+        @Override
+        public K previous() {
+            return super.next();
+        }
+    }
+
+    class DescendingInverseViewMapIterator extends InverseViewMapIterator {
+        DescendingInverseViewMapIterator(final DataElement orderType) {
+            super(orderType);
+        }
+
+        @Override
+        public void reset() {
+            previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            lastReturnedNode = null;
+            nextNode = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public V next() {
+            return super.previous();
+        }
+
+        @Override
+        public V previous() {
+            return super.next();
         }
     }
 
@@ -2793,7 +2868,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * The inverse map implementation.
      */
-    class Inverse implements OrderedBidiMap<V, K, OrderedBidiMap<K, V, ?>> {
+    class Inverse implements OrderedBidiMap<V, K, OrderedBidiMap<V, K, ?, ?>, OrderedBidiMap<K, V, ?, ?>> {
         private static final long serialVersionUID = -8331796932150921575L;
 
         /** Store the keySet once created. */
@@ -3072,11 +3147,6 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public Set<V> keySet() {
-            return sequencedKeySet();
-        }
-
-        @Override
         public SequencedSet<V> sequencedKeySet() {
             if (inverseKeySet == null) {
                 inverseKeySet = new ValueView(VALUE);
@@ -3093,7 +3163,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public Set<K> values() {
+        public SequencedSet<K> values() {
            return sequencedValues();
         }
 
@@ -3106,11 +3176,6 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public Set<Map.Entry<V, K>> entrySet() {
-           return sequencedEntrySet();
-        }
-
-        @Override
         public OrderedMapIterator<V, K> mapIterator() {
             if (isEmpty()) {
                 return EmptyOrderedMapIterator.<V, K>emptyOrderedMapIterator();
@@ -3119,8 +3184,21 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public OrderedBidiMap<K, V, ?> inverseBidiMap() {
+        public OrderedMapIterator<V, K> descendingMapIterator() {
+            if (isEmpty()) {
+                return EmptyOrderedMapIterator.<V, K>emptyOrderedMapIterator();
+            }
+            return new DescendingInverseViewMapIterator(VALUE);
+        }
+
+        @Override
+        public OrderedBidiMap<K, V, ?, ?> inverseBidiMap() {
             return TreeBidiMap.this;
+        }
+
+        @Override
+        public OrderedBidiMap<V, K, ?, ?> reversed() {
+            throw new UnsupportedOperationException("can't combine inverse and reverse operations");
         }
 
         @Override
@@ -3147,14 +3225,9 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
             TreeBidiMap.this.readExternal(in);
         }
-
-        @Override
-        public OrderedBidiMap<V, K, ?> reversed() {
-            return null;
-        }
     }
 
-    class Reverse implements OrderedBidiMap<K, V, OrderedBidiMap> {
+    class Reverse implements OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?, ?>, OrderedBidiMap<V, K, ?, ?>> {
 
     }
 }

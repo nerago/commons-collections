@@ -4,6 +4,8 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapUtils;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -16,12 +18,12 @@ import java.util.SortedMap;
  * @param <V> the value type
  */
 public class SortedMapOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
-    private final SortedMap<K, V> map;
-    private boolean forward;
-    private boolean currentValid;
-    private Iterator<Map.Entry<K, V>> forwardIterator;
-    private Map.Entry<K, V> current;
-    private Map.Entry<K, V> previous;
+    protected final SortedMap<K, V> map;
+    protected boolean forward;
+    protected boolean currentValid;
+    protected Iterator<Map.Entry<K, V>> forwardIterator;
+    protected Map.Entry<K, V> current;
+    protected Map.Entry<K, V> previous;
 
     public static <K, V> OrderedMapIterator<K, V> sortedMapIterator(final SortedMap<K, V> map) {
         if (map instanceof NavigableMap) {
@@ -30,6 +32,16 @@ public class SortedMapOrderedMapIterator<K, V> implements OrderedMapIterator<K, 
             return new SortedMapListIterator<>(map);
         } else {
             return new SortedMapOrderedMapIterator<>(map);
+        }
+    }
+
+    public static <K, V> OrderedMapIterator<K, V> sortedMapIteratorDescending(final SortedMap<K, V> map) {
+        if (map instanceof NavigableMap) {
+            return new NavigableMapOrderedMapIterator.Descending<>((NavigableMap<K, V>) map);
+        } else if (map.size() < 10) {
+            return new SortedMapListIterator<>(() -> new ArrayDeque<>(map.entrySet()).descendingIterator());
+        } else {
+            return new SortedMapOrderedMapIterator.Descending<>(map);
         }
     }
 
@@ -135,6 +147,41 @@ public class SortedMapOrderedMapIterator<K, V> implements OrderedMapIterator<K, 
             return current.setValue(value);
         } else {
             throw new IllegalStateException();
+        }
+    }
+
+    private static class Descending<K, V> extends SortedMapOrderedMapIterator<K, V> {
+        private Descending(final SortedMap<K, V> map) {
+            super(map);
+        }
+
+        @Override
+        public void reset() {
+            forwardIterator = null;
+            current = null;
+            previous = map.lastEntry();
+            forward = false;
+            currentValid = false;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public K next() {
+            return super.previous();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public K previous() {
+            return super.next();
         }
     }
 }

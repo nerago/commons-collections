@@ -42,14 +42,15 @@ import org.apache.commons.collections4.OrderedMapIterator;
  * @since 3.0
  */
 public abstract class AbstractOrderedBidiMapDecorator<K, V,
-            TDecorated extends OrderedBidiMap<K, V, ?>,
-            TDecoratedInverse extends OrderedBidiMap<V, K, ?>,
-            TInverseMap extends AbstractOrderedBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?>,
+            TDecorated extends OrderedBidiMap<K, V, ?, ?>,
+            TDecoratedInverse extends OrderedBidiMap<V, K, ?, ?>,
+            TSubMap extends AbstractOrderedBidiMapDecorator<K, V, ?, ?, ?, ?, ?, ?, ?>,
+            TInverseMap extends AbstractOrderedBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?, ?>,
             TKeySet extends SequencedSet<K>,
             TEntrySet extends SequencedSet<Map.Entry<K, V>>,
             TValueSet extends SequencedSet<V>>
         extends AbstractBidiMapDecorator<K, V, TDecorated, TDecoratedInverse, TInverseMap, TKeySet, TEntrySet, TValueSet>
-        implements OrderedBidiMap<K, V, TInverseMap> {
+        implements OrderedBidiMap<K, V, TSubMap, TInverseMap> {
 
     private static final long serialVersionUID = 7010751296610809092L;
 

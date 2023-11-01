@@ -160,7 +160,7 @@ public class FixedSizeMap<K, V>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         final Set<Map.Entry<K, V>> set = decorated().entrySet();
         // unmodifiable set will still allow modification via Map.Entry objects
         return UnmodifiableSet.unmodifiableSet(set);

@@ -26,8 +26,6 @@ import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
-import org.apache.commons.collections4.map.UnmodifiableEntrySet;
-import org.apache.commons.collections4.map.UnmodifiableSequencedEntrySet;
 import org.apache.commons.collections4.map.UnmodifiableSortedEntrySet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
@@ -185,7 +183,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public UnmodifiableSortedBidiMap<K, V> reversed() {
+    public UnmodifiableSortedBidiMap<V, K> reversed() {
         return new UnmodifiableSortedBidiMap<>(decorated().reversed());
     }
 

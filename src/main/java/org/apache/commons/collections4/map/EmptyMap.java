@@ -364,6 +364,11 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return EmptyOrderedMapIterator.emptyOrderedMapIterator();
+    }
+
+    @Override
     public MapSpliterator<K, V> mapSpliterator() {
         return EmptyMapSpliterator.emptyMapSpliterator();
     }
@@ -404,7 +409,7 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public EverythingMap<K, V> reversed() {
+    public EverythingMap<V, K> reversed() {
         return this;
     }
 }

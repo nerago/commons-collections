@@ -31,7 +31,6 @@ import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.EverythingMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
@@ -676,7 +675,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public EverythingMap<K, V> reversed() {
+    public EverythingMap<V, K> reversed() {
         return this;
     }
 

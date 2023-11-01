@@ -32,6 +32,7 @@ import java.util.function.Function;
 import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.iterators.FixedOrderedMapIterator;
@@ -68,7 +69,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  */
 public class FixedSizeSortedMap<K, V>
         extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, FixedSizeSortedMap<K, V>,
-                                           SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
+                                           SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements BoundedMap<K, V> {
 
     /** Serialization version */

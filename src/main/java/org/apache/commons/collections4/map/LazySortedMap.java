@@ -17,6 +17,8 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.Factory;
@@ -175,6 +177,11 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
     }
 
     @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return null;
+    }
+
+    @Override
     public LazySortedMap<K, V> subMap(final SortedMapRange<K> range) {
         return new LazySortedMap<>(range.applyToMap(getSortedMap()), factory, range);
     }
@@ -183,4 +190,26 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
     public SortedMapRange<K> getKeyRange() {
         return keyRange;
     }
+
+    @Override
+    public LazySortedMap<K, V> reversed() {
+        return new LazySortedMap<>(getSortedMap().reversed(), factory);
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return null;
+    }
+
+    @Override
+    public SequencedCollection<V> sequencedValues() {
+        return null;
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return null;
+    }
+
+
 }

@@ -30,6 +30,8 @@ import java.util.function.Supplier;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 
 public final class ToArrayUtils {
+    public static final Object[] EMPTY_ARRAY = new Object[0];
+
     private ToArrayUtils() {
     }
 

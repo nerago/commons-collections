@@ -28,9 +28,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableGet;
-import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MapUtils;
 
 /**
  * Provides a base decorator that enables additional functionality to be added

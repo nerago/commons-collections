@@ -31,10 +31,13 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMap;
@@ -43,6 +46,8 @@ import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.iterators.AbstractUntypedIteratorDecorator;
 import org.apache.commons.collections4.iterators.TransformListIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
+import org.apache.commons.collections4.keyvalue.TiedMapEntry;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
@@ -89,8 +94,8 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  * @since 3.0
  */
 public class ListOrderedMap<K, V>
-        extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
-        implements OrderedMap<K, V> {
+        extends AbstractMapDecorator<K, V, OrderedMap<K, V, ?>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
+        implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
 
     /** Serialization version */
     private static final long serialVersionUID = 2728177751851003750L;
@@ -167,6 +172,11 @@ public class ListOrderedMap<K, V>
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new ListOrderedMapIterator<>(this);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return new DescendingListOrderedMapIterator<>(this);
     }
 
     /**
@@ -297,12 +307,17 @@ public class ListOrderedMap<K, V>
      * <p>
      * The Collection will be ordered by object insertion into the map.
      *
-     * @see #keyList()
      * @return the fully modifiable collection view over the keys
+     * @see #keyList()
      */
     @Override
-    public Set<K> keySet() {
+    public SequencedSet<K> keySet() {
         return new KeySetView<>(this);
+    }
+
+    @Override
+    public SequencedSet<K> sequencedKeySet() {
+        return keySet();
     }
 
     /**
@@ -327,12 +342,17 @@ public class ListOrderedMap<K, V>
      * From Commons Collections 3.2, this Collection can be cast
      * to a list, see {@link #valueList()}
      *
-     * @see #valueList()
      * @return the fully modifiable collection view over the values
+     * @see #valueList()
      */
     @Override
-    public Collection<V> values() {
+    public SequencedCollection<V> values() {
         return new ValuesView<>(this);
+    }
+
+    @Override
+    public SequencedCollection<V> sequencedValues() {
+        return values();
     }
 
     /**
@@ -357,8 +377,13 @@ public class ListOrderedMap<K, V>
      * @return the fully modifiable set view over the entries
      */
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public SequencedSet<Entry<K, V>> entrySet() {
         return new EntrySetView<>(this);
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+        return entrySet();
     }
 
     /**
@@ -667,8 +692,8 @@ public class ListOrderedMap<K, V>
         }
     }
 
-    static class KeySetView<K> extends AbstractSet<K> {
-        private final ListOrderedMap<K, Object> parent;
+    static class KeySetView<K> extends AbstractSet<K> implements SequencedSet<K> {
+        protected final ListOrderedMap<K, Object> parent;
 
         @SuppressWarnings("unchecked")
         KeySetView(final ListOrderedMap<K, ?> parent) {
@@ -709,9 +734,79 @@ public class ListOrderedMap<K, V>
         public Spliterator<K> spliterator() {
             return parent.insertOrder.spliterator();
         }
+
+        @Override
+        public SequencedSet<K> reversed() {
+            return new KeySetViewReverse<>(parent);
+        }
+
+        @Override
+        public K getFirst() {
+            return parent.firstKey();
+        }
+
+        @Override
+        public K getLast() {
+            return parent.lastKey();
+        }
+
+        @Override
+        public K removeFirst() {
+            final K key = parent.insertOrder.removeFirst();
+            parent.map.remove(key);
+            return key;
+        }
+
+        @Override
+        public K removeLast() {
+            final K key = parent.insertOrder.removeLast();
+            parent.map.remove(key);
+            return key;
+        }
     }
 
-    static class EntrySetView<K, V> extends AbstractSet<Map.Entry<K, V>> {
+    static class KeySetViewReverse<K> extends KeySetView<K> {
+        KeySetViewReverse(final ListOrderedMap<K, ?> parent) {
+            super(parent);
+        }
+
+        @Override
+        public Iterator<K> iterator() {
+            return parent.insertOrder.reversed().iterator();
+        }
+
+        @Override
+        public Spliterator<K> spliterator() {
+            return parent.insertOrder.reversed().spliterator();
+        }
+
+        @Override
+        public SequencedSet<K> reversed() {
+            return new KeySetView<>(parent);
+        }
+
+        @Override
+        public K getFirst() {
+            return super.getLast();
+        }
+
+        @Override
+        public K getLast() {
+            return super.getFirst();
+        }
+
+        @Override
+        public K removeFirst() {
+            return super.removeLast();
+        }
+
+        @Override
+        public K removeLast() {
+            return super.removeFirst();
+        }
+    }
+
+    static class EntrySetView<K, V> extends AbstractSet<Map.Entry<K, V>> implements SequencedSet<Map.Entry<K, V>> {
         private final ListOrderedMap<K, V> parent;
         private Set<Map.Entry<K, V>> entrySet;
 
@@ -789,7 +884,78 @@ public class ListOrderedMap<K, V>
 
         @Override
         public Spliterator<Map.Entry<K, V>> spliterator() {
-            return new TransformSpliterator<>(parent.insertOrder.spliterator(), key -> new ListOrderedMapEntry<>(parent, key));
+            return new TransformSpliterator<>(parent.insertOrder.spliterator(),
+                    key -> new TiedMapEntry<>(parent.decorated(), key));
+        }
+
+        @Override
+        public SequencedSet<Entry<K, V>> reversed() {
+            return new EntrySetViewReversed<>(parent);
+        }
+
+        @Override
+        public Entry<K, V> getFirst() {
+            return new TiedMapEntry<>(parent.decorated(), parent.firstKey());
+        }
+
+        @Override
+        public Entry<K, V> getLast() {
+            return new TiedMapEntry<>(parent.decorated(), parent.lastKey());
+        }
+
+        @Override
+        public Entry<K, V> removeFirst() {
+            final K key = parent.insertOrder.removeFirst();
+            final V value = parent.map.remove(key);
+            return new UnmodifiableMapEntry<>(key, value);
+        }
+
+        @Override
+        public Entry<K, V> removeLast() {
+            final K key = parent.insertOrder.removeLast();
+            final V value = parent.map.remove(key);
+            return new UnmodifiableMapEntry<>(key, value);
+        }
+    }
+
+    static class EntrySetViewReversed<K, V> extends EntrySetView<K, V> {
+        EntrySetViewReversed(final ListOrderedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> iterator() {
+            return super.iterator();
+        }
+
+        @Override
+        public Spliterator<Entry<K, V>> spliterator() {
+            return super.spliterator();
+        }
+
+        @Override
+        public SequencedSet<Entry<K, V>> reversed() {
+            return super.reversed();
+        }
+
+        @Override
+        public Entry<K, V> getFirst() {
+            return super.getLast();
+        }
+
+        @Override
+        public Entry<K, V> getLast() {
+            return super.getFirst();
+        }
+
+        @Override
+        public Entry<K, V> removeFirst() {
+            return super.removeLast();
+        }
+
+        @Override
+        public Entry<K, V> removeLast() {
+            return super.removeFirst();
         }
     }
 
@@ -817,7 +983,7 @@ public class ListOrderedMap<K, V>
         @Override
         public Map.Entry<K, V> next() {
             lastKey = getIterator().next();
-            return new ListOrderedMapEntry<>(parent, lastKey);
+            return new TiedMapEntry<>(parent.decorated(), lastKey);
         }
     }
 
@@ -845,34 +1011,15 @@ public class ListOrderedMap<K, V>
         }
     }
 
-    static class ListOrderedMapEntry<K, V> extends AbstractMapEntry<K, V> {
-        private final ListOrderedMap<K, V> parent;
-
-        ListOrderedMapEntry(final ListOrderedMap<K, V> parent, final K key) {
-            super(key, null);
-            this.parent = parent;
-        }
-
-        @Override
-        public V getValue() {
-            return parent.get(getKey());
-        }
-
-        @Override
-        public V setValue(final V value) {
-            return parent.decorated().put(getKey(), value);
-        }
-    }
-
     static class ListOrderedMapIterator<K, V> implements OrderedMapIterator<K, V>, ResettableIterator<K> {
-        private final ListOrderedMap<K, V> parent;
-        private ListIterator<K> iterator;
-        private K last;
-        private boolean readable;
+        protected final ListOrderedMap<K, V> parent;
+        protected ListIterator<K> iterator;
+        protected K last;
+        protected boolean readable;
 
         ListOrderedMapIterator(final ListOrderedMap<K, V> parent) {
             this.parent = parent;
-            this.iterator = parent.insertOrder.listIterator();
+            reset();
         }
 
         @Override
@@ -946,6 +1093,39 @@ public class ListOrderedMap<K, V>
                 return "Iterator[" + getKey() + "=" + getValue() + "]";
             }
             return "Iterator[]";
+        }
+    }
+
+    static class DescendingListOrderedMapIterator<K, V> extends ListOrderedMapIterator<K, V> {
+        DescendingListOrderedMapIterator(final ListOrderedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public K next() {
+            return super.previous();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public K previous() {
+            return super.next();
+        }
+
+        @Override
+        public void reset() {
+            iterator = parent.insertOrder.listIterator(parent.insertOrder.size());
+            last = null;
+            readable = false;
         }
     }
 

@@ -22,7 +22,7 @@ import java.util.SequencedSet;
 public interface SortedBidiMap<K, V,
             TSubMap extends SortedBidiMap<K, V, ?, ?>,
         TInverseMap extends SortedBidiMap<V, K, ?, ?>>
-        extends OrderedBidiMap<K, V, TInverseMap>,
+        extends OrderedBidiMap<K, V, TSubMap, TInverseMap>,
                 IterableSortedMap<K, V, TSubMap> {
     /**
      * Get the comparator used for the values in the value-to-key map aspect.
@@ -50,7 +50,11 @@ public interface SortedBidiMap<K, V,
     @Override
     SortedRangedSet<V, ?> sequencedValues();
 
-    V firstValue();
+    default V firstValue() {
+        return sequencedValues().getFirst();
+    }
 
-    V lastValue();
+    default V lastValue() {
+        return sequencedValues().getLast();
+    }
 }

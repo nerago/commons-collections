@@ -3,7 +3,7 @@ package org.apache.commons.collections4;
 import java.util.SortedSet;
 
 public interface SortedRangedSet<E, TSubSet extends SortedRangedSet<E, ?>>
-        extends SortedSet<E> {
+        extends SortedSet<E>, SequencedCommonsSet<E> {
     /**
      * Range of elements included in this set instance (i.e. full set or sub set)
      *
@@ -27,4 +27,7 @@ public interface SortedRangedSet<E, TSubSet extends SortedRangedSet<E, ?>>
     default TSubSet tailSet(final E fromElement) {
         return subSet(getRange().tail(fromElement));
     }
+
+    @Override
+    TSubSet reversed();
 }

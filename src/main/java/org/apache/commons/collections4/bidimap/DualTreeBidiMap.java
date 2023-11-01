@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
-import java.util.Set;
+import java.util.SequencedCollection;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.BidiMap;
@@ -252,7 +252,7 @@ public class DualTreeBidiMap<K, V>
         }
 
         @Override
-        public Set<V> values() {
+        public SequencedCollection<V> values() {
             if (values == null) {
                 values = new ValuesView<>(this);
             }

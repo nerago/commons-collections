@@ -29,7 +29,6 @@ import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
-import org.apache.commons.collections4.map.UnmodifiableEntrySet;
 import org.apache.commons.collections4.map.UnmodifiableSequencedEntrySet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
@@ -45,8 +44,9 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  */
 public final class UnmodifiableOrderedBidiMap<K, V>
         extends AbstractOrderedBidiMapDecorator<K, V,
-            OrderedBidiMap<K, V, ?>,
-            OrderedBidiMap<V, K, ?>,
+            OrderedBidiMap<K, V, ?, ?>,
+            OrderedBidiMap<V, K, ?, ?>,
+            UnmodifiableOrderedBidiMap<K, V>,
             UnmodifiableOrderedBidiMap<V, K>,
             SequencedSet<K>,
             SequencedSet<Map.Entry<K, V>>,
@@ -68,12 +68,11 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> OrderedBidiMap<K, V, ?> unmodifiableOrderedBidiMap(
-            final OrderedBidiMap<K, V, ?> map) {
+    public static <K, V> OrderedBidiMap<K, V, ?, ?> unmodifiableOrderedBidiMap(
+            final OrderedBidiMap<K, V, ?, ?> map) {
         if (map instanceof Unmodifiable) {
-            @SuppressWarnings("unchecked") // safe to upcast
-            final OrderedBidiMap<K, V, ?> tmpMap = (OrderedBidiMap<K, V, ?>) map;
-            return tmpMap;
+            // safe to upcast
+            return map;
         }
         return new UnmodifiableOrderedBidiMap<>(map);
     }
@@ -85,7 +84,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<K, V, ?> map) {
+    private UnmodifiableOrderedBidiMap(final OrderedBidiMap<K, V, ?, ?> map) {
         super(map);
     }
 
@@ -179,7 +178,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> entrySet() {
+    public Set<Entry> entrySet() {
         return sequencedEntrySet();
     }
 
@@ -194,7 +193,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     }
 
     @Override
-    protected UnmodifiableOrderedBidiMap<V, K> decorateInverse(final OrderedBidiMap<V, K, ?> inverse) {
+    protected UnmodifiableOrderedBidiMap<V, K> decorateInverse(final OrderedBidiMap<V, K, ?, ?> inverse) {
         return new UnmodifiableOrderedBidiMap<>(inverse);
     }
 

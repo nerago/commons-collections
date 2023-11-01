@@ -6,6 +6,8 @@ import org.apache.commons.collections4.ResettableIterator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * OrderedMapIterator implementation.
@@ -115,5 +117,38 @@ public class NavigableMapOrderedMapIterator<K, V> implements OrderedMapIterator<
             return "MapIterator[" + getKey() + "=" + getValue() + "]";
         }
         return "MapIterator[]";
+    }
+
+    public static class Descending<K, V> extends NavigableMapOrderedMapIterator<K, V> {
+        public Descending(final NavigableMap<K, V> map) {
+            super(map);
+        }
+
+        @Override
+        public void reset() {
+            forward = false;
+            forwardIterator = null;
+            backwardIterator = map.descendingMap().entrySet().iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public K next() {
+            return super.previous();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public K previous() {
+            return super.next();
+        }
     }
 }

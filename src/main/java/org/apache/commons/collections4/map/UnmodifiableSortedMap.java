@@ -25,6 +25,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
@@ -46,7 +47,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  */
 public final class UnmodifiableSortedMap<K, V>
         extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, UnmodifiableSortedMap<K, V>,
-            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
+            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements Unmodifiable {
 
     /** Serialization version */

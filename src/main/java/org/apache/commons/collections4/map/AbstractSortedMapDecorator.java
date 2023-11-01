@@ -22,12 +22,13 @@ import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.SequencedCollection;
 import java.util.SequencedSet;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
 import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
@@ -53,9 +54,9 @@ import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
 public abstract class AbstractSortedMapDecorator<K, V,
                 TDecorated extends SortedMap<K, V>,
                 TSubMap extends IterableSortedMap<K, V, TSubMap>,
-                TKeySet extends SequencedSet<K>,
-                TEntrySet extends SequencedSet<Map.Entry<K, V>>,
-                TValueSet extends SequencedCollection<V>>
+                TKeySet extends SequencedCommonsSet<K>,
+                TEntrySet extends SequencedCommonsSet<Map.Entry<K, V>>,
+                TValueSet extends SequencedCommonsCollection<V>>
         extends AbstractMapDecorator<K, V, TDecorated, TKeySet, TEntrySet, TValueSet>
         implements IterableSortedMap<K, V, TSubMap> {
 
@@ -222,6 +223,11 @@ public abstract class AbstractSortedMapDecorator<K, V,
         return SortedMapOrderedMapIterator.sortedMapIterator(decorated());
     }
 
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return SortedMapOrderedMapIterator.sortedMapIteratorDescending(decorated());
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public TSubMap reversed() {
@@ -244,7 +250,7 @@ public abstract class AbstractSortedMapDecorator<K, V,
     /** Simple wrapper class to decorate a SortedMap with IterableSortedMap interfaces but no changed behaviour */
     public static final class BasicWrapper<K, V>
             extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, BasicWrapper<K, V>,
-                                                     SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>> {
+                    SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>> {
         private static final long serialVersionUID = -4795013829872876714L;
 
         /** Default wrapping contractor

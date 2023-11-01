@@ -4,18 +4,17 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.SequencedSet;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
 
-public final class EmptySet<E> implements SequencedSet<E>, NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
-    private static final Object[] EMPTY_ARRAY = new Object[0];
+public final class EmptySet<E> implements NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
     @SuppressWarnings("rawtypes")
     private static final EmptySet instance = new EmptySet();
 
@@ -125,7 +124,7 @@ public final class EmptySet<E> implements SequencedSet<E>, NavigableRangedSet<E,
 
     @Override
     public Object[] toArray() {
-        return EMPTY_ARRAY;
+        return ToArrayUtils.EMPTY_ARRAY;
     }
 
     @Override

@@ -16,14 +16,12 @@
  */
 package org.apache.commons.collections4;
 
-import java.util.Collection;
 import java.util.SequencedCollection;
 import java.util.SequencedSet;
-import java.util.Set;
 import java.util.SortedMap;
 
 public interface SortedRangedMap<K, V, TSubMap extends SortedRangedMap<K, V, ?>>
-         extends SortedMap<K, V> {
+         extends SortedMap<K, V>, IterableMap<K, V>, SequencedCommonsMap<K, V, TSubMap> {
     /**
      * Range of keys included in this map instance (i.e. full map or sub map)
      * @return key range
@@ -48,23 +46,20 @@ public interface SortedRangedMap<K, V, TSubMap extends SortedRangedMap<K, V, ?>>
     TSubMap subMap(SortedMapRange<K> range);
 
     @Override
+    default SequencedSet<K> keySet() {
+        return SequencedCommonsMap.super.keySet();
+    }
+
+    @Override
+    default SequencedSet<Entry<K, V>> entrySet() {
+        return SequencedCommonsMap.super.entrySet();
+    }
+
+    @Override
+    default SequencedCollection<V> values() {
+        return SequencedCommonsMap.super.values();
+    }
+
+    @Override
     TSubMap reversed();
-
-    @Override
-    SequencedSet<K> keySet();
-
-    @Override
-    SequencedSet<K> sequencedKeySet();
-
-    @Override
-    SequencedCollection<V> values();
-
-    @Override
-    SequencedCollection<V> sequencedValues();
-
-    @Override
-    SequencedSet<Entry<K, V>> entrySet();
-
-    @Override
-    SequencedSet<Entry<K, V>> sequencedEntrySet();
 }

@@ -150,7 +150,7 @@ public final class UnmodifiableBidiMap<K, V>
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         final Set<Map.Entry<K, V>> set = super.entrySet();
         return UnmodifiableEntrySet.unmodifiableEntrySet(set);
     }

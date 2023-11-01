@@ -3,11 +3,13 @@ package org.apache.commons.collections4.iterators;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.map.EntrySetToMapIteratorAdapter;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.function.Supplier;
 
 /**
  * OrderedMapIterator implementation.
@@ -26,44 +28,52 @@ public class SortedMapListIterator<K, V> extends EntrySetToMapIteratorAdapter<K,
         super(entrySet);
     }
 
-    protected SortedMapListIterator(final SortedMap<K,V> map) {
+    protected SortedMapListIterator(final SortedMap<K, V> map) {
         super(map.entrySet());
+    }
+
+    protected SortedMapListIterator(final Supplier<Iterator<Map.Entry<K, V>>> supplier) {
+        super(supplier);
     }
 
     @Override
     public synchronized void reset() {
-        super.reset();
-        iterator = new ListIteratorWrapper<>(iterator);
+        iterator = new ListIteratorWrapper<>(supplier.get());
+        entry = null;
+    }
+
+    private ListIterator<Map.Entry<K, V>> getListIterator() {
+        return (ListIterator<Map.Entry<K, V>>) iterator;
     }
 
     @Override
     public boolean hasPrevious() {
-        return ((ListIterator<Map.Entry<K, V>>) iterator).hasPrevious();
+        return getListIterator().hasPrevious();
     }
 
     @Override
     public K previous() {
-        entry = ((ListIterator<Map.Entry<K, V>>) iterator).previous();
+        entry = getListIterator().previous();
         return getKey();
     }
 
     @Override
     public int nextIndex() {
-        return 0;
+        return getListIterator().nextIndex();
     }
 
     @Override
     public int previousIndex() {
-        return 0;
+        return getListIterator().previousIndex();
     }
 
     @Override
-    public void set(K k) {
-
+    public void set(final K k) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void add(K k) {
-
+    public void add(final K k) {
+        throw new UnsupportedOperationException();
     }
 }

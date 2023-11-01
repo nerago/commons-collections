@@ -17,6 +17,7 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Map;
+import java.util.SequencedSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.BidiMap;
@@ -41,7 +42,8 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractBidiMapDecorator<K, V, TDecorated extends BidiMap<K, V, ?>,
+public abstract class AbstractBidiMapDecorator<K, V,
+            TDecorated extends BidiMap<K, V, ?>,
             TDecoratedInverse extends BidiMap<V, K, ?>,
             TInverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?>,
             TKeySet extends Set<K>,

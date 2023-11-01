@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
@@ -46,7 +47,8 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  * @since 3.0
  */
 public final class UnmodifiableOrderedMap<K, V>
-        extends AbstractOrderedMapDecorator<K, V, OrderedMap<K, V>, SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
+        extends AbstractOrderedMapDecorator<K, V, OrderedMap<K, V, ?>, UnmodifiableOrderedMap<K, V>,
+            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -62,10 +64,10 @@ public final class UnmodifiableOrderedMap<K, V>
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> OrderedMap<K, V> unmodifiableOrderedMap(final OrderedMap<? extends K, ? extends V> map) {
+    public static <K, V> OrderedMap<K, V, ?> unmodifiableOrderedMap(final OrderedMap<? extends K, ? extends V, ?> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final OrderedMap<K, V> tmpMap = (OrderedMap<K, V>) map;
+            final OrderedMap<K, V, ?> tmpMap = (OrderedMap<K, V, ?>) map;
             return tmpMap;
         }
         return new UnmodifiableOrderedMap<>(map);
@@ -78,8 +80,8 @@ public final class UnmodifiableOrderedMap<K, V>
      * @throws NullPointerException if map is null
      */
     @SuppressWarnings("unchecked") // safe to upcast
-    private UnmodifiableOrderedMap(final OrderedMap<? extends K, ? extends V> map) {
-        super((OrderedMap<K, V>) map);
+    private UnmodifiableOrderedMap(final OrderedMap<? extends K, ? extends V, ?> map) {
+        super((OrderedMap<K, V, ?>) map);
     }
 
     @Override
@@ -175,7 +177,7 @@ public final class UnmodifiableOrderedMap<K, V>
 
     @Override
     public SequencedSet<K> sequencedKeySet() {
-        return UnmodifiableSequencedSet.unmodifiableSet(decorated().sequencedKeySet());
+        return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedKeySet());
     }
 
     @Override

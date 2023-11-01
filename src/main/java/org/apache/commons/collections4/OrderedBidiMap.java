@@ -17,7 +17,6 @@
 package org.apache.commons.collections4;
 
 import java.util.SequencedCollection;
-import java.util.SequencedMap;
 import java.util.SequencedSet;
 
 /**
@@ -33,12 +32,25 @@ import java.util.SequencedSet;
  *
  * @since 3.0
  */
-public interface OrderedBidiMap<K, V, InverseMap extends OrderedBidiMap<V, K, ?>>
-        extends BidiMap<K, V, InverseMap>,
-                OrderedMap<K, V> {
+public interface OrderedBidiMap<K, V, TSubMap extends OrderedBidiMap<K, V, ?, ?>, TInverseMap extends OrderedBidiMap<V, K, ?, ?>>
+        extends BidiMap<K, V, TInverseMap>,
+                OrderedMap<K, V, TSubMap> {
 
     @Override
-    OrderedBidiMap<K, V, ?> reversed();
+    TSubMap reversed();
+
+    @Override
+    SequencedSet<V> values();
+
+    @Override
+    default SequencedSet<K> keySet() {
+        return OrderedMap.super.keySet();
+    }
+
+    @Override
+    default SequencedSet<Entry<K, V>> entrySet() {
+        return OrderedMap.super.entrySet();
+    }
 
     @Override
     SequencedSet<V> sequencedValues();

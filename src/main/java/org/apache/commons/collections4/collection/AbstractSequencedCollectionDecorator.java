@@ -2,7 +2,11 @@ package org.apache.commons.collections4.collection;
 
 import java.util.SequencedCollection;
 
-public abstract class AbstractSequencedCollectionDecorator<E> extends AbstractCollectionDecorator<E, SequencedCollection<E>> implements SequencedCollection<E> {
+import org.apache.commons.collections4.SequencedCommonsCollection;
+
+public abstract class AbstractSequencedCollectionDecorator<E>
+        extends AbstractCollectionDecorator<E, SequencedCollection<E>>
+        implements SequencedCommonsCollection<E> {
     protected AbstractSequencedCollectionDecorator(final SequencedCollection<E> collection) {
         super(collection);
     }
