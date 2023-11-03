@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -418,13 +419,13 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the entrySet view
      */
     @Override
-    public SortedRangedSet<Entry<K, V>, ?> entrySet() {
+    public SortedRangedSet<Entry<K, V>> entrySet() {
         final Map.Entry<K, V> entry = new TiedMapEntry<>(this, getKey());
         return new SingletonSet<>(entry);
     }
 
     @Override
-    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
+    public SortedRangedSet<Entry<K, V>> sequencedEntrySet() {
         return entrySet();
     }
 
@@ -436,12 +437,12 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the keySet view
      */
     @Override
-    public NavigableRangedSet<K, ?> keySet() {
+    public NavigableRangedSet<K> keySet() {
         return new SingletonSet<>(key);
     }
 
     @Override
-    public NavigableRangedSet<K, ?> sequencedKeySet() {
+    public NavigableRangedSet<K> sequencedKeySet() {
         return keySet();
     }
 
@@ -453,12 +454,12 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return the values view
      */
     @Override
-    public NavigableRangedSet<V, ?> values() {
+    public NavigableRangedSet<V> values() {
         return new SingletonValues<>(this);
     }
 
     @Override
-    public NavigableRangedSet<V, ?> sequencedValues() {
+    public NavigableRangedSet<V> sequencedValues() {
         return values();
     }
 
@@ -675,7 +676,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public EverythingMap<V, K> reversed() {
+    public EverythingMap<K, V> reversed() {
         return this;
     }
 
@@ -767,7 +768,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * Values implementation for the SingletonMap.
      * This class is needed as values is a view that must update as the map updates.
      */
-    static class SingletonValues<V> extends AbstractSet<V> implements NavigableRangedSet<V, NavigableRangedSet<V, ?>>, Serializable {
+    static class SingletonValues<V> extends AbstractSet<V> implements NavigableRangedSet<V>, Serializable {
         private static final long serialVersionUID = -3689524741863047872L;
         private final SingletonMap<?, V> parent;
 
@@ -799,12 +800,12 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
 
         @Override
         public V floor(V v) {
-            return va;
+            return Objects.equals(parent.value, v) ? v : null;
         }
 
         @Override
         public V ceiling(V v) {
-            return null;
+            return Objects.equals(parent.value, v) ? v : null;
         }
 
         @Override
@@ -814,17 +815,17 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
 
         @Override
         public V pollFirst() {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public V pollLast() {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public Iterator<V> iterator() {
-            return new SingletonIterator<>(parent.getValue(), false);
+            return new SingletonIterator<>(parent.value, false);
         }
 
         @Override
@@ -834,12 +835,12 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
 
         @Override
         public V first() {
-            return null;
+            return parent.value;
         }
 
         @Override
         public V last() {
-            return null;
+            return parent.value;
         }
 
         @Override
@@ -848,7 +849,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         }
 
         @Override
-        public NavigableRangedSet<V, ?> descendingSet() {
+        public NavigableRangedSet<V> descendingSet() {
             return this;
         }
 
@@ -863,7 +864,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         }
 
         @Override
-        public NavigableRangedSet<V, ?> subSet(SortedMapRange<V> range) {
+        public NavigableRangedSet<V> subSet(SortedMapRange<V> range) {
             return null;
         }
     }

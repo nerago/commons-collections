@@ -45,9 +45,9 @@ public final class UnmodifiableSortedBidiMap<K, V>
             SortedBidiMap<V, K, ?, ?>,
             UnmodifiableSortedBidiMap<K, V>,
             UnmodifiableSortedBidiMap<V, K>,
-            SortedRangedSet<K, ?>,
-            SortedRangedSet<Map.Entry<K, V>, ?>,
-            SortedRangedSet<V, ?>>
+            SortedRangedSet<K>,
+            SortedRangedSet<Map.Entry<K, V>>,
+            SortedRangedSet<V>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -166,18 +166,18 @@ public final class UnmodifiableSortedBidiMap<K, V>
     }
 
     @Override
-    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
+    public SortedRangedSet<Entry<K, V>> sequencedEntrySet() {
         return UnmodifiableSortedEntrySet.unmodifiableEntrySet(decorated().sequencedEntrySet());
     }
 
     @Override
-    public SortedRangedSet<K, ?> sequencedKeySet() {
+    public SortedRangedSet<K> sequencedKeySet() {
         final Set<K> set = super.keySet();
         return UnmodifiableSet.unmodifiableSet(set);
     }
 
     @Override
-    public SortedRangedSet<V, ?> sequencedValues() {
+    public SortedRangedSet<V> sequencedValues() {
         final Set<V> set = super.values();
         return UnmodifiableSet.unmodifiableSet(set);
     }

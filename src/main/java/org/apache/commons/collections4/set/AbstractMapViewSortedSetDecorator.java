@@ -10,8 +10,8 @@ import java.util.function.Predicate;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
-public abstract class AbstractMapViewSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E, ?>>
-        extends AbstractMapViewSortedSet<E, TSubSet> {
+public abstract class AbstractMapViewSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
+        extends AbstractMapViewSortedSet<E> {
 
     /** The collection being decorated */
     private final TDecorated decorated;
@@ -45,7 +45,7 @@ public abstract class AbstractMapViewSortedSetDecorator<E, TDecorated extends So
 
     @SuppressWarnings("unchecked")
     @Override
-    public SortedSet<E> reversed() {
+    public SortedRangedSet<E> reversed() {
         return decorateDerived((TDecorated) decorated.reversed(), range.reversed());
     }
 

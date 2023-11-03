@@ -21,6 +21,7 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MutableBoolean;
+import org.apache.commons.collections4.iterators.AbstractMapIteratorAdapter;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
@@ -46,8 +47,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
 
     @Override
     public Iterator<Map.Entry<K, V>> entryIterator() {
-        final MapIterator<K, V> mapIterator = mapIterator();
-        return new TransformIterator<>(mapIterator, k -> new UnmodifiableMapEntry<>(k, mapIterator.getValue()));
+        return new MapIteratorToEntryAdapter<>(mapIterator());
     }
 
     @Override
@@ -382,6 +382,17 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         @Override
         public void remove() {
             mapIterator.remove();
+        }
+    }
+
+    protected static class MapIteratorToEntryAdapter<K, V> extends AbstractMapIteratorAdapter<K, V, Entry<K, V>> {
+        public MapIteratorToEntryAdapter(final MapIterator<K, V> mapIterator) {
+            super(mapIterator);
+        }
+
+        @Override
+        protected Entry<K, V> transform(final K key, final V value) {
+            return new UnmodifiableMapEntry<>(key, value);
         }
     }
 }

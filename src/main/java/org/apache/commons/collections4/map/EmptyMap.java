@@ -319,22 +319,22 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public SortedRangedSet<K, ?> keySet() {
+    public SortedRangedSet<K> keySet() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SortedRangedSet<K, ?> sequencedKeySet() {
+    public SortedRangedSet<K> sequencedKeySet() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SortedRangedSet<V, ?> values() {
+    public SortedRangedSet<V> values() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SortedRangedSet<V, ?> sequencedValues() {
+    public SortedRangedSet<V> sequencedValues() {
         return CollectionUtils.emptySet();
     }
 
@@ -349,12 +349,12 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public SortedRangedSet<Entry<K, V>, ?> entrySet() {
+    public SortedRangedSet<Entry<K, V>> entrySet() {
         return CollectionUtils.emptySet();
     }
 
     @Override
-    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
+    public SortedRangedSet<Entry<K, V>> sequencedEntrySet() {
         return CollectionUtils.emptySet();
     }
 

@@ -16,13 +16,9 @@
  */
 package org.apache.commons.collections4.set;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.SequencedSet;
-import java.util.SortedSet;
 
-import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SequencedCommonsSet;
 
 
 /**
@@ -34,9 +30,9 @@ import org.apache.commons.collections4.SortedMapRange;
  * @param <E> the type of the elements in the sorted set
  * @since 3.0
  */
-public abstract class AbstractSequencedSetDecorator<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedSet<E>>
+public abstract class AbstractSequencedSetDecorator<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedCommonsSet<E>>
         extends AbstractSetDecorator<E, TDecorated>
-        implements SequencedSet<E> {
+        implements SequencedCommonsSet<E> {
 
 
     private static final long serialVersionUID = -363134107178725896L;

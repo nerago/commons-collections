@@ -867,7 +867,7 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private abstract static class TrieSetView<E, K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractMapViewSortedSet<E, TrieSetView<E, K, V>> {
+            extends AbstractMapViewSortedSet<E> {
         protected final GeneralRadixTrie<K, V> parent;
 
         protected TrieSetView(final GeneralRadixTrie<K, V> parent, final SortedMapRange<E> range) {

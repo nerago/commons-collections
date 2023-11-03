@@ -11,7 +11,7 @@ import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.ToArrayUtils;
 
-public class ReverseNavigableSet<E, TDecorated extends NavigableSet<E>, TSubSet extends NavigableRangedSet<E, ?>>
+public class ReverseNavigableSet<E, TDecorated extends NavigableSet<E>, TSubSet extends NavigableRangedSet<E>>
         extends AbstractNavigableSetDecorator<E, TDecorated, TSubSet> {
     public ReverseNavigableSet(final TDecorated set, final SortedMapRange<E> range) {
         super(set, range.reversed());

@@ -34,7 +34,7 @@ public abstract class AbstractMapIteratorAdapter<K, V, O> implements Iterator<O>
         return false;
     }
 
-    protected abstract O transform(K next, V value);
+    protected abstract O transform(K key, V value);
 
     @Override
     public O next() {

@@ -17,6 +17,7 @@
 package org.apache.commons.collections4;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -112,7 +113,11 @@ public class ComparatorUtils {
      * @see ReverseComparator
      */
     public static <E> Comparator<E> reversedComparator(final Comparator<E> comparator) {
-        return new ReverseComparator<>(comparator);
+        if (comparator == null) {
+            return Collections.reverseOrder();
+        } else {
+            return new ReverseComparator<>(comparator);
+        }
     }
 
     /**

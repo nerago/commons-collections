@@ -44,8 +44,8 @@ import java.util.*;
 public abstract class AbstractNavigableMapDecorator<K, V,
                 TDecorated extends NavigableMap<K, V>,
                 TSubMap extends AbstractNavigableMapDecorator<K, V, TDecorated, TSubMap, ?, ?, ?>,
-                TKeySet extends NavigableRangedSet<K, ?>,
-                TEntrySet extends NavigableRangedSet<Map.Entry<K, V>, ?>,
+                TKeySet extends NavigableRangedSet<K>,
+                TEntrySet extends NavigableRangedSet<Map.Entry<K, V>>,
                 TValueSet extends SequencedCommonsCollection<V>>
         extends AbstractSortedMapDecorator<K, V, TDecorated, TSubMap, TKeySet, TEntrySet, TValueSet>
         implements NavigableRangedMap<K, V, TSubMap> {

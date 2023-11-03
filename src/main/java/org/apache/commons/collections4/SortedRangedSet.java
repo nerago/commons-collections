@@ -2,7 +2,7 @@ package org.apache.commons.collections4;
 
 import java.util.SortedSet;
 
-public interface SortedRangedSet<E, TSubSet extends SortedRangedSet<E, ?>>
+public interface SortedRangedSet<E>
         extends SortedSet<E>, SequencedCommonsSet<E> {
     /**
      * Range of elements included in this set instance (i.e. full set or sub set)
@@ -11,23 +11,26 @@ public interface SortedRangedSet<E, TSubSet extends SortedRangedSet<E, ?>>
      */
     SortedMapRange<E> getRange();
 
-    TSubSet subSet(SortedMapRange<E> range);
+    SortedRangedSet<E> subSet(SortedMapRange<E> range);
 
     @Override
-    default TSubSet subSet(final E fromElement, final E toElement) {
+    @Deprecated
+    default SortedRangedSet<E> subSet(final E fromElement, final E toElement) {
         return subSet(getRange().subRange(fromElement, toElement));
     }
 
     @Override
-    default TSubSet headSet(final E toElement) {
+    @Deprecated
+    default SortedRangedSet<E> headSet(final E toElement) {
         return subSet(getRange().head(toElement));
     }
 
     @Override
-    default TSubSet tailSet(final E fromElement) {
+    @Deprecated
+    default SortedRangedSet<E> tailSet(final E fromElement) {
         return subSet(getRange().tail(fromElement));
     }
 
     @Override
-    TSubSet reversed();
+    SortedRangedSet<E> reversed();
 }

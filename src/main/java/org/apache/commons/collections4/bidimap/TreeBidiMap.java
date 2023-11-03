@@ -25,9 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.SequencedCollection;
 import java.util.SequencedSet;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -38,9 +36,11 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
+import org.apache.commons.collections4.set.ReverseSequencedSet;
 
 import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
 import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.VALUE;
@@ -685,7 +685,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * @return a set view of the keys contained in this map.
      */
     @Override
-    public Set<K> keySet() {
+    public SequencedSet<K> keySet() {
         return sequencedKeySet();
     }
 
@@ -724,7 +724,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
      * @return a set view of the values contained in this map.
      */
     @Override
-    public SequencedCollection<V> values() {
+    public SequencedSet<V> values() {
         return sequencedValues();
     }
 
@@ -1801,7 +1801,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    abstract class View<E> extends AbstractMapViewSortedSet<E, View<E>> {
+    abstract class View<E> implements SequencedCommonsSet<E> {
 
         /** Whether to return KEY or VALUE order. */
         final DataElement orderType;
@@ -1823,6 +1823,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         public void clear() {
             TreeBidiMap.this.clear();
         }
+
+        @Override
+        public SequencedCommonsSet<E> reversed() {
+            return new ReverseSequencedSet<>(this);
+        }
     }
 
     class KeyView extends View<K> {
@@ -1837,6 +1842,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Iterator<K> iterator() {
             return new ViewMapIterator(orderType);
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return new DescendingViewMapIterator(orderType);
         }
 
         @Override

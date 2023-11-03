@@ -18,6 +18,7 @@ package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.set.AbstractMapViewNavigableSet;
 import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 
 
@@ -571,7 +572,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableRangedSet<K, ?> createKeySet(final boolean descending) {
+    protected NavigableRangedSet<K> createKeySet(final boolean descending) {
         if (valueRange.isFull())
             return new KeySetUsingKeyMapSubSet<>(this, descending);
         else
@@ -579,7 +580,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableRangedSet<V, ?> createValueSet() {
+    protected NavigableRangedSet<V> createValueSet() {
         if (valueRange.isFull())
             return new ValueSetUsingKeyEntrySetSubSet<>(this);
         else
@@ -587,7 +588,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableRangedSet<Entry<K, V>, ?> createEntrySet() {
+    protected NavigableRangedSet<Entry<K, V>> createEntrySet() {
         if (valueRange.isFull())
             return new EntrySetUsingKeyMap<>(this);
         else
@@ -643,8 +644,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private abstract static class BaseUsingBoth<E, K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractMapViewSortedSet<E, NavigableRangedSet<E, ?>>
-            implements NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
+            extends AbstractMapViewNavigableSet<E> {
         protected final DualTreeBidi2MapSubMap<K, V> parent;
         protected final SortedMapRange<E> range;
         private final boolean descending;
@@ -663,7 +663,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
 
         protected abstract K toKey(E element);
 
-        protected abstract NavigableRangedSet<E, ?> createSimilar(DualTreeBidi2MapSubMap<K, V> parent, boolean descending);
+        protected abstract NavigableRangedSet<E> createSimilar(DualTreeBidi2MapSubMap<K, V> parent, boolean descending);
 
         @Override
         public SortedMapRange<E> getRange() {
@@ -751,17 +751,17 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public NavigableRangedSet<E, ?> descendingSet() {
+        public NavigableRangedSet<E> descendingSet() {
             return createSimilar(parent, !descending);
         }
 
-        @Override
-        public NavigableRangedSet<E, ?> reversed() {
-            return descendingSet();
-        }
+//        @Override
+//        public NavigableRangedSet<E> reversed() {
+//            return descendingSet();
+//        }
 
         @Override
-        public NavigableRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
+        public NavigableRangedSet<E> subSet(final SortedMapRange<E> range) {
             return createSimilar(
                     (DualTreeBidi2MapSubMap<K, V>)
                     parent.subMap(toKey(range.getFromKey()), range.isFromInclusive(), toKey(range.getToKey()), range.isToInclusive()),
@@ -786,7 +786,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        protected NavigableRangedSet<K, ?> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
+        protected NavigableRangedSet<K> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
             return new KeySetUsingBoth<>(parent, descending);
         }
 
@@ -823,7 +823,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        protected NavigableRangedSet<Entry<K, V>, ?> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
+        protected NavigableRangedSet<Entry<K, V>> createSimilar(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
             return new EntrySetUsingBoth<>(parent, descending);
         }
 

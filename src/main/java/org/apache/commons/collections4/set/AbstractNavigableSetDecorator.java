@@ -31,9 +31,9 @@ import java.util.NavigableSet;
  * @param <E> the type of the elements in the navigable set
  * @since 4.1
  */
-public abstract class AbstractNavigableSetDecorator<E, TDecorated extends NavigableSet<E>, TSubSet extends NavigableRangedSet<E, ?>>
+public abstract class AbstractNavigableSetDecorator<E, TDecorated extends NavigableSet<E>, TSubSet extends NavigableRangedSet<E>>
         extends AbstractSortedSetDecorator<E, TDecorated, TSubSet>
-        implements NavigableRangedSet<E, TSubSet> {
+        implements NavigableRangedSet<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = 20150528L;

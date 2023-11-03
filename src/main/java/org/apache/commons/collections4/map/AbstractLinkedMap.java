@@ -384,7 +384,10 @@ public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> im
 
     @Override
     public SequencedSet<Entry<K, V>> entrySet() {
-        return super.entrySet();
+        if (entrySet == null) {
+            entrySet = new EntrySet<>(this);
+        }
+        return entrySet;
     }
 
     @Override

@@ -2,24 +2,23 @@ package org.apache.commons.collections4.set;
 
 import java.util.Collection;
 
-import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
-public abstract class AbstractMapViewSortedSet<E, TSubSet extends SortedRangedSet<E, ?>>
-        extends AbstractCommonsSortedSet<E, TSubSet> {
+public abstract class AbstractMapViewSortedSet<E>
+        extends AbstractCommonsSortedSet<E> {
 
     @Override
-    public final void addFirst(E e) {
+    public final void addFirst(final E e) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public final void addLast(E e) {
+    public final void addLast(final E e) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public final boolean add(E e) {
+    public final boolean add(final E e) {
         throw new UnsupportedOperationException();
     }
 

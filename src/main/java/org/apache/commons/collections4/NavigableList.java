@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Spliterator;
 
 public interface NavigableList<E, TSubList extends NavigableList<E, ?>>
-        extends NavigableRangedSet<E, TSubList>, List<E> {
+        extends NavigableRangedSet<E>, List<E> {
     /**
      * Returns the index of the last element in this list strictly less than the
      * given element -1 if there is no such location.

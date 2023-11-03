@@ -18,43 +18,55 @@ package org.apache.commons.collections4;
 
 import java.util.NavigableSet;
 
-public interface NavigableRangedSet<E, TSubSet extends NavigableRangedSet<E, ?>>
-        extends NavigableSet<E>, SortedRangedSet<E, TSubSet> {
+public interface NavigableRangedSet<E>
+        extends NavigableSet<E>, SortedRangedSet<E> {
     @Override
-    default TSubSet subSet(final E fromElement, final boolean fromInclusive, final E toElement, final boolean toInclusive) {
-        return subSet(getRange().subRange(fromElement,fromInclusive,toElement,toInclusive));
-    }
+    NavigableRangedSet<E> subSet(SortedMapRange<E> range);
 
     @Override
-    default TSubSet headSet(final E toElement, final boolean inclusive) {
-        return subSet(getRange().head(toElement));
-    }
-
-    @Override
-    default TSubSet tailSet(final E fromElement, final boolean inclusive) {
-        return subSet(getRange().tail(fromElement));
-    }
-
-    @Override
-    default TSubSet subSet(final E fromElement, final E toElement) {
-        return subSet(fromElement, true, toElement, false);
-    }
-
-    @Override
-    default TSubSet headSet(final E toElement) {
-        return headSet(toElement, false);
-    }
-
-    @Override
-    default TSubSet tailSet(final E fromElement) {
-        return tailSet(fromElement, true);
-    }
-
-    @Override
-    default TSubSet reversed() {
+    default NavigableRangedSet<E> reversed() {
         return descendingSet();
     }
 
     @Override
-    TSubSet descendingSet();
+    NavigableRangedSet<E> descendingSet();
+
+    @Override
+    @Deprecated
+    default NavigableRangedSet<E> subSet(final E fromElement, final boolean fromInclusive, final E toElement, final boolean toInclusive) {
+        return subSet(getRange().subRange(fromElement, fromInclusive, toElement, toInclusive));
+    }
+
+    @Override
+    @Deprecated
+    default NavigableRangedSet<E> headSet(final E toElement, final boolean inclusive) {
+        return subSet(getRange().head(toElement));
+    }
+
+    @Override
+    @Deprecated
+    default NavigableRangedSet<E> tailSet(final E fromElement, final boolean inclusive) {
+        return subSet(getRange().tail(fromElement));
+    }
+
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    default NavigableRangedSet<E> subSet(final E fromElement, final E toElement) {
+        return subSet(fromElement, true, toElement, false);
+    }
+
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    default NavigableRangedSet<E> headSet(final E toElement) {
+        return headSet(toElement, false);
+    }
+
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    default NavigableRangedSet<E> tailSet(final E fromElement) {
+        return tailSet(fromElement, true);
+    }
 }

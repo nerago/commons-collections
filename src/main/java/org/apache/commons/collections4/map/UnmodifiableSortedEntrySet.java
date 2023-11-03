@@ -9,11 +9,11 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.set.AbstractSetDecorator;
 import org.apache.commons.collections4.set.AbstractSortedSetDecorator;
 import org.apache.commons.collections4.spliterators.UnmodifiableMapSpliterator;
 
@@ -96,7 +96,7 @@ public class UnmodifiableSortedEntrySet<K, V>
     }
 
     @Override
-    public SequencedSet<Map.Entry<K, V>> reversed() {
+    public SequencedCommonsSet<Map.Entry<K, V>> reversed() {
         if (reversed == null) {
             reversed = new UnmodifiableSequencedEntrySet<>(decorated().reversed());
         }

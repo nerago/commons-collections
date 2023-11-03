@@ -231,6 +231,11 @@ public class SplitMapUtils {
         }
 
         @Override
+        public boolean removeMapping(final Object key, final Object value) {
+            return put.removeMapping(key, value);
+        }
+
+        @Override
         public int size() {
             throw new UnsupportedOperationException();
         }

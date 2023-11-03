@@ -46,9 +46,9 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
             TDecoratedInverse extends SortedBidiMap<V, K, ?, ?>,
             TSubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?, ?, ?, ?>,
             TInverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?, ?>,
-            TKeySet extends SortedRangedSet<K, ?>,
-            TEntrySet extends SortedRangedSet<Map.Entry<K, V>, ?>,
-            TValueSet extends SortedRangedSet<V, ?>>
+            TKeySet extends SortedRangedSet<K>,
+            TEntrySet extends SortedRangedSet<Map.Entry<K, V>>,
+            TValueSet extends SortedRangedSet<V>>
         extends AbstractOrderedBidiMapDecorator<K, V, TDecorated, TDecoratedInverse, TSubMap, TInverseMap, TKeySet, TEntrySet, TValueSet>
         implements SortedBidiMap<K, V, TSubMap, TInverseMap> {
 
@@ -102,7 +102,7 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
     }
 
     @Override
-    public SortedRangedSet<Entry<K, V>, ?> sequencedEntrySet() {
+    public SortedRangedSet<Entry<K, V>> sequencedEntrySet() {
         return decorated().sequencedEntrySet();
     }
 

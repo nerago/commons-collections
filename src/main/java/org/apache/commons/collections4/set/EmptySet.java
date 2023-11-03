@@ -14,7 +14,7 @@ import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
 
-public final class EmptySet<E> implements NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
+public final class EmptySet<E> implements NavigableRangedSet<E> {
     @SuppressWarnings("rawtypes")
     private static final EmptySet instance = new EmptySet();
 
@@ -24,12 +24,12 @@ public final class EmptySet<E> implements NavigableRangedSet<E, NavigableRangedS
     }
 
     @Override
-    public NavigableRangedSet<E, ?> reversed() {
+    public NavigableRangedSet<E> reversed() {
         return this;
     }
 
     @Override
-    public NavigableRangedSet<E, ?> descendingSet() {
+    public NavigableRangedSet<E> descendingSet() {
         return this;
     }
 
@@ -202,7 +202,7 @@ public final class EmptySet<E> implements NavigableRangedSet<E, NavigableRangedS
     }
 
     @Override
-    public NavigableRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
+    public NavigableRangedSet<E> subSet(final SortedMapRange<E> range) {
         return this;
     }
 }

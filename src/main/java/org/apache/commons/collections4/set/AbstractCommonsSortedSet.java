@@ -4,15 +4,19 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.apache.commons.collections4.AbstractCommonsCollection;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ComparatorUtils;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
-public abstract class AbstractCommonsSortedSet<E, TSubSet extends SortedRangedSet<E, ?>>
+public abstract class AbstractCommonsSortedSet<E>
         extends AbstractCommonsCollection<E>
-        implements SortedRangedSet<E, TSubSet> {
+        implements SortedRangedSet<E> {
 
     @Override
     public final boolean equals(final Object obj) {
@@ -30,20 +34,29 @@ public abstract class AbstractCommonsSortedSet<E, TSubSet extends SortedRangedSe
 
     @Override
     public final boolean removeAll(final Collection<?> coll) {
-        boolean changed = false;
-        if (coll.size() < size()) {
+        if (coll.isEmpty()) {
+            return false;
+        } else if (coll.size() < size()) {
+            boolean changed = false;
             for (final Object element : coll) {
                 changed |= remove(element);
             }
+            return changed;
         } else {
-            removeIf(coll::contains);
+            return removeIf(coll::contains);
         }
-        return changed;
     }
 
     @Override
     public final boolean retainAll(final Collection<?> coll) {
-        return removeIf(element -> !coll.contains(element));
+        if (isEmpty()) {
+            return false;
+        } else if (coll.isEmpty()) {
+            clear();
+            return true;
+        } else {
+            return removeIf(element -> !coll.contains(element));
+        }
     }
 
     @Override
@@ -57,135 +70,88 @@ public abstract class AbstractCommonsSortedSet<E, TSubSet extends SortedRangedSe
     }
 
     @Override
-    public final TSubSet subSet(final E fromElement, final E toElement) {
-        return SortedRangedSet.super.subSet(fromElement, toElement);
-    }
+    public abstract Iterator<E> descendingIterator();
 
     @Override
-    public final TSubSet headSet(final E toElement) {
-        return SortedRangedSet.super.headSet(toElement);
+    public SortedRangedSet<E> reversed() {
+        return new ReverseView<>(this);
     }
 
-    @Override
-    public final TSubSet tailSet(final E fromElement) {
-        return SortedRangedSet.super.tailSet(fromElement);
-    }
+    protected static class ReverseView<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
+            extends AbstractSortedSetDecorator<E, TDecorated, TSubSet> {
+        private static final long serialVersionUID = -3785473145672064127L;
 
-    @Override
-    public final TSubSet reversed() {
-        return new ReverseView();
-    }
-
-    protected class ReverseView implements SortedRangedSet<E, TSubSet> {
-
-        @Override
-        public SortedMapRange<E> getRange() {
-            return null;
+        public ReverseView(final TDecorated set) {
+            super(set);
         }
 
         @Override
-        public TSubSet subSet(SortedMapRange<E> range) {
-            return null;
-        }
-
-        @Override
-        public Comparator<? super E> comparator() {
-            return null;
-        }
-
-        @Override
-        public E first() {
-            return null;
-        }
-
-        @Override
-        public E last() {
-            return null;
-        }
-
-        @Override
-        public Iterator<E> descendingIterator() {
-            return null;
-        }
-
-        @Override
-        public TSubSet reversed() {
-            return null;
-        }
-
-        @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return false;
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return false;
+        protected TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range) {
+            return (TSubSet) new ReverseView<>(subMap);
         }
 
         @Override
         public Iterator<E> iterator() {
-            return null;
+            if (decorated() instanceof SequencedCommonsSet<?>) {
+                return ((SequencedCommonsSet<E>) decorated()).descendingIterator();
+            } else {
+                return decorated().reversed().iterator();
+            }
         }
 
         @Override
-        public Object[] toArray() {
-            return new Object[0];
+        public Iterator<E> descendingIterator() {
+            return decorated().iterator();
         }
 
         @Override
-        public <T> T[] toArray(T[] a) {
-            return null;
+        public boolean addAll(Collection<? extends E> coll) {
+            return super.addAll(CollectionUtils.reversedCollection(coll));
         }
 
         @Override
-        public boolean add(E e) {
-            return false;
+        public void addFirst(E e) {
+            super.addLast(e);
         }
 
         @Override
-        public boolean remove(Object o) {
-            return false;
+        public void addLast(E e) {
+            super.addFirst(e);
         }
 
         @Override
-        public boolean containsAll(Collection<?> c) {
-            return false;
+        public E getFirst() {
+            return super.getLast();
         }
 
         @Override
-        public boolean addAll(Collection<? extends E> c) {
-            return false;
+        public E getLast() {
+            return super.getFirst();
         }
 
         @Override
-        public boolean retainAll(Collection<?> c) {
-            return false;
+        public E removeFirst() {
+            return super.removeLast();
         }
 
         @Override
-        public boolean removeAll(Collection<?> c) {
-            return false;
+        public E removeLast() {
+            return super.removeFirst();
         }
 
         @Override
-        public void clear() {
-
+        public E first() {
+            return super.last();
         }
 
         @Override
-        public boolean equals(Object o) {
-            return false;
+        public E last() {
+            return super.first();
         }
 
         @Override
-        public int hashCode() {
-            return 0;
+        public Comparator<? super E> comparator() {
+            return ComparatorUtils.reversedComparator(decorated().comparator());
         }
     }
 }

@@ -5,14 +5,13 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 
 public class SingletonSet<E>
-        extends AbstractCommonsSortedSet<E, NavigableRangedSet<E, ?>>
-        implements NavigableRangedSet<E, NavigableRangedSet<E, ?>> {
+        extends AbstractCommonsSortedSet<E>
+        implements NavigableRangedSet<E> {
     private final E value;
 
     public SingletonSet(final E value) {
@@ -20,7 +19,7 @@ public class SingletonSet<E>
     }
 
     @Override
-    public NavigableRangedSet<E, ?> subSet(final SortedMapRange<E> range) {
+    public NavigableRangedSet<E> subSet(final SortedMapRange range) {
         return range.inRange(value) ? this : EmptySet.emptySet();
     }
 
@@ -115,7 +114,12 @@ public class SingletonSet<E>
     }
 
     @Override
-    public NavigableRangedSet<E, ?> descendingSet() {
+    public NavigableRangedSet<E> descendingSet() {
+        return this;
+    }
+
+    @Override
+    public NavigableRangedSet<E> reversed() {
         return this;
     }
 }

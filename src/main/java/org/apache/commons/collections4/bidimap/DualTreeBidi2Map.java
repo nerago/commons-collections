@@ -139,16 +139,16 @@ public class DualTreeBidi2Map<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected NavigableRangedSet<K, ?> createKeySet(final boolean descending) {
+    protected NavigableRangedSet<K> createKeySet(final boolean descending) {
         return new KeySetUsingKeyMapFullRange<>(this, descending);
     }
 
     @Override
-    protected NavigableRangedSet<V, ?> createValueSet() {
+    protected NavigableRangedSet<V> createValueSet() {
         return new ValueSetUsingKeyEntrySetFullRange<>(this);
     }
     @Override
-    protected NavigableRangedSet<Entry<K, V>, ?> createEntrySet() {
+    protected NavigableRangedSet<Entry<K, V>> createEntrySet() {
         return new EntrySetUsingKeyMap<>(this);
     }
 }

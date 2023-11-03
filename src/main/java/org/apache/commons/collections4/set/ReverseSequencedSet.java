@@ -1,15 +1,12 @@
 package org.apache.commons.collections4.set;
 
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.NavigableSet;
 import java.util.SequencedSet;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 
-import org.apache.commons.collections4.NavigableRangedSet;
-import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.ToArrayUtils;
 
 public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedSet<E>>
@@ -78,7 +75,7 @@ public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet 
 
     @SuppressWarnings("unchecked")
     @Override
-    public TSubSet reversed() {
+    public SequencedCommonsSet<E> reversed() {
         return (TSubSet) decorated();
     }
 

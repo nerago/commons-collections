@@ -20,9 +20,10 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Comparator;
-import java.util.Set;
+import java.util.Iterator;
 import java.util.SortedSet;
 
+import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
@@ -35,9 +36,9 @@ import org.apache.commons.collections4.SortedRangedSet;
  * @param <E> the type of the elements in the sorted set
  * @since 3.0
  */
-public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E, ?>>
+public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
         extends AbstractSequencedSetDecorator<E, TDecorated, TSubSet>
-        implements SortedRangedSet<E, TSubSet> {
+        implements SortedRangedSet<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = -3462240946294214398L;
@@ -96,6 +97,15 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
     protected abstract TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range);
 
     @Override
+    public Iterator<E> descendingIterator() {
+        if (decorated() instanceof SequencedCommonsCollection) {
+            return ((SequencedCommonsCollection<E>) decorated()).descendingIterator();
+        } else {
+            return reversed().iterator();
+        }
+    }
+
+    @Override
     public final TSubSet subSet(final SortedMapRange<E> range) {
         return decorateDerived(range.applyToSet(decorated()), range);
     }
@@ -104,12 +114,6 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
     @Override
     public TSubSet reversed() {
         return decorateDerived((TDecorated) decorated().reversed(), range.reversed());
-    }
-
-    // TODO remove, just for compile checks
-    @Override
-    public final TSubSet subSet(final E fromElement, final E toElement) {
-        return SortedRangedSet.super.subSet(fromElement, toElement);
     }
 
     @SuppressWarnings("unchecked")
