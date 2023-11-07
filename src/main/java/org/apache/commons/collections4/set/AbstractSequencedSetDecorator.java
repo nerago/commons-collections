@@ -16,9 +16,14 @@
  */
 package org.apache.commons.collections4.set;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.SequencedSet;
+import java.util.SortedSet;
 
 import org.apache.commons.collections4.SequencedCommonsSet;
+import org.apache.commons.collections4.SortedRangedSet;
+import org.apache.commons.collections4.map.UnmodifiableSortedEntrySet;
 
 
 /**
@@ -34,8 +39,9 @@ public abstract class AbstractSequencedSetDecorator<E, TDecorated extends Sequen
         extends AbstractSetDecorator<E, TDecorated>
         implements SequencedCommonsSet<E> {
 
-
     private static final long serialVersionUID = -363134107178725896L;
+
+    private TSubSet reversed;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -52,6 +58,11 @@ public abstract class AbstractSequencedSetDecorator<E, TDecorated extends Sequen
      */
     protected AbstractSequencedSetDecorator(final TDecorated set) {
         super(set);
+    }
+
+    protected AbstractSequencedSetDecorator(final TDecorated set, final TSubSet reverse) {
+        super(set);
+        this.reversed = reverse;
     }
 
     @Override
@@ -84,11 +95,26 @@ public abstract class AbstractSequencedSetDecorator<E, TDecorated extends Sequen
         return decorated().removeLast();
     }
 
-    protected abstract TSubSet decorateReverse(final TDecorated subMap);
+    // some implementations can provide reversed via constructor so may not require
+    protected TSubSet createReversed() {
+        throw new UnsupportedOperationException();
+    }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public TSubSet reversed() {
-        return decorateReverse((TDecorated) decorated().reversed());
+    public final TSubSet reversed() {
+        if (reversed == null) {
+            reversed = createReversed();
+        }
+        return reversed;
+    }
+
+    @Override
+    public Iterator<E> descendingIterator() {
+        final SequencedSet<E> decorated = decorated();
+        if (decorated instanceof SequencedCommonsSet<E>) {
+            return ((SequencedCommonsSet<E>) decorated).descendingIterator();
+        } else {
+            return decorated.reversed().iterator();
+        }
     }
 }

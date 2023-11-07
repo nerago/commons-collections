@@ -21,7 +21,7 @@ import java.util.SequencedSet;
 import java.util.SortedMap;
 
 public interface SortedRangedMap<K, V, TSubMap extends SortedRangedMap<K, V, ?>>
-         extends SortedMap<K, V>, IterableMap<K, V>, SequencedCommonsMap<K, V, TSubMap> {
+         extends SortedMap<K, V>, IterableMap<K, V>, SequencedCommonsMap<K, V> {
     /**
      * Range of keys included in this map instance (i.e. full map or sub map)
      * @return key range

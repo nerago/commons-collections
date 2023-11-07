@@ -5,10 +5,10 @@ import java.util.SequencedCollection;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
 
-public interface SequencedCommonsMap<K, V, TSubMap extends SequencedCommonsMap<K, V, ?>>
+public interface SequencedCommonsMap<K, V>
         extends SequencedMap<K, V> {
     @Override
-    TSubMap reversed();
+    SequencedCommonsMap reversed();
 
     @Override
     SequencedSet<K> sequencedKeySet();

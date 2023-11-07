@@ -192,7 +192,7 @@ public final class SortedMapRange<T> implements Serializable {
     /**
      * Returns true if the provided key is greater than TO and less than FROM.
      */
-    public boolean inRange(final T key) {
+    public boolean contains(final T key) {
         return inFromRange(key) && inToRange(key);
     }
 
@@ -272,7 +272,7 @@ public final class SortedMapRange<T> implements Serializable {
         }
 
         final T key = entry != null ? entry.getKey() : null;
-        if (key == null || !inRange(key)) {
+        if (key == null || !contains(key)) {
             throw new NoSuchElementException();
         }
         return key;

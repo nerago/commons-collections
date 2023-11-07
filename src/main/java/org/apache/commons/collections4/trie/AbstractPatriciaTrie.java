@@ -2266,7 +2266,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public boolean containsKey(final Object key) {
-            if (!keyRange.inRange(castKey(key))) {
+            if (!keyRange.contains(castKey(key))) {
                 return false;
             }
 
@@ -2275,7 +2275,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public V remove(final Object key) {
-            if (!keyRange.inRange(castKey(key))) {
+            if (!keyRange.contains(castKey(key))) {
                 return null;
             }
 
@@ -2284,7 +2284,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public V get(final Object key) {
-            if (!keyRange.inRange(castKey(key))) {
+            if (!keyRange.contains(castKey(key))) {
                 return null;
             }
 
@@ -2293,7 +2293,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public V put(final K key, final V value) {
-            if (!keyRange.inRange(key)) {
+            if (!keyRange.contains(key)) {
                 throw new IllegalArgumentException("Key is out of range: " + key);
             }
             return AbstractPatriciaTrie.this.put(key, value);
@@ -2386,7 +2386,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 throw new NoSuchElementException();
             }
             final K firstKey = entry.getKey();
-            if (!keyRange.inRange(firstKey)) {
+            if (!keyRange.contains(firstKey)) {
                 throw new NoSuchElementException();
             }
             return firstKey;
@@ -2399,7 +2399,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 throw new NoSuchElementException();
             }
             final K lastKey = entry.getKey();
-            if (!keyRange.inRange(lastKey)) {
+            if (!keyRange.contains(lastKey)) {
                 throw new NoSuchElementException();
             }
             return lastKey;
@@ -2446,7 +2446,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         protected boolean inRange(final K key) {
-            return keyRange.inRange(key);
+            return keyRange.contains(key);
         }
 
         @Override
@@ -2567,7 +2567,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
             final Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
             final K key = entry.getKey();
-            if (!delegate.keyRange.inRange(key)) {
+            if (!delegate.keyRange.contains(key)) {
                 return false;
             }
 
@@ -2585,7 +2585,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
             final Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
             final K key = entry.getKey();
-            if (!delegate.keyRange.inRange(key)) {
+            if (!delegate.keyRange.contains(key)) {
                 return false;
             }
 

@@ -1699,10 +1699,9 @@ public class CollectionUtils {
      * @param collection  the collection to reverse
      * @return new collection with shallow copy of items in reverse order
      */
-    @SuppressWarnings("unchecked")
-    public static <E> Collection<? extends E> reversedCollection(final Collection<? extends E> collection) {
-        if (collection instanceof SequencedCollection<? extends E>) {
-            return ((SequencedCollection<? extends E>) collection).reversed();
+    public static <E> SequencedCommonsCollection<E> reversedCollection(final Collection<E> collection) {
+        if (collection instanceof SequencedCommonsCollection<E>) {
+            return ((SequencedCommonsCollection<E>) collection).reversed();
         } else {
             return ArraySequencedCollection.reverseSequencedCollection(collection);
         }

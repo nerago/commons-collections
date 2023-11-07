@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.ToArrayUtils;
 
-public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedSet<E>>
+public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedCommonsSet<E>>
         extends AbstractSequencedSetDecorator<E, TDecorated, TSubSet> {
     private final SequencedSet<E> reverse;
 
@@ -68,20 +68,14 @@ public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet 
         return reverse.iterator();
     }
 
-//    @Override
+    @Override
     public Iterator<E> descendingIterator() {
         return decorated().iterator();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public SequencedCommonsSet<E> reversed() {
+    protected TSubSet createReversed() {
         return (TSubSet) decorated();
-    }
-
-    @Override
-    protected TSubSet decorateReverse(final TDecorated subMap) {
-        return (TSubSet) subMap;
     }
 
     /**

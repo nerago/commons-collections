@@ -548,7 +548,7 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
     /**
      * KeySet implementation.
      */
-    static class ReferenceKeySet<K> extends KeySet<K> {
+    static class ReferenceKeySet<K, V> extends KeySet<K, V> {
 
         protected ReferenceKeySet(final AbstractHashedMap<K, ?> parent) {
             super(parent);
@@ -573,9 +573,9 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
     /**
      * Values implementation.
      */
-    static class ReferenceValues<V> extends Values<V> {
+    static class ReferenceValues<K, V> extends Values<K, V> {
 
-        protected ReferenceValues(final AbstractHashedMap<?, V> parent) {
+        protected ReferenceValues(final AbstractHashedMap<K, V> parent) {
             super(parent);
         }
 

@@ -27,7 +27,7 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
         this.keyRange = keyRange;
 
         // dig down tree until in range
-        if (!keyRange.inRange(currentNode.getKey())) {
+        if (!keyRange.contains(currentNode.getKey())) {
             final N minimumNode = findFirstNode(), maximumNode = findLastNode();
             while (currentNode != null && isLowerThan(maximumNode, currentNode)) {
                 currentNode = getLeft(currentNode);
@@ -66,13 +66,13 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
             return true;
         }
 
-        if (keyRange.inRange(currentNode.getKey())) {
+        if (keyRange.contains(currentNode.getKey())) {
             return true;
         }
 
         if (keyRange.hasFrom()) {
             final N minimumNode = findFirstNode();
-            if (keyRange.inRange(minimumNode.getKey()) && isLowerThanOrEqual(currentNode, minimumNode) && isLowerThanOrEqual(minimumNode, lastNode)) {
+            if (keyRange.contains(minimumNode.getKey()) && isLowerThanOrEqual(currentNode, minimumNode) && isLowerThanOrEqual(minimumNode, lastNode)) {
                 currentNode = minimumNode;
                 return true;
             }
@@ -88,13 +88,13 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
             return false;
         }
 
-        if (keyRange.inRange(lastNode.getKey())) {
+        if (keyRange.contains(lastNode.getKey())) {
             return true;
         }
 
         if (keyRange.hasTo()) {
             final N maximumNode = findLastNode();
-            if (keyRange.inRange(maximumNode.getKey()) && isLowerThanOrEqual(currentNode, maximumNode) && isLowerThanOrEqual(maximumNode, lastNode)) {
+            if (keyRange.contains(maximumNode.getKey()) && isLowerThanOrEqual(currentNode, maximumNode) && isLowerThanOrEqual(maximumNode, lastNode)) {
                 lastNode = maximumNode;
                 return true;
             }
@@ -112,7 +112,7 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
         if (state == SplitState.INITIAL) {
             // currentNode is guaranteed in range
             final N splitLast = nextLower(currentNode);
-            if (isLowerThanOrEqual(left, splitLast) && isLowerThanOrEqual(currentNode, lastNode) && keyRange.inRange(splitLast.getKey())) {
+            if (isLowerThanOrEqual(left, splitLast) && isLowerThanOrEqual(currentNode, lastNode) && keyRange.contains(splitLast.getKey())) {
                 // mid = current is unknown but last is good in range
                 split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                 // right = current good, last good
@@ -121,7 +121,7 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
         } else if (state == SplitState.SPLITTING_MID) {
             // mid = current is unchecked but last is good in range
             final N splitLast = nextLower(currentNode);
-            if (isLowerThanOrEqual(left, splitLast) && isLowerThanOrEqual(currentNode, lastNode) && keyRange.inRange(splitLast.getKey())) {
+            if (isLowerThanOrEqual(left, splitLast) && isLowerThanOrEqual(currentNode, lastNode) && keyRange.contains(splitLast.getKey())) {
                 // mid = current unknown but last is good in range
                 split = makeSplit(SplitState.SPLITTING_MID, left, splitLast, estimatedSize >>>= 1);
                 // right = current probably good, splitLast good
@@ -131,7 +131,7 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
         } else if (state == SplitState.SPLITTING_RIGHT) {
             // right = current probably good, splitLast good
             final N rightLeft = getLeft(right);
-            if (rightLeft != null && isLowerThanOrEqual(currentNode, rightLeft) && isLowerThanOrEqual(right, lastNode) && keyRange.inRange(rightLeft.getKey())) {
+            if (rightLeft != null && isLowerThanOrEqual(currentNode, rightLeft) && isLowerThanOrEqual(right, lastNode) && keyRange.contains(rightLeft.getKey())) {
                 // left = current unchecked, last is good
                 split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, rightLeft, estimatedSize >>>= 1);
                 // right = current unchecked, last is good. inconsistent but maybe think about it some more
@@ -142,7 +142,7 @@ public abstract class AbstractTreeRangeSpliterator<K, V, N extends Map.Entry<K, 
             final N passedSubTree = lastNode;
             final N subTreeLeft = getLeft(passedSubTree);
             final N subTreeRight = getRight(passedSubTree);
-            if (subTreeLeft != null && isLowerThanOrEqual(currentNode, subTreeLeft) && subTreeRight != null && keyRange.inRange(subTreeLeft.getKey())) {
+            if (subTreeLeft != null && isLowerThanOrEqual(currentNode, subTreeLeft) && subTreeRight != null && keyRange.contains(subTreeLeft.getKey())) {
                 split = makeSplit(SplitState.SPLITTING_LEFT, currentNode, subTreeLeft, estimatedSize >>>= 1);
                 state = SplitState.SPLITTING_RIGHT;
                 currentNode = passedSubTree;

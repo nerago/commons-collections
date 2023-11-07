@@ -15,79 +15,24 @@ import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
 public abstract class AbstractCommonsSortedSet<E>
-        extends AbstractCommonsCollection<E>
-        implements SortedRangedSet<E> {
+        extends AbstractCommonsSequencedSet<E, SortedRangedSet<E>> implements SortedRangedSet<E> {
 
     @Override
-    public final boolean equals(final Object obj) {
-        if (obj instanceof Set) {
-            return SetUtils.isEqualSet(this, (Collection<?>) obj);
-        } else {
-            return false;
-        }
+    protected SortedRangedSet<E> createReversed() {
+        return new SortedReverseView<>(this, this, getRange().reversed());
     }
 
-    @Override
-    public final int hashCode() {
-        return SetUtils.hashCodeForSet(this);
-    }
-
-    @Override
-    public final boolean removeAll(final Collection<?> coll) {
-        if (coll.isEmpty()) {
-            return false;
-        } else if (coll.size() < size()) {
-            boolean changed = false;
-            for (final Object element : coll) {
-                changed |= remove(element);
-            }
-            return changed;
-        } else {
-            return removeIf(coll::contains);
-        }
-    }
-
-    @Override
-    public final boolean retainAll(final Collection<?> coll) {
-        if (isEmpty()) {
-            return false;
-        } else if (coll.isEmpty()) {
-            clear();
-            return true;
-        } else {
-            return removeIf(element -> !coll.contains(element));
-        }
-    }
-
-    @Override
-    public boolean containsAll(final Collection<?> coll) {
-        for (final Object element : coll) {
-            if (!coll.contains(element)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public abstract Iterator<E> descendingIterator();
-
-    @Override
-    public SortedRangedSet<E> reversed() {
-        return new ReverseView<>(this);
-    }
-
-    protected static class ReverseView<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
+    protected static class SortedReverseView<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
             extends AbstractSortedSetDecorator<E, TDecorated, TSubSet> {
         private static final long serialVersionUID = -3785473145672064127L;
 
-        public ReverseView(final TDecorated set) {
-            super(set);
+        protected SortedReverseView(final TDecorated set, final TSubSet reverse, final SortedMapRange<E> range) {
+            super(set, reverse, range);
         }
 
         @Override
-        protected TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range) {
-            return (TSubSet) new ReverseView<>(subMap);
+        protected TSubSet decorateDerived(final TDecorated subSet, final SortedMapRange<E> range) {
+            return (TSubSet) new SortedReverseView<>(subSet, null, range);
         }
 
         @Override

@@ -36,7 +36,6 @@ import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
-import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.spliterators.AbstractTreeRangeSpliterator;
 import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
@@ -1100,7 +1099,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     private Node<K, V> firstEntryInRange(final SortedMapRange<K> keyRange) {
         final Node<K, V> candidate = keyRange.hasFrom() ? lookupHigher(keyRange.getFromKey(), keyRange.isFromInclusive())
                 : leastNode(rootNode);
-        if (keyRange.inRange(candidate.getKey())) {
+        if (keyRange.contains(candidate.getKey())) {
             return candidate;
         } else {
             return null;
@@ -1110,7 +1109,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     private Node<K, V> lastEntryInRange(final SortedMapRange<K> keyRange) {
         final Node<K, V> candidate = keyRange.hasTo() ? lookupLower(keyRange.getToKey(), keyRange.isToInclusive())
                 : greatestNode(rootNode);
-        if (keyRange.inRange(candidate.getKey())) {
+        if (keyRange.contains(candidate.getKey())) {
             return candidate;
         } else {
             return null;
@@ -1414,7 +1413,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         private void verifyRange(final K key) {
-            if (!keyRange.inRange(key)) {
+            if (!keyRange.contains(key)) {
                 throw new IllegalArgumentException("key");
             }
         }
@@ -1422,7 +1421,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public boolean containsKey(final Object keyObject) {
             final K key = checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return lookupKey(key) != null;
             } else {
                 return false;
@@ -1458,7 +1457,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public V getOrDefault(final Object keyObject, final V defaultValue) {
             final K key = checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 final Node<K, V> node = lookupKey(key);
                 if (node != null) {
                     return node.value;
@@ -1470,7 +1469,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public boolean containsMapping(final Object keyObject, final Object value) {
             final K key = checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 final Node<K, V> node = lookupKey(key);
                 if (node != null) {
                     return Objects.equals(node.value, value);
@@ -1482,7 +1481,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public V remove(final Object keyObject) {
             final K key = checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return BinaryTreeMap.this.remove(key);
             }
             return null;
@@ -1491,7 +1490,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public boolean remove(final Object keyObject, final Object value) {
             final K key = checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return BinaryTreeMap.this.remove(key,  value);
             }
             return false;
@@ -1500,7 +1499,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public boolean removeAsBoolean(final Object keyObject) {
             final K key = checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return BinaryTreeMap.this.removeAsBoolean(keyObject);
             }
             return false;

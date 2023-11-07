@@ -28,6 +28,7 @@ import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableSortedEntrySet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
+import org.apache.commons.collections4.set.UnmodifiableSortedSet;
 
 /**
  * Decorates another {@link SortedBidiMap} to ensure it can't be altered.
@@ -172,24 +173,29 @@ public final class UnmodifiableSortedBidiMap<K, V>
 
     @Override
     public SortedRangedSet<K> sequencedKeySet() {
-        final Set<K> set = super.keySet();
-        return UnmodifiableSet.unmodifiableSet(set);
+        return UnmodifiableSortedSet.unmodifiableSortedSet(super.sequencedKeySet());
     }
 
     @Override
     public SortedRangedSet<V> sequencedValues() {
-        final Set<V> set = super.values();
-        return UnmodifiableSet.unmodifiableSet(set);
+        return UnmodifiableSortedSet.unmodifiableSortedSet(super.sequencedValues());
     }
 
     @Override
-    public UnmodifiableSortedBidiMap<V, K> reversed() {
+    protected UnmodifiableSortedBidiMap<K, V> createReverse() {
+
         return new UnmodifiableSortedBidiMap<>(decorated().reversed());
     }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         final OrderedMapIterator<K, V> it = decorated().mapIterator();
+        return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        final OrderedMapIterator<K, V> it = decorated().descendingMapIterator();
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
     }
 }

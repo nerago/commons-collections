@@ -42,5 +42,5 @@ public abstract class AbstractSequencedCollectionDecorator<E>
     }
 
     @Override
-    public abstract SequencedCollection<E> reversed();
+    public abstract SequencedCommonsCollection<E> reversed();
 }

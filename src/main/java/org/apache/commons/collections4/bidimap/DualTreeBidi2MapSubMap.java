@@ -19,7 +19,6 @@ package org.apache.commons.collections4.bidimap;
 import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.set.AbstractMapViewNavigableSet;
-import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 
 
 import java.util.*;
@@ -74,12 +73,12 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private void checkKey(final K key) {
-        if (!getKeyRange().inRange(key))
+        if (!getKeyRange().contains(key))
             throw new IllegalArgumentException();
     }
 
     private void checkValue(final V value) {
-        if (!getValueRange().inRange(value))
+        if (!getValueRange().contains(value))
             throw new IllegalArgumentException();
     }
 
@@ -88,7 +87,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         final K key = castKey(keyObject);
         final V value = keyMap.get(key);
         if (value != null)
-            return getValueRange().inRange(value);
+            return getValueRange().contains(value);
         else
             return false;
     }
@@ -103,7 +102,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         final K key = castKey(keyObject);
         final V value = keyMap.get(key);
         if (value != null) {
-            if (getValueRange().inRange(value))
+            if (getValueRange().contains(value))
                 return value;
         }
         return defaultValue;
@@ -582,7 +581,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     protected NavigableRangedSet<V> createValueSet() {
         if (valueRange.isFull())
-            return new ValueSetUsingKeyEntrySetSubSet<>(this);
+            return new ValueSetUsingKeyEntrySetSubKeyRange<>(this);
         else
             return new ValueSetUsingKeyEntrySetFiltered<>(this);
     }

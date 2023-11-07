@@ -466,12 +466,12 @@ public class AutoSortingList<E>
 
         @Override
         public boolean contains(final Object obj) {
-            return range.inRange(castElementNotNull(obj)) && parent.contains(obj);
+            return range.contains(castElementNotNull(obj)) && parent.contains(obj);
         }
 
         @Override
         public boolean add(final E element) {
-            if (range.inRange(element)) {
+            if (range.contains(element)) {
                 return parent.add(element);
             } else {
                 throw new IllegalArgumentException();
@@ -481,7 +481,7 @@ public class AutoSortingList<E>
         @Override
         public boolean remove(final Object obj) {
             final E element = castElementNotNull(obj);
-            if (range.inRange(element)) {
+            if (range.contains(element)) {
                 return parent.remove(element);
             } else {
                 throw new IllegalArgumentException();

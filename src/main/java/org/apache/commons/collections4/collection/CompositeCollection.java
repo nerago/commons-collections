@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.collection;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +42,7 @@ import org.apache.commons.collections4.list.UnmodifiableList;
  * @param <E> the type of the elements in the collection
  * @since 3.0
  */
-public class CompositeCollection<E> extends AbstractCommonsCollection<E> implements Collection<E>, Serializable {
+public class CompositeCollection<E> extends AbstractCommonsCollection<E> {
 
     /** Serialization version */
     private static final long serialVersionUID = 8417515734108306801L;
@@ -404,6 +407,19 @@ public class CompositeCollection<E> extends AbstractCommonsCollection<E> impleme
      */
     protected CollectionMutator<E> getMutator() {
         return mutator;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(mutator);
+        out.writeObject(all);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        mutator = (CollectionMutator<E>) in.readObject();
+        all.addAll((Collection<Collection<E>>) in.readObject());
     }
 
     /**

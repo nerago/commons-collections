@@ -25,6 +25,9 @@ import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
 import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SequencedSet;
@@ -106,6 +109,16 @@ public abstract class AbstractExtendedBidiMap<K, V,
         @Override
         public final void clear() {
             AbstractExtendedBidiMap.this.clear();
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            AbstractExtendedBidiMap.this.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            AbstractExtendedBidiMap.this.readExternal(in);
         }
     }
 

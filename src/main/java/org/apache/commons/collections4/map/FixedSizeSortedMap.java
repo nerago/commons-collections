@@ -19,12 +19,9 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.SequencedCollection;
 import java.util.SequencedSet;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -34,9 +31,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.collection.UnmodifiableCollection;
+import org.apache.commons.collections4.collection.UnmodifiableSequencedCollection;
 import org.apache.commons.collections4.iterators.FixedOrderedMapIterator;
-import org.apache.commons.collections4.set.UnmodifiableSet;
+import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
 
 /**
  * Decorates another {@code SortedMap} to fix the size blocking add/remove.
@@ -192,17 +189,17 @@ public class FixedSizeSortedMap<K, V>
 
     @Override
     public SequencedSet<Entry<K, V>> entrySet() {
-        return UnmodifiableSet.unmodifiableSet(decorated().entrySet());
+        return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedEntrySet());
     }
 
     @Override
     public SequencedSet<K> keySet() {
-        return UnmodifiableSet.unmodifiableSet(decorated().keySet());
+        return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedKeySet());
     }
 
     @Override
-    public SequencedCollection<V> values() {
-        return UnmodifiableCollection.unmodifiableCollection(decorated().values());
+    public SequencedCommonsCollection<V> values() {
+        return UnmodifiableSequencedCollection.unmodifiableSequencedCollection(decorated().sequencedValues());
     }
 
     @Override

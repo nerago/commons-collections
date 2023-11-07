@@ -18,13 +18,12 @@ package org.apache.commons.collections4.collection;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 import java.util.SequencedCollection;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BoundedCollection;
+import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
@@ -88,12 +87,17 @@ public final class UnmodifiableSequencedCollection<E> extends AbstractSequencedC
     }
 
     @Override
+    public Iterator<E> descendingIterator() {
+        return UnmodifiableIterator.unmodifiableIterator(decorated().reversed().iterator());
+    }
+
+    @Override
     public Spliterator<E> spliterator() {
         return new UnmodifiableSpliterator<>(decorated().spliterator());
     }
 
     @Override
-    public SequencedCollection<E> reversed() {
+    public SequencedCommonsCollection<E> reversed() {
         return new UnmodifiableSequencedCollection<>(decorated().reversed());
     }
 

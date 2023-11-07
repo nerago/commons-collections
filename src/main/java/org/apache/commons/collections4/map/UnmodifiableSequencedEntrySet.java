@@ -4,11 +4,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.SequencedSet;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
@@ -18,7 +18,7 @@ import org.apache.commons.collections4.spliterators.UnmodifiableMapSpliterator;
 
 public final class UnmodifiableSequencedEntrySet<K, V>
         extends AbstractSetDecorator<Map.Entry<K, V>, SequencedSet<Map.Entry<K, V>>>
-        implements SequencedSet<Map.Entry<K, V>>, Unmodifiable {
+        implements SequencedCommonsSet<Map.Entry<K, V>>, Unmodifiable {
 
     private static final long serialVersionUID = -3669591917001393091L;
     private UnmodifiableSequencedEntrySet<K, V> reversed;
@@ -95,7 +95,7 @@ public final class UnmodifiableSequencedEntrySet<K, V>
     }
 
     @Override
-    public SequencedSet<Map.Entry<K, V>> reversed() {
+    public SequencedCommonsSet<Map.Entry<K, V>> reversed() {
         if (reversed == null) {
             reversed = new UnmodifiableSequencedEntrySet<>(decorated().reversed());
         }
@@ -105,6 +105,15 @@ public final class UnmodifiableSequencedEntrySet<K, V>
     @Override
     public Iterator<Map.Entry<K, V>> iterator() {
         return new UnmodifiableEntrySetIterator(decorated().iterator());
+    }
+
+    @Override
+    public Iterator<Map.Entry<K, V>> descendingIterator() {
+        if (decorated() instanceof SequencedCommonsSet<Map.Entry<K,V>>) {
+            return ((SequencedCommonsSet<Map.Entry<K,V>>) decorated()).descendingIterator();
+        } else {
+            return reversed().iterator();
+        }
     }
 
     @Override

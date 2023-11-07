@@ -2079,7 +2079,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private Node<K, V> firstEntryInRange(final SortedMapRange<K> keyRange) {
         final Node<K, V> candidate = keyRange.hasFrom() ? lookupKeyHigher(keyRange.getFromKey(), keyRange.isFromInclusive())
                                                         : leastNodeKey(rootNodeKey);
-        if (keyRange.inRange(candidate.getKey())) {
+        if (keyRange.contains(candidate.getKey())) {
             return candidate;
         } else {
             return null;
@@ -2089,7 +2089,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private Node<K, V> lastEntryInRange(final SortedMapRange<K> keyRange) {
         final Node<K, V> candidate = keyRange.hasTo() ? lookupKeyLower(keyRange.getToKey(), keyRange.isToInclusive())
                                                       : greatestNodeKey(rootNodeKey);
-        if (keyRange.inRange(candidate.getKey())) {
+        if (keyRange.contains(candidate.getKey())) {
             return candidate;
         } else {
             return null;
@@ -2837,7 +2837,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         private void verifyRange(final K key) {
-            if (!keyRange.inRange(key)) {
+            if (!keyRange.contains(key)) {
                 throw new IllegalArgumentException("key");
             }
         }
@@ -2855,7 +2855,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public boolean containsKey(final Object keyObject) {
             final K key = parent.checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return parent.lookupKey(key) != null;
             } else {
                 return false;
@@ -2881,7 +2881,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public V getOrDefault(final Object keyObject, final V defaultValue) {
             final K key = parent.checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 final Node<K, V> node = parent.lookupKey(key);
                 if (node != null) {
                     return node.value;
@@ -2894,7 +2894,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public boolean containsMapping(final Object keyObject, final Object valueObject) {
             final K key = parent.checkKey(keyObject);
             final V value = parent.checkValue(valueObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 final Node<K, V> node = parent.lookupKey(key);
                 if (node != null) {
                     return Objects.equals(node.value, value);
@@ -2907,7 +2907,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public K getKeyOrDefault(final Object valueObject, final K defaultKey) {
             final V value = parent.checkValue(valueObject);
             final Node<K, V> node = parent.lookupValue(value);
-            if (node != null && keyRange.inRange(node.key)) {
+            if (node != null && keyRange.contains(node.key)) {
                 return node.key;
             }
             return defaultKey;
@@ -2917,7 +2917,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         public K removeValue(final Object valueObject) {
             final V value = parent.checkValue(valueObject);
             final Node<K, V> node = parent.lookupValue(value);
-            if (node != null && keyRange.inRange(node.key)) {
+            if (node != null && keyRange.contains(node.key)) {
                 parent.doRedBlackDelete(node);
                 return node.key;
             }
@@ -2927,7 +2927,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public V remove(final Object keyObject) {
             final K key = parent.checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return parent.remove(key);
             }
             return null;
@@ -2936,7 +2936,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public boolean remove(final Object keyObject, final Object value) {
             final K key = parent.checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return parent.remove(key,  value);
             }
             return false;
@@ -2945,7 +2945,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         @Override
         public boolean removeAsBoolean(final Object keyObject) {
             final K key = parent.checkKey(keyObject);
-            if (keyRange.inRange(key)) {
+            if (keyRange.contains(key)) {
                 return parent.removeAsBoolean(keyObject);
             }
             return false;

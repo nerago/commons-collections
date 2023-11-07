@@ -1,8 +1,10 @@
 package org.apache.commons.collections4.set;
 
 import java.util.NavigableSet;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.collections4.NavigableRangedSet;
+import org.apache.commons.collections4.SortedMapRange;
 
 public abstract class AbstractMapViewNavigableSet<E> extends AbstractMapViewSortedSet<E> implements NavigableRangedSet<E> {
     @Override
@@ -12,12 +14,22 @@ public abstract class AbstractMapViewNavigableSet<E> extends AbstractMapViewSort
 
     @Override
     public final E removeFirst() {
-        return NavigableRangedSet.super.removeFirst();
+        final E element = pollFirst();
+        if (element != null) {
+            return element;
+        } else {
+            throw new NoSuchElementException();
+        }
     }
 
     @Override
     public final E removeLast() {
-        return NavigableRangedSet.super.removeLast();
+        final E element = pollLast();
+        if (element != null) {
+            return element;
+        } else {
+            throw new NoSuchElementException();
+        }
     }
 
     protected static class ReverseNavigableView<E>
@@ -25,8 +37,17 @@ public abstract class AbstractMapViewNavigableSet<E> extends AbstractMapViewSort
             implements NavigableRangedSet<E> {
         private static final long serialVersionUID = 5385328200121138393L;
 
-        public ReverseNavigableView(final NavigableSet<E> set) {
-            super(set);
+        protected ReverseNavigableView(final NavigableRangedSet<E> set) {
+            super(set, set, set.getRange());
+        }
+
+        protected ReverseNavigableView(final NavigableSet<E> set, final SortedMapRange<E> range) {
+            super(set, null, range);
+        }
+
+        @Override
+        protected NavigableRangedSet<E> decorateDerived(final NavigableSet<E> subSet, final SortedMapRange<E> range) {
+            return new ReverseNavigableView(subSet, range);
         }
 
         @Override
@@ -60,13 +81,28 @@ public abstract class AbstractMapViewNavigableSet<E> extends AbstractMapViewSort
         }
 
         @Override
-        public NavigableRangedSet<E> descendingSet() {
-            return new AbstractNavigableSetDecorator.NullDecorator<>(decorated().descendingSet());
+        public final E removeFirst() {
+            final E element = pollFirst();
+            if (element != null) {
+                return element;
+            } else {
+                throw new NoSuchElementException();
+            }
         }
 
         @Override
-        public NavigableRangedSet<E> reversed() {
-            return descendingSet();
+        public final E removeLast() {
+            final E element = pollLast();
+            if (element != null) {
+                return element;
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public NavigableRangedSet<E> descendingSet() {
+            return reversed();
         }
     }
 }

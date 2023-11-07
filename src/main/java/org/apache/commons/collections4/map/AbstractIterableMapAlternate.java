@@ -198,7 +198,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public Set<K> keySet() {
+    public final Set<K> keySet() {
         if (keySet != null)
             return keySet;
         keySet = createKeySet();
@@ -206,7 +206,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public final Set<Map.Entry<K, V>> entrySet() {
         if (entrySet != null)
             return entrySet;
         entrySet = createEntrySet();
@@ -214,7 +214,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public Collection<V> values() {
+    public final Collection<V> values() {
         if (values != null)
             return values;
         values = createValuesCollection();

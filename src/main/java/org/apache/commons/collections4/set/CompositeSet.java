@@ -16,6 +16,9 @@
  */
 package org.apache.commons.collections4.set;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -61,7 +64,7 @@ public class CompositeSet<E> extends AbstractCommonsCollection<E> implements Set
     private SetMutator<E> mutator;
 
     /** Sets in the composite */
-    private final List<Set<E>> all = new ArrayList<>();
+    private List<Set<E>> all = new ArrayList<>();
 
     /**
      * Creates an empty CompositeSet.
@@ -433,6 +436,18 @@ public class CompositeSet<E> extends AbstractCommonsCollection<E> implements Set
             code += e == null ? 0 : e.hashCode();
         }
         return code;
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(mutator);
+        out.writeObject(all);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        mutator = (SetMutator<E>) in.readObject();
+        all = (List<Set<E>>) in.readObject();
     }
 
     /**

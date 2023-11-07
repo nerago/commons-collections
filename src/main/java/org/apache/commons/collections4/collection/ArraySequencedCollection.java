@@ -25,9 +25,11 @@ public final class ArraySequencedCollection<E> extends AbstractCollection<E> imp
     private final E[] array;
 
     @SuppressWarnings("unchecked")
-    public static <E> SequencedCollection<E> sequencedCollection(final Collection<E> collection) {
-        if (collection instanceof SequencedCollection<E>) {
-            return (SequencedCollection<E>) collection;
+    public static <E> SequencedCommonsCollection<E> sequencedCollection(final Collection<E> collection) {
+        if (collection instanceof SequencedCommonsCollection<E>) {
+            return (SequencedCommonsCollection<E>) collection;
+        } else if (collection instanceof SequencedCollection<E>) {
+            // TODO adapter
         } else if (collection.isEmpty()) {
             return EmptySet.emptySet();
         } else {
@@ -36,7 +38,7 @@ public final class ArraySequencedCollection<E> extends AbstractCollection<E> imp
     }
 
     @SuppressWarnings("unchecked")
-    public static <E> SequencedCollection<E> reverseSequencedCollection(final Collection<E> collection) {
+    public static <E> SequencedCommonsCollection<E> reverseSequencedCollection(final Collection<E> collection) {
         if (collection.isEmpty()) {
             return EmptySet.emptySet();
         } else {
@@ -84,7 +86,7 @@ public final class ArraySequencedCollection<E> extends AbstractCollection<E> imp
     }
 
     @Override
-    public SequencedCollection<E> reversed() {
+    public SequencedCommonsCollection<E> reversed() {
         final E[] reverse = CollectionUtils.reverseArrayCopy(array);
         return new ArraySequencedCollection<>(reverse);
     }

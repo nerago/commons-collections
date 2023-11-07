@@ -53,6 +53,7 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V,
         implements OrderedBidiMap<K, V, TSubMap, TInverseMap> {
 
     private static final long serialVersionUID = 7010751296610809092L;
+    private transient TSubMap reverse;
 
     /**
      * Constructor that wraps (not copies).
@@ -89,4 +90,13 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V,
         return decorated().previousKey(key);
     }
 
+    @Override
+    public final TSubMap reversed() {
+        if (reverse == null) {
+            reverse = createReverse();
+        }
+        return reverse;
+    }
+
+    protected abstract TSubMap createReverse();
 }

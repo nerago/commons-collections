@@ -53,7 +53,7 @@ public abstract class AbstractOrderedMapDecorator<K, V,
         implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
 
     private static final long serialVersionUID = 6964783574989279065L;
-    private TSubMap reverse;
+    private transient TSubMap reverse;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -138,16 +138,14 @@ public abstract class AbstractOrderedMapDecorator<K, V,
     }
 
     @Override
-    public TSubMap reversed() {
+    public final TSubMap reversed() {
         if (reverse == null) {
             reverse = createReverse();
         }
         return reverse;
     }
 
-    protected TSubMap createReverse() {
-        return new ReverseOrderedMap<>(this);
-    }
+    protected abstract TSubMap createReverse();
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {

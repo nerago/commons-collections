@@ -19,8 +19,8 @@ public class ReverseNavigableSet<E, TDecorated extends NavigableSet<E>, TSubSet 
 
     @SuppressWarnings("unchecked")
     @Override
-    protected TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range) {
-        return (TSubSet) new ReverseNavigableSet<>(subMap, range);
+    protected TSubSet decorateDerived(final TDecorated subSet, final SortedMapRange<E> range) {
+        return (TSubSet) new ReverseNavigableSet<>(subSet, range);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class ReverseNavigableSet<E, TDecorated extends NavigableSet<E>, TSubSet 
 
     @SuppressWarnings("unchecked")
     @Override
-    public TSubSet reversed() {
+    protected TSubSet createReversed() {
         return (TSubSet) new NullDecorator<>(decorated());
     }
 

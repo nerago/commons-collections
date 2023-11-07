@@ -18,19 +18,16 @@ package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
 import java.util.Map;
-import java.util.SequencedCollection;
-import java.util.SequencedSet;
 import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
-import org.apache.commons.collections4.collection.UnmodifiableCollection;
 import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
-import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
  * Decorates another {@code SortedMap} to ensure it can't be altered.
@@ -47,7 +44,7 @@ import org.apache.commons.collections4.set.UnmodifiableSet;
  */
 public final class UnmodifiableSortedMap<K, V>
         extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, UnmodifiableSortedMap<K, V>,
-            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
+            SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements Unmodifiable {
 
     /** Serialization version */
@@ -162,17 +159,17 @@ public final class UnmodifiableSortedMap<K, V>
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
+    public SequencedCommonsSet<Entry<K, V>> entrySet() {
         return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(decorated().sequencedEntrySet());
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
+    public SequencedCommonsSet<K> keySet() {
         return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedKeySet());
     }
 
     @Override
-    public SequencedCollection<V> sequencedValues() {
+    public SequencedCommonsCollection<V> values() {
         return UnmodifiableSequencedCollection.unmodifiableCollection(decorated().sequencedValues());
     }
 

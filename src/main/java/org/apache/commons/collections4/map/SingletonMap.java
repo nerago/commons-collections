@@ -263,12 +263,6 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         return isEqualKey(key) && isEqualValue(value);
     }
 
-    @Override
-    public Iterator<Entry<K, V>> entryIterator() {
-        return null;
-    }
-
-
     /**
      * Puts a key-value mapping into this map where the key must match the existing key.
      * <p>
@@ -289,42 +283,42 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         return null;
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         return null;
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         return false;
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         return null;
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         return null;
     }
 
     @Override
-    public K getKey(Object value) {
+    public K getKey(final Object value) {
         return null;
     }
 
     @Override
-    public K getKeyOrDefault(Object value, K defaultKey) {
+    public K getKeyOrDefault(final Object value, final K defaultKey) {
         return null;
     }
 
     @Override
-    public K removeValue(Object value) {
+    public K removeValue(final Object value) {
         return null;
     }
 
@@ -420,7 +414,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      */
     @Override
     public SortedRangedSet<Entry<K, V>> entrySet() {
-        final Map.Entry<K, V> entry = new TiedMapEntry<>(this, getKey());
+        final Map.Entry<K, V> entry = new TiedMapEntry<>(this, key);
         return new SingletonSet<>(entry);
     }
 
@@ -473,12 +467,19 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         return value;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public Iterator<Entry<K, V>> entryIterator() {
+        return new SingletonIterator<>(this);
+    }
+
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new SingletonMapIterator<>(this);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return mapIterator();
     }
 
     @Override
@@ -493,7 +494,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      */
     @Override
     public K firstKey() {
-        return getKey();
+        return key;
     }
 
     /**
@@ -503,7 +504,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      */
     @Override
     public K lastKey() {
-        return getKey();
+        return key;
     }
 
     /**
@@ -535,7 +536,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return true if equal
      */
     protected boolean isEqualKey(final Object key) {
-        return key == null ? getKey() == null : key.equals(getKey());
+        return key == null ? this.key == null : key.equals(this.key);
     }
 
     /**
@@ -545,7 +546,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      * @return true if equal
      */
     protected boolean isEqualValue(final Object value) {
-        return value == null ? getValue() == null : value.equals(getValue());
+        return value == null ? this.value == null : value.equals(this.value);
     }
 
     @Override
@@ -560,7 +561,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
 
     @Override
     public EverythingMap<K, V> subMap(final SortedMapRange<K> range) {
-        if (range.inRange(this.key)) {
+        if (range.contains(this.key)) {
             return this;
         } else {
             return EmptyMap.emptyMap();
@@ -794,22 +795,22 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         }
 
         @Override
-        public V lower(V v) {
+        public V lower(final V v) {
             return null;
         }
 
         @Override
-        public V floor(V v) {
+        public V floor(final V v) {
             return Objects.equals(parent.value, v) ? v : null;
         }
 
         @Override
-        public V ceiling(V v) {
+        public V ceiling(final V v) {
             return Objects.equals(parent.value, v) ? v : null;
         }
 
         @Override
-        public V higher(V v) {
+        public V higher(final V v) {
             return null;
         }
 
@@ -829,6 +830,16 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         }
 
         @Override
+        public Iterator<V> descendingIterator() {
+            return iterator();
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            return new SingletonSpliterator<>(parent.value);
+        }
+
+        @Override
         public Comparator<? super V> comparator() {
             return null;
         }
@@ -844,19 +855,10 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         }
 
         @Override
-        public Spliterator<V> spliterator() {
-            return new SingletonSpliterator<>(parent.getValue());
-        }
-
-        @Override
         public NavigableRangedSet<V> descendingSet() {
             return this;
         }
 
-        @Override
-        public Iterator<V> descendingIterator() {
-            return null;
-        }
 
         @Override
         public SortedMapRange<V> getRange() {
@@ -864,7 +866,7 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
         }
 
         @Override
-        public NavigableRangedSet<V> subSet(SortedMapRange<V> range) {
+        public NavigableRangedSet<V> subSet(final SortedMapRange<V> range) {
             return null;
         }
     }
@@ -913,8 +915,8 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
      */
     @Override
     public int hashCode() {
-        return (getKey() == null ? 0 : getKey().hashCode()) ^
-               (getValue() == null ? 0 : getValue().hashCode());
+        return (key == null ? 0 : key.hashCode()) ^
+               (value == null ? 0 : value.hashCode());
     }
 
     /**
@@ -926,9 +928,9 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     public String toString() {
         return new StringBuilder(128)
             .append('{')
-            .append(getKey() == this ? "(this Map)" : getKey())
+            .append(key == this ? "(this Map)" : key)
             .append('=')
-            .append(getValue() == this ? "(this Map)" : getValue())
+            .append(value == this ? "(this Map)" : value)
             .append('}')
             .toString();
     }

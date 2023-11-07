@@ -189,33 +189,33 @@ public abstract class AbstractSortedMapDecorator<K, V,
     }
 
     @Override
-    public TEntrySet sequencedEntrySet() {
+    public final TEntrySet sequencedEntrySet() {
+        return entrySet();
+    }
+
+    @Override
+    public TEntrySet entrySet() {
         return (TEntrySet) decorated().sequencedEntrySet();
     }
 
     @Override
-    public final TEntrySet entrySet() {
-        return sequencedEntrySet();
+    public final TKeySet sequencedKeySet() {
+        return keySet();
     }
 
     @Override
-    public TKeySet sequencedKeySet() {
+    public TKeySet keySet() {
         return (TKeySet) decorated().sequencedKeySet();
     }
 
     @Override
-    public final TKeySet keySet() {
-        return sequencedKeySet();
+    public final TValueSet sequencedValues() {
+        return values();
     }
 
     @Override
-    public TValueSet sequencedValues() {
+    public TValueSet values() {
         return (TValueSet) decorated().sequencedValues();
-    }
-
-    @Override
-    public final TValueSet values() {
-        return sequencedValues();
     }
 
     @Override

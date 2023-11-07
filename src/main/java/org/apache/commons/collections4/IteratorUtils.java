@@ -1433,6 +1433,7 @@ public class IteratorUtils {
     }
 
     public static <V> boolean removeIf(final Iterator<V> iterator, final java.util.function.Predicate<? super V> filter) {
+        Objects.requireNonNull(iterator);
         Objects.requireNonNull(filter);
         boolean changed = false;
         while (iterator.hasNext()) {
@@ -1442,5 +1443,16 @@ public class IteratorUtils {
             }
         }
         return changed;
+    }
+
+    public static <V> boolean removeFirst(final ResettableIterator<V> iterator, final V value) {
+        Objects.requireNonNull(iterator);
+        while (iterator.hasNext()) {
+            if (Objects.equals(iterator.next(), value)) {
+                iterator.remove();
+                return true;
+            }
+        }
+        return false;
     }
 }

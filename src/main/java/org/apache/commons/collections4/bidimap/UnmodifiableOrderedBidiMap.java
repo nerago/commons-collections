@@ -30,6 +30,7 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableSequencedEntrySet;
+import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 
 /**
@@ -155,21 +156,17 @@ public final class UnmodifiableOrderedBidiMap<K, V>
 
     @Override
     public SequencedSet<K> sequencedKeySet() {
-        final Set<K> set = super.keySet();
-        return UnmodifiableSet.unmodifiableSet(set);
+        return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedKeySet());
     }
 
     @Override
     public SequencedSet<Entry<K, V>> sequencedEntrySet() {
-        final Set<Map.Entry<K, V>> set = super.entrySet();
-        return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(set);
+        return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(decorated().entrySet());
     }
 
     @Override
     public SequencedSet<V> sequencedValues() {
-
-        final Set<V> set = super.values();
-        return UnmodifiableSet.unmodifiableSet(set);
+        return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedValues());
     }
 
     @Override
@@ -178,7 +175,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     }
 
     @Override
-    public Set<Entry> entrySet() {
+    public SequencedSet<Entry<K, V>> entrySet() {
         return sequencedEntrySet();
     }
 
@@ -203,6 +200,12 @@ public final class UnmodifiableOrderedBidiMap<K, V>
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
     }
 
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        final OrderedMapIterator<K, V> it = decorated().descendingMapIterator();
+        return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
+    }
+
     /**
      * Gets an unmodifiable view of this map where the keys and values are reversed.
      *
@@ -210,6 +213,11 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      */
     public UnmodifiableOrderedBidiMap<V, K> inverseOrderedBidiMap() {
         return inverseBidiMap();
+    }
+
+    @Override
+    protected UnmodifiableOrderedBidiMap<K, V> createReverse() {
+        return new UnmodifiableOrderedBidiMap<>(decorated().reversed());
     }
 
     /**
@@ -233,6 +241,6 @@ public final class UnmodifiableOrderedBidiMap<K, V>
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        setMap((OrderedBidiMap<K, V, ?>) in.readObject());
+        setMap((OrderedBidiMap<K, V, ?, ?>) in.readObject());
     }
 }

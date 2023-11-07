@@ -409,7 +409,7 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
-    public EverythingMap<V, K> reversed() {
+    public EverythingMap<K, V> reversed() {
         return this;
     }
 }

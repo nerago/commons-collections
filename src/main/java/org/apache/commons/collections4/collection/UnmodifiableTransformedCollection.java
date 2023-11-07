@@ -22,6 +22,9 @@ import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
@@ -48,9 +51,9 @@ public class UnmodifiableTransformedCollection<TStored, TExternal> extends Abstr
     private static final long serialVersionUID = 1708768617060537720L;
 
     /** The transformer to use */
-    protected final Transformer<? super TStored, ? extends TExternal> transform;
+    protected Transformer<? super TStored, ? extends TExternal> transform;
 
-    protected final Collection<TStored> collection;
+    protected Collection<TStored> collection;
 
     public static <S, I> Collection<I> transformingCollection(final Collection<S> coll,
                                                               final Transformer<? super S, ? extends I> transform) {
@@ -159,5 +162,17 @@ public class UnmodifiableTransformedCollection<TStored, TExternal> extends Abstr
     @Override
     public boolean retainAll(final Collection<?> coll) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(transform);
+        out.writeObject(collection);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        transform = (Transformer<? super TStored, ? extends TExternal>) in.readObject();
+        collection = (Collection<TStored>) in.readObject();
     }
 }

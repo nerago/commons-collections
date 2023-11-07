@@ -129,8 +129,8 @@ public abstract class AbstractNavigableSetDecorator<E, TDecorated extends Naviga
         }
 
         @Override
-        protected NullDecorator<E> decorateDerived(final NavigableSet<E> subMap, final SortedMapRange<E> range) {
-            return new NullDecorator<>(subMap, range);
+        protected NullDecorator<E> decorateDerived(final NavigableSet<E> subSet, final SortedMapRange<E> range) {
+            return new NullDecorator<>(subSet, range);
         }
     }
 }

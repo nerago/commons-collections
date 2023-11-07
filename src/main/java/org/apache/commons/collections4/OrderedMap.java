@@ -29,8 +29,8 @@ import java.util.SequencedSet;
  *
  * @since 3.0
  */
-public interface OrderedMap<K, V, TSubMap extends SequencedCommonsMap<K, V, ?>>
-        extends IterableMap<K, V>, SequencedCommonsMap<K, V, TSubMap> {
+public interface OrderedMap<K, V, TSubMap extends SequencedCommonsMap<K, V>>
+        extends IterableMap<K, V>, SequencedCommonsMap<K, V> {
 
     /**
      * Obtains an {@code OrderedMapIterator} over the map.

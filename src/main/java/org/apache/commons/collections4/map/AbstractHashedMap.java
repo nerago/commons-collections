@@ -19,30 +19,34 @@ package org.apache.commons.collections4.map;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.AbstractCollection;
 import java.util.AbstractMap;
-import java.util.AbstractSet;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.IterableMap;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
+import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
 
 /**
  * An abstract implementation of a hash-based map which provides numerous points for
@@ -65,7 +69,8 @@ import org.apache.commons.collections4.iterators.EmptyMapIterator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implements IterableMap<K, V> {
+public abstract class AbstractHashedMap<K, V>
+        extends AbstractIterableMapAlternate<K, V> {
 
     private static final long serialVersionUID = -4995129447690652538L;
 
@@ -98,11 +103,11 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
     /** Modification count for iterators */
     transient int modCount;
     /** Entry set */
-    transient EntrySet<K, V> entrySet;
+    transient AbstractMapViewSortedSet<Entry<K, V>> entrySet;
     /** Key set */
-    transient KeySet<K> keySet;
+    transient AbstractMapViewSortedSet<K> keySet;
     /** Values */
-    transient Values<V> values;
+    transient AbstractMapViewSortedSet<V> values;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -182,17 +187,6 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * Gets the value mapped to the key specified.
      *
      * @param key  the key
-     * @return the mapped value, null if no match
-     */
-    @Override
-    public V get(final Object key) {
-        return getOrDefault(key, null);
-    }
-
-    /**
-     * Gets the value mapped to the key specified.
-     *
-     * @param key  the key
      * @param defaultValue alternate return value
      * @return the mapped value, defaultValue if no match
      */
@@ -250,47 +244,9 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         return false;
     }
 
-    /**
-     * Checks whether the map contains the specified value.
-     *
-     * @param value  the value to search for
-     * @return true if the map contains the value
-     */
-    @Override
-    public boolean containsValue(final Object value) {
-        if (value == null) {
-            for (final HashEntry<K, V> element : data) {
-                HashEntry<K, V> entry = element;
-                while (entry != null) {
-                    if (entry.getValue() == null) {
-                        return true;
-                    }
-                    entry = entry.next;
-                }
-            }
-        } else {
-            for (final HashEntry<K, V> element : data) {
-                HashEntry<K, V> entry = element;
-                while (entry != null) {
-                    if (isEqualValue(value, entry.getValue())) {
-                        return true;
-                    }
-                    entry = entry.next;
-                }
-            }
-        }
-        return false;
-    }
 
-    /**
-     * Puts a key-value mapping into this map.
-     *
-     * @param key  the key to add
-     * @param value  the value to add
-     * @return the value previously mapped to this key, null if none
-     */
     @Override
-    public V put(final K key, final V value) {
+    protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         final Object convertedKey = convertKey(key);
         final int hashCode = hash(convertedKey);
         final int index = hashIndex(hashCode, data.length);
@@ -298,13 +254,51 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         while (entry != null) {
             if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
                 final V oldValue = entry.getValue();
-                updateEntry(entry, value);
+                if (updateIfPresent) {
+                    updateEntry(entry, value);
+                }
                 return oldValue;
             }
             entry = entry.next;
         }
 
-        addMapping(index, hashCode, key, value);
+        if (addIfAbsent) {
+            addMapping(index, hashCode, key, value);
+        }
+        return null;
+    }
+
+    @Override
+    protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc,
+                      final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
+        final int expectedModCount = modCount;
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index], prev = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V oldValue = entry.getValue();
+                final V newValue = presentFunc.apply(key, oldValue);
+                if (modCount != expectedModCount) {
+                    throw new ConcurrentModificationException();
+                } else if (newValue != null || saveNulls) {
+                    updateEntry(entry, newValue);
+                } else {
+                    removeMapping(entry, index, prev);
+                }
+                return newValue;
+            }
+            prev = entry;
+            entry = entry.next;
+        }
+
+        final V newValue = absentFunc.apply(key);
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        } else if (newValue != null || saveNulls) {
+            addMapping(index, hashCode, key, newValue);
+        }
         return null;
     }
 
@@ -403,43 +397,6 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         return false;
     }
 
-    @Override
-    public V replace(final K key, final V value) {
-        final Object convertedKey = convertKey(key);
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index];
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                final V oldValue = entry.getValue();
-                updateEntry(entry, value);
-                return oldValue;
-            }
-            entry = entry.next;
-        }
-        return null;
-    }
-    
-    @Override
-    public boolean replace(final K key, final V oldValue, final V newValue) {
-        final Object convertedKey = convertKey(key);
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index];
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                if (isEqualValueNullable(oldValue, entry.getValue())) {
-                    updateEntry(entry, newValue);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-            entry = entry.next;
-        }
-        return false;
-    }
-
     /**
      * Clears the map, resetting the size to zero and nullifying references
      * to avoid garbage collection issues.
@@ -450,169 +407,6 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         final HashEntry<K, V>[] data = this.data;
         Arrays.fill(data, null);
         size = 0;
-    }
-
-    @Override
-    public V putIfAbsent(final K key, final V newValue) {
-        final Object convertedKey = convertKey(key);
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index];
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                final V oldValue = entry.getValue();
-                if (oldValue == null) {
-                    entry.setValue(newValue);
-                    return null;
-                } else {
-                    return oldValue;
-                }
-            }
-            entry = entry.next;
-        }
-
-        addMapping(index, hashCode, key, newValue);
-        return null;
-    }
-
-    @Override
-    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
-        Objects.requireNonNull(mappingFunction);
-        final Object convertedKey = convertKey(key);
-        final int expectedModCount = modCount;
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index];
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                final V oldValue = entry.getValue();
-                if (oldValue == null) {
-                    final V newValue = mappingFunction.apply(key);
-                    if (modCount != expectedModCount) {
-                        throw new ConcurrentModificationException();
-                    }
-                    entry.setValue(newValue);
-                    return newValue;
-                } else {
-                    return oldValue;
-                }
-            }
-            entry = entry.next;
-        }
-
-        final V newValue = mappingFunction.apply(key);
-        if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
-        }
-        if (newValue != null) {
-            addMapping(index, hashCode, key, newValue);
-        }
-        return newValue;
-    }
-
-    @Override
-    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        Objects.requireNonNull(remappingFunction);
-        final Object convertedKey = convertKey(key);
-        final int expectedModCount = modCount;
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index], previous = null;
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                final V oldValue = entry.getValue();
-                if (oldValue != null) {
-                    final V newValue = remappingFunction.apply(key, oldValue);
-                    if (modCount != expectedModCount) {
-                        throw new ConcurrentModificationException();
-                    }
-                    if (newValue != null) {
-                        entry.setValue(newValue);
-                        return newValue;
-                    } else {
-                        removeMapping(entry, index, previous);
-                    }
-                }
-                return null;
-            }
-            previous = entry;
-            entry = entry.next;
-        }
-        return null;
-    }
-
-    @Override
-    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        Objects.requireNonNull(remappingFunction);
-        final Object convertedKey = convertKey(key);
-        final int expectedModCount = modCount;
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index], previous = null;
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                final V oldValue = entry.getValue();
-                final V newValue = remappingFunction.apply(key, oldValue);
-                if (modCount != expectedModCount) {
-                    throw new ConcurrentModificationException();
-                }
-                if (newValue != null) {
-                    entry.setValue(newValue);
-                    return newValue;
-                } else {
-                    removeMapping(entry, index, previous);
-                    return null;
-                }
-            }
-            previous = entry;
-            entry = entry.next;
-        }
-
-        final V newValue = remappingFunction.apply(key, null);
-        if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
-        }
-        if (newValue != null) {
-            addMapping(index, hashCode, key, newValue);
-        }
-        return newValue;
-    }
-
-    @Override
-    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        Objects.requireNonNull(remappingFunction);
-        Objects.requireNonNull(value);
-        final Object convertedKey = convertKey(key);
-        final int expectedModCount = modCount;
-        final int hashCode = hash(convertedKey);
-        final int index = hashIndex(hashCode, data.length);
-        HashEntry<K, V> entry = data[index], previous = null;
-        while (entry != null) {
-            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
-                final V oldValue = entry.getValue();
-                if (oldValue != null) {
-                    final V newValue = remappingFunction.apply(oldValue, value);
-                    if (modCount != expectedModCount) {
-                        throw new ConcurrentModificationException();
-                    }
-                    if (newValue != null) {
-                        entry.setValue(newValue);
-                        return newValue;
-                    } else {
-                        removeMapping(entry, index, previous);
-                        return null;
-                    }
-                } else {
-                    entry.setValue(value);
-                    return value;
-                }
-            }
-            previous = entry;
-            entry = entry.next;
-        }
-
-        addMapping(index, hashCode, key, value);
-        return value;
     }
 
     /**
@@ -1017,7 +811,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @param <K> the type of the keys in the map
      * @param <V> the type of the values in the map
      */
-    protected static class HashMapIterator<K, V> extends HashIterator<K, V> implements MapIterator<K, V> {
+    protected static class HashMapIterator<K, V> extends HashIterator<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
 
         protected HashMapIterator(final AbstractHashedMap<K, V> parent) {
             super(parent);
@@ -1057,31 +851,23 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
     }
 
     /**
-     * Gets the entrySet view of the map.
-     * Changes made to the view affect this map.
-     * To simply iterate through the entries, use {@link #mapIterator()}.
-     *
-     * @return the entrySet view
-     */
-    @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        if (entrySet == null) {
-            entrySet = new EntrySet<>(this);
-        }
-        return entrySet;
-    }
-
-    /**
      * Creates an entry set iterator.
      * Subclasses can override this to return iterators with different properties.
      *
      * @return the entrySet iterator
      */
-    protected Iterator<Map.Entry<K, V>> createEntrySetIterator() {
+    protected ResettableIterator<Map.Entry<K, V>> createEntrySetIterator() {
         if (isEmpty()) {
-            return EmptyIterator.<Map.Entry<K, V>>emptyIterator();
+            return EmptyIterator.resettableEmptyIterator();
         }
         return new EntrySetIterator<>(this);
+    }
+
+    protected ResettableIterator<Entry<K,V>> createDescendingEntrySetIterator() {
+        if (isEmpty()) {
+            return EmptyIterator.resettableEmptyIterator();
+        }
+        return new EntrySetDescendingIterator<>(this);
     }
 
     /**
@@ -1097,17 +883,11 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         return new HashSpliterator<>(this, entry -> entry, Spliterator.DISTINCT | Spliterator.SIZED);
     }
 
-    /**
-     * EntrySet implementation.
-     *
-     * @param <K> the type of the keys in the map
-     * @param <V> the type of the values in the map
-     */
-    protected static class EntrySet<K, V> extends AbstractSet<Map.Entry<K, V>> {
+    protected abstract static class BaseView<K, V, E> extends AbstractMapViewSortedSet<E> {
         /** The parent map */
-        private final AbstractHashedMap<K, V> parent;
+        protected AbstractHashedMap<K, V> parent;
 
-        protected EntrySet(final AbstractHashedMap<K, V> parent) {
+        protected BaseView(final AbstractHashedMap<K, V> parent) {
             this.parent = parent;
         }
 
@@ -1119,6 +899,54 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         @Override
         public void clear() {
             parent.clear();
+        }
+
+        // don't really support full SortedSet interface here
+        @Override
+        public SortedRangedSet<E> subSet(final SortedMapRange<E> range) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public SortedMapRange<E> getRange() {
+            return SortedMapRange.full(null);
+        }
+        @Override
+        public Comparator<? super E> comparator() {
+            return null;
+        }
+
+        @Override
+        public E first() {
+            return iterator().next();
+        }
+
+        @Override
+        public E last() {
+            return descendingIterator().next();
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            out.writeObject(parent);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            parent = (AbstractHashedMap<K, V>) in.readObject();
+        }
+    }
+
+    /**
+     * EntrySet implementation.
+     *
+     * @param <K> the type of the keys in the map
+     * @param <V> the type of the values in the map
+     */
+    protected static class EntrySet<K, V> extends BaseView<K, V, Entry<K, V>> {
+        private static final long serialVersionUID = -2875095224204124208L;
+
+        protected EntrySet(final AbstractHashedMap<K, V> parent) {
+            super(parent);
         }
 
         @Override
@@ -1145,8 +973,13 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         }
 
         @Override
-        public Iterator<Map.Entry<K, V>> iterator() {
+        public ResettableIterator<Map.Entry<K, V>> iterator() {
             return parent.createEntrySetIterator();
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> descendingIterator() {
+            return parent.createDescendingEntrySetIterator();
         }
 
         @Override
@@ -1161,7 +994,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @param <K> the type of the keys in the map
      * @param <V> the type of the values in the map
      */
-    protected static class EntrySetIterator<K, V> extends HashIterator<K, V> implements Iterator<Map.Entry<K, V>> {
+    protected static class EntrySetIterator<K, V> extends HashIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
 
         protected EntrySetIterator(final AbstractHashedMap<K, V> parent) {
             super(parent);
@@ -1169,7 +1002,23 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
 
         @Override
         public Map.Entry<K, V> next() {
-            return super.nextEntry();
+            return nextEntry();
+        }
+    }
+
+    protected static class EntrySetDescendingIterator<K, V> extends HashIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
+        protected EntrySetDescendingIterator(final AbstractHashedMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        public void reset() {
+            resetReverse();
+        }
+
+        @Override
+        public Map.Entry<K, V> next() {
+            return prevEntry();
         }
     }
 
@@ -1181,7 +1030,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @return the keySet view
      */
     @Override
-    public Set<K> keySet() {
+    public final AbstractMapViewSortedSet<K> keySet() {
         if (keySet == null) {
             keySet = new KeySet<>(this);
         }
@@ -1194,11 +1043,18 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      *
      * @return the keySet iterator
      */
-    protected Iterator<K> createKeySetIterator() {
+    protected ResettableIterator<K> createKeySetIterator() {
         if (isEmpty()) {
-            return EmptyIterator.<K>emptyIterator();
+            return EmptyIterator.resettableEmptyIterator();
         }
         return new KeySetIterator<>(this);
+    }
+
+    protected ResettableIterator<K> createDescendingKeySetIterator() {
+        if (isEmpty()) {
+            return EmptyIterator.resettableEmptyIterator();
+        }
+        return new KeySetDescendingIterator<>(this);
     }
 
     /**
@@ -1219,22 +1075,11 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      *
      * @param <K> the type of elements maintained by this set
      */
-    protected static class KeySet<K> extends AbstractSet<K> {
-        /** The parent map */
-        private final AbstractHashedMap<K, ?> parent;
+    protected static class KeySet<K, V> extends BaseView<K, V, K> {
+        private static final long serialVersionUID = -7776486642609009600L;
 
-        protected KeySet(final AbstractHashedMap<K, ?> parent) {
-            this.parent = parent;
-        }
-
-        @Override
-        public int size() {
-            return parent.size();
-        }
-
-        @Override
-        public void clear() {
-            parent.clear();
+        protected KeySet(final AbstractHashedMap<K, V> parent) {
+            super(parent);
         }
 
         @Override
@@ -1250,8 +1095,13 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         }
 
         @Override
-        public Iterator<K> iterator() {
+        public ResettableIterator<K> iterator() {
             return parent.createKeySetIterator();
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return parent.createDescendingKeySetIterator();
         }
 
         @Override
@@ -1265,8 +1115,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      *
      * @param <K> the type of elements maintained by this set
      */
-    protected static class KeySetIterator<K> extends HashIterator<K, Object> implements Iterator<K> {
-
+    protected static class KeySetIterator<K> extends HashIterator<K, Object> implements ResettableIterator<K> {
         @SuppressWarnings("unchecked")
         protected KeySetIterator(final AbstractHashedMap<K, ?> parent) {
             super((AbstractHashedMap<K, Object>) parent);
@@ -1274,9 +1123,27 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
 
         @Override
         public K next() {
-            return super.nextEntry().getKey();
+            return nextEntry().getKey();
         }
     }
+
+    protected static class KeySetDescendingIterator<K> extends HashIterator<K, Object> implements ResettableIterator<K> {
+        @SuppressWarnings("unchecked")
+        protected KeySetDescendingIterator(final AbstractHashedMap<K, ?> parent) {
+            super((AbstractHashedMap<K, Object>) parent);
+        }
+
+        @Override
+        public void reset() {
+            resetReverse();
+        }
+
+        @Override
+        public K next() {
+            return prevEntry().getKey();
+        }
+    }
+
 
     /**
      * Gets the values view of the map.
@@ -1286,7 +1153,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      * @return the values view
      */
     @Override
-    public Collection<V> values() {
+    public final AbstractMapViewSortedSet<V> values() {
         if (values == null) {
             values = new Values<>(this);
         }
@@ -1299,11 +1166,18 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      *
      * @return the values iterator
      */
-    protected Iterator<V> createValuesIterator() {
+    protected ResettableIterator<V> createValuesIterator() {
         if (isEmpty()) {
-            return EmptyIterator.<V>emptyIterator();
+            return EmptyIterator.resettableEmptyIterator();
         }
         return new ValuesIterator<>(this);
+    }
+
+    protected ResettableIterator<V> createDescendingValuesIterator() {
+        if (isEmpty()) {
+            return EmptyIterator.resettableEmptyIterator();
+        }
+        return new ValuesDescendingIterator<>(this);
     }
 
     /**
@@ -1324,22 +1198,9 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      *
      * @param <V> the type of elements maintained by this collection
      */
-    protected static class Values<V> extends AbstractCollection<V> {
-        /** The parent map */
-        private final AbstractHashedMap<?, V> parent;
-
-        protected Values(final AbstractHashedMap<?, V> parent) {
-            this.parent = parent;
-        }
-
-        @Override
-        public int size() {
-            return parent.size();
-        }
-
-        @Override
-        public void clear() {
-            parent.clear();
+    protected static class Values<K, V> extends BaseView<K, V, V> {
+        protected Values(final AbstractHashedMap<K, V> parent) {
+            super(parent);
         }
 
         @Override
@@ -1348,8 +1209,18 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         }
 
         @Override
-        public Iterator<V> iterator() {
+        public boolean remove(final Object value) {
+            return IteratorUtils.removeFirst(iterator(), (V) value);
+        }
+
+        @Override
+        public ResettableIterator<V> iterator() {
             return parent.createValuesIterator();
+        }
+
+        @Override
+        public ResettableIterator<V> descendingIterator() {
+            return parent.createDescendingValuesIterator();
         }
 
         @Override
@@ -1363,8 +1234,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
      *
      * @param <V> the type of elements maintained by this collection
      */
-    protected static class ValuesIterator<V> extends HashIterator<Object, V> implements Iterator<V> {
-
+    protected static class ValuesIterator<V> extends HashIterator<Object, V> implements ResettableIterator<V> {
         @SuppressWarnings("unchecked")
         protected ValuesIterator(final AbstractHashedMap<?, V> parent) {
             super((AbstractHashedMap<Object, V>) parent);
@@ -1373,6 +1243,23 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
         @Override
         public V next() {
             return super.nextEntry().getValue();
+        }
+    }
+
+    protected static class ValuesDescendingIterator<V> extends HashIterator<Object, V> implements ResettableIterator<V> {
+        @SuppressWarnings("unchecked")
+        protected ValuesDescendingIterator(final AbstractHashedMap<?, V> parent) {
+            super((AbstractHashedMap<Object, V>) parent);
+        }
+
+        @Override
+        public void reset() {
+            resetReverse();
+        }
+
+        @Override
+        public V next() {
+            return prevEntry().getValue();
         }
     }
 
@@ -1474,6 +1361,10 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
 
         protected HashIterator(final AbstractHashedMap<K, V> parent) {
             this.parent = parent;
+            reset();
+        }
+
+        public void reset() {
             final HashEntry<K, V>[] data = parent.data;
             int i = data.length;
             HashEntry<K, V> next = null;
@@ -1482,6 +1373,18 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
             }
             this.next = next;
             this.hashIndex = i;
+            this.expectedModCount = parent.modCount;
+        }
+
+        protected void resetReverse() {
+            final HashEntry<K, V>[] data = parent.data;
+            int i = 0;
+            HashEntry<K, V> next = null;
+            while (i < data.length && next == null) {
+                next = data[i++];
+            }
+            this.next = next;
+            this.hashIndex = i - 1;
             this.expectedModCount = parent.modCount;
         }
 
@@ -1505,6 +1408,26 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
             }
             next = n;
             hashIndex = i;
+            last = newCurrent;
+            return newCurrent;
+        }
+
+        protected HashEntry<K, V> prevEntry() {
+            if (parent.modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+            final HashEntry<K, V> newCurrent = next;
+            if (newCurrent == null)  {
+                throw new NoSuchElementException(AbstractHashedMap.NO_NEXT_ENTRY);
+            }
+            final HashEntry<K, V>[] data = parent.data;
+            int i = hashIndex;
+            HashEntry<K, V> n = newCurrent.next;
+            while (n == null && i < data.length) {
+                n = data[i++];
+            }
+            next = n;
+            hashIndex = i - 1;
             last = newCurrent;
             return newCurrent;
         }
@@ -1562,7 +1485,7 @@ public abstract class AbstractHashedMap<K, V> extends AbstractMap<K, V> implemen
             this.characteristics = characteristics;
         }
 
-        protected HashSpliterator(final AbstractHashedMap<K,V> parent, final Function<HashEntry<K,V>,E> convertResult,
+        protected HashSpliterator(final AbstractHashedMap<K, V> parent, final Function<HashEntry<K,V>,E> convertResult,
                                   final int hashIndex, final int lastHashIndex,
                                   final long estimatedSize,  final int characteristics) {
             this.parent = parent;

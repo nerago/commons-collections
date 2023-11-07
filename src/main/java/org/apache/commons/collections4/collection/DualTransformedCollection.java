@@ -22,6 +22,9 @@ import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
@@ -48,10 +51,10 @@ public class DualTransformedCollection<TExternal, TStored> extends AbstractCommo
     private static final long serialVersionUID = 4488366779197789058L;
 
     /** The transformer to use */
-    protected final Transformer<? super TExternal, ? extends TStored> interfaceToStorage;
-    protected final Transformer<? super TStored, ? extends TExternal> storageToInterface;
+    protected Transformer<? super TExternal, ? extends TStored> interfaceToStorage;
+    protected Transformer<? super TStored, ? extends TExternal> storageToInterface;
 
-    protected final Collection<TStored> collection;
+    protected Collection<TStored> collection;
 
     public static <S, I> Collection<I> transformingCollection(final Collection<S> coll,
                                                               final Transformer<? super I, ? extends S> interfaceToStorage,
@@ -176,5 +179,19 @@ public class DualTransformedCollection<TExternal, TStored> extends AbstractCommo
     @Override
     public Spliterator<TExternal> spliterator() {
         return new TransformSpliterator<>(collection.spliterator(), storageToInterface);
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(interfaceToStorage);
+        out.writeObject(storageToInterface);
+        out.writeObject(collection);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        interfaceToStorage = (Transformer<? super TExternal, ? extends TStored>) in.readObject();
+        storageToInterface = (Transformer<? super TStored, ? extends TExternal>) in.readObject();
+        collection = (Collection<TStored>) in.readObject();
     }
 }

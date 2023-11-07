@@ -3,26 +3,25 @@ package org.apache.commons.collections4.map;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.SequencedSet;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.apache.commons.collections4.SequencedCommonsSet;
+import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Unmodifiable;
-import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.iterators.UnmodifiableEntrySetIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.set.AbstractSortedSetDecorator;
 import org.apache.commons.collections4.spliterators.UnmodifiableMapSpliterator;
 
 public class UnmodifiableSortedEntrySet<K, V>
-        extends AbstractSortedSetDecorator<Map.Entry<K, V>, SortedSet<Map.Entry<K, V>>, SortedSet<Map.Entry<K, V>>>
+        extends AbstractSortedSetDecorator<Map.Entry<K, V>, SortedSet<Map.Entry<K, V>>, SortedRangedSet<Map.Entry<K, V>>>
         implements Unmodifiable {
 
     private static final long serialVersionUID = -3669591917001393091L;
-    private UnmodifiableSequencedEntrySet<K, V> reversed;
 
     /**
      * Factory method to create an unmodifiable set of Map Entry objects.
@@ -34,9 +33,9 @@ public class UnmodifiableSortedEntrySet<K, V>
      * @throws NullPointerException if set is null
      * @since X.X
      */
-    public static <K, V> SequencedSet<Map.Entry<K, V>> unmodifiableEntrySet(final SortedSet<Map.Entry<K, V>> set) {
-        if (set instanceof Unmodifiable) {
-            return set;
+    public static <K, V> SortedRangedSet<Map.Entry<K, V>> unmodifiableEntrySet(final SortedSet<Map.Entry<K, V>> set) {
+        if (set instanceof Unmodifiable && set instanceof SortedRangedSet) {
+            return (SortedRangedSet<Map.Entry<K, V>>) set;
         }
         return new UnmodifiableSortedEntrySet<>(set);
     }
@@ -49,6 +48,15 @@ public class UnmodifiableSortedEntrySet<K, V>
      */
     private UnmodifiableSortedEntrySet(final SortedSet<Map.Entry<K, V>> set) {
         super(set);
+    }
+
+    public UnmodifiableSortedEntrySet(final SortedSet<Map.Entry<K, V>> set, final SortedMapRange<Map.Entry<K, V>> range) {
+        super(set, range);
+    }
+
+    @Override
+    protected SortedRangedSet<Map.Entry<K, V>> decorateDerived(SortedSet<Map.Entry<K, V>> subSet, SortedMapRange<Map.Entry<K, V>> range) {
+        return new UnmodifiableSortedEntrySet(subSet, range);
     }
 
     private Map.Entry<K, V> wrapEntry(final Map.Entry<K, V> entry) {
@@ -96,16 +104,8 @@ public class UnmodifiableSortedEntrySet<K, V>
     }
 
     @Override
-    public SequencedCommonsSet<Map.Entry<K, V>> reversed() {
-        if (reversed == null) {
-            reversed = new UnmodifiableSequencedEntrySet<>(decorated().reversed());
-        }
-        return reversed;
-    }
-
-    @Override
     public Iterator<Map.Entry<K, V>> iterator() {
-        return new UnmodifiableSequencedEntrySet.UnmodifiableEntrySetIterator(decorated().iterator());
+        return new UnmodifiableEntrySetIterator<>(decorated().iterator());
     }
 
     @Override
@@ -121,26 +121,6 @@ public class UnmodifiableSortedEntrySet<K, V>
     @Override
     public <T> T[] toArray(final T[] array) {
         return ToArrayUtils.fromEntryCollectionUnmodifiable(decorated(), array);
-    }
-
-    /**
-     * Implementation of an entry set iterator.
-     */
-    private class UnmodifiableEntrySetIterator extends AbstractIteratorDecorator<Map.Entry<K, V>> {
-
-        protected UnmodifiableEntrySetIterator(final Iterator<Map.Entry<K, V>> iterator) {
-            super(iterator);
-        }
-
-        @Override
-        public Map.Entry<K, V> next() {
-            return new UnmodifiableMapEntry<>(getIterator().next());
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
     }
 
 }

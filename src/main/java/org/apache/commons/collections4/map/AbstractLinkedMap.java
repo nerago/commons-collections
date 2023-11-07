@@ -29,6 +29,8 @@ import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.iterators.EmptyOrderedIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 
@@ -70,7 +72,11 @@ import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
+public abstract class AbstractLinkedMap<K, V>
+        extends AbstractHashedMap<K, V>
+        implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
+
+    private static final long serialVersionUID = 2043896582875021090L;
 
     /** Header in the linked list */
     transient LinkEntry<K, V> header;
@@ -383,21 +389,18 @@ public abstract class AbstractLinkedMap<K, V> extends AbstractHashedMap<K, V> im
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> entrySet() {
-        if (entrySet == null) {
-            entrySet = new EntrySet<>(this);
-        }
-        return entrySet;
-    }
-
-    @Override
-    public SequencedSet<K> keySet() {
+    public SequencedCommonsSet<K> keySet() {
         return super.keySet();
     }
 
     @Override
-    public SequencedCollection<V> values() {
+    public SequencedCommonsCollection<V> values() {
         return super.values();
+    }
+
+    @Override
+    public SequencedCommonsSet<Entry<K, V>> entrySet() {
+        return super.entrySet();
     }
 
     @Override

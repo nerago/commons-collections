@@ -23,6 +23,7 @@ import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
@@ -55,9 +56,9 @@ public final class UnmodifiableSortedSet<E>
      * @throws NullPointerException if set is null
      * @since 4.0
      */
-    public static <E> SortedSet<E> unmodifiableSortedSet(final SortedSet<E> set) {
-        if (set instanceof Unmodifiable) {
-            return set;
+    public static <E> SortedRangedSet<E> unmodifiableSortedSet(final SortedSet<E> set) {
+        if (set instanceof Unmodifiable && set instanceof SortedRangedSet<E>) {
+            return (SortedRangedSet<E>) set;
         }
         return new UnmodifiableSortedSet<>(set);
     }
@@ -131,7 +132,7 @@ public final class UnmodifiableSortedSet<E>
     }
 
     @Override
-    protected UnmodifiableSortedSet<E> decorateDerived(final SortedSet<E> subMap, final SortedMapRange<E> range) {
-        return new UnmodifiableSortedSet<>(subMap, range);
+    protected UnmodifiableSortedSet<E> decorateDerived(final SortedSet<E> subSet, final SortedMapRange<E> range) {
+        return new UnmodifiableSortedSet<>(subSet, range);
     }
 }

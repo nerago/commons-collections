@@ -69,6 +69,11 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
         this.range = range;
     }
 
+    protected AbstractSortedSetDecorator(final TDecorated set, final TSubSet reverse, final SortedMapRange<E> range) {
+        super(set, reverse);
+        this.range = range;
+    }
+
     @Override
     public E first() {
         return decorated().first();
@@ -89,12 +94,7 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
         return range;
     }
 
-    @Override
-    protected final TSubSet decorateReverse(final TDecorated subMap) {
-        return decorateDerived(subMap, range.reversed());
-    }
-
-    protected abstract TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range);
+    protected abstract TSubSet decorateDerived(final TDecorated subSet, final SortedMapRange<E> range);
 
     @Override
     public Iterator<E> descendingIterator() {
@@ -110,10 +110,9 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
         return decorateDerived(range.applyToSet(decorated()), range);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public TSubSet reversed() {
-        return decorateDerived((TDecorated) decorated().reversed(), range.reversed());
+    protected TSubSet createReversed() {
+        return decorateDerived((TDecorated) decorated().reversed(), getRange().reversed());
     }
 
     @SuppressWarnings("unchecked")

@@ -20,7 +20,7 @@ public class SingletonSet<E>
 
     @Override
     public NavigableRangedSet<E> subSet(final SortedMapRange range) {
-        return range.inRange(value) ? this : EmptySet.emptySet();
+        return range.contains(value) ? this : EmptySet.emptySet();
     }
 
     @Override

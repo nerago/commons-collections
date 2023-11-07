@@ -7,12 +7,12 @@ import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
-import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.spliterators.UnmodifiableSpliterator;
 
-public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E, SequencedSet<E>, SequencedSet<E>> {
+public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E, SequencedSet<E>, SequencedCommonsSet<E>> {
     private static final long serialVersionUID = -3247548273544146332L;
 
     /**
@@ -22,7 +22,6 @@ public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E
      * @param set  the set to decorate, must not be null
      * @return a new unmodifiable {@link SortedSet}
      * @throws NullPointerException if set is null
-     * @since 4.0
      */
     public static <E> SequencedSet<E> unmodifiableSequencedSet(final SequencedSet<E> set) {
         if (set instanceof Unmodifiable) {
@@ -42,13 +41,18 @@ public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E
     }
 
     @Override
-    protected SequencedSet<E> decorateReverse(final SequencedSet<E> subMap) {
+    protected SequencedCommonsSet<E> decorateReverse(final SequencedSet<E> subMap) {
         return new UnmodifiableSequencedSet<>(subMap);
     }
 
     @Override
     public Iterator<E> iterator() {
-        return UnmodifiableIterator.unmodifiableIterator(decorated().iterator());
+        return UnmodifiableIterator.unmodifiableIterator(super.iterator());
+    }
+
+    @Override
+    public Iterator<E> descendingIterator() {
+        return UnmodifiableIterator.unmodifiableIterator(super.descendingIterator());
     }
 
     @Override
@@ -76,9 +80,6 @@ public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * @since 4.4
-     */
     @Override
     public boolean removeIf(final Predicate<? super E> filter) {
         throw new UnsupportedOperationException();
