@@ -107,7 +107,7 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Cloneable {
     /** Value, used while in flat mode */
     private transient V value3;
     /** Map, used while in delegate mode */
-    private transient AbstractHashedMap<K, V> delegateMap;
+    private transient AbstractHashedMap<K, V, ?, ?, ?> delegateMap;
 
     /**
      * Constructor.
@@ -446,7 +446,7 @@ public class Flat3Map<K, V> implements IterableMap<K, V>, Cloneable {
      * @return a new AbstractHashedMap or subclass
      * @since 3.1
      */
-    protected AbstractHashedMap<K, V> createDelegateMap() {
+    protected AbstractHashedMap<K, V, ?, ?, ?> createDelegateMap() {
         return new HashedMap<>();
     }
 

@@ -24,16 +24,17 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
-import java.util.SequencedCollection;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.NavigableMapOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.set.ReverseSortedSet;
 
 /**
  * Implementation of {@link BidiMap} that uses two {@link TreeMap} instances.
@@ -168,12 +169,22 @@ public class DualTreeBidiMap<K, V>
         return new BidiOrderedMapIterator<>(this);
     }
 
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return null; // TODO
+    }
+
     public DualTreeBidiMap<V, K> inverseSortedBidiMap() {
         return inverseBidiMap();
     }
 
     public DualTreeBidiMap<V, K> inverseOrderedBidiMap() {
         return inverseBidiMap();
+    }
+
+    @Override
+    public DualTreeBidiMap<K, V> reversed() {
+        return new DualTreeBidiMap<>(normalMap.reversed(), reverseMap.reversed(), null);
     }
 
     @Override
@@ -189,6 +200,21 @@ public class DualTreeBidiMap<K, V>
     @Override
     public SortedMapRange<V> getValueRange() {
         return SortedMapRange.full(valueComparator);
+    }
+
+    @Override
+    public SortedRangedSet<K> keySet() {
+        return (SortedRangedSet<K>) super.keySet();
+    }
+
+    @Override
+    public SortedRangedSet<Entry<K, V>> entrySet() {
+        return (SortedRangedSet<Entry<K, V>>) super.entrySet();
+    }
+
+    @Override
+    public SortedRangedSet<V> values() {
+        return (SortedRangedSet<V>) super.values();
     }
 
     /**
@@ -252,11 +278,11 @@ public class DualTreeBidiMap<K, V>
         }
 
         @Override
-        public SequencedCollection<V> values() {
+        public SortedRangedSet<V> values() {
             if (values == null) {
                 values = new ValuesView<>(this);
             }
-            return values;
+            return (SortedRangedSet<V>) values;
         }
 
         @Override
@@ -264,11 +290,32 @@ public class DualTreeBidiMap<K, V>
             return new BidiOrderedMapIterator<>(this);
         }
 
-        private static class ValuesView<K, V> extends Values<K, V> {
+        private static class ValuesView<K, V> extends Values<K, V> implements SortedRangedSet<V> {
             private static final long serialVersionUID = 734663374206042436L;
 
             protected ValuesView(final DualTreeBidiMap<K, V> parent) {
                 super(parent);
+            }
+
+            @SuppressWarnings("unchecked")
+            protected DualTreeBidiMap<K, V> parent() {
+                return (DualTreeBidiMap<K, V>) parent;
+            }
+
+            @Override
+            public SortedMapRange<V> getRange() {
+                return parent().getValueRange();
+            }
+
+            @Override
+            public SortedRangedSet<V> reversed() {
+                return new ReverseSortedSet<>(this, getRange());
+            }
+
+            @Override
+            public SortedRangedSet<V> subSet(final SortedMapRange<V> range) {
+                final DualTreeBidiMap<K, V> parent = parent();
+                return parent.subMap(parent.getKeyRange(), range).values();
             }
 
             @Override

@@ -45,7 +45,7 @@ import org.apache.commons.collections4.map.AbstractMapDecorator;
 public abstract class AbstractBidiMapDecorator<K, V,
             TDecorated extends BidiMap<K, V, ?>,
             TDecoratedInverse extends BidiMap<V, K, ?>,
-            TInverseMap extends AbstractBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?>,
+            TInverseMap extends BidiMap<V, K, ?>,
             TKeySet extends Set<K>,
             TEntrySet extends Set<Map.Entry<K, V>>,
             TValueSet extends Set<V>>

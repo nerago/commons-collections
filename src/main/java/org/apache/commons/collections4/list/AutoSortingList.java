@@ -378,7 +378,7 @@ public class AutoSortingList<E>
 
     @Override
     protected NavigableList<E, ?> decorateSubList(final List<E> subList) {
-        return new AutoSortedSubList<>(subList);
+        throw new UnsupportedOperationException();
     }
 
     @Override

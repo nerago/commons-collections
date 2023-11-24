@@ -29,10 +29,13 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
@@ -63,7 +66,7 @@ import org.apache.commons.collections4.spliterators.MapSpliterator;
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "OverlyComplexClass"})
 public final class BinaryTreeMap<K extends Comparable<K>, V>
-        extends AbstractIterableSortedMap<K, V>
+        extends AbstractIterableSortedMap<K, V, IterableSortedMap<K, V, ?>, SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements Externalizable, Cloneable {
 
     private static final long serialVersionUID = 5398917388048351226L;
@@ -148,7 +151,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     @Override
-    public V getOrDefault(final Object key, final V defaultValue) {
+    public Object getOrDefault(final Object key, final Object defaultValue) {
         final Node<K, V> node = lookupKey(checkKey(key));
         return node == null ? defaultValue : node.getValue();
     }
@@ -292,7 +295,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     @Override
-    public AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+    public AbstractIterableSortedMap<K, V, ?, ?, ?, ?> subMap(final SortedMapRange<K> range) {
         return new TreeSubMap(range);
     }
 
@@ -411,6 +414,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     public OrderedMapIterator<K, V> mapIterator() {
         return isEmpty() ? EmptyOrderedMapIterator.emptyOrderedMapIterator()
                          : new TreeMapIterator();
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return isEmpty() ? EmptyOrderedMapIterator.emptyOrderedMapIterator()
+                         : new TreeMapIteratorDescending();
     }
 
     @Override
@@ -1145,17 +1154,17 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
             reset();
         }
 
-        public final void reset() {
+        public void reset() {
             nextNode = leastNode(rootNode);
             lastReturnedNode = null;
             previousNode = null;
         }
 
-        public final boolean hasNext() {
+        public boolean hasNext() {
             return nextNode != null;
         }
 
-        public final boolean hasPrevious() {
+        public boolean hasPrevious() {
             return previousNode != null;
         }
 
@@ -1230,7 +1239,7 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     /**
      * An iterator over the map.
      */
-    private final class TreeMapIterator extends IteratorBase implements OrderedMapIterator<K, V>, ResettableIterator<K> {
+    private class TreeMapIterator extends IteratorBase implements OrderedMapIterator<K, V>, ResettableIterator<K> {
         @Override
         public K getKey() {
             checkCanGetKey();
@@ -1259,6 +1268,35 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         @Override
         public K previous() {
             return navigatePrevious().getKey();
+        }
+    }
+
+    private final class TreeMapIteratorDescending extends TreeMapIterator {
+        @Override
+        public void reset() {
+            nextNode = null;
+            lastReturnedNode = null;
+            previousNode = greatestNode(rootNode);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public K next() {
+            return super.previous();
+        }
+
+        @Override
+        public K previous() {
+            return super.next();
         }
     }
 
@@ -1404,7 +1442,8 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
     }
 
-    private class TreeSubMap extends AbstractIterableSortedMap<K, V> {
+    private class TreeSubMap extends AbstractIterableSortedMap<K, V,
+            IterableSortedMap<K, V, ?>, SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>> {
         private static final long serialVersionUID = 7793720431038658603L;
         private SortedMapRange<K> keyRange;
 
@@ -1440,13 +1479,13 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         }
 
         @Override
-        public AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-            return new TreeSubMap(range);
+        public OrderedMapIterator<K, V> descendingMapIterator() {
+            return new TreeMapIteratorDescending();
         }
 
         @Override
-        protected AbstractIterableSortedMap<K, V> createReversed() {
-            return new TreeSubMapReverse(keyRange.reversed());
+        public AbstractIterableSortedMap<K, V, ?, ?, ?, ?> subMap(final SortedMapRange<K> range) {
+            return new TreeSubMap(range);
         }
 
         @Override
@@ -1566,12 +1605,6 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
             keyRange = (SortedMapRange<K>) in.readObject();
             BinaryTreeMap.this.readExternal(in);
-        }
-    }
-
-    private class TreeSubMapReverse extends TreeSubMap {
-        TreeSubMapReverse(final SortedMapRange<K> keyRange) {
-            super(keyRange);
         }
     }
 

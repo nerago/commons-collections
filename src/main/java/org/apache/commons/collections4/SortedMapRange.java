@@ -17,7 +17,6 @@
 package org.apache.commons.collections4;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -26,7 +25,9 @@ import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.EmptyMap;
+import org.apache.commons.collections4.set.EmptySet;
 
 /**
  * Represents the range of keys/values included in a given instance of sub collection.
@@ -114,13 +115,20 @@ public final class SortedMapRange<T> implements Serializable {
     }
 
     @SuppressWarnings("unchecked")
-    public static <K> SortedMapRange<K> full(final Comparator<? super K> comparator) {
+    public static <T> SortedMapRange<T> full(final Comparator<? super T> comparator) {
         return new SortedMapRange<>(null, false, null, false,
-                comparator != null ? comparator : (Comparator<? super K>) Comparator.naturalOrder());
+                comparator != null ? comparator : (Comparator<? super T>) Comparator.naturalOrder());
     }
 
-    public static <K> SortedMapRange<K> empty() {
+    public static <T> SortedMapRange<T> empty() {
         return new SortedMapRange<>();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> SortedMapRange<T> of(final T fromKey, final boolean fromInclusive, final T toKey, final boolean toInclusive,
+                                           final Comparator<? super T> comparator) {
+        return new SortedMapRange<>(fromKey, fromInclusive, toKey, toInclusive,
+                comparator != null ? comparator : (Comparator<? super T>) Comparator.naturalOrder());
     }
 
     public boolean isFull() {
@@ -162,6 +170,10 @@ public final class SortedMapRange<T> implements Serializable {
 
     public SortedMapRange<T> head(final T toKey) {
         return head(toKey, false);
+    }
+
+    public Comparator<? super T> comparator() {
+        return comparator;
     }
 
     private int compare(final T a, final T b) {
@@ -322,7 +334,7 @@ public final class SortedMapRange<T> implements Serializable {
         } else if (isFull()) {
             return set;
         } else {
-            return Collections.emptyNavigableSet();
+            return EmptySet.emptySet();
         }
     }
 
@@ -343,5 +355,24 @@ public final class SortedMapRange<T> implements Serializable {
         } else {
             throw new IllegalArgumentException("range is not applicable to basic SortedSet");
         }
+    }
+
+    public <V> SortedMapRange<Map.Entry<T, V>> toEntryRange() {
+        return new SortedMapRange<>(
+                fromKey != null ? new UnmodifiableMapEntry<>(fromKey, null) : null,
+                fromInclusive,
+                toKey != null ? new UnmodifiableMapEntry<>(toKey, null) : null,
+                toInclusive,
+                comparator != null ? Map.Entry.comparingByKey(comparator) : null);
+    }
+
+    public static <K extends Comparable<K>, V extends Comparable<V>> SortedMapRange<K> entryToKeyRange(final SortedMapRange<Map.Entry<K, V>> entryRange,
+                                                                                                       final Comparator<? super K> keyComparator) {
+        return new SortedMapRange<>(
+                entryRange.fromKey != null ? entryRange.fromKey.getKey() : null,
+                entryRange.fromInclusive,
+                entryRange.toKey != null ? entryRange.toKey.getKey() : null,
+                entryRange.toInclusive,
+                entryRange.comparator != null ? keyComparator : null);
     }
 }

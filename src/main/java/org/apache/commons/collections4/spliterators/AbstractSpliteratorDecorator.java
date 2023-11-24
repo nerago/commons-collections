@@ -24,29 +24,30 @@ import java.util.function.Consumer;
 public abstract class AbstractSpliteratorDecorator<E, T extends Spliterator<E>> implements Spliterator<E> {
     private final Spliterator<E> spliterator;
 
-    protected AbstractSpliteratorDecorator(Spliterator<E> spliterator) {
+    protected AbstractSpliteratorDecorator(final Spliterator<E> spliterator) {
         this.spliterator = spliterator;
     }
 
     protected Spliterator<E> decorated() { return spliterator; }
 
     @Override
-    public boolean tryAdvance(Consumer<? super E> action) {
+    public boolean tryAdvance(final Consumer<? super E> action) {
         return spliterator.tryAdvance(action);
     }
 
     @Override
-    public void forEachRemaining(Consumer<? super E> action) {
+    public void forEachRemaining(final Consumer<? super E> action) {
         spliterator.forEachRemaining(action);
     }
 
     @Override
     public T trySplit() {
-        Spliterator<E> split = spliterator.trySplit();
-        if (split != null)
+        final Spliterator<E> split = spliterator.trySplit();
+        if (split != null) {
             return decorateSplit(split);
-        else
+        } else {
             return null;
+        }
     }
 
     protected abstract T decorateSplit(Spliterator<E> split);

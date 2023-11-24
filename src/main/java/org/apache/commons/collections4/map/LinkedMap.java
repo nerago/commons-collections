@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.collections4.iterators.UnmodifiableListIterator;
 import org.apache.commons.collections4.list.UnmodifiableList;

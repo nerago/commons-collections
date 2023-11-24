@@ -22,24 +22,32 @@ import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.SequencedSet;
 import java.util.Spliterator;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.IterableGet;
+import org.apache.commons.collections4.IterableMap;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.OrderedBidiMap;
 import org.apache.commons.collections4.OrderedIterator;
+import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
+import org.apache.commons.collections4.map.AbstractMapViewSequencedSet;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.collections4.set.ReverseSequencedSet;
 
 import static org.apache.commons.collections4.bidimap.TreeBidiMap.DataElement.KEY;
@@ -839,7 +847,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     @Override
     public OrderedBidiMap<K, V, ?, ?> reversed() {
         if (reverse == null) {
-            reverse = new Reverse();
+            reverse = new Reverse(this);
         }
         return reverse;
     }
@@ -1801,7 +1809,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
     /**
      * A view of this map.
      */
-    abstract class View<E> implements SequencedCommonsSet<E> {
+    abstract class View<E> extends AbstractMapViewSequencedSet<E, SequencedCommonsSet<E>> {
 
         /** Whether to return KEY or VALUE order. */
         final DataElement orderType;
@@ -1825,8 +1833,13 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public SequencedCommonsSet<E> reversed() {
-            return new ReverseSequencedSet<>(this);
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            TreeBidiMap.this.readExternal(in);
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            TreeBidiMap.this.writeExternal(out);
         }
     }
 
@@ -1885,6 +1898,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Iterator<V> iterator() {
             return new InverseViewMapIterator(orderType);
+        }
+
+        @Override
+        public Iterator<V> descendingIterator() {
+            return new DescendingInverseViewMapIterator(orderType);
         }
 
         @Override
@@ -1956,6 +1974,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
+        public Iterator<Entry<K, V>> descendingIterator() {
+            return new DescendingViewMapEntryIterator();
+        }
+
+        @Override
         public Spliterator<Entry<K, V>> spliterator() {
             return new ViewSpliteratorEntry(orderType);
         }
@@ -1999,6 +2022,11 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Iterator<Map.Entry<V, K>> iterator() {
             return new InverseViewMapEntryIterator();
+        }
+
+        @Override
+        public Iterator<Entry<V, K>> descendingIterator() {
+            return new DescendingInverseViewMapEntryIterator();
         }
 
         @Override
@@ -2302,6 +2330,64 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Map.Entry<V, K> previous() {
             return navigatePrevious().toInverseUnmodifiableMapEntry();
+        }
+    }
+
+    class DescendingViewMapEntryIterator extends ViewMapEntryIterator {
+        @Override
+        public void reset() {
+            previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            lastReturnedNode = null;
+            nextNode = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public Map.Entry<K, V> next() {
+            return super.previous();
+        }
+
+        @Override
+        public Map.Entry<K, V> previous() {
+            return super.next();
+        }
+    }
+
+    class DescendingInverseViewMapEntryIterator extends InverseViewMapEntryIterator {
+        @Override
+        public void reset() {
+            previousNode = greatestNode(rootNode[orderType.ordinal()], orderType);
+            lastReturnedNode = null;
+            nextNode = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return super.hasPrevious();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return super.hasNext();
+        }
+
+        @Override
+        public Entry<V, K> next() {
+            return super.previous();
+        }
+
+        @Override
+        public Entry<V, K> previous() {
+            return super.next();
         }
     }
 
@@ -3157,7 +3243,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public SequencedSet<V> sequencedKeySet() {
+        public SequencedSet<V> keySet() {
             if (inverseKeySet == null) {
                 inverseKeySet = new ValueView(VALUE);
             }
@@ -3165,7 +3251,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public SequencedSet<K> sequencedValues() {
+        public SequencedSet<K> values() {
             if (inverseValuesSet == null) {
                 inverseValuesSet = new KeyView(VALUE);
             }
@@ -3173,12 +3259,7 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
 
         @Override
-        public SequencedSet<K> values() {
-           return sequencedValues();
-        }
-
-        @Override
-        public SequencedSet<Entry<V, K>> sequencedEntrySet() {
+        public SequencedSet<Entry<V, K>> entrySet() {
             if (inverseEntrySet == null) {
                 inverseEntrySet = new InverseEntryView();
             }
@@ -3237,7 +3318,132 @@ public final class TreeBidiMap<K extends Comparable<K>, V extends Comparable<V>>
         }
     }
 
-    class Reverse implements OrderedBidiMap<K, V, OrderedBidiMap<K, V, ?, ?>, OrderedBidiMap<V, K, ?, ?>> {
+    class Reverse extends AbstractOrderedBidiMapDecorator<K, V,
+            TreeBidiMap<K, V>, TreeBidiMap<V, K>,
+            OrderedBidiMap<K, V, ?, ?>, OrderedBidiMap<V, K, ?, ?>,
+            SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedSet<V>> {
+        private static final long serialVersionUID = -7665985761709514790L;
 
+        /**
+         * Constructor that wraps (not copies).
+         *
+         * @param map the map to decorate, must not be null
+         * @throws NullPointerException if the collection is null
+         */
+        protected Reverse(final TreeBidiMap<K, V> map) {
+            super(map, map);
+        }
+
+        @Override
+        public K firstKey() {
+            return decorated().lastKey();
+        }
+
+        @Override
+        public K lastKey() {
+            return decorated().firstKey();
+        }
+
+        @Override
+        public K nextKey(final K key) {
+            return decorated().previousKey(key);
+        }
+
+        @Override
+        public K previousKey(final K key) {
+            return decorated().nextKey(key);
+        }
+
+        @Override
+        public Entry<K, V> firstEntry() {
+            return decorated().lastEntry();
+        }
+
+        @Override
+        public Entry<K, V> lastEntry() {
+            return decorated().firstEntry();
+        }
+
+        @Override
+        public Entry<K, V> pollFirstEntry() {
+            return decorated().pollLastEntry();
+        }
+
+        @Override
+        public Entry<K, V> pollLastEntry() {
+            return decorated().pollFirstEntry();
+        }
+
+        @Override
+        public V putFirst(final K k, final V v) {
+            return decorated().putLast(k, v);
+        }
+
+        @Override
+        public V putLast(final K k, final V v) {
+            return decorated().putFirst(k, v);
+        }
+
+        @Override
+        public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
+            if (mapToCopy instanceof OrderedMap<? extends K,? extends V>) {
+                decorated().putAll(((OrderedMap<? extends K, ? extends V>) mapToCopy).descendingMapIterator());
+            } else {
+                final OrderedMap<K, V> temp = new LinkedMap<>(mapToCopy);
+                decorated().putAll(temp.descendingMapIterator());
+            }
+        }
+
+        @Override
+        public void putAll(MapIterator<? extends K, ? extends V> it) {
+            final LinkedMap<K, V> temp = new LinkedMap<>();
+            temp.putAll(it);
+            decorated().putAll(temp.descendingMapIterator());
+        }
+
+        @Override
+        public void forEach(final BiConsumer<? super K, ? super V> action) {
+            decorated().descendingMapIterator().forEachRemaining(action);
+        }
+
+        @Override
+        public String toString() {
+            return MapUtils.toString(this);
+        }
+
+        @Override
+        protected OrderedBidiMap<V, K, ?, ?> decorateInverse(final TreeBidiMap<V, K> map) {
+            return map.reversed();
+        }
+
+        @Override
+        protected OrderedBidiMap<K, V, ?, ?> createReverse() {
+            return TreeBidiMap.this;
+        }
+
+        @Override
+        public OrderedMapIterator<K, V> mapIterator() {
+            return decorated().descendingMapIterator();
+        }
+
+        @Override
+        public OrderedMapIterator<K, V> descendingMapIterator() {
+            return decorated().mapIterator();
+        }
+
+        @Override
+        public SequencedSet<Entry<K, V>> entrySet() {
+            return new ReverseSequencedSet<>(decorated().entrySet());
+        }
+
+        @Override
+        public SequencedSet<K> keySet() {
+            return new ReverseSequencedSet<>(decorated().keySet());
+        }
+
+        @Override
+        public SequencedSet<V> values() {
+            return new ReverseSequencedSet<>(decorated().values());
+        }
     }
 }

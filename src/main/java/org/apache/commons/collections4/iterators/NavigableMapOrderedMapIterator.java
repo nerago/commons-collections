@@ -22,7 +22,7 @@ public class NavigableMapOrderedMapIterator<K, V> implements OrderedMapIterator<
     protected Iterator<Map.Entry<K, V>> backwardIterator;
     protected Map.Entry<K, V> current;
 
-    protected NavigableMapOrderedMapIterator(final NavigableMap<K, V> map) {
+    public NavigableMapOrderedMapIterator(final NavigableMap<K, V> map) {
         this.map = map;
         reset();
     }

@@ -22,8 +22,10 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MutableBoolean;
 import org.apache.commons.collections4.iterators.AbstractMapIteratorAdapter;
+import org.apache.commons.collections4.iterators.MapIteratorToEntryAdapter;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformMapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
@@ -38,12 +40,17 @@ import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterableMap<K, V> implements IterableExtendedMap<K, V> {
+public abstract class AbstractIterableMapAlternate<K, V,
+            TKeySet extends Set<K>,
+            TEntrySet extends Set<Map.Entry<K, V>>,
+            TValueSet extends Collection<V>>
+        extends AbstractIterableMap<K, V>
+        implements IterableExtendedMap<K, V> {
     private static final long serialVersionUID = 4016005260054821088L;
 
-    private transient Set<Entry<K, V>> entrySet;
-    private transient Set<K> keySet;
-    private transient Collection<V> values;
+    private transient TEntrySet entrySet;
+    private transient TKeySet keySet;
+    private transient TValueSet values;
 
     @Override
     public Iterator<Map.Entry<K, V>> entryIterator() {
@@ -59,7 +66,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public final boolean containsValue(final Object value) {
+    public boolean containsValue(final Object value) {
         final MapIterator<K, V> mapIterator = mapIterator();
         while (mapIterator.hasNext()) {
             mapIterator.next();
@@ -185,20 +192,20 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    protected Set<K> createKeySet() {
-        return new AbsIterMapKeySet();
+    protected TKeySet createKeySet() {
+        return (TKeySet) new AbsIterMapKeySet();
     }
 
-    protected Set<Map.Entry<K, V>> createEntrySet() {
-        return new AbsIterMapEntrySet();
+    protected TEntrySet createEntrySet() {
+        return (TEntrySet) (Set<Map.Entry<K, V>>) new AbsIterMapEntrySet();
     }
 
-    protected Collection<V> createValuesCollection() {
-        return new AbsIterMapValues();
+    protected TValueSet createValuesCollection() {
+        return (TValueSet) new AbsIterMapValues();
     }
 
     @Override
-    public final Set<K> keySet() {
+    public final TKeySet keySet() {
         if (keySet != null)
             return keySet;
         keySet = createKeySet();
@@ -206,7 +213,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public final Set<Map.Entry<K, V>> entrySet() {
+    public final TEntrySet entrySet() {
         if (entrySet != null)
             return entrySet;
         entrySet = createEntrySet();
@@ -214,7 +221,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
     }
 
     @Override
-    public final Collection<V> values() {
+    public final TValueSet values() {
         if (values != null)
             return values;
         values = createValuesCollection();
@@ -242,7 +249,20 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         return MapUtils.toString(mapIterator());
     }
 
-    protected final class AbsIterMapKeySet extends AbstractSet<K> {
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        try {
+            final AbstractIterableMapAlternate<K, V, ?, ?, ?> cloned = (AbstractIterableMapAlternate<K, V, ?, ?, ?>) super.clone();
+            cloned.entrySet = null;
+            cloned.keySet = null;
+            cloned.values = null;
+            return cloned;
+        } catch (final CloneNotSupportedException ex) {
+            throw new UnsupportedOperationException(ex);
+        }
+    }
+
+    protected class AbsIterMapKeySet extends AbstractSet<K> {
         @Override
         public Iterator<K> iterator() {
             return mapIterator();
@@ -279,7 +299,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    protected final class AbsIterMapEntrySet extends AbstractSet<Map.Entry<K, V>> {
+    protected class AbsIterMapEntrySet extends AbstractSet<Map.Entry<K, V>> {
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
             return entryIterator();
@@ -324,7 +344,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    protected final class AbsIterMapValues extends AbstractCollection<V> {
+    protected class AbsIterMapValues extends AbstractCollection<V> {
         @Override
         public Iterator<V> iterator() {
             return new AbsIterMapValueIterator<>(mapIterator());
@@ -361,7 +381,7 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         }
     }
 
-    protected static final class AbsIterMapValueIterator<V> implements Iterator<V> {
+    protected static class AbsIterMapValueIterator<V> implements Iterator<V> {
         private final MapIterator<?, V> mapIterator;
 
         public AbsIterMapValueIterator(final MapIterator<?, V> mapIterator) {
@@ -382,17 +402,6 @@ public abstract class AbstractIterableMapAlternate<K, V> extends AbstractIterabl
         @Override
         public void remove() {
             mapIterator.remove();
-        }
-    }
-
-    protected static class MapIteratorToEntryAdapter<K, V> extends AbstractMapIteratorAdapter<K, V, Entry<K, V>> {
-        public MapIteratorToEntryAdapter(final MapIterator<K, V> mapIterator) {
-            super(mapIterator);
-        }
-
-        @Override
-        protected Entry<K, V> transform(final K key, final V value) {
-            return new UnmodifiableMapEntry<>(key, value);
         }
     }
 }

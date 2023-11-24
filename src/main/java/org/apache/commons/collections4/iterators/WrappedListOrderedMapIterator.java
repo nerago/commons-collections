@@ -4,11 +4,9 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.map.EntrySetToMapIteratorAdapter;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.function.Supplier;
 
 /**
@@ -17,22 +15,22 @@ import java.util.function.Supplier;
  * @param <K> the key type
  * @param <V> the value type
  */
-public class SortedMapListIterator<K, V> extends EntrySetToMapIteratorAdapter<K, V>
+public class WrappedListOrderedMapIterator<K, V> extends EntrySetToMapIteratorAdapter<K, V>
         implements OrderedMapIterator<K, V>, ListIterator<K> {
     /**
-     * Create a new SortedMapListIterator.
+     * Create a new WrappedListOrderedMapIterator.
      *
      * @param entrySet the entrySet to iterate
      */
-    protected SortedMapListIterator(final Set<Map.Entry<K, V>> entrySet) {
-        super(entrySet);
+    public WrappedListOrderedMapIterator(final Set<Map.Entry<K, V>> entrySet) {
+        super(entrySet::iterator);
     }
 
-    protected SortedMapListIterator(final SortedMap<K, V> map) {
-        super(map.entrySet());
+    public WrappedListOrderedMapIterator(final Map<K, V> map) {
+        super(() -> map.entrySet().iterator());
     }
 
-    protected SortedMapListIterator(final Supplier<Iterator<Map.Entry<K, V>>> supplier) {
+    public WrappedListOrderedMapIterator(final Supplier<Iterator<Map.Entry<K, V>>> supplier) {
         super(supplier);
     }
 

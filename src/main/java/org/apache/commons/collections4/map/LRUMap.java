@@ -220,15 +220,41 @@ public class LRUMap<K, V>
     /**
      * Gets the value mapped to the key specified.
      * <p>
+     * If {@code updateToMRU} is {@code true}, the position of the key in the map
+     * is changed to the most recently used position (last), otherwise the iteration
+     * order is not changed by this operation.
+     *
+     * @param key  the key
+     * @param defaultValue the default mapping of the key
+     * @param updateToMRU  whether the key shall be updated to the
+     *   most recently used position
+     * @return the mapped value, defaultValue if no match
+     * @since 4.1
+     */
+    public V getOrDefault(final Object key, final V defaultValue, final boolean updateToMRU) {
+        final LinkEntry<K, V> entry = getEntry(key);
+        if (entry == null) {
+            return defaultValue;
+        }
+        if (updateToMRU) {
+            moveToMRU(entry);
+        }
+        return entry.getValue();
+    }
+
+    /**
+     * Gets the value mapped to the key specified.
+     * <p>
      * This operation changes the position of the key in the map to the
      * most recently used position (last).
      *
      * @param key  the key
-     * @return the mapped value, null if no match
+     * @param defaultValue the default mapping of the key
+     * @return the mapped value, defaultValue if no match
      */
     @Override
-    public V get(final Object key) {
-        return get(key, true);
+    public V getOrDefault(final Object key, final V defaultValue) {
+        return getOrDefault(key, defaultValue, true);
     }
 
     /**
@@ -245,14 +271,7 @@ public class LRUMap<K, V>
      * @since 4.1
      */
     public V get(final Object key, final boolean updateToMRU) {
-        final LinkEntry<K, V> entry = getEntry(key);
-        if (entry == null) {
-            return null;
-        }
-        if (updateToMRU) {
-            moveToMRU(entry);
-        }
-        return entry.getValue();
+        return getOrDefault(key, null, updateToMRU);
     }
 
     /**

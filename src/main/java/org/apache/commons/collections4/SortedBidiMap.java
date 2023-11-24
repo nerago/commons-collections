@@ -17,6 +17,7 @@
 package org.apache.commons.collections4;
 
 import java.util.Comparator;
+import java.util.Map;
 
 public interface SortedBidiMap<K, V,
             TSubMap extends SortedBidiMap<K, V, ?, ?>,
@@ -31,6 +32,8 @@ public interface SortedBidiMap<K, V,
 
     SortedMapRange<V> getValueRange();
 
+    TSubMap subMap(SortedMapRange<K> keyRange, SortedMapRange<V> valueRange);
+
     @Override
     SortedRangedSet<K> keySet();
 
@@ -41,13 +44,19 @@ public interface SortedBidiMap<K, V,
     SortedRangedSet<V> values();
 
     @Override
-    SortedRangedSet<K> sequencedKeySet();
+    default SortedRangedSet<K> sequencedKeySet() {
+        return keySet();
+    }
 
     @Override
-    SortedRangedSet<Entry<K, V>> sequencedEntrySet();
+    default SortedRangedSet<Entry<K, V>> sequencedEntrySet() {
+        return entrySet();
+    }
 
     @Override
-    SortedRangedSet<V> sequencedValues();
+    default SortedRangedSet<V> sequencedValues() {
+        return values();
+    }
 
     default V firstValue() {
         return sequencedValues().getFirst();

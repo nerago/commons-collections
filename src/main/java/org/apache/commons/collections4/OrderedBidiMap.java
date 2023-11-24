@@ -18,6 +18,7 @@ package org.apache.commons.collections4;
 
 import java.util.SequencedCollection;
 import java.util.SequencedSet;
+import java.util.Set;
 
 /**
  * Defines a map that allows bidirectional lookup between key and values
@@ -34,31 +35,16 @@ import java.util.SequencedSet;
  */
 public interface OrderedBidiMap<K, V, TSubMap extends OrderedBidiMap<K, V, ?, ?>, TInverseMap extends OrderedBidiMap<V, K, ?, ?>>
         extends BidiMap<K, V, TInverseMap>,
-                OrderedMap<K, V, TSubMap> {
-
-    @Override
-    TSubMap reversed();
+                OrderedMap<K, V> {
 
     @Override
     SequencedSet<V> values();
 
     @Override
-    default SequencedSet<K> keySet() {
-        return OrderedMap.super.keySet();
+    default SequencedSet<V> sequencedValues() {
+        return values();
     }
 
     @Override
-    default SequencedSet<Entry<K, V>> entrySet() {
-        return OrderedMap.super.entrySet();
-    }
-
-    @Override
-    SequencedSet<V> sequencedValues();
-
-    // just override to avoid their default for now
-    @Override
-    SequencedSet<K> sequencedKeySet();
-
-    @Override
-    SequencedSet<Entry<K, V>> sequencedEntrySet();
+    TSubMap reversed();
 }

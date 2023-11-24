@@ -27,6 +27,7 @@ import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Unmodifiable;
+import org.apache.commons.collections4.collection.UnmodifiableSequencedCollection;
 import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
 
 /**
@@ -170,7 +171,7 @@ public final class UnmodifiableSortedMap<K, V>
 
     @Override
     public SequencedCommonsCollection<V> values() {
-        return UnmodifiableSequencedCollection.unmodifiableCollection(decorated().sequencedValues());
+        return UnmodifiableSequencedCollection.unmodifiableSequencedCollection(decorated().sequencedValues());
     }
 
     @Override

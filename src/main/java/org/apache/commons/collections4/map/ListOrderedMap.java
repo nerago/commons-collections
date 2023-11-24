@@ -37,7 +37,6 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.OrderedMap;
@@ -45,7 +44,6 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.iterators.AbstractUntypedIteratorDecorator;
 import org.apache.commons.collections4.iterators.TransformListIterator;
-import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
 import org.apache.commons.collections4.keyvalue.TiedMapEntry;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.list.UnmodifiableList;
@@ -94,8 +92,8 @@ import org.apache.commons.collections4.spliterators.TransformSpliterator;
  * @since 3.0
  */
 public class ListOrderedMap<K, V>
-        extends AbstractMapDecorator<K, V, OrderedMap<K, V, ?>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
-        implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
+        extends AbstractMapDecorator<K, V, Map<K, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
+        implements OrderedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 2728177751851003750L;
@@ -386,6 +384,11 @@ public class ListOrderedMap<K, V>
         return entrySet();
     }
 
+    @Override
+    public OrderedMap<K, V> reversed() {
+        return new ReverseOrderedMap<>(this);
+    }
+
     /**
      * Returns the Map as a string.
      *
@@ -533,7 +536,7 @@ public class ListOrderedMap<K, V>
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         final V oldValue = map.get(key);
         if (oldValue != null) {
             return oldValue;

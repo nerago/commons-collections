@@ -1,5 +1,8 @@
 package org.apache.commons.collections4.set;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -10,16 +13,16 @@ import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.iterators.SingletonIterator;
 
 public class SingletonSet<E>
-        extends AbstractCommonsSortedSet<E>
+        extends AbstractCommonsSortedSet<E, NavigableRangedSet<E>>
         implements NavigableRangedSet<E> {
-    private final E value;
+    private E value;
 
     public SingletonSet(final E value) {
         this.value = value;
     }
 
     @Override
-    public NavigableRangedSet<E> subSet(final SortedMapRange range) {
+    public NavigableRangedSet<E> subSet(final SortedMapRange<E> range) {
         return range.contains(value) ? this : EmptySet.emptySet();
     }
 
@@ -49,22 +52,22 @@ public class SingletonSet<E>
     }
 
     @Override
-    public E lower(E e) {
+    public E lower(final E e) {
         return null;
     }
 
     @Override
-    public E floor(E e) {
+    public E floor(final E e) {
         return Objects.equals(value, e) ? value : null;
     }
 
     @Override
-    public E ceiling(E e) {
+    public E ceiling(final E e) {
         return Objects.equals(value, e) ? value : null;
     }
 
     @Override
-    public E higher(E e) {
+    public E higher(final E e) {
         return null;
     }
 
@@ -89,17 +92,17 @@ public class SingletonSet<E>
     }
 
     @Override
-    public boolean add(E e) {
+    public boolean add(final E e) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean remove(Object o) {
+    public boolean remove(final Object o) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(final Collection<? extends E> c) {
         throw new UnsupportedOperationException();
     }
 
@@ -119,7 +122,17 @@ public class SingletonSet<E>
     }
 
     @Override
-    public NavigableRangedSet<E> reversed() {
+    protected NavigableRangedSet<E> createReversed() {
         return this;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(value);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        value = (E) in.readObject();
     }
 }

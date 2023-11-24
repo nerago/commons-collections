@@ -18,9 +18,14 @@ package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.SortedMap;
 
+import org.apache.commons.collections4.IterableGet;
 import org.apache.commons.collections4.IterableSortedMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
@@ -163,17 +168,56 @@ public class TransformedSortedMap<K, V>
     }
 
     @Override
-    public TransformedSortedMap<K, V> subMap(final SortedMapRange<K> range) {
-        return new TransformedSortedMap<>(range.applyToMap(getSortedMap()), keyTransformer, valueTransformer, range);
-    }
-
-    @Override
     public SortedMapRange<K> getKeyRange() {
         return keyRange;
     }
 
     @Override
+    public TransformedSortedMap<K, V> subMap(final SortedMapRange<K> range) {
+        return new TransformedSortedMap<>(range.applyToMap(getSortedMap()), keyTransformer, valueTransformer, range);
+    }
+
+    @Override
+    public TransformedSortedMap<K, V> reversed() {
+        return new TransformedSortedMap<>(getSortedMap().reversed(), keyTransformer, valueTransformer, keyRange.reversed());
+    }
+
+    @Override
+    public SequencedSet<K> keySet() {
+        return getSortedMap().sequencedKeySet();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return getSortedMap().sequencedEntrySet();
+    }
+
+    @Override
+    public SequencedCollection<V> values() {
+        return getSortedMap().sequencedValues();
+    }
+
+    @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return (OrderedMapIterator<K, V>) super.mapIterator();
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        if (map instanceof OrderedMap<K, V>) {
+            return ((OrderedMap<K, V>) map).descendingMapIterator();
+        } else {
+            SortedMap<K, V> reverse = getSortedMap().reversed();
+            if (reverse instanceof IterableGet) {
+                final MapIterator<K, V> mapIterator = ((IterableGet<K, V>) reverse).mapIterator();
+                if (mapIterator instanceof OrderedMapIterator<K, V>) {
+                    return (OrderedMapIterator<K, V>) mapIterator;
+                }
+            }
+
+            return SortedMapUtils.sortedMapIterator(reverse);
+
+//            return getSortedMap().reversed().mapIterator();
+        }
     }
 }

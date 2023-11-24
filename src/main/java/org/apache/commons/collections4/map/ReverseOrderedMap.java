@@ -5,14 +5,15 @@ import java.util.Map;
 import java.util.SequencedCollection;
 import java.util.SequencedSet;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.set.ReverseSequencedSet;
 
 // see java.util.ReverseOrderSortedMapView
-public final class ReverseOrderedMap<K, V>
-        extends AbstractOrderedMapDecorator<K, V, OrderedMap<K, V, ?>, OrderedMap<K, V, ?>,
+public class ReverseOrderedMap<K, V>
+        extends AbstractOrderedMapDecorator<K, V, OrderedMap<K, V>, OrderedMap<K, V>,
                                             SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>> {
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -28,8 +29,8 @@ public final class ReverseOrderedMap<K, V>
      * @param map the map to decorate, must not be null
      * @throws NullPointerException if the map is null
      */
-    public ReverseOrderedMap(final OrderedMap<K, V, ?> map) {
-        super(map);
+    public ReverseOrderedMap(final OrderedMap<K, V> map) {
+        super(map, map);
     }
 
     @Override
@@ -89,7 +90,7 @@ public final class ReverseOrderedMap<K, V>
 
     @Override
     public SequencedCollection<V> sequencedValues() {
-        return new ArrayReverseSequencedCollection<>(super.sequencedValues());
+        return CollectionUtils.reversedCollection(super.sequencedValues());
     }
 
     @Override
@@ -108,7 +109,7 @@ public final class ReverseOrderedMap<K, V>
     }
 
     @Override
-    public OrderedMap<K, V, ?> reversed() {
+    protected OrderedMap<K, V> createReverse() {
         return decorated();
     }
 }

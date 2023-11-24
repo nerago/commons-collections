@@ -1,6 +1,7 @@
 package org.apache.commons.collections4;
 
 import java.util.Collection;
+import java.util.Objects;
 
 public abstract class AbstractCommonsCollection<E> implements Collection<E>, SerializableTransitional {
     protected void fillArray(final Object[] array) {
@@ -41,6 +42,7 @@ public abstract class AbstractCommonsCollection<E> implements Collection<E>, Ser
 
     @Override
     public final boolean removeAll(final Collection<?> coll) {
+        Objects.requireNonNull(coll);
         if (coll.isEmpty()) {
             return false;
         } else if (coll.size() < size()) {
@@ -56,6 +58,7 @@ public abstract class AbstractCommonsCollection<E> implements Collection<E>, Ser
 
     @Override
     public final boolean retainAll(final Collection<?> coll) {
+        Objects.requireNonNull(coll);
         if (isEmpty()) {
             return false;
         } else if (coll.isEmpty()) {
@@ -68,6 +71,7 @@ public abstract class AbstractCommonsCollection<E> implements Collection<E>, Ser
 
     @Override
     public boolean containsAll(final Collection<?> coll) {
+        Objects.requireNonNull(coll);
         for (final Object element : coll) {
             if (!coll.contains(element)) {
                 return false;

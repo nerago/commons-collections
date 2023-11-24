@@ -38,20 +38,26 @@ import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
+import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractIterableMapAlternate;
-import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
+import org.apache.commons.collections4.map.AbstractMapViewSequencedSet;
+import org.apache.commons.collections4.map.AbstractMapViewSortedSet;
 import org.apache.commons.collections4.spliterators.AbstractTreeSpliterator;
 import org.apache.commons.collections4.spliterators.MapSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 // https://en.wikipedia.org/wiki/Radix_tree
 public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractIterableMapAlternate<K, V>
+        extends AbstractIterableMapAlternate<K, V,
+            SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements Trie<K, V, IterableSortedMap<K, V, ?>> {
     private static final long serialVersionUID = -1993317552691676845L;
 
@@ -456,17 +462,17 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
-    protected Set<K> createKeySet() {
+    protected SequencedCommonsSet<K> createKeySet() {
         return new TrieKeySet<>(this);
     }
 
     @Override
-    protected Set<Entry<K, V>> createEntrySet() {
+    protected SequencedCommonsSet<Entry<K, V>> createEntrySet() {
         return new TrieEntrySet<>(this);
     }
 
     @Override
-    protected Collection<V> createValuesCollection() {
+    protected SequencedCommonsCollection<V> createValuesCollection() {
         return new TrieValues<>(this);
     }
 
@@ -476,7 +482,17 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return null;
+    }
+
+    @Override
     public MapSpliterator<K, V> mapSpliterator() {
+        return null;
+    }
+
+    @Override
+    public IterableSortedMap<K, V, ?> reversed() {
         return null;
     }
 
@@ -755,9 +771,9 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         private TEntry<K, V> current;
         private TEntry<K, V> nextEntry;
 
-        private TrieEntryIterator(final GeneralRadixTrie<K, V> parent, SortedMapRange<Entry<K,V>> range) {
+        private TrieEntryIterator(final GeneralRadixTrie<K, V> parent) {
             this.parent = parent;
-            if (!range.isFull())
+            if (!parent.getKeyRange().isFull())
                 throw new IllegalStateException();
             reset();
         }
@@ -783,12 +799,53 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
 
         @Override
         public void remove() {
-            ResettableIterator.super.remove();
+            if (current == null) {
+                throw new IllegalStateException();
+            }
+            parent.removeEntry(current);
+            current = null;
+        }
+    }
+
+    private static final class TrieEntryDescendingIterator<K extends Comparable<K>, V extends Comparable<V>>
+            implements ResettableIterator<Entry<K, V>> {
+        private final GeneralRadixTrie<K, V> parent;
+        private TEntry<K, V> current;
+        private TEntry<K, V> nextEntry;
+
+        private TrieEntryDescendingIterator(final GeneralRadixTrie<K, V> parent) {
+            this.parent = parent;
+            if (!parent.getKeyRange().isFull())
+                throw new IllegalStateException();
+            reset();
         }
 
         @Override
-        public void forEachRemaining(Consumer<? super Entry<K, V>> action) {
-            ResettableIterator.super.forEachRemaining(action);
+        public void reset() {
+            nextEntry = parent._lastEntry();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextEntry != null;
+        }
+
+        @Override
+        public Entry<K, V> next() {
+            if (nextEntry == null)
+                throw new NoSuchElementException();
+            current = nextEntry;
+            nextEntry = nextEntry.prev();
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            if (current == null) {
+                throw new IllegalStateException();
+            }
+            parent.removeEntry(current);
+            current = null;
         }
     }
 
@@ -796,9 +853,9 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractTreeSpliterator<K, V, TEntry<K, V>> {
         private final GeneralRadixTrie<K, V> parent;
 
-        TrieEntrySpliterator(final GeneralRadixTrie<K, V> parent, final SortedMapRange<Entry<K,V>> range) {
+        TrieEntrySpliterator(final GeneralRadixTrie<K, V> parent) {
             this.parent = parent;
-            if (!range.isFull())
+            if (!parent.getKeyRange().isFull())
                 throw new IllegalArgumentException();
         }
 
@@ -867,11 +924,10 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private abstract static class TrieSetView<E, K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractMapViewSortedSet<E> {
+            extends AbstractMapViewSequencedSet<E, SequencedCommonsSet<E>> {
         protected final GeneralRadixTrie<K, V> parent;
 
-        protected TrieSetView(final GeneralRadixTrie<K, V> parent, final SortedMapRange<E> range) {
-            super(range);
+        protected TrieSetView(final GeneralRadixTrie<K, V> parent) {
             this.parent = parent;
         }
 
@@ -889,23 +945,37 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
         public void clear() {
             parent.clear();
         }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            parent.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            parent.readExternal(in);
+        }
     }
 
     private static class TrieEntrySet<K extends Comparable<K>, V extends Comparable<V>>
-            extends TrieSetView<Entry<K, V>, K, V>
-            implements Set<Entry<K, V>> {
-        private TrieEntrySet(final GeneralRadixTrie<K, V> parent, final SortedMapRange<Entry<K, V>> range) {
-            super(parent, range);
+            extends TrieSetView<Entry<K, V>, K, V> {
+        private TrieEntrySet(final GeneralRadixTrie<K, V> parent) {
+            super(parent);
         }
 
         @Override
         public Iterator<Entry<K, V>> iterator() {
-            return new TrieEntryIterator<>(parent, range);
+            return new TrieEntryIterator<>(parent);
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> descendingIterator() {
+            return new TrieEntryDescendingIterator<>(parent);
         }
 
         @Override
         public Spliterator<Entry<K, V>> spliterator() {
-            return new TrieEntrySpliterator<>(parent, range);
+            return new TrieEntrySpliterator<>(parent);
         }
 
         protected TEntry<K, V> findMatchingEntry(final Object obj) {
@@ -958,18 +1028,18 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     private static class TrieKeySet<K extends Comparable<K>, V extends Comparable<V>>
             extends TrieSetView<K, K, V>
             implements Set<K> {
-        public TrieKeySet(final GeneralRadixTrie<K, V> parent, final SortedMapRange<K> range) {
-            super(parent, range);
-        }
-
-        @Override
-        public TrieSetView<K, K, V> subSet(final SortedMapRange<K> range) {
-            return null;
+        private TrieKeySet(final GeneralRadixTrie<K, V> parent) {
+            super(parent);
         }
 
         @Override
         public Iterator<K> iterator() {
             return new TransformIterator<>(new TrieEntryIterator<>(parent), Entry::getKey);
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return new TransformIterator<>(new TrieEntryDescendingIterator<>(parent), Entry::getKey);
         }
 
         @Override
@@ -996,16 +1066,19 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     private static class TrieValues<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractCommonsCollection<V> {
-        private final GeneralRadixTrie<K, V> parent;
-
+            extends TrieSetView<V, K, V> {
         private TrieValues(final GeneralRadixTrie<K, V> parent) {
-            this.parent = parent;
+            super(parent);
         }
 
         @Override
         public Iterator<V> iterator() {
             return new TransformIterator<>(new TrieEntryIterator<>(parent), Entry::getValue);
+        }
+
+        @Override
+        public Iterator<V> descendingIterator() {
+            return new TransformIterator<>(new TrieEntryDescendingIterator<>(parent), Entry::getValue);
         }
 
         @Override
@@ -1032,17 +1105,6 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
                 entry = entry.next();
             }
             return false;
-        }
-
-        @Override
-        public boolean equals(final Object other) {
-            if (this == other) return true;
-            if (other instanceof Collection) {
-                final Collection<?> otherCollection = (Collection<?>) other;
-                return CollectionUtils.isEqualCollection(this, otherCollection);
-            } else {
-                return false;
-            }
         }
     }
 }

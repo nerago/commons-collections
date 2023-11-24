@@ -44,13 +44,13 @@ import org.apache.commons.collections4.SequencedCommonsCollection;
  * @since 3.0
  */
 public abstract class AbstractOrderedMapDecorator<K, V,
-            TDecorated extends OrderedMap<K, V, ?>,
-            TSubMap extends OrderedMap<K, V, ?>,
+            TDecorated extends OrderedMap<K, V>,
+            TSubMap extends OrderedMap<K, V>,
             TKeySet extends SequencedSet<K>,
             TEntrySet extends SequencedSet<Map.Entry<K, V>>,
             TValueSet extends SequencedCommonsCollection<V>>
         extends AbstractMapDecorator<K, V, TDecorated, TKeySet, TEntrySet, TValueSet>
-        implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
+        implements OrderedMap<K, V> {
 
     private static final long serialVersionUID = 6964783574989279065L;
     private transient TSubMap reverse;
@@ -70,6 +70,11 @@ public abstract class AbstractOrderedMapDecorator<K, V,
      */
     public AbstractOrderedMapDecorator(final TDecorated map) {
         super(map);
+    }
+
+    protected AbstractOrderedMapDecorator(final TDecorated map, final TSubMap reverse) {
+        super(map);
+        this.reverse = reverse;
     }
 
     @Override

@@ -1,11 +1,12 @@
-package org.apache.commons.collections4.set;
+package org.apache.commons.collections4.map;
 
 import java.util.Collection;
 
-import org.apache.commons.collections4.SortedRangedSet;
+import org.apache.commons.collections4.SequencedCommonsSet;
+import org.apache.commons.collections4.set.AbstractCommonsSequencedSet;
 
-public abstract class AbstractMapViewSortedSet<E>
-        extends AbstractCommonsSortedSet<E> {
+public abstract class AbstractMapViewSequencedSet<E, TSubSet extends SequencedCommonsSet<E>>
+        extends AbstractCommonsSequencedSet<E, TSubSet> {
 
     @Override
     public final void addFirst(final E e) {

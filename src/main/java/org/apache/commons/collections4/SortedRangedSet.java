@@ -1,5 +1,6 @@
 package org.apache.commons.collections4;
 
+import java.util.Comparator;
 import java.util.SortedSet;
 
 public interface SortedRangedSet<E>
@@ -10,6 +11,11 @@ public interface SortedRangedSet<E>
      * @return set element range
      */
     SortedMapRange<E> getRange();
+
+    @Override
+    default Comparator<? super E> comparator() {
+        return getRange().comparator();
+    }
 
     SortedRangedSet<E> subSet(SortedMapRange<E> range);
 

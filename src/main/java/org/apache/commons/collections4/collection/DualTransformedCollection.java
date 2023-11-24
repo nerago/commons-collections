@@ -160,7 +160,6 @@ public class DualTransformedCollection<TExternal, TStored> extends AbstractCommo
         return collection.retainAll(list);
     }
 
-
     @Override
     public void forEach(Consumer<? super TExternal> action) {
         collection.forEach(s -> action.accept(storageToInterface.transform(s)));

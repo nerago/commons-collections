@@ -35,25 +35,30 @@ import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.IterableGet;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.NavigableExtendedBidiMap;
 import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.iterators.FilterIterator;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.map.AbstractNavigableMapDecorator;
-import org.apache.commons.collections4.set.AbstractMapViewNavigableSet;
+import org.apache.commons.collections4.map.AbstractMapViewNavigableSet;
 import org.apache.commons.collections4.set.AbstractNavigableSetDecorator;
 import org.apache.commons.collections4.set.AbstractSequencedSetDecorator;
 import org.apache.commons.collections4.set.ReverseNavigableSet;
+import org.apache.commons.collections4.spliterators.FilterSpliterator;
 import org.apache.commons.collections4.spliterators.TransformSpliterator;
 
 @SuppressWarnings("ClassWithTooManyFields")
@@ -71,7 +76,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     protected NavigableMap<V, K> valueMap;
     protected Comparator<? super K> keyComparator;
     protected Comparator<? super V> valueComparator;
-    protected final SortedMapRange<V> valueRange;
+    final SortedMapRange<V> valueRange;
 
     private DualTreeBidi2MapBase<V, K> inverseBidiMap;
     private DualTreeBidi2MapBase<K,V> descendingBidiMap;
@@ -1018,26 +1023,80 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     }
 
     // can assume only key has a subrange, and can assume the keyMap is correctly restricted to that range
+    // however value map is still the original and to add checks when iterating values
     protected static class ValueSetUsingKeyEntrySetSubKeyRange<K extends Comparable<K>, V extends Comparable<V>>
             extends ValueSetUsingKeyEntrySetFullRange<K, V> {
         private static final long serialVersionUID = 5296117687879550829L;
 
         public ValueSetUsingKeyEntrySetSubKeyRange(final DualTreeBidi2MapSubMap<K, V> parent) {
             super(parent);
-            assert parent.valueRange.isFull();
+            assert parent.getValueRange().isFull();
         }
 
-        private V relative(final V initialValue, final Function<V, Entry<V, K>> start, final Function<V, Entry<V, K>> next) {
-            final SortedMapRange<K> keyRange = parent.getKeyRange();
-            Entry<V, K> entry = start.apply(initialValue);
-            while (entry != null) {
-                if (keyRange.contains(entry.getValue())) {
-                    return entry.getKey();
+        protected boolean inRange(final Entry<V, K> e) {
+            return parent.getKeyRange().contains(e.getValue());
+        }
+
+        protected Entry<V, K> firstInRange(final Iterator<Entry<V, K>> it) {
+            while (it.hasNext()) {
+                final Entry<V, K> entry = it.next();
+                if (inRange(entry)) {
+                    return entry;
                 }
-                entry = next.apply(entry.getKey());
             }
             return null;
         }
+
+        protected Entry<V, K> firstEntry() {
+            return firstInRange(parent.valueMap.entrySet().iterator());
+        }
+
+        protected Entry<V, K> lastEntry() {
+            return firstInRange(parent.valueMap.descendingMap().entrySet().iterator());
+        }
+        
+        @Override
+        public V first() {
+            final Entry<V, K> entry = firstEntry();
+            if (entry != null) {
+                return entry.getKey();
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public V last() {
+            final Entry<V, K> entry = lastEntry();
+            if (entry != null) {
+                return entry.getKey();
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public V pollFirst() {
+            final Entry<V, K> entry = firstEntry();
+            if (entry != null) {
+                parent.keyMapRemoveChecked(entry.getValue(), entry.getKey());
+                parent.modified();
+                return entry.getKey();
+            }
+            return null;
+        }
+
+        @Override
+        public V pollLast() {
+            final Entry<V, K> entry = lastEntry();
+            if (entry != null) {
+                parent.keyMapRemoveChecked(entry.getValue(), entry.getKey());
+                parent.modified();
+                return entry.getKey();
+            }
+            return null;
+        }
+
 
         @Override
         public V lower(final V value) {
@@ -1059,57 +1118,97 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             return relative(value, parent.valueMap::higherEntry, parent.valueMap::higherEntry);
         }
 
-        @Override
-        public V getLast() {
-            return super.getLast();
-        }
-
-        @Override
-        public V pollFirst() {
-            return super.pollFirst();
-        }
-
-        @Override
-        public V pollLast() {
-            return super.pollLast();
-        }
-
-        @Override
-        public Spliterator<V> spliterator() {
-            return super.spliterator();
-        }
-
-        @Override
-        public V getFirst() {
-            return super.getFirst();
-        }
-
-        @Override
-        public boolean removeIf(Predicate<? super V> filter) {
-            return super.removeIf(filter);
-        }
-
-        @Override
-        public void forEach(Consumer<? super V> action) {
-            super.forEach(action);
-        }
-    }
-
-    // filtered in the sense of running range checks on everything ourselves
-    static final class ValueSetUsingKeyEntrySetFiltered<K extends Comparable<K>, V extends Comparable<V>>
-        extends BaseEntryWrappedValueSet<K, V> {
-        public ValueSetUsingKeyEntrySetFiltered(final DualTreeBidi2MapSubMap<K, V> parent) {
-            super(parent.keyMap.sequencedEntrySet(), parent);
+        private V relative(final V initialValue, final Function<V, Entry<V, K>> start, final Function<V, Entry<V, K>> next) {
+            Entry<V, K> entry = start.apply(initialValue);
+            while (entry != null) {
+                if (inRange(entry)) {
+                    return entry.getKey();
+                }
+                entry = next.apply(entry.getKey());
+            }
+            return null;
         }
 
         @Override
         public Iterator<V> iterator() {
-            return new FilterIterator<>();
+            final Iterator<Entry<V, K>> entryIterator = parent.valueMap.entrySet().iterator();
+            return new TransformIterator<>(new FilterIterator<>(entryIterator, this::inRange), Entry::getKey);
         }
 
         @Override
         public Iterator<V> descendingIterator() {
-            return null;
+            final Iterator<Entry<V, K>> entryIterator = parent.valueMap.descendingMap().entrySet().iterator();
+            return new TransformIterator<>(new FilterIterator<>(entryIterator, this::inRange), Entry::getKey);
+        }
+
+        @Override
+        public Spliterator<V> spliterator() {
+            final Spliterator<Entry<V, K>> entrySpliterator = parent.valueMap.entrySet().spliterator();
+            return new TransformSpliterator<>(new FilterSpliterator<>(entrySpliterator, this::inRange), Entry::getKey);
+        }
+    }
+
+    // filtered in the sense of running range checks on everything ourselves
+    protected static final class ValueSetUsingKeyEntrySetFiltered<K extends Comparable<K>, V extends Comparable<V>>
+            extends ValueSetUsingKeyEntrySetSubKeyRange<K, V> {
+        ValueSetUsingKeyEntrySetFiltered(final DualTreeBidi2MapSubMap<K, V> parent) {
+            super(parent);
+        }
+
+        @Override
+        protected boolean inRange(final Entry<V, K> e) {
+            return parent.getKeyRange().contains(e.getValue()) && parent.getValueRange().contains(e.getKey());
+        }
+
+        @Override
+        public Object[] toArray() {
+            return ToArrayUtils.fromIteratorUnknownSize(iterator());
+        }
+
+        @Override
+        public <T> T[] toArray(final T[] array) {
+            return ToArrayUtils.fromIteratorUnknownSize(iterator(), array);
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return IteratorUtils.isEmpty(iterator());
+        }
+
+        @Override
+        public int size() {
+            return IteratorUtils.size(iterator());
+        }
+
+        @Override
+        public void clear() {
+            final Iterator<V> it = iterator();
+            while (it.hasNext()) {
+                it.next();
+                it.remove();
+            }
+        }
+
+        @Override
+        public boolean contains(final Object valueObject) {
+            final V value = castValue(valueObject);
+            if (parent.valueRange.contains(value)) {
+                final K key = parent.valueMap.get(value);
+                return parent.getKeyRange().contains(key);
+            }
+            return false;
+        }
+
+        @Override
+        public boolean remove(final Object valueObject) {
+            final V value = castValue(valueObject);
+            if (parent.valueRange.contains(value)) {
+                final K key = parent.valueMap.get(value);
+                if (parent.getKeyRange().contains(key)) {
+                    return parent.remove(key, value);
+                }
+            }
+            return false;
         }
     }
 
@@ -1130,10 +1229,10 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
             this.parent = parent;
         }
 
-        @Override
-        protected NavigableRangedSet<Entry<K, V>> decorateReverse(final SequencedSet<Entry<K, V>> subMap) {
-            return new EntrySetUsingKeyMap<>(parent, subMap);
-        }
+//        @Override
+//        protected NavigableRangedSet<Entry<K, V>> decorateReverse(final SequencedSet<Entry<K, V>> subMap) {
+//            return new EntrySetUsingKeyMap<>(parent, subMap);
+//        }
 
         @Override
         public Entry<K, V> lower(final Entry<K, V> entry) {
@@ -1255,11 +1354,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         @Override
         public Entry<K, V> last() {
             return null;
-        }
-
-        @Override
-        public NavigableRangedSet<Entry<K, V>> reversed() {
-            return super.reversed();
         }
 
         @Override

@@ -17,13 +17,9 @@
 package org.apache.commons.collections4.set;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.SequencedSet;
-import java.util.SortedSet;
 
 import org.apache.commons.collections4.SequencedCommonsSet;
-import org.apache.commons.collections4.SortedRangedSet;
-import org.apache.commons.collections4.map.UnmodifiableSortedEntrySet;
 
 
 /**
@@ -115,6 +111,14 @@ public abstract class AbstractSequencedSetDecorator<E, TDecorated extends Sequen
             return ((SequencedCommonsSet<E>) decorated).descendingIterator();
         } else {
             return decorated.reversed().iterator();
+        }
+    }
+
+    public static class NullSequencedDecorator<E> extends AbstractSequencedSetDecorator<E, SequencedSet<E>, SequencedCommonsSet<E>> {
+        private static final long serialVersionUID = 3415778197895850197L;
+
+        public NullSequencedDecorator(final SequencedSet<E> set) {
+            super(set);
         }
     }
 }

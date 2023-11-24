@@ -23,8 +23,11 @@ import java.util.Objects;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.Trie;
+import org.apache.commons.collections4.map.AbstractIterableSortedMap;
 
 /**
  * This class provides some basic {@link Trie} functionality and
@@ -35,7 +38,8 @@ import org.apache.commons.collections4.Trie;
  * @since 4.0
  */
 public abstract class AbstractBitwiseTrie<K, V, TSubMap extends IterableSortedMap<K, V, ?>>
-        extends AbstractMap<K, V>
+        extends AbstractIterableSortedMap<K, V, TSubMap,
+            SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements Trie<K, V, TSubMap> {
 
     private static final long serialVersionUID = 5826987063535505652L;
@@ -68,17 +72,6 @@ public abstract class AbstractBitwiseTrie<K, V, TSubMap extends IterableSortedMa
     @Override
     public SortedMapRange<K> getKeyRange() {
         return keyRange;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append("Trie[").append(size()).append("]={\n");
-        for (final Map.Entry<K, V> entry : entrySet()) {
-            buffer.append("  ").append(entry).append("\n");
-        }
-        buffer.append("}\n");
-        return buffer.toString();
     }
 
     /**

@@ -46,20 +46,5 @@ public interface SortedRangedMap<K, V, TSubMap extends SortedRangedMap<K, V, ?>>
     TSubMap subMap(SortedMapRange<K> range);
 
     @Override
-    default SequencedSet<K> keySet() {
-        return SequencedCommonsMap.super.keySet();
-    }
-
-    @Override
-    default SequencedSet<Entry<K, V>> entrySet() {
-        return SequencedCommonsMap.super.entrySet();
-    }
-
-    @Override
-    default SequencedCollection<V> values() {
-        return SequencedCommonsMap.super.values();
-    }
-
-    @Override
     TSubMap reversed();
 }

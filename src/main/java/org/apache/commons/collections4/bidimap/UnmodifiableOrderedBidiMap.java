@@ -86,7 +86,7 @@ public final class UnmodifiableOrderedBidiMap<K, V>
      */
     @SuppressWarnings("unchecked") // safe to upcast
     private UnmodifiableOrderedBidiMap(final OrderedBidiMap<K, V, ?, ?> map) {
-        super(map);
+        super(map, null);
     }
 
     @Override

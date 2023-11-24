@@ -17,7 +17,6 @@
 package org.apache.commons.collections4.bidimap;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -27,7 +26,6 @@ import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableSortedEntrySet;
-import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.apache.commons.collections4.set.UnmodifiableSortedSet;
 
 /**
@@ -83,7 +81,7 @@ public final class UnmodifiableSortedBidiMap<K, V>
      */
     @SuppressWarnings("unchecked") // safe to upcast
     private UnmodifiableSortedBidiMap(final SortedBidiMap<K, V, ?, ?> map) {
-        super(map);
+        super(map, null);
     }
 
     @Override

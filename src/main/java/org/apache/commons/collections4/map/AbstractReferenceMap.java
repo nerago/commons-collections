@@ -32,9 +32,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 /**
  * An abstract implementation of a hash-based map that allows the entries to
@@ -89,7 +94,8 @@ import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
  * @see java.lang.ref.Reference
  * @since 3.1 (extracted from ReferenceMap in 3.0)
  */
-public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V> {
+public abstract class AbstractReferenceMap<K, V>
+        extends AbstractHashedMap<K, V, Set<K>, Set<Map.Entry<K, V>>, Collection<V>> {
 
     /**
      * Reference type enum.
@@ -246,31 +252,28 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * @return the mapped value, null if no match
      */
     @Override
-    public V get(final Object key) {
+    public V getOrDefault(final Object key, final V defaultValue) {
         purgeBeforeRead();
         final Entry<K, V> entry = getEntry(key);
         if (entry == null) {
-            return null;
+            return defaultValue;
         }
         return entry.getValue();
     }
 
-
-    /**
-     * Puts a key-value mapping into this map.
-     * Neither the key nor the value may be null.
-     *
-     * @param key  the key to add, must not be null
-     * @param value  the value to add, must not be null
-     * @return the value previously mapped to this key, null if none
-     * @throws NullPointerException if either the key or value is null
-     */
     @Override
-    public V put(final K key, final V value) {
+    protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(value, "value");
         purgeBeforeWrite();
-        return super.put(key, value);
+        return super.doPut(key, value, addIfAbsent, updateIfPresent);
+    }
+
+    @Override
+    protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
+        Objects.requireNonNull(key, "key");
+        purgeBeforeWrite();
+        return super.doPut(key, absentFunc, presentFunc, saveNulls);
     }
 
     /**
@@ -310,6 +313,11 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
         return new ReferenceMapIterator<>(this);
     }
 
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        return new ReferenceMapSpliterator<>(this);
+    }
+
     /**
      * Returns a set view of this map's entries.
      * An iterator returned entry is valid until {@code next()} is called again.
@@ -318,11 +326,8 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * @return a set view of this map's entries
      */
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        if (entrySet == null) {
-            entrySet = new ReferenceEntrySet<>(this);
-        }
-        return entrySet;
+    protected Set<Entry<K, V>> createEntrySet() {
+        return new ReferenceEntrySet();
     }
 
     /**
@@ -331,11 +336,8 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * @return a set view of this map's keys
      */
     @Override
-    public Set<K> keySet() {
-        if (keySet == null) {
-            keySet = new ReferenceKeySet<>(this);
-        }
-        return keySet;
+    protected Set<K> createKeySet() {
+        return new ReferenceKeySet();
     }
 
     /**
@@ -344,11 +346,8 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * @return a set view of this map's values
      */
     @Override
-    public Collection<V> values() {
-        if (values == null) {
-            values = new ReferenceValues<>(this);
-        }
-        return values;
+    protected Collection<V> createValuesCollection() {
+        return new ReferenceValues();
     }
 
     /**
@@ -481,39 +480,14 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * @return the entrySet iterator
      */
     @Override
-    protected Iterator<Map.Entry<K, V>> createEntrySetIterator() {
+    public ResettableIterator<Entry<K, V>> entryIterator() {
         return new ReferenceEntrySetIterator<>(this);
-    }
-
-    /**
-     * Creates a key set iterator.
-     *
-     * @return the keySet iterator
-     */
-    @Override
-    protected Iterator<K> createKeySetIterator() {
-        return new ReferenceKeySetIterator<>(this);
-    }
-
-    /**
-     * Creates a values iterator.
-     *
-     * @return the values iterator
-     */
-    @Override
-    protected Iterator<V> createValuesIterator() {
-        return new ReferenceValuesIterator<>(this);
     }
 
     /**
      * EntrySet implementation.
      */
-    static class ReferenceEntrySet<K, V> extends EntrySet<K, V> {
-
-        protected ReferenceEntrySet(final AbstractHashedMap<K, V> parent) {
-            super(parent);
-        }
-
+     class ReferenceEntrySet extends AbsIterMapEntrySet {
         @Override
         public Object[] toArray() {
             return toArray(new Object[size()]);
@@ -533,13 +507,13 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
     static class PartiallyWrappedMapEntry<K, V> extends AbstractMapEntry<K, V> {
         private final Entry<K,V> parent;
 
-        public PartiallyWrappedMapEntry(Entry<K, V> entry) {
+        PartiallyWrappedMapEntry(final Entry<K, V> entry) {
             super(entry.getKey(), entry.getValue());
             parent = entry;
         }
 
         @Override
-        public V setValue(V value) {
+        public V setValue(final V value) {
             super.setValue(value);
             return parent.setValue(value);
         }
@@ -548,12 +522,7 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
     /**
      * KeySet implementation.
      */
-    static class ReferenceKeySet<K, V> extends KeySet<K, V> {
-
-        protected ReferenceKeySet(final AbstractHashedMap<K, ?> parent) {
-            super(parent);
-        }
-
+    class ReferenceKeySet extends AbsIterMapKeySet {
         @Override
         public Object[] toArray() {
             return toArray(new Object[size()]);
@@ -573,12 +542,7 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
     /**
      * Values implementation.
      */
-    static class ReferenceValues<K, V> extends Values<K, V> {
-
-        protected ReferenceValues(final AbstractHashedMap<K, V> parent) {
-            super(parent);
-        }
-
+    class ReferenceValues extends AbsIterMapValues {
         @Override
         public Object[] toArray() {
             return toArray(new Object[size()]);
@@ -802,10 +766,19 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
 
         ReferenceBaseIterator(final AbstractReferenceMap<K, V> parent) {
             this.parent = parent;
+        }
+
+        public void reset() {
             index = !parent.isEmpty() ? parent.data.length : 0;
-            // have to do this here!  size() invocation above
+            // have to do this here!  isEmpty() invocation above
             // may have altered the modCount.
             expectedModCount = parent.modCount;
+            next = null;
+            current = null;
+            currentKey = null;
+            currentValue = null;
+            nextKey = null;
+            nextValue = null;
         }
 
         public boolean hasNext() {
@@ -877,7 +850,7 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
      * The EntrySet iterator.
      */
     static class ReferenceEntrySetIterator<K, V>
-            extends ReferenceBaseIterator<K, V> implements Iterator<Map.Entry<K, V>> {
+            extends ReferenceBaseIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
 
         ReferenceEntrySetIterator(final AbstractReferenceMap<K, V> parent) {
             super(parent);
@@ -888,38 +861,6 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
             return nextEntry();
         }
 
-    }
-
-    /**
-     * The keySet iterator.
-     */
-    static class ReferenceKeySetIterator<K> extends ReferenceBaseIterator<K, Object> implements Iterator<K> {
-
-        @SuppressWarnings("unchecked")
-        ReferenceKeySetIterator(final AbstractReferenceMap<K, ?> parent) {
-            super((AbstractReferenceMap<K, Object>) parent);
-        }
-
-        @Override
-        public K next() {
-            return nextEntry().getKey();
-        }
-    }
-
-    /**
-     * The values iterator.
-     */
-    static class ReferenceValuesIterator<V> extends ReferenceBaseIterator<Object, V> implements Iterator<V> {
-
-        @SuppressWarnings("unchecked")
-        ReferenceValuesIterator(final AbstractReferenceMap<?, V> parent) {
-            super((AbstractReferenceMap<Object, V>) parent);
-        }
-
-        @Override
-        public V next() {
-            return nextEntry().getValue();
-        }
     }
 
     /**
@@ -961,6 +902,68 @@ public abstract class AbstractReferenceMap<K, V> extends AbstractHashedMap<K, V>
                 throw new IllegalStateException(AbstractHashedMap.SETVALUE_INVALID);
             }
             return current.setValue(value);
+        }
+    }
+
+    private static class ReferenceMapSpliterator<K, V> extends HashSpliterator<K, V> {
+        private ReferenceMapSpliterator(final AbstractHashedMap<K, V, ?, ?, ?> parent) {
+            super(parent);
+        }
+
+        private ReferenceMapSpliterator(final AbstractHashedMap<K, V, ?, ?, ?> parent, final int hashIndex, final int lastHashIndex, final long estimatedSize, final int characteristics) {
+            super(parent, hashIndex, lastHashIndex, estimatedSize, characteristics);
+        }
+
+        @Override
+        protected MapSpliterator<K, V> makeSplit(final AbstractHashedMap<K, V, ?, ?, ?> parent, final int hashIndex, final int lastHashIndex, final long estimatedSize, final int characteristics) {
+            return new ReferenceMapSpliterator<>(parent, hashIndex, lastHashIndex, estimatedSize, characteristics);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super Entry<K, V>> action) {
+            if (parent.modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+
+            while (next != null && isNull(next)) {
+                next = next.next;
+            }
+
+            if (next != null) {
+                action.accept(next);
+                next = next.next;
+                return true;
+            }
+
+            final HashEntry<K, V>[] data1 = parent.data;
+            int i = hashIndex, z = lastHashIndex;
+            if (i < z) {
+                return false;
+            }
+
+            while (i >= z) {
+                HashEntry<K, V> n;
+                do {
+                    n = data1[i--];
+                } while (n == null && i >= z);
+
+                while (n != null && isNull(n)) {
+                    n = n.next;
+                }
+
+                if (n != null) {
+                    action.accept(n);
+                    hashIndex = i;
+                    next = n.next;
+                    return true;
+                }
+            }
+            hashIndex = i;
+            return false;
+        }
+
+        private boolean isNull(final HashEntry<K, V> entry) {
+            return entry.key == null || entry.value == null;
         }
     }
 

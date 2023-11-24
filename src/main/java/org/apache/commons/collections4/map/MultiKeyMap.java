@@ -82,7 +82,14 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
  * @param <V> the type of the values in this map
  * @since 3.1
  */
-public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K>, V, AbstractHashedMap<MultiKey<? extends K>, V>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
+public class MultiKeyMap<K, V>
+        extends AbstractMapDecorator<
+            MultiKey<? extends K>,
+            V,
+            AbstractHashedMap<MultiKey<? extends K>, V, ?, ?, ?>,
+            Set<MultiKey<? extends K>>,
+            Set<Map.Entry<MultiKey<? extends K>, V>>,
+            Collection<V>>
         implements Cloneable {
 
     /** Serialisation version */
@@ -100,7 +107,7 @@ public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K
      * @throws IllegalArgumentException if the map is not empty
      * @since 4.0
      */
-    public static <K, V> MultiKeyMap<K, V> multiKeyMap(final AbstractHashedMap<MultiKey<? extends K>, V> map) {
+    public static <K, V> MultiKeyMap<K, V> multiKeyMap(final AbstractHashedMap<MultiKey<? extends K>, V, ?, ?, ?> map) {
         Objects.requireNonNull(map, "map");
         if (map.isEmpty()) {
             return new MultiKeyMap<>(map);
@@ -123,7 +130,7 @@ public class MultiKeyMap<K, V> extends AbstractMapDecorator<MultiKey<? extends K
      *
      * @param map  the map to decorate
      */
-    protected MultiKeyMap(final AbstractHashedMap<MultiKey<? extends K>, V> map) {
+    protected MultiKeyMap(final AbstractHashedMap<MultiKey<? extends K>, V, ?, ?, ?> map) {
         super(map);
     }
 

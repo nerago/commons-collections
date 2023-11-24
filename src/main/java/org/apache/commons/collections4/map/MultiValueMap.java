@@ -69,7 +69,7 @@ import org.apache.commons.collections4.iterators.TransformIterator;
  * @deprecated since 4.1, use {@link org.apache.commons.collections4.MultiValuedMap MultiValuedMap} instead
  */
 @Deprecated
-public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, Object>, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
+public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, Object>, Set<K>, Set<Map.Entry<K, Object>>, Collection<Object>>
         implements MultiMap<K, V> {
 
     /** Serialization version */
@@ -213,11 +213,9 @@ public class MultiValueMap<K, V> extends AbstractMapDecorator<K, Object, Map<K, 
     @SuppressWarnings("unchecked")
     public boolean containsValue(final Object value) {
         final Set<Map.Entry<K, Object>> pairs = decorated().entrySet();
-        if (pairs != null) {
-            for (final Map.Entry<K, Object> entry : pairs) {
-                if (((Collection<V>) entry.getValue()).contains(value)) {
-                    return true;
-                }
+        for (final Entry<K, Object> entry : pairs) {
+            if (((Collection<V>) entry.getValue()).contains(value)) {
+                return true;
             }
         }
         return false;

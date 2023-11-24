@@ -23,6 +23,7 @@ import org.apache.commons.collections4.set.AbstractSetDecorator;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorator<Map.Entry<K, V>, Set<Map.Entry<K, V>>> {
@@ -35,13 +36,11 @@ public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorat
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object[] toArray() {
         return ToArrayUtils.transformed(super::toArray, this::wrapEntry);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T[] toArray(final T[] array) {
         return ToArrayUtils.transformed(super::toArray, this::wrapEntry, array);
     }
@@ -74,6 +73,22 @@ public abstract class AbstractEntrySetDecorator<K, V> extends AbstractSetDecorat
         @Override
         public void forEachRemaining(final Consumer<? super Map.Entry<K, V>> action) {
             super.forEachRemaining(entry -> action.accept(wrapEntry(entry)));
+        }
+    }
+
+    public static class Wrapper<K, V> extends AbstractEntrySetDecorator<K, V> {
+        private static final long serialVersionUID = 5401035603921603795L;
+
+        private final Function<Map.Entry<K, V>, Map.Entry<K, V>> wrapper;
+
+        public Wrapper(final Set<Map.Entry<K, V>> set, final Function<Map.Entry<K, V>, Map.Entry<K, V>> wrapper) {
+            super(set);
+            this.wrapper = wrapper;
+        }
+
+        @Override
+        protected Map.Entry<K, V> wrapEntry(final Map.Entry<K, V> entry) {
+            return wrapper.apply(entry);
         }
     }
 }

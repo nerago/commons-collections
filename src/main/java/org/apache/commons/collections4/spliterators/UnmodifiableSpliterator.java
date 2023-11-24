@@ -20,15 +20,16 @@ import org.apache.commons.collections4.Unmodifiable;
 
 import java.util.Spliterator;
 
+// what's this for?
 public class UnmodifiableSpliterator<E>
         extends AbstractSpliteratorDecorator<E, Spliterator<E>>
         implements Spliterator<E>, Unmodifiable {
-    public UnmodifiableSpliterator(Spliterator<E> spliterator) {
+    public UnmodifiableSpliterator(final Spliterator<E> spliterator) {
         super(spliterator);
     }
 
     @Override
-    protected Spliterator<E> decorateSplit(Spliterator<E> split) {
+    protected Spliterator<E> decorateSplit(final Spliterator<E> split) {
         return new UnmodifiableSpliterator<>(split);
     }
 

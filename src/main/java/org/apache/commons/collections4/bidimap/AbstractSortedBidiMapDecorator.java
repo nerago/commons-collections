@@ -57,11 +57,12 @@ public abstract class AbstractSortedBidiMapDecorator<K, V,
     /**
      * Constructor that wraps (not copies).
      *
-     * @param map  the map to decorate, must not be null
+     * @param map     the map to decorate, must not be null
+     * @param reverse
      * @throws NullPointerException if the collection is null
      */
-    public AbstractSortedBidiMapDecorator(final TDecorated map) {
-        super(map);
+    public AbstractSortedBidiMapDecorator(final TDecorated map, final TSubMap reverse) {
+        super(map, reverse);
     }
 
     protected abstract TSubMap decorateDerived(final TDecorated map);

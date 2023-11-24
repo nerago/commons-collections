@@ -4,11 +4,8 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
 import org.apache.commons.collections4.SortedMapUtils;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.SortedMap;
 
 /**
@@ -25,27 +22,7 @@ public class SortedMapOrderedMapIterator<K, V> implements OrderedMapIterator<K, 
     protected Map.Entry<K, V> current;
     protected Map.Entry<K, V> previous;
 
-    public static <K, V> OrderedMapIterator<K, V> sortedMapIterator(final SortedMap<K, V> map) {
-        if (map instanceof NavigableMap) {
-            return new NavigableMapOrderedMapIterator<>((NavigableMap<K, V>) map);
-        } else if (map.size() < 10) {
-            return new SortedMapListIterator<>(map);
-        } else {
-            return new SortedMapOrderedMapIterator<>(map);
-        }
-    }
-
-    public static <K, V> OrderedMapIterator<K, V> sortedMapIteratorDescending(final SortedMap<K, V> map) {
-        if (map instanceof NavigableMap) {
-            return new NavigableMapOrderedMapIterator.Descending<>((NavigableMap<K, V>) map);
-        } else if (map.size() < 10) {
-            return new SortedMapListIterator<>(() -> new ArrayDeque<>(map.entrySet()).descendingIterator());
-        } else {
-            return new SortedMapOrderedMapIterator.Descending<>(map);
-        }
-    }
-
-    SortedMapOrderedMapIterator(final SortedMap<K, V> map) {
+    public SortedMapOrderedMapIterator(final SortedMap<K, V> map) {
         this.map = map;
         reset();
     }

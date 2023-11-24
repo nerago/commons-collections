@@ -21,9 +21,11 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.SequencedSet;
 import java.util.SortedSet;
 
 import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
@@ -126,5 +128,24 @@ public abstract class AbstractSortedSetDecorator<E, TDecorated extends SortedSet
     public void writeExternal(final ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeObject(range);
+    }
+
+    public static class NullSortedDecorator<E> extends AbstractSortedSetDecorator<E, SortedSet<E>, SortedRangedSet<E>> {
+        public NullSortedDecorator(final SortedSet<E> set) {
+            super(set);
+        }
+
+        public NullSortedDecorator(final SortedSet<E> set, final SortedMapRange<E> range) {
+            super(set, range);
+        }
+
+        public NullSortedDecorator(final SortedSet<E> set, final SortedRangedSet<E> reverse, final SortedMapRange<E> range) {
+            super(set, reverse, range);
+        }
+
+        @Override
+        protected SortedRangedSet<E> decorateDerived(final SortedSet<E> subSet, final SortedMapRange<E> range) {
+            return new NullSortedDecorator<>(subSet, range);
+        }
     }
 }

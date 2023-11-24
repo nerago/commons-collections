@@ -17,7 +17,9 @@
 package org.apache.commons.collections4.map;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A case-insensitive {@code Map}.
@@ -68,7 +70,8 @@ import java.util.Map;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public class CaseInsensitiveMap<K, V> extends AbstractHashedMap<K, V> implements Serializable, Cloneable {
+public final class CaseInsensitiveMap<K, V> extends AbstractHashedMap<K, V, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
+        implements Cloneable {
 
     /** Serialisation version */
     private static final long serialVersionUID = -7074655917369299456L;

@@ -62,10 +62,10 @@ public final class UnmodifiableSequencedCollection<E> extends AbstractSequencedC
      * @throws NullPointerException if {@code coll} is {@code null}
      * @since 4.0
      */
-    public static <E> SequencedCollection<E> unmodifiableSequencedCollection(final SequencedCollection<E> coll) {
-        if (coll instanceof Unmodifiable) {
+    public static <E> SequencedCommonsCollection<E> unmodifiableSequencedCollection(final SequencedCollection<E> coll) {
+        if (coll instanceof Unmodifiable && coll instanceof SequencedCommonsCollection<E>) {
             @SuppressWarnings("unchecked") // safe to upcast
-            final SequencedCollection<E> tmpColl = (SequencedCollection<E>) coll;
+            final SequencedCommonsCollection<E> tmpColl = (SequencedCommonsCollection<E>) coll;
             return tmpColl;
         }
         return new UnmodifiableSequencedCollection<>(coll);
@@ -78,7 +78,7 @@ public final class UnmodifiableSequencedCollection<E> extends AbstractSequencedC
      * @throws NullPointerException if coll is null
      */
     private UnmodifiableSequencedCollection(final SequencedCollection<E> coll) {
-        super(coll);
+        super(coll, null);
     }
 
     @Override
@@ -97,7 +97,7 @@ public final class UnmodifiableSequencedCollection<E> extends AbstractSequencedC
     }
 
     @Override
-    public SequencedCommonsCollection<E> reversed() {
+    protected SequencedCommonsCollection<E> createReversed() {
         return new UnmodifiableSequencedCollection<>(decorated().reversed());
     }
 

@@ -34,6 +34,7 @@ import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
 import org.apache.commons.collections4.spliterators.AbstractTreeRangeSpliterator;
@@ -87,7 +88,8 @@ import org.apache.commons.collections4.spliterators.MapSpliterator;
  */
 @SuppressWarnings({"OverlyComplexMethod", "OverlyLongMethod", "InstanceVariableMayNotBeInitializedByReadObject"})
 public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable<V>>
-        extends AbstractExtendedBidiMap<K, V, TreeBidiMapHard.TreeBidiSubMap<K, V>, TreeBidiMapHard.Inverse<K, V>> {
+        extends AbstractExtendedSortedBidiMap<K, V, TreeBidiMapHard.TreeBidiSubMap<K, V>, TreeBidiMapHard.Inverse<K, V>,
+            SortedRangedSet<K>, SortedRangedSet<Map.Entry<K, V>>, SortedRangedSet<V>> {
 
     private static final long serialVersionUID = -1641463319195982234L;
 
@@ -2656,7 +2658,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * The inverse map implementation.
      */
     public static final class Inverse<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractExtendedBidiMap<V, K, TreeBidiSubMap<V, K>, TreeBidiMapHard<K, V>> {
+            extends AbstractExtendedSortedBidiMap<V, K, TreeBidiSubMap<V, K>, TreeBidiMapHard<K, V>,
+                SortedRangedSet<K>, SortedRangedSet<Map.Entry<K, V>>, SortedRangedSet<V>> {
 
         private static final long serialVersionUID = -5940400507869486450L;
         private final TreeBidiMapHard<K, V> parent;
@@ -2825,7 +2828,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     }
 
     public static final class TreeBidiSubMap<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractExtendedBidiMap<K, V, TreeBidiSubMap<K, V>, TreeBidiSubMap<V, K>> {
+            extends AbstractExtendedSortedBidiMap<K, V, TreeBidiSubMap<K, V>, TreeBidiSubMap<V, K>,
+                SortedRangedSet<K>, SortedRangedSet<Map.Entry<K, V>>, SortedRangedSet<V>> {
 
         private static final long serialVersionUID = 7793720431038658603L;
         private final TreeBidiMapHard<K, V> parent;

@@ -9,13 +9,15 @@ import java.util.function.Consumer;
 import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.ToArrayUtils;
 
-public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedCommonsSet<E>>
-        extends AbstractSequencedSetDecorator<E, TDecorated, TSubSet> {
-    private final SequencedSet<E> reverse;
+public final class ReverseSequencedSet<E>
+        extends AbstractSequencedSetDecorator<E, SequencedSet<E>, SequencedCommonsSet<E>> {
 
-    public ReverseSequencedSet(final TDecorated set) {
+    public ReverseSequencedSet(final SequencedSet<E> set) {
         super(set);
-        reverse = set.reversed();
+    }
+
+    public ReverseSequencedSet(final SequencedCommonsSet<E> set) {
+        super(set, set);
     }
 
     @Override
@@ -65,17 +67,22 @@ public class ReverseSequencedSet<E, TDecorated extends SequencedSet<E>, TSubSet 
 
     @Override
     public Iterator<E> iterator() {
-        return reverse.iterator();
+        return super.descendingIterator();
     }
 
     @Override
     public Iterator<E> descendingIterator() {
-        return decorated().iterator();
+        return super.iterator();
     }
 
     @Override
-    protected TSubSet createReversed() {
-        return (TSubSet) decorated();
+    protected SequencedCommonsSet<E> createReversed() {
+        final SequencedSet<E> decorated = decorated();
+        if (decorated instanceof SequencedCommonsSet<E>) {
+            return (SequencedCommonsSet<E>) decorated;
+        } else {
+            return new NullSequencedDecorator<>(decorated);
+        }
     }
 
     /**

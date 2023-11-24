@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.ToArrayUtils;
 import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.commons.collections4.keyvalue.AbstractMapEntryDecorator;
 import org.apache.commons.collections4.set.AbstractSetDecorator;
@@ -103,89 +104,13 @@ abstract class AbstractInputCheckedMapDecorator<K, V,
     @Override
     public Set<Entry<K, V>> entrySet() {
         if (isSetValueChecking()) {
-            return new EntrySet(decorated().entrySet(), this);
+            return new AbstractEntrySetDecorator.Wrapper<>(decorated().entrySet(), this::wrapEntry);
         }
         return decorated().entrySet();
     }
 
-    /**
-     * Implementation of an entry set that checks additions via setValue.
-     */
-    private class EntrySet extends AbstractSetDecorator<Map.Entry<K, V>, Set<Map.Entry<K, V>>> {
-
-        /** Generated serial version ID. */
-        private static final long serialVersionUID = 4354731610923110264L;
-
-        /** The parent map */
-        private final AbstractInputCheckedMapDecorator<K, V, ?> parent;
-
-        protected EntrySet(final Set<Map.Entry<K, V>> set, final AbstractInputCheckedMapDecorator<K, V, ?> parent) {
-            super(set);
-            this.parent = parent;
-        }
-
-        @Override
-        public Iterator<Map.Entry<K, V>> iterator() {
-            return new EntrySetIterator(this.decorated().iterator(), parent);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Object[] toArray() {
-            final Object[] array = this.decorated().toArray();
-            for (int i = 0; i < array.length; i++) {
-                array[i] = new MapEntry((Map.Entry<K, V>) array[i], parent);
-            }
-            return array;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> T[] toArray(final T[] array) {
-            Object[] result = array;
-            if (array.length > 0) {
-                // we must create a new array to handle multithreaded situations
-                // where another thread could access data before we decorate it
-                result = (Object[]) Array.newInstance(array.getClass().getComponentType(), 0);
-            }
-            result = this.decorated().toArray(result);
-            for (int i = 0; i < result.length; i++) {
-                result[i] = new MapEntry((Map.Entry<K, V>) result[i], parent);
-            }
-
-            // check to see if result should be returned straight
-            if (result.length > array.length) {
-                return (T[]) result;
-            }
-
-            // copy back into input array to fulfil the method contract
-            System.arraycopy(result, 0, array, 0, result.length);
-            if (array.length > result.length) {
-                array[result.length] = null;
-            }
-            return array;
-        }
-    }
-
-    /**
-     * Implementation of an entry set iterator that checks additions via setValue.
-     */
-    private class EntrySetIterator extends AbstractIteratorDecorator<Map.Entry<K, V>> {
-
-        /** The parent map */
-        private final AbstractInputCheckedMapDecorator<K, V, ?> parent;
-
-        protected EntrySetIterator(final Iterator<Map.Entry<K, V>> iterator,
-                                   final AbstractInputCheckedMapDecorator<K, V, ?> parent) {
-            super(iterator);
-            this.parent = parent;
-        }
-
-        @Override
-        public Map.Entry<K, V> next() {
-            final Map.Entry<K, V> entry = getIterator().next();
-            return new MapEntry(entry, parent);
-        }
+    protected Entry<K, V> wrapEntry(final Entry<K, V> entry) {
+        return new MapEntry(entry, this);
     }
 
     /**

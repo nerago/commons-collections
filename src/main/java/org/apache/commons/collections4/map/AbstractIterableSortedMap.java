@@ -16,59 +16,39 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.Map;
 import java.util.SequencedCollection;
 import java.util.SequencedSet;
 
-import org.apache.commons.collections4.IterableExtendedMap;
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 
-public abstract class AbstractIterableSortedMap<K extends Comparable<K>, V>
-        extends AbstractIterableMapAlternate<K, V>
-        implements IterableSortedMap<K, V, AbstractIterableSortedMap<K, V>>, IterableExtendedMap<K, V> {
+public abstract class AbstractIterableSortedMap<K, V,
+            TSubMap extends IterableSortedMap<K, V, ?>,
+            TKeySet extends SequencedCommonsSet<K>,
+            TEntrySet extends SequencedCommonsSet<Map.Entry<K, V>>,
+            TValueSet extends SequencedCommonsCollection<V>>
+        extends AbstractIterableMapAlternate<K, V, TKeySet, TEntrySet, TValueSet>
+        implements IterableSortedMap<K, V, TSubMap> {
     private static final long serialVersionUID = 8059244983988773629L;
 
-    private AbstractIterableSortedMap<K, V> reversed;
+    private TSubMap reversed;
 
     @Override
     public abstract OrderedMapIterator<K, V> mapIterator();
 
     @Override
-    public abstract AbstractIterableSortedMap<K, V> subMap(final SortedMapRange<K> range);
+    public abstract TSubMap subMap(final SortedMapRange<K> range);
 
-    // todo remove
-    public final AbstractIterableSortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        return IterableSortedMap.super.subMap(fromKey, toKey);
-    }
-
-    public final AbstractIterableSortedMap<K, V> headMap(final K toKey) {
-        return IterableSortedMap.super.headMap(toKey);
-    }
-
-    public final AbstractIterableSortedMap<K, V> tailMap(final K fromKey) {
-        return IterableSortedMap.super.tailMap(fromKey);
+    protected TSubMap createReversed() {
+        return (TSubMap) new ReverseSortedMap<>(this);
     }
 
     @Override
-    public final SequencedSet<K> keySet() {
-        return sequencedKeySet();
-    }
-
-    @Override
-    public final SequencedSet<Entry<K, V>> entrySet() {
-        return sequencedEntrySet();
-    }
-
-    @Override
-    public final SequencedCollection<V> values() {
-        return sequencedValues();
-    }
-
-    protected abstract AbstractIterableSortedMap<K, V> createReversed();
-
-    @Override
-    public AbstractIterableSortedMap<K, V> reversed() {
+    public TSubMap reversed() {
         if (reversed == null) {
             reversed = createReversed();
         }

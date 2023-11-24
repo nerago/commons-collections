@@ -8,29 +8,29 @@ import java.util.SequencedSet;
 public interface SequencedCommonsMap<K, V>
         extends SequencedMap<K, V> {
     @Override
-    SequencedCommonsMap reversed();
+    SequencedCommonsMap<K, V> reversed();
 
     @Override
-    SequencedSet<K> sequencedKeySet();
-
-    @Override
-    SequencedCollection<V> sequencedValues();
-
-    @Override
-    SequencedSet<Map.Entry<K, V>> sequencedEntrySet();
-
-    @Override
-    default SequencedSet<K> keySet() {
-        return sequencedKeySet();
+    default SequencedSet<K> sequencedKeySet() {
+        return keySet();
     }
 
     @Override
-    default SequencedCollection<V> values() {
-        return sequencedValues();
+    default SequencedSet<Map.Entry<K, V>> sequencedEntrySet() {
+        return entrySet();
     }
 
     @Override
-    default SequencedSet<Map.Entry<K, V>> entrySet() {
-        return sequencedEntrySet();
+    default SequencedCollection<V> sequencedValues() {
+        return values();
     }
+
+    @Override
+    SequencedSet<K> keySet();
+
+    @Override
+    SequencedSet<Map.Entry<K, V>> entrySet();
+
+    @Override
+    SequencedCollection<V> values() ;
 }

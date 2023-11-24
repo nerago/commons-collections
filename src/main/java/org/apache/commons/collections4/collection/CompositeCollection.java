@@ -252,25 +252,6 @@ public class CompositeCollection<E> extends AbstractCommonsCollection<E> {
     }
 
     /**
-     * Removes the elements in the specified collection from this composite collection.
-     * <p>
-     * This implementation calls {@code removeAll} on each collection.
-     * </p>
-     * @param coll  the collection to remove
-     * @return true if the collection was modified
-     * @throws UnsupportedOperationException if removeAll is unsupported
-     */
-    @Override
-    public boolean removeAll(final Collection<?> coll) {
-        Objects.requireNonNull(coll);
-        boolean changed = false;
-        for (final Collection<E> item : all) {
-            changed |= item.removeAll(coll);
-        }
-        return changed;
-    }
-
-    /**
      * Removes all of the elements of this collection that satisfy the given predicate from this composite collection.
      * <p>
      * This implementation calls {@code removeIf} on each collection.
@@ -290,25 +271,6 @@ public class CompositeCollection<E> extends AbstractCommonsCollection<E> {
         return changed;
     }
 
-    /**
-     * Retains all the elements in the specified collection in this composite collection,
-     * removing all others.
-     * <p>
-     * This implementation calls {@code retainAll()} on each collection.
-     * </p>
-     * @param coll  the collection to remove
-     * @return true if the collection was modified
-     * @throws UnsupportedOperationException if retainAll is unsupported
-     */
-    @Override
-    public boolean retainAll(final Collection<?> coll) {
-        Objects.requireNonNull(coll);
-        boolean changed = false;
-        for (final Collection<E> item : all) {
-            changed |= item.retainAll(coll);
-        }
-        return changed;
-    }
 
     /**
      * Removes all of the elements from this collection .

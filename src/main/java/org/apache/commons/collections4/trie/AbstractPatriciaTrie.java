@@ -20,15 +20,15 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.AbstractCollection;
-import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.Spliterator;
@@ -37,12 +37,20 @@ import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableSortedMap;
 import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MutableBoolean;
+import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Reference;
+import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.iterators.SingletonIterator;
+import org.apache.commons.collections4.map.AbstractIterableSortedMap;
+import org.apache.commons.collections4.map.AbstractMapViewSequencedCollection;
+import org.apache.commons.collections4.map.AbstractMapViewSequencedSet;
+import org.apache.commons.collections4.set.AbstractCommonsSequencedSet;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 /**
  * This class implements the base PATRICIA algorithm and everything that
@@ -65,9 +73,9 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
      * appropriate view the first time this view is requested. The views are
      * stateless, so there's no reason to create more than one of each.
      */
-    private transient volatile Set<K> keySet;
-    private transient volatile Collection<V> values;
-    private transient volatile Set<Map.Entry<K, V>> entrySet;
+    private transient volatile SequencedSet<K> keySet;
+    private transient volatile SequencedCollection<V> values;
+    private transient volatile SequencedSet<Map.Entry<K, V>> entrySet;
 
     /** The current size of the {@link org.apache.commons.collections4.Trie}. */
     private transient int size;
@@ -141,22 +149,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         ++modCount;
     }
 
-    @Override
-    public V put(final K key, final V value) {
-        return doPut(key, value, true, true);
-    }
-
-    @Override
-    public V putIfAbsent(final K key, final V value) {
-        return doPut(key, value, true, false);
-    }
-
-    @Override
-    public V replace(final K key, final V value) {
-        return doPut(key, value, false, true);
-    }
-
-    private V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
+    protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         Objects.requireNonNull(key, "key");
 
         // empty key maps to root
@@ -189,7 +182,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
     }
 
-    private V doPut(final K key,
+    protected V doPut(final K key,
                     final Function<? super K, ? extends V> absentFunc,
                     final BiFunction<? super K, ? super V, ? extends V> presentFunc,
                     final boolean saveNulls) {
@@ -334,12 +327,6 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 current = current.right;
             }
         }
-    }
-
-    @Override
-    public V get(final Object k) {
-        final TrieEntry<K, V> entry = getEntry(k);
-        return entry != null ? entry.getValue() : null;
     }
 
     @Override
@@ -489,27 +476,23 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
-        if (entrySet == null) {
-            entrySet = new EntrySet();
-        }
-        return entrySet;
+    protected SequencedCommonsSet<Entry<K, V>> createEntrySet() {
+        return new EntrySet();
     }
 
     @Override
-    public Set<K> keySet() {
-        if (keySet == null) {
-            keySet = new KeySet();
-        }
-        return keySet;
+    protected SequencedCommonsSet<K> createKeySet() {
+        return new KeySet();
     }
 
     @Override
-    public Collection<V> values() {
-        if (values == null) {
-            values = new Values();
-        }
-        return values;
+    protected SequencedCommonsCollection<V> createValuesCollection() {
+        return new Values();
+    }
+
+    @Override
+    protected TSubMap createReversed() {
+        return super.createReversed(); // TODO
     }
 
     @Override
@@ -571,47 +554,33 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
     }
 
-    @Override
-    public boolean replace(final K key, final V oldValue, final V newValue) {
-        final MutableBoolean didUpdate = new MutableBoolean();
-        doPut(key, null, (k, v) -> {
-            if (Objects.equals(v, oldValue)) {
-                didUpdate.flag = true;
-                return newValue;
-            } else {
-                return v;
+    public boolean removeAsBoolean(final Object k) {
+        if (k == null) {
+            // TODO apply to root?
+            return false;
+        }
+
+        final K key = castKey(k);
+        final int lengthInBits = lengthInBits(key);
+        TrieEntry<K, V> current = root.left;
+        TrieEntry<K, V> path = root;
+        while (true) {
+            if (current.bitIndex <= path.bitIndex) {
+                if (!current.isEmptyRoot() && equalKeys(key, current.key)) {
+                    removeEntry(current);
+                    return true;
+                }
+                return false;
             }
-        }, true);
-        return didUpdate.flag;
-    }
 
-    @Override
-    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
-        Objects.requireNonNull(mappingFunction);
-        return doPut(key, mappingFunction, null, false);
-    }
+            path = current;
 
-    @Override
-    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        Objects.requireNonNull(remappingFunction);
-        return doPut(key, null, remappingFunction, false);
-    }
-
-    @Override
-    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        Objects.requireNonNull(remappingFunction);
-        return doPut(key,
-                v -> remappingFunction.apply(v, null),
-                remappingFunction, false);
-    }
-
-    @Override
-    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        Objects.requireNonNull(value);
-        Objects.requireNonNull(remappingFunction);
-        return doPut(key,
-                k -> value,
-                (k, v) -> remappingFunction.apply(v, value), false);
+            if (!isBitSet(key, current.bitIndex, lengthInBits)) {
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
     }
 
     /**
@@ -914,7 +883,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
      * This is implemented by going always to the left until
      * we encounter a valid uplink. That uplink is the first key.
      */
-    TrieEntry<K, V> firstEntry() {
+    public TrieEntry<K, V> firstEntry() {
         // if Trie is empty, no first node.
         if (isEmpty()) {
             return null;
@@ -990,6 +959,16 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return new TrieMapIterator();
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return null; // TODO
+    }
+
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        return null; // TODO
     }
 
     @Override
@@ -1705,7 +1684,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
      * <p>This is implemented by going always to the right until
      * we encounter a valid uplink. That uplink is the last key.
      */
-    TrieEntry<K, V> lastEntry() {
+    public TrieEntry<K, V> lastEntry() {
         return followRight(root.left);
     }
 
@@ -1926,11 +1905,17 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
     /**
      * This is an entry set view of the {@link org.apache.commons.collections4.Trie} as returned by {@link Map#entrySet()}.
      */
-    private class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+    private class EntrySet extends AbstractMapViewSequencedSet<Entry<K, V>, SequencedCommonsSet<Entry<K, V>>> {
+        private static final long serialVersionUID = -4470483382613275584L;
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
             return new EntryIterator();
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> descendingIterator() {
+            return null; // TODO
         }
 
         @Override
@@ -1980,16 +1965,30 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 return nextEntry();
             }
         }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            AbstractPatriciaTrie.this.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            AbstractPatriciaTrie.this.readExternal(in);
+        }
     }
 
     /**
      * This is a key set view of the {@link org.apache.commons.collections4.Trie} as returned by {@link Map#keySet()}.
      */
-    private class KeySet extends AbstractSet<K> {
-
+    private class KeySet extends AbstractMapViewSequencedSet<K, SequencedCommonsSet<K>> {
         @Override
         public Iterator<K> iterator() {
             return new KeyIterator();
+        }
+
+        @Override
+        public Iterator<K> descendingIterator() {
+            return null; // TODO
         }
 
         @Override
@@ -2023,16 +2022,31 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 return nextEntry().getKey();
             }
         }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            AbstractPatriciaTrie.this.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            AbstractPatriciaTrie.this.readExternal(in);
+        }
     }
 
     /**
      * This is a value view of the {@link org.apache.commons.collections4.Trie} as returned by {@link Map#values()}.
      */
-    private class Values extends AbstractCollection<V> {
+    private class Values extends AbstractMapViewSequencedCollection<V> implements SequencedCollection<V> {
 
         @Override
         public Iterator<V> iterator() {
             return new ValueIterator();
+        }
+
+        @Override
+        public Iterator<V> descendingIterator() {
+            return null; // TODO
         }
 
         @Override
@@ -2060,6 +2074,16 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 }
             }
             return false;
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            AbstractPatriciaTrie.this.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            AbstractPatriciaTrie.this.readExternal(in);
         }
 
         /**
@@ -2229,14 +2253,12 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
     /**
      * A range view of the {@link org.apache.commons.collections4.Trie}.
      */
-    private abstract class RangeMap extends AbstractMap<K, V>
-            implements IterableSortedMap<K, V, TSubMap> {
+    private abstract class RangeMap extends AbstractIterableSortedMap<K, V, IterableSortedMap<K, V, ?>,
+                SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
+            implements IterableSortedMap<K, V, IterableSortedMap<K, V, ?>> {
 
         private static final long serialVersionUID = 5837026185237818383L;
         protected SortedMapRange<K> keyRange;
-
-        /** The {@link #entrySet()} view. */
-        private transient volatile Set<Map.Entry<K, V>> entrySet;
 
         private RangeMap(final SortedMapRange<K> keyRange) {
             this.keyRange = keyRange;
@@ -2248,16 +2270,9 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         protected abstract boolean inRange(K key);
 
-        /**
-         * Creates and returns an {@link #entrySet()} view of the {@link RangeMap}.
-         */
-        protected abstract Set<Map.Entry<K, V>> createEntrySet();
+        public abstract TrieEntry<K, V> firstEntry();
 
-        abstract Iterator<Entry<K,V>> createEntryIterator();
-
-        abstract TrieEntry<K, V> firstEntry();
-
-        abstract TrieEntry<K, V> lastEntry();
+        public abstract TrieEntry<K, V> lastEntry();
 
         @Override
         public Comparator<? super K> comparator() {
@@ -2266,7 +2281,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public boolean containsKey(final Object key) {
-            if (!keyRange.contains(castKey(key))) {
+            if (!inRange(castKey(key))) {
                 return false;
             }
 
@@ -2275,7 +2290,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public V remove(final Object key) {
-            if (!keyRange.contains(castKey(key))) {
+            if (!inRange(castKey(key))) {
                 return null;
             }
 
@@ -2283,47 +2298,53 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        public V get(final Object key) {
-            if (!keyRange.contains(castKey(key))) {
-                return null;
+        public boolean remove(final Object key, final Object value) {
+            if (!inRange(castKey(key))) {
+                return false;
             }
 
-            return AbstractPatriciaTrie.this.get(key);
+            return AbstractPatriciaTrie.this.remove(key, value);
         }
 
         @Override
-        public V put(final K key, final V value) {
-            if (!keyRange.contains(key)) {
+        public boolean removeAsBoolean(final Object key) {
+            if (!inRange(castKey(key))) {
+                return false;
+            }
+
+            return AbstractPatriciaTrie.this.removeAsBoolean(key);
+        }
+
+        @Override
+        public V getOrDefault(final Object key, final V defaultValue) {
+            if (!inRange(castKey(key))) {
+                return defaultValue;
+            }
+
+            return AbstractPatriciaTrie.this.getOrDefault(key, defaultValue);
+        }
+
+        @Override
+        protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
+            if (!inRange(key)) {
                 throw new IllegalArgumentException("Key is out of range: " + key);
             }
-            return AbstractPatriciaTrie.this.put(key, value);
+            return AbstractPatriciaTrie.this.doPut(key, value, addIfAbsent, updateIfPresent);
         }
 
         @Override
-        public void putAll(final MapIterator<? extends K, ? extends V> it) {
-            it.forEachRemaining(this::put);
-        }
-
-        @Override
-        public Set<Map.Entry<K, V>> entrySet() {
-            if (entrySet == null) {
-                entrySet = createEntrySet();
+        protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
+            if (!inRange(key)) {
+                throw new IllegalArgumentException("Key is out of range: " + key);
             }
-            return entrySet;
+            return AbstractPatriciaTrie.this.doPut(key, absentFunc, presentFunc, saveNulls);
         }
-
-        @Override
-        public TSubMap subMap(final SortedMapRange<K> range) {
-            return createRangeMap(range);
-        }
-
-        protected abstract TSubMap createRangeMap(SortedMapRange<K> range);
     }
 
     /**
      * A {@link RangeMap} that deals with {@link Entry}s.
      */
-    private final class BoundedRangeMap extends RangeMap {
+    private final class BoundedRangeMap extends RangeMap implements OrderedMap<K, V> {
         private static final long serialVersionUID = 5993894592893398533L;
 
         /**
@@ -2334,7 +2355,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        TrieEntry<K,V> firstEntry() {
+        public TrieEntry<K,V> firstEntry() {
             if (!keyRange.hasFrom()) {
                 return AbstractPatriciaTrie.this.firstEntry();
             } else {
@@ -2347,7 +2368,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        TrieEntry<K, V> lastEntry() {
+        public TrieEntry<K, V> lastEntry() {
             if (!keyRange.hasTo()) {
                 return AbstractPatriciaTrie.this.lastEntry();
             } else {
@@ -2424,12 +2445,12 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        protected Set<Entry<K, V>> createEntrySet() {
+        protected SequencedCommonsSet<Entry<K, V>> createEntrySet() {
             return new BoundedRangeEntrySet(this);
         }
 
         @Override
-        Iterator<Entry<K, V>> createEntryIterator() {
+        public Iterator<Entry<K, V>> entryIterator() {
             return new BoundedRangeEntryIterator();
         }
 
@@ -2438,10 +2459,19 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
             return new RangeMapIterator(this.firstEntry());
         }
 
-        @SuppressWarnings("unchecked")
         @Override
-        protected TSubMap createRangeMap(final SortedMapRange<K> keyRange) {
-            return (TSubMap) new BoundedRangeMap(keyRange);
+        public OrderedMapIterator<K, V> descendingMapIterator() {
+            return null; // TODO
+        }
+
+        @Override
+        public MapSpliterator<K, V> mapSpliterator() {
+            return null; // TODO
+        }
+
+        @Override
+        public IterableSortedMap<K, V, ?> subMap(final SortedMapRange<K> range) {
+            return new BoundedRangeMap(keyRange);
         }
 
         @Override
@@ -2524,7 +2554,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
     /**
      * A {@link Set} view of a {@link RangeMap}.
      */
-    private class BoundedRangeEntrySet extends AbstractSet<Map.Entry<K, V>> {
+    private class BoundedRangeEntrySet extends AbstractMapViewSequencedSet<Map.Entry<K, V>, SequencedCommonsSet<Map.Entry<K, V>>> {
 
         private final RangeMap delegate;
 
@@ -2541,7 +2571,12 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            return delegate.createEntryIterator();
+            return delegate.entryIterator();
+        }
+
+        @Override
+        public Iterator<Entry<K, V>> descendingIterator() {
+            return null; // TODO
         }
 
         @Override
@@ -2598,6 +2633,21 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
             }
             return false;
         }
+
+        @Override
+        public void clear() {
+            delegate.clear();
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            delegate.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            delegate.readExternal(in);
+        }
     }
 
     /**
@@ -2630,7 +2680,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        protected TSubMap createRangeMap(SortedMapRange<K> range) {
+        public IterableSortedMap<K, V, ?> subMap(final SortedMapRange<K> range) {
             return null;
         }
 
@@ -2675,13 +2725,13 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        TrieEntry<K, V> firstEntry() {
+        public TrieEntry<K, V> firstEntry() {
             updateRangeIfNeeded();
             return followLeft(prefixSubTree);
         }
 
         @Override
-        TrieEntry<K, V> lastEntry() {
+        public TrieEntry<K, V> lastEntry() {
             updateRangeIfNeeded();
             return prefixSubTree;
         }
@@ -2721,7 +2771,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public K previousKey(K key) {
-
+            // TODO
             return null;
         }
 
@@ -2735,13 +2785,13 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
 
         @Override
-        protected Set<Map.Entry<K, V>> createEntrySet() {
+        protected SequencedCommonsSet<Entry<K, V>> createEntrySet() {
             updateRangeIfNeeded();
             return new PrefixRangeEntrySet(this);
         }
 
         @Override
-        Iterator<Entry<K, V>> createEntryIterator() {
+        public Iterator<Entry<K, V>> entryIterator() {
             updateRangeIfNeeded();
             if (prefixSubTree == null) {
                 return IteratorUtils.emptyIterator();
@@ -2754,7 +2804,17 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
         @Override
         public OrderedMapIterator<K, V> mapIterator() {
-            return null;
+            return null; // TODO
+        }
+
+        @Override
+        public OrderedMapIterator<K, V> descendingMapIterator() {
+            return null; // TODO
+        }
+
+        @Override
+        public MapSpliterator<K, V> mapSpliterator() {
+            return null; // TODO
         }
 
         @Override
@@ -2866,7 +2926,7 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
 
             @Override
             public Iterator<Map.Entry<K, V>> iterator() {
-                return PrefixRangeMap.this.createEntryIterator();
+                return PrefixRangeMap.this.entryIterator();
             }
         }
     }

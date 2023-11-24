@@ -21,32 +21,25 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.Set;
 import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableGet;
-import org.apache.commons.collections4.IterableMap;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SetUtils;
-import org.apache.commons.collections4.SortedMapRange;
-import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.EmptyIterator;
 import org.apache.commons.collections4.iterators.EmptyMapIterator;
-import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
+import org.apache.commons.collections4.spliterators.EmptyMapSpliterator;
+import org.apache.commons.collections4.spliterators.MapSpliterator;
 
 /**
  * An abstract implementation of a hash-based map which provides numerous points for
@@ -69,8 +62,11 @@ import org.apache.commons.collections4.set.AbstractMapViewSortedSet;
  * @param <V> the type of the values in this map
  * @since 3.0
  */
-public abstract class AbstractHashedMap<K, V>
-        extends AbstractIterableMapAlternate<K, V> {
+public abstract class AbstractHashedMap<K, V,
+            TKeySet extends Set<K>,
+            TEntrySet extends Set<Map.Entry<K, V>>,
+            TValueSet extends Collection<V>>
+        extends AbstractIterableMapAlternate<K, V, TKeySet, TEntrySet, TValueSet> {
 
     private static final long serialVersionUID = -4995129447690652538L;
 
@@ -102,12 +98,6 @@ public abstract class AbstractHashedMap<K, V>
     transient int threshold;
     /** Modification count for iterators */
     transient int modCount;
-    /** Entry set */
-    transient AbstractMapViewSortedSet<Entry<K, V>> entrySet;
-    /** Key set */
-    transient AbstractMapViewSortedSet<K> keySet;
-    /** Values */
-    transient AbstractMapViewSortedSet<V> values;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -373,6 +363,24 @@ public abstract class AbstractHashedMap<K, V>
             entry = entry.next;
         }
         return null;
+    }
+
+    @Override
+    public boolean removeAsBoolean(final Object key) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index];
+        HashEntry<K, V> previous = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                removeMapping(entry, index, previous);
+                return true;
+            }
+            previous = entry;
+            entry = entry.next;
+        }
+        return false;
     }
 
     @Override
@@ -800,9 +808,25 @@ public abstract class AbstractHashedMap<K, V>
     @Override
     public MapIterator<K, V> mapIterator() {
         if (size == 0) {
-            return EmptyMapIterator.<K, V>emptyMapIterator();
+            return EmptyMapIterator.emptyMapIterator();
         }
         return new HashMapIterator<>(this);
+    }
+
+    @Override
+    public ResettableIterator<Entry<K, V>> entryIterator() {
+        if (size == 0) {
+            return EmptyIterator.resettableEmptyIterator();
+        }
+        return new EntrySetIterator<>(this);
+    }
+
+    @Override
+    public MapSpliterator<K, V> mapSpliterator() {
+        if (size == 0) {
+            return EmptyMapSpliterator.emptyMapSpliterator();
+        }
+        return new HashSpliterator<>(this);
     }
 
     /**
@@ -813,7 +837,7 @@ public abstract class AbstractHashedMap<K, V>
      */
     protected static class HashMapIterator<K, V> extends HashIterator<K, V> implements MapIterator<K, V>, ResettableIterator<K> {
 
-        protected HashMapIterator(final AbstractHashedMap<K, V> parent) {
+        protected HashMapIterator(final AbstractHashedMap<K, V, ?, ?, ?> parent) {
             super(parent);
         }
 
@@ -851,144 +875,6 @@ public abstract class AbstractHashedMap<K, V>
     }
 
     /**
-     * Creates an entry set iterator.
-     * Subclasses can override this to return iterators with different properties.
-     *
-     * @return the entrySet iterator
-     */
-    protected ResettableIterator<Map.Entry<K, V>> createEntrySetIterator() {
-        if (isEmpty()) {
-            return EmptyIterator.resettableEmptyIterator();
-        }
-        return new EntrySetIterator<>(this);
-    }
-
-    protected ResettableIterator<Entry<K,V>> createDescendingEntrySetIterator() {
-        if (isEmpty()) {
-            return EmptyIterator.resettableEmptyIterator();
-        }
-        return new EntrySetDescendingIterator<>(this);
-    }
-
-    /**
-     * Creates an entry set spliterator.
-     * Subclasses can override this to return spliterator with different properties.
-     *
-     * @return the entrySet spliterator
-     */
-    protected Spliterator<Entry<K,V>> createEntrySetSpliterator() {
-        if (isEmpty()) {
-            return Spliterators.emptySpliterator();
-        }
-        return new HashSpliterator<>(this, entry -> entry, Spliterator.DISTINCT | Spliterator.SIZED);
-    }
-
-    protected abstract static class BaseView<K, V, E> extends AbstractMapViewSortedSet<E> {
-        /** The parent map */
-        protected AbstractHashedMap<K, V> parent;
-
-        protected BaseView(final AbstractHashedMap<K, V> parent) {
-            this.parent = parent;
-        }
-
-        @Override
-        public int size() {
-            return parent.size();
-        }
-
-        @Override
-        public void clear() {
-            parent.clear();
-        }
-
-        // don't really support full SortedSet interface here
-        @Override
-        public SortedRangedSet<E> subSet(final SortedMapRange<E> range) {
-            throw new UnsupportedOperationException();
-        }
-        @Override
-        public SortedMapRange<E> getRange() {
-            return SortedMapRange.full(null);
-        }
-        @Override
-        public Comparator<? super E> comparator() {
-            return null;
-        }
-
-        @Override
-        public E first() {
-            return iterator().next();
-        }
-
-        @Override
-        public E last() {
-            return descendingIterator().next();
-        }
-
-        @Override
-        public void writeExternal(final ObjectOutput out) throws IOException {
-            out.writeObject(parent);
-        }
-
-        @Override
-        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-            parent = (AbstractHashedMap<K, V>) in.readObject();
-        }
-    }
-
-    /**
-     * EntrySet implementation.
-     *
-     * @param <K> the type of the keys in the map
-     * @param <V> the type of the values in the map
-     */
-    protected static class EntrySet<K, V> extends BaseView<K, V, Entry<K, V>> {
-        private static final long serialVersionUID = -2875095224204124208L;
-
-        protected EntrySet(final AbstractHashedMap<K, V> parent) {
-            super(parent);
-        }
-
-        @Override
-        public boolean contains(final Object entry) {
-            if (entry instanceof Map.Entry) {
-                final Map.Entry<?, ?> e = (Map.Entry<?, ?>) entry;
-                final Entry<K, V> match = parent.getEntry(e.getKey());
-                return match != null && match.equals(e);
-            }
-            return false;
-        }
-
-        @Override
-        public boolean remove(final Object obj) {
-            if (!(obj instanceof Map.Entry)) {
-                return false;
-            }
-            if (!contains(obj)) {
-                return false;
-            }
-            final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
-            parent.remove(entry.getKey());
-            return true;
-        }
-
-        @Override
-        public ResettableIterator<Map.Entry<K, V>> iterator() {
-            return parent.createEntrySetIterator();
-        }
-
-        @Override
-        public Iterator<Entry<K, V>> descendingIterator() {
-            return parent.createDescendingEntrySetIterator();
-        }
-
-        @Override
-        public Spliterator<Entry<K, V>> spliterator() {
-            return parent.createEntrySetSpliterator();
-        }
-    }
-
-    /**
      * EntrySet iterator.
      *
      * @param <K> the type of the keys in the map
@@ -996,270 +882,13 @@ public abstract class AbstractHashedMap<K, V>
      */
     protected static class EntrySetIterator<K, V> extends HashIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
 
-        protected EntrySetIterator(final AbstractHashedMap<K, V> parent) {
+        protected EntrySetIterator(final AbstractHashedMap<K, V, ?, ?, ?> parent) {
             super(parent);
         }
 
         @Override
         public Map.Entry<K, V> next() {
             return nextEntry();
-        }
-    }
-
-    protected static class EntrySetDescendingIterator<K, V> extends HashIterator<K, V> implements ResettableIterator<Map.Entry<K, V>> {
-        protected EntrySetDescendingIterator(final AbstractHashedMap<K, V> parent) {
-            super(parent);
-        }
-
-        @Override
-        public void reset() {
-            resetReverse();
-        }
-
-        @Override
-        public Map.Entry<K, V> next() {
-            return prevEntry();
-        }
-    }
-
-    /**
-     * Gets the keySet view of the map.
-     * Changes made to the view affect this map.
-     * To simply iterate through the keys, use {@link #mapIterator()}.
-     *
-     * @return the keySet view
-     */
-    @Override
-    public final AbstractMapViewSortedSet<K> keySet() {
-        if (keySet == null) {
-            keySet = new KeySet<>(this);
-        }
-        return keySet;
-    }
-
-    /**
-     * Creates a key set iterator.
-     * Subclasses can override this to return iterators with different properties.
-     *
-     * @return the keySet iterator
-     */
-    protected ResettableIterator<K> createKeySetIterator() {
-        if (isEmpty()) {
-            return EmptyIterator.resettableEmptyIterator();
-        }
-        return new KeySetIterator<>(this);
-    }
-
-    protected ResettableIterator<K> createDescendingKeySetIterator() {
-        if (isEmpty()) {
-            return EmptyIterator.resettableEmptyIterator();
-        }
-        return new KeySetDescendingIterator<>(this);
-    }
-
-    /**
-     * Creates a key set spliterator.
-     * Subclasses can override this to return spliterator with different properties.
-     *
-     * @return the keySet spliterator
-     */
-    protected Spliterator<K> createKeySetSpliterator() {
-        if (isEmpty()) {
-            return Spliterators.emptySpliterator();
-        }
-        return new HashSpliterator<>(this, HashEntry::getKey, Spliterator.DISTINCT | Spliterator.SIZED);
-    }
-
-    /**
-     * KeySet implementation.
-     *
-     * @param <K> the type of elements maintained by this set
-     */
-    protected static class KeySet<K, V> extends BaseView<K, V, K> {
-        private static final long serialVersionUID = -7776486642609009600L;
-
-        protected KeySet(final AbstractHashedMap<K, V> parent) {
-            super(parent);
-        }
-
-        @Override
-        public boolean contains(final Object key) {
-            return parent.containsKey(key);
-        }
-
-        @Override
-        public boolean remove(final Object key) {
-            final boolean result = parent.containsKey(key);
-            parent.remove(key);
-            return result;
-        }
-
-        @Override
-        public ResettableIterator<K> iterator() {
-            return parent.createKeySetIterator();
-        }
-
-        @Override
-        public Iterator<K> descendingIterator() {
-            return parent.createDescendingKeySetIterator();
-        }
-
-        @Override
-        public Spliterator<K> spliterator() {
-            return parent.createKeySetSpliterator();
-        }
-    }
-
-    /**
-     * KeySet iterator.
-     *
-     * @param <K> the type of elements maintained by this set
-     */
-    protected static class KeySetIterator<K> extends HashIterator<K, Object> implements ResettableIterator<K> {
-        @SuppressWarnings("unchecked")
-        protected KeySetIterator(final AbstractHashedMap<K, ?> parent) {
-            super((AbstractHashedMap<K, Object>) parent);
-        }
-
-        @Override
-        public K next() {
-            return nextEntry().getKey();
-        }
-    }
-
-    protected static class KeySetDescendingIterator<K> extends HashIterator<K, Object> implements ResettableIterator<K> {
-        @SuppressWarnings("unchecked")
-        protected KeySetDescendingIterator(final AbstractHashedMap<K, ?> parent) {
-            super((AbstractHashedMap<K, Object>) parent);
-        }
-
-        @Override
-        public void reset() {
-            resetReverse();
-        }
-
-        @Override
-        public K next() {
-            return prevEntry().getKey();
-        }
-    }
-
-
-    /**
-     * Gets the values view of the map.
-     * Changes made to the view affect this map.
-     * To simply iterate through the values, use {@link #mapIterator()}.
-     *
-     * @return the values view
-     */
-    @Override
-    public final AbstractMapViewSortedSet<V> values() {
-        if (values == null) {
-            values = new Values<>(this);
-        }
-        return values;
-    }
-
-    /**
-     * Creates a values iterator.
-     * Subclasses can override this to return iterators with different properties.
-     *
-     * @return the values iterator
-     */
-    protected ResettableIterator<V> createValuesIterator() {
-        if (isEmpty()) {
-            return EmptyIterator.resettableEmptyIterator();
-        }
-        return new ValuesIterator<>(this);
-    }
-
-    protected ResettableIterator<V> createDescendingValuesIterator() {
-        if (isEmpty()) {
-            return EmptyIterator.resettableEmptyIterator();
-        }
-        return new ValuesDescendingIterator<>(this);
-    }
-
-    /**
-     * Creates a values spliterator.
-     * Subclasses can override this to return spliterator with different properties.
-     *
-     * @return the values spliterator
-     */
-    protected Spliterator<V> createValuesSpliterator() {
-        if (isEmpty()) {
-            return Spliterators.emptySpliterator();
-        }
-        return new HashSpliterator<>(this, HashEntry::getValue, Spliterator.SIZED);
-    }
-
-    /**
-     * Values implementation.
-     *
-     * @param <V> the type of elements maintained by this collection
-     */
-    protected static class Values<K, V> extends BaseView<K, V, V> {
-        protected Values(final AbstractHashedMap<K, V> parent) {
-            super(parent);
-        }
-
-        @Override
-        public boolean contains(final Object value) {
-            return parent.containsValue(value);
-        }
-
-        @Override
-        public boolean remove(final Object value) {
-            return IteratorUtils.removeFirst(iterator(), (V) value);
-        }
-
-        @Override
-        public ResettableIterator<V> iterator() {
-            return parent.createValuesIterator();
-        }
-
-        @Override
-        public ResettableIterator<V> descendingIterator() {
-            return parent.createDescendingValuesIterator();
-        }
-
-        @Override
-        public Spliterator<V> spliterator() {
-            return parent.createValuesSpliterator();
-        }
-    }
-
-    /**
-     * Values iterator.
-     *
-     * @param <V> the type of elements maintained by this collection
-     */
-    protected static class ValuesIterator<V> extends HashIterator<Object, V> implements ResettableIterator<V> {
-        @SuppressWarnings("unchecked")
-        protected ValuesIterator(final AbstractHashedMap<?, V> parent) {
-            super((AbstractHashedMap<Object, V>) parent);
-        }
-
-        @Override
-        public V next() {
-            return super.nextEntry().getValue();
-        }
-    }
-
-    protected static class ValuesDescendingIterator<V> extends HashIterator<Object, V> implements ResettableIterator<V> {
-        @SuppressWarnings("unchecked")
-        protected ValuesDescendingIterator(final AbstractHashedMap<?, V> parent) {
-            super((AbstractHashedMap<Object, V>) parent);
-        }
-
-        @Override
-        public void reset() {
-            resetReverse();
-        }
-
-        @Override
-        public V next() {
-            return prevEntry().getValue();
         }
     }
 
@@ -1349,7 +978,7 @@ public abstract class AbstractHashedMap<K, V>
     protected abstract static class HashIterator<K, V> {
 
         /** The parent map */
-        private final AbstractHashedMap<K, V> parent;
+        private final AbstractHashedMap<K, V, ?, ?, ?> parent;
         /** The current index into the array of buckets */
         private int hashIndex;
         /** The last returned entry */
@@ -1359,7 +988,7 @@ public abstract class AbstractHashedMap<K, V>
         /** The modification count expected */
         private int expectedModCount;
 
-        protected HashIterator(final AbstractHashedMap<K, V> parent) {
+        protected HashIterator(final AbstractHashedMap<K, V, ?, ?, ?> parent) {
             this.parent = parent;
             reset();
         }
@@ -1457,39 +1086,34 @@ public abstract class AbstractHashedMap<K, V>
         }
     }
 
-    protected static class HashSpliterator<E, K, V> implements Spliterator<E> {
+    protected static class HashSpliterator<K, V> implements MapSpliterator<K, V> {
 
         /** The parent map */
-        private final AbstractHashedMap<K, V> parent;
-        /** Converts entry into result */
-        private final Function<HashEntry<K,V>,E> convertResult;
+        protected final AbstractHashedMap<K, V, ?, ?, ?> parent;
         /** The modification count expected */
-        private final int expectedModCount;
+        protected final int expectedModCount;
         private int characteristics;
         private long estimatedSize;
         /** The current index into the array of buckets */
-        private int hashIndex;
+        protected int hashIndex;
         /** The final index this spliterator should check */
-        private final int lastHashIndex;
+        protected final int lastHashIndex;
         /** The next entry */
-        private HashEntry<K, V> next;
+        protected HashEntry<K, V> next;
 
-        protected HashSpliterator(final AbstractHashedMap<K, V> parent, final Function<HashEntry<K, V>, E> convertResult,
-                                  final int characteristics) {
+        protected HashSpliterator(final AbstractHashedMap<K, V, ?, ?, ?> parent) {
             this.parent = parent;
-            this.convertResult = convertResult;
             this.hashIndex = parent.data.length - 1;
             this.lastHashIndex = 0;
             this.expectedModCount = parent.modCount;
             this.estimatedSize = parent.size;
-            this.characteristics = characteristics;
+            this.characteristics = Spliterator.ORDERED | Spliterator.SIZED;
         }
 
-        protected HashSpliterator(final AbstractHashedMap<K, V> parent, final Function<HashEntry<K,V>,E> convertResult,
+        protected HashSpliterator(final AbstractHashedMap<K, V, ?, ?, ?> parent,
                                   final int hashIndex, final int lastHashIndex,
                                   final long estimatedSize,  final int characteristics) {
             this.parent = parent;
-            this.convertResult = convertResult;
             this.hashIndex = hashIndex;
             this.lastHashIndex = lastHashIndex;
             this.expectedModCount = parent.modCount;
@@ -1497,14 +1121,25 @@ public abstract class AbstractHashedMap<K, V>
             this.characteristics = characteristics;
         }
 
+        protected MapSpliterator<K,V> makeSplit(final AbstractHashedMap<K, V, ?, ?, ?> parent,
+                                                final int hashIndex, final int lastHashIndex,
+                                                final long estimatedSize,  final int characteristics) {
+            return new HashSpliterator<>(parent, hashIndex, lastHashIndex, estimatedSize, characteristics);
+        }
+
         @Override
-        public boolean tryAdvance(final Consumer<? super E> action) {
+        public boolean tryAdvance(final BiConsumer<? super K, ? super V> action) {
+            return tryAdvance(entry -> action.accept(entry.getKey(), entry.getValue()));
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super Entry<K, V>> action) {
             if (parent.modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
             }
 
             if (next != null)  {
-                action.accept(convertResult.apply(next));
+                action.accept(next);
                 next = next.next;
                 return true;
             }
@@ -1522,7 +1157,7 @@ public abstract class AbstractHashedMap<K, V>
             hashIndex = i;
 
             if (n != null) {
-                action.accept(convertResult.apply(n));
+                action.accept(n);
                 next = n.next;
                 return true;
             }
@@ -1530,12 +1165,12 @@ public abstract class AbstractHashedMap<K, V>
         }
 
         @Override
-        public Spliterator<E> trySplit() {
+        public MapSpliterator<K, V> trySplit() {
             final int mid = lastHashIndex + (hashIndex - lastHashIndex) / 2;
             if (lastHashIndex < mid && mid < hashIndex) {
                 estimatedSize >>>= 1;
                 characteristics &= ~Spliterator.SIZED;
-                final Spliterator<E> split = new HashSpliterator<>(parent, convertResult, hashIndex, mid + 1, estimatedSize, characteristics);
+                final MapSpliterator<K, V> split = makeSplit(parent, hashIndex, mid + 1, estimatedSize, characteristics);
                 hashIndex = mid;
                 return split;
             }
@@ -1639,13 +1274,10 @@ public abstract class AbstractHashedMap<K, V>
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected AbstractHashedMap<K, V> clone() {
+    protected AbstractHashedMap<K, V, ?, ?, ?> clone() {
         try {
-            final AbstractHashedMap<K, V> cloned = (AbstractHashedMap<K, V>) super.clone();
+            final AbstractHashedMap<K, V, ?, ?, ?> cloned = (AbstractHashedMap<K, V, ?, ?, ?>) super.clone();
             cloned.data = new HashEntry[data.length];
-            cloned.entrySet = null;
-            cloned.keySet = null;
-            cloned.values = null;
             cloned.modCount = 0;
             cloned.size = 0;
             cloned.init();
@@ -1654,47 +1286,5 @@ public abstract class AbstractHashedMap<K, V>
         } catch (final CloneNotSupportedException ex) {
             throw new UnsupportedOperationException(ex);
         }
-    }
-
-    /**
-     * Compares this map with another.
-     *
-     * @param obj  the object to compare to
-     * @return true if equal
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof Map)) {
-            return false;
-        }
-        final Map<?, ?> map = (Map<?, ?>) obj;
-        try {
-            return MapUtils.isEqualMap(this, map);
-        } catch (final ClassCastException | NullPointerException ignored) {
-            return false;
-        }
-    }
-
-    /**
-     * Gets the standard Map hashCode.
-     *
-     * @return the hash code defined in the Map interface
-     */
-    @Override
-    public int hashCode() {
-        return MapUtils.hashCode(createEntrySetIterator());
-    }
-
-    /**
-     * Gets the map as a String.
-     *
-     * @return a string version of the map
-     */
-    @Override
-    public String toString() {
-        return MapUtils.toString(this);
     }
 }

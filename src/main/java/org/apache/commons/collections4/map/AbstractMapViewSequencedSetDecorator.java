@@ -1,25 +1,25 @@
-package org.apache.commons.collections4.set;
+package org.apache.commons.collections4.map;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
+import java.util.SequencedSet;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
-public abstract class AbstractMapViewSortedSetDecorator<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
-        extends AbstractMapViewSortedSet<E> {
+public abstract class AbstractMapViewSequencedSetDecorator<E, TDecorated extends SequencedSet<E>, TSubSet extends SequencedCommonsSet<E>>
+        extends AbstractMapViewSequencedSet<E, TSubSet> {
+    /**
+     * The collection being decorated
+     */
+    protected final TDecorated decorated;
 
-    /** The collection being decorated */
-    private final TDecorated decorated;
-    private final SortedMapRange<E> range;
-
-    protected AbstractMapViewSortedSetDecorator(final TDecorated decorated, final SortedMapRange<E> range) {
+    public AbstractMapViewSequencedSetDecorator(final TDecorated decorated) {
         this.decorated = decorated;
-        this.range = range;
     }
 
     protected TDecorated decorated() {
@@ -27,37 +27,6 @@ public abstract class AbstractMapViewSortedSetDecorator<E, TDecorated extends So
     }
 
     protected abstract TSubSet decorateDerived(final TDecorated subMap, final SortedMapRange<E> range);
-
-    @Override
-    public SortedMapRange<E> getRange() {
-        return range;
-    }
-
-    @Override
-    public Comparator<? super E> comparator() {
-        return decorated.comparator();
-    }
-
-    @Override
-    public final TSubSet subSet(final SortedMapRange<E> range) {
-        return decorateDerived(range.applyToSet(decorated()), range);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public SortedRangedSet<E> reversed() {
-        return decorateDerived((TDecorated) decorated.reversed(), range.reversed());
-    }
-
-    @Override
-    public E first() {
-        return decorated.first();
-    }
-
-    @Override
-    public E last() {
-        return decorated.last();
-    }
 
     @Override
     public Spliterator<E> spliterator() {

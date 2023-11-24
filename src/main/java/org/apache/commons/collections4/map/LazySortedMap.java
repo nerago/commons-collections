@@ -27,7 +27,6 @@ import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
 import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
 
 /**
  * Decorates another {@code SortedMap} to create objects in the map on demand.
@@ -173,7 +172,7 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return SortedMapOrderedMapIterator.sortedMapIterator(getSortedMap());
+        return SortedMapUtils.sortedMapIterator(getSortedMap());
     }
 
     @Override
@@ -197,19 +196,17 @@ public class LazySortedMap<K, V> extends LazyMap<K, V> implements IterableSorted
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
-        return null;
+    public SequencedSet<K> keySet() {
+        return getSortedMap().sequencedKeySet();
     }
 
     @Override
-    public SequencedCollection<V> sequencedValues() {
-        return null;
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return getSortedMap().sequencedEntrySet();
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
-        return null;
+    public SequencedCollection<V> values() {
+        return getSortedMap().sequencedValues();
     }
-
-
 }

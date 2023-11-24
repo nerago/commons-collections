@@ -33,9 +33,9 @@ public final class UnmodifiableSequencedEntrySet<K, V>
      * @throws NullPointerException if set is null
      * @since X.X
      */
-    public static <K, V> SequencedSet<Map.Entry<K, V>> unmodifiableEntrySet(final SequencedSet<Map.Entry<K, V>> set) {
-        if (set instanceof Unmodifiable) {
-            return set;
+    public static <K, V> SequencedCommonsSet<Map.Entry<K, V>> unmodifiableEntrySet(final SequencedSet<Map.Entry<K, V>> set) {
+        if (set instanceof Unmodifiable && set instanceof SequencedCommonsSet) {
+            return (SequencedCommonsSet<Map.Entry<K, V>>) set;
         }
         return new UnmodifiableSequencedEntrySet<>(set);
     }

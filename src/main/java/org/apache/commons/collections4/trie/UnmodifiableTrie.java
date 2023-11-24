@@ -19,12 +19,12 @@ package org.apache.commons.collections4.trie;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -36,6 +36,7 @@ import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
 import org.apache.commons.collections4.map.UnmodifiableEntrySet;
+import org.apache.commons.collections4.map.UnmodifiableSequencedEntrySet;
 import org.apache.commons.collections4.map.UnmodifiableSortedMap;
 
 /**
@@ -84,18 +85,18 @@ public class UnmodifiableTrie<K, V, TSubMap extends IterableSortedMap<K, V, TSub
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
-        return UnmodifiableEntrySet.unmodifiableEntrySet(delegate.entrySet());
+    public SequencedSet<Entry<K, V>> entrySet() {
+        return UnmodifiableSequencedEntrySet.unmodifiableEntrySet(delegate.entrySet());
     }
 
     @Override
-    public Set<K> keySet() {
-        return Collections.unmodifiableSet(delegate.keySet());
+    public SequencedSet<K> keySet() {
+        return Collections.unmodifiableSequencedSet(delegate.keySet());
     }
 
     @Override
-    public Collection<V> values() {
-        return Collections.unmodifiableCollection(delegate.values());
+    public SequencedCollection<V> values() {
+        return Collections.unmodifiableSequencedCollection(delegate.values());
     }
 
     @Override
@@ -144,47 +145,47 @@ public class UnmodifiableTrie<K, V, TSubMap extends IterableSortedMap<K, V, TSub
     }
 
     @Override
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    public boolean remove(final Object key, final Object value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean replace(K key, V oldValue, V newValue) {
+    public boolean replace(final K key, final V oldValue, final V newValue) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V replace(K key, V value) {
+    public V replace(final K key, final V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
@@ -201,6 +202,11 @@ public class UnmodifiableTrie<K, V, TSubMap extends IterableSortedMap<K, V, TSub
     @Override
     public K lastKey() {
         return delegate.lastKey();
+    }
+
+    @Override
+    public TSubMap reversed() {
+        return (TSubMap) new ReversedTrie<>(this);
     }
 
     @Override
@@ -221,6 +227,12 @@ public class UnmodifiableTrie<K, V, TSubMap extends IterableSortedMap<K, V, TSub
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         final OrderedMapIterator<K, V> it = delegate.mapIterator();
+        return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        final OrderedMapIterator<K, V> it = delegate.descendingMapIterator();
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(it);
     }
 

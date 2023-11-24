@@ -17,10 +17,12 @@
 package org.apache.commons.collections4.bidimap;
 
 import org.apache.commons.collections4.*;
-import org.apache.commons.collections4.keyvalue.UnmodifiableMapEntry;
-import org.apache.commons.collections4.set.AbstractMapViewNavigableSet;
+import org.apache.commons.collections4.map.AbstractMapViewNavigableSet;
 
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.*;
 import java.util.function.*;
 import java.util.function.Predicate;
@@ -645,8 +647,8 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     private abstract static class BaseUsingBoth<E, K extends Comparable<K>, V extends Comparable<V>>
             extends AbstractMapViewNavigableSet<E> {
         protected final DualTreeBidi2MapSubMap<K, V> parent;
-        protected final SortedMapRange<E> range;
-        private final boolean descending;
+        protected SortedMapRange<E> range;
+        private boolean descending;
         protected final NavigableMap<K, V> keyMap;
         protected final Map<V, K> valueMap;
 
@@ -766,6 +768,20 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
                     parent.subMap(toKey(range.getFromKey()), range.isFromInclusive(), toKey(range.getToKey()), range.isToInclusive()),
                     descending);
         }
+
+        @Override
+        public void writeExternal(final ObjectOutput out) throws IOException {
+            out.writeBoolean(descending);
+            out.writeObject(range);
+            parent.writeExternal(out);
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+            descending = in.readBoolean();
+            range = (SortedMapRange<E>) in.readObject();
+            parent.readExternal(in);
+        }
     }
 
     private static final class KeySetUsingBoth<K extends Comparable<K>, V extends Comparable<V>>
@@ -808,7 +824,7 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
     private static final class EntrySetUsingBoth<K extends Comparable<K>, V extends Comparable<V>>
             extends BaseUsingBoth<Entry<K, V>, K, V> {
         public EntrySetUsingBoth(final DualTreeBidi2MapSubMap<K, V> parent, final boolean descending) {
-            super(parent, toEntryRange(parent.getKeyRange(), parent), descending);
+            super(parent, parent.getKeyRange().toEntryRange(), descending);
         }
 
         @Override
@@ -839,13 +855,6 @@ class DualTreeBidi2MapSubMap<K extends Comparable<K>, V extends Comparable<V>>
         @Override
         public Comparator<? super Entry<K, V>> comparator() {
             return Entry.comparingByKey(parent.comparator());
-        }
-
-        private static <K extends Comparable<K>, V extends Comparable<V>> SortedMapRange<Entry<K, V>> toEntryRange(final SortedMapRange<K> keyRange,
-                                                                                                                   final DualTreeBidi2MapSubMap<K, V> parent) {
-            final SortedMapRange<Entry<K, V>> fullEntryRange = SortedMapRange.full(Entry.comparingByKey(parent.comparator()));
-            return fullEntryRange.subRange(new UnmodifiableMapEntry<>(keyRange.getFromKey(), null), keyRange.isFromInclusive(),
-                    new UnmodifiableMapEntry<>(keyRange.getToKey(), null), keyRange.isToInclusive());
         }
     }
 

@@ -29,24 +29,9 @@ import java.util.SortedMap;
  * @since 4.0
  */
 public interface IterableSortedMap<K, V, TSubMap extends IterableSortedMap<K, V, ?>>
-        extends SortedRangedMap<K, V, TSubMap>, OrderedMap<K, V, TSubMap> {
+        extends SortedRangedMap<K, V, TSubMap>, OrderedMap<K, V> {
     @Override
     TSubMap reversed();
-
-    @Override
-    default SequencedSet<K> keySet() {
-        return SortedRangedMap.super.keySet();
-    }
-
-    @Override
-    default SequencedSet<Entry<K, V>> entrySet() {
-        return SortedRangedMap.super.entrySet();
-    }
-
-    @Override
-    default SequencedCollection<V> values() {
-        return SortedRangedMap.super.values();
-    }
 
     @Override
     default K firstKey() {

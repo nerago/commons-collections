@@ -44,8 +44,8 @@ import org.apache.commons.collections4.OrderedMapIterator;
 public abstract class AbstractOrderedBidiMapDecorator<K, V,
             TDecorated extends OrderedBidiMap<K, V, ?, ?>,
             TDecoratedInverse extends OrderedBidiMap<V, K, ?, ?>,
-            TSubMap extends AbstractOrderedBidiMapDecorator<K, V, ?, ?, ?, ?, ?, ?, ?>,
-            TInverseMap extends AbstractOrderedBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?, ?>,
+            TSubMap extends OrderedBidiMap<K, V, ?, ?>,
+            TInverseMap extends OrderedBidiMap<V, K, ?, ?>,
             TKeySet extends SequencedSet<K>,
             TEntrySet extends SequencedSet<Map.Entry<K, V>>,
             TValueSet extends SequencedSet<V>>
@@ -61,13 +61,19 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V,
      * @param map  the map to decorate, must not be null
      * @throws NullPointerException if the collection is null
      */
-    protected AbstractOrderedBidiMapDecorator(final TDecorated map) {
+    protected AbstractOrderedBidiMapDecorator(final TDecorated map, final TSubMap reverse) {
         super(map);
+        this.reverse = reverse;
     }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         return decorated().mapIterator();
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return decorated().descendingMapIterator();
     }
 
     @Override
@@ -88,6 +94,16 @@ public abstract class AbstractOrderedBidiMapDecorator<K, V,
     @Override
     public K previousKey(final K key) {
         return decorated().previousKey(key);
+    }
+
+    @Override
+    public V putFirst(final K k, final V v) {
+        return decorated().putFirst(k, v);
+    }
+
+    @Override
+    public V putLast(final K k, final V v) {
+        return decorated().putLast(k, v);
     }
 
     @Override

@@ -33,14 +33,14 @@ public class EmptyOrderedIterator<E> extends AbstractEmptyIterator<E>
      * @since 3.1
      */
     @SuppressWarnings("rawtypes")
-    public static final OrderedIterator INSTANCE = new EmptyOrderedIterator<>();
+    public static final EmptyOrderedIterator INSTANCE = new EmptyOrderedIterator<>();
 
     /**
      * Typed instance of the iterator.
      * @param <E> the element type
      * @return OrderedIterator&lt;E&gt;
      */
-    public static <E> OrderedIterator<E> emptyOrderedIterator() {
+    public static <E> EmptyOrderedIterator<E> emptyOrderedIterator() {
         return INSTANCE;
     }
 

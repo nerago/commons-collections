@@ -16,7 +16,9 @@
  */
 package org.apache.commons.collections4.map;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A {@code Map} implementation that is a general purpose alternative
@@ -39,7 +41,8 @@ import java.util.Map;
  * @since 3.0
  */
 public class HashedMap<K, V>
-        extends AbstractHashedMap<K, V> implements Cloneable {
+        extends AbstractHashedMap<K, V, Set<K>, Set<Map.Entry<K, V>>, Collection<V>>
+        implements Cloneable {
 
     /** Serialisation version */
     private static final long serialVersionUID = -1788199231038721040L;

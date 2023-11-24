@@ -17,6 +17,9 @@
 package org.apache.commons.collections4.map;
 
 import java.util.Comparator;
+import java.util.SequencedCollection;
+import java.util.SequencedSet;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
@@ -119,6 +122,24 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V, SortedMap<K, 
     }
 
     @Override
+    public SequencedSet<K> keySet() {
+        return decorated().sequencedKeySet();
+    }
+
+    @Override
+    public SequencedSet<Entry<K, V>> entrySet() {
+        if (isSetValueChecking()) {
+            return new AbstractEntrySetSequencedDecorator.Wrapper<>(decorated(), this::wrapEntry);
+        }
+        return decorated().sequencedEntrySet();
+    }
+
+    @Override
+    public SequencedCollection<V> values() {
+        return decorated().sequencedValues();
+    }
+
+    @Override
     public Comparator<? super K> comparator() {
         return decorated().comparator();
     }
@@ -129,12 +150,22 @@ public class PredicatedSortedMap<K, V> extends PredicatedMap<K, V, SortedMap<K, 
     }
 
     @Override
+    public PredicatedSortedMap<K, V> reversed() {
+        return new PredicatedSortedMap<>(decorated().reversed(), keyPredicate, valuePredicate, keyRange.reversed());
+    }
+
+    @Override
     public SortedMapRange<K> getKeyRange() {
         return keyRange;
     }
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return (OrderedMapIterator<K, V>) super.mapIterator();
+        return SortedMapUtils.sortedMapIterator(map);
+    }
+
+    @Override
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return SortedMapUtils.sortedMapIteratorDescending(map);
     }
 }

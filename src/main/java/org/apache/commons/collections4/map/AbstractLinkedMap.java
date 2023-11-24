@@ -29,8 +29,6 @@ import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.ResettableIterator;
-import org.apache.commons.collections4.SequencedCommonsCollection;
-import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.iterators.EmptyOrderedIterator;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
 
@@ -73,8 +71,8 @@ import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
  * @since 3.0
  */
 public abstract class AbstractLinkedMap<K, V>
-        extends AbstractHashedMap<K, V>
-        implements OrderedMap<K, V, OrderedMap<K, V, ?>> {
+        extends AbstractHashedMap<K, V, SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCollection<V>>
+        implements OrderedMap<K, V> {
 
     private static final long serialVersionUID = 2043896582875021090L;
 
@@ -384,43 +382,25 @@ public abstract class AbstractLinkedMap<K, V>
     }
 
     @Override
-    public OrderedMap<K, V, ?> reversed() {
+    public OrderedMap<K, V> reversed() {
         return null;
     }
 
     @Override
-    public SequencedCommonsSet<K> keySet() {
-        return super.keySet();
+    protected SequencedSet<K> createKeySet() {
+        return super.createKeySet();
     }
 
     @Override
-    public SequencedCommonsCollection<V> values() {
-        return super.values();
+    protected SequencedSet<Entry<K, V>> createEntrySet() {
+        return super.createEntrySet();
     }
 
     @Override
-    public SequencedCommonsSet<Entry<K, V>> entrySet() {
-        return super.entrySet();
+    protected SequencedCollection<V> createValuesCollection() {
+        return super.createValuesCollection();
     }
 
-    @Override
-    public SequencedSet<K> sequencedKeySet() {
-        return keySet();
-    }
-
-    @Override
-    public SequencedCollection<V> sequencedValues() {
-        return values();
-    }
-
-    @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
-        return entrySet();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
         if (size == 0) {
@@ -524,10 +504,7 @@ public abstract class AbstractLinkedMap<K, V>
      * @return the entrySet iterator
      */
     @Override
-    protected Iterator<Map.Entry<K, V>> createEntrySetIterator() {
-        if (isEmpty()) {
-            return EmptyOrderedIterator.<Map.Entry<K, V>>emptyOrderedIterator();
-        }
+    public EntrySetIterator<K, V> entryIterator() {
         return new EntrySetIterator<>(this);
     }
 
@@ -558,13 +535,13 @@ public abstract class AbstractLinkedMap<K, V>
      *
      * @return the keySet iterator
      */
-    @Override
-    protected Iterator<K> createKeySetIterator() {
-        if (isEmpty()) {
-            return EmptyOrderedIterator.<K>emptyOrderedIterator();
-        }
-        return new KeySetIterator<>(this);
-    }
+//    @Override
+//    protected Iterator<K> createKeySetIterator() {
+//        if (isEmpty()) {
+//            return EmptyOrderedIterator.<K>emptyOrderedIterator();
+//        }
+//        return new KeySetIterator<>(this);
+//    }
 
     /**
      * KeySet iterator.
@@ -594,13 +571,13 @@ public abstract class AbstractLinkedMap<K, V>
      *
      * @return the values iterator
      */
-    @Override
-    protected Iterator<V> createValuesIterator() {
-        if (isEmpty()) {
-            return EmptyOrderedIterator.<V>emptyOrderedIterator();
-        }
-        return new ValuesIterator<>(this);
-    }
+//    @Override
+//    protected Iterator<V> createValuesIterator() {
+//        if (isEmpty()) {
+//            return EmptyOrderedIterator.<V>emptyOrderedIterator();
+//        }
+//        return new ValuesIterator<>(this);
+//    }
 
     /**
      * Values iterator.
@@ -738,29 +715,29 @@ public abstract class AbstractLinkedMap<K, V>
      * Creates an entry set spliterator.
      * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
      */
-    @Override
-    protected Spliterator<Entry<K, V>> createEntrySetSpliterator() {
-        return Spliterators.spliterator(createEntrySetIterator(), size(),
-                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.DISTINCT);
-    }
-
-    /**
-     * Creates a key set spliterator.
-     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
-     */
-    @Override
-    protected Spliterator<K> createKeySetSpliterator() {
-        return Spliterators.spliterator(createKeySetIterator(), size(),
-                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.DISTINCT);
-    }
-
-    /**
-     * Creates a values spliterator.
-     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
-     */
-    @Override
-    protected Spliterator<V> createValuesSpliterator() {
-        return Spliterators.spliterator(createValuesIterator(), size(),
-                Spliterator.ORDERED | Spliterator.SIZED);
-    }
+//    @Override
+//    protected Spliterator<Entry<K, V>> createEntrySetSpliterator() {
+//        return Spliterators.spliterator(createEntrySetIterator(), size(),
+//                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.DISTINCT);
+//    }
+//
+//    /**
+//     * Creates a key set spliterator.
+//     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
+//     */
+//    @Override
+//    protected Spliterator<K> createKeySetSpliterator() {
+//        return Spliterators.spliterator(createKeySetIterator(), size(),
+//                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.DISTINCT);
+//    }
+//
+//    /**
+//     * Creates a values spliterator.
+//     * Just uses a default implementation since we have no way to split linked entries efficiently while preserving order.
+//     */
+//    @Override
+//    protected Spliterator<V> createValuesSpliterator() {
+//        return Spliterators.spliterator(createValuesIterator(), size(),
+//                Spliterator.ORDERED | Spliterator.SIZED);
+//    }
 }

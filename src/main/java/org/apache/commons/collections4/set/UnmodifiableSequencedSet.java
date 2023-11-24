@@ -23,9 +23,9 @@ public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E
      * @return a new unmodifiable {@link SortedSet}
      * @throws NullPointerException if set is null
      */
-    public static <E> SequencedSet<E> unmodifiableSequencedSet(final SequencedSet<E> set) {
-        if (set instanceof Unmodifiable) {
-            return set;
+    public static <E> SequencedCommonsSet<E> unmodifiableSequencedSet(final SequencedSet<E> set) {
+        if (set instanceof Unmodifiable && set instanceof SequencedCommonsSet<E>) {
+            return (SequencedCommonsSet<E>) set;
         }
         return new UnmodifiableSequencedSet<>(set);
     }
@@ -41,8 +41,8 @@ public class UnmodifiableSequencedSet<E> extends AbstractSequencedSetDecorator<E
     }
 
     @Override
-    protected SequencedCommonsSet<E> decorateReverse(final SequencedSet<E> subMap) {
-        return new UnmodifiableSequencedSet<>(subMap);
+    protected SequencedCommonsSet<E> createReversed() {
+        return new UnmodifiableSequencedSet<>(decorated().reversed());
     }
 
     @Override

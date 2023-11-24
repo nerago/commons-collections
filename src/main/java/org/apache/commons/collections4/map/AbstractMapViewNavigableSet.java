@@ -1,14 +1,18 @@
-package org.apache.commons.collections4.set;
+package org.apache.commons.collections4.map;
 
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.collections4.NavigableRangedSet;
 import org.apache.commons.collections4.SortedMapRange;
+import org.apache.commons.collections4.set.AbstractCommonsSortedSet;
 
-public abstract class AbstractMapViewNavigableSet<E> extends AbstractMapViewSortedSet<E> implements NavigableRangedSet<E> {
+public abstract class AbstractMapViewNavigableSet<E>
+        extends AbstractMapViewSortedSet<E, NavigableRangedSet<E>>
+        implements NavigableRangedSet<E> {
+
     @Override
-    public final NavigableRangedSet<E> reversed() {
+    protected NavigableRangedSet<E> createReversed() {
         return new ReverseNavigableView<>(this);
     }
 
@@ -33,7 +37,7 @@ public abstract class AbstractMapViewNavigableSet<E> extends AbstractMapViewSort
     }
 
     protected static class ReverseNavigableView<E>
-            extends ReverseView<E, NavigableSet<E>, NavigableRangedSet<E>> 
+            extends AbstractCommonsSortedSet.SortedReverseView<E, NavigableSet<E>, NavigableRangedSet<E>>
             implements NavigableRangedSet<E> {
         private static final long serialVersionUID = 5385328200121138393L;
 

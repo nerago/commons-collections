@@ -29,8 +29,11 @@ import java.util.SequencedSet;
  *
  * @since 3.0
  */
-public interface OrderedMap<K, V, TSubMap extends SequencedCommonsMap<K, V>>
+public interface OrderedMap<K, V>
         extends IterableMap<K, V>, SequencedCommonsMap<K, V> {
+
+    @Override
+    OrderedMap<K, V> reversed();
 
     /**
      * Obtains an {@code OrderedMapIterator} over the map.
@@ -91,19 +94,4 @@ public interface OrderedMap<K, V, TSubMap extends SequencedCommonsMap<K, V>>
      * @return the previous key, null if no match or at start
      */
     K previousKey(K key);
-
-    @Override
-    default SequencedSet<K> keySet() {
-        return SequencedCommonsMap.super.keySet();
-    }
-
-    @Override
-    default SequencedSet<Entry<K, V>> entrySet() {
-        return SequencedCommonsMap.super.entrySet();
-    }
-
-    @Override
-    default SequencedCollection<V> values() {
-        return SequencedCommonsMap.super.values();
-    }
 }

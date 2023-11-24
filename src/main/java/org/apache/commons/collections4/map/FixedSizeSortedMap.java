@@ -21,7 +21,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Map;
 import java.util.Objects;
-import java.util.SequencedSet;
 import java.util.SortedMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -30,6 +29,7 @@ import org.apache.commons.collections4.BoundedMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.collection.UnmodifiableSequencedCollection;
 import org.apache.commons.collections4.iterators.FixedOrderedMapIterator;
@@ -66,7 +66,7 @@ import org.apache.commons.collections4.set.UnmodifiableSequencedSet;
  */
 public class FixedSizeSortedMap<K, V>
         extends AbstractSortedMapDecorator<K, V, SortedMap<K, V>, FixedSizeSortedMap<K, V>,
-                                           SequencedSet<K>, SequencedSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
+            SequencedCommonsSet<K>, SequencedCommonsSet<Map.Entry<K, V>>, SequencedCommonsCollection<V>>
         implements BoundedMap<K, V> {
 
     /** Serialization version */
@@ -188,12 +188,12 @@ public class FixedSizeSortedMap<K, V>
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> entrySet() {
+    public SequencedCommonsSet<Entry<K, V>> entrySet() {
         return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedEntrySet());
     }
 
     @Override
-    public SequencedSet<K> keySet() {
+    public SequencedCommonsSet<K> keySet() {
         return UnmodifiableSequencedSet.unmodifiableSequencedSet(decorated().sequencedKeySet());
     }
 

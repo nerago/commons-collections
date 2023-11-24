@@ -22,7 +22,6 @@ import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.SequencedSet;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.IterableSortedMap;
@@ -31,7 +30,6 @@ import org.apache.commons.collections4.SequencedCommonsCollection;
 import org.apache.commons.collections4.SequencedCommonsSet;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedMapUtils;
-import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
 
 /**
  * Provides a base decorator that enables additional functionality to be added
@@ -53,7 +51,7 @@ import org.apache.commons.collections4.iterators.SortedMapOrderedMapIterator;
  */
 public abstract class AbstractSortedMapDecorator<K, V,
                 TDecorated extends SortedMap<K, V>,
-                TSubMap extends IterableSortedMap<K, V, TSubMap>,
+                TSubMap extends IterableSortedMap<K, V, ?>,
                 TKeySet extends SequencedCommonsSet<K>,
                 TEntrySet extends SequencedCommonsSet<Map.Entry<K, V>>,
                 TValueSet extends SequencedCommonsCollection<V>>
@@ -63,7 +61,8 @@ public abstract class AbstractSortedMapDecorator<K, V,
     private static final long serialVersionUID = 4710068155190191469L;
 
     /** The range of this sub-map */
-    transient SortedMapRange<K> keyRange;
+    private transient SortedMapRange<K> keyRange;
+    private transient TSubMap reversed;
 
     /**
      * Constructor only used in deserialization, do not use otherwise.
@@ -220,17 +219,24 @@ public abstract class AbstractSortedMapDecorator<K, V,
 
     @Override
     public OrderedMapIterator<K, V> mapIterator() {
-        return SortedMapOrderedMapIterator.sortedMapIterator(decorated());
+        return SortedMapUtils.sortedMapIterator(decorated());
     }
 
     @Override
     public OrderedMapIterator<K, V> descendingMapIterator() {
-        return SortedMapOrderedMapIterator.sortedMapIteratorDescending(decorated());
+        return SortedMapUtils.sortedMapIteratorDescending(decorated());
+    }
+
+    @Override
+    public final TSubMap reversed() {
+        if (reversed == null) {
+            reversed = createReversed();
+        }
+        return reversed;
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public TSubMap reversed() {
+    protected TSubMap createReversed() {
         return decorateDerived((TDecorated) decorated().reversed(), keyRange.reversed());
     }
 

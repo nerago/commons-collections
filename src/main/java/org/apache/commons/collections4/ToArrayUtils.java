@@ -72,6 +72,13 @@ public final class ToArrayUtils {
         return list.toArray(array);
     }
 
+    public static <E, T> T[] fromIteratorUnknownSize(final Iterator<E> iterator, final T[] array) {
+        Objects.requireNonNull(iterator, "iterator");
+        Objects.requireNonNull(array, "array");
+        final List<E> list = IteratorUtils.toList(iterator, 100);
+        return list.toArray(array);
+    }
+
     /**
      * Gets an array based on an iterator and expected size.
      * <p>

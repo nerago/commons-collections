@@ -3,23 +3,22 @@ package org.apache.commons.collections4.set;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.SortedSet;
 
-import org.apache.commons.collections4.AbstractCommonsCollection;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.collections4.SequencedCommonsSet;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 
-public abstract class AbstractCommonsSortedSet<E>
-        extends AbstractCommonsSequencedSet<E, SortedRangedSet<E>> implements SortedRangedSet<E> {
+public abstract class AbstractCommonsSortedSet<E, TSubSet extends SortedRangedSet<E>>
+        extends AbstractCommonsSequencedSet<E, TSubSet> implements SortedRangedSet<E> {
+
+    private static final long serialVersionUID = -1148032504181310936L;
 
     @Override
-    protected SortedRangedSet<E> createReversed() {
-        return new SortedReverseView<>(this, this, getRange().reversed());
+    protected TSubSet createReversed() {
+        return (TSubSet) new SortedReverseView<>(this, this, getRange().reversed());
     }
 
     protected static class SortedReverseView<E, TDecorated extends SortedSet<E>, TSubSet extends SortedRangedSet<E>>
