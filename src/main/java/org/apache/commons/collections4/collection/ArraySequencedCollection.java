@@ -30,6 +30,7 @@ public final class ArraySequencedCollection<E> extends AbstractCollection<E> imp
             return (SequencedCommonsCollection<E>) collection;
         } else if (collection instanceof SequencedCollection<E>) {
             // TODO adapter
+            return null;
         } else if (collection.isEmpty()) {
             return EmptySet.emptySet();
         } else {

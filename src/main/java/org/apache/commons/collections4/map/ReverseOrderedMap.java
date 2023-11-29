@@ -9,6 +9,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.SequencedCommonsCollection;
+import org.apache.commons.collections4.SequencedCommonsSet;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.collections4.set.ReverseSequencedSet;
 
 // see java.util.ReverseOrderSortedMapView
@@ -84,18 +86,18 @@ public class ReverseOrderedMap<K, V>
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
-        return new ReverseSequencedSet<>(super.sequencedKeySet());
+    public SequencedCommonsSet<K> keySet() {
+        return SetUtils.reversedSet(decorated().sequencedKeySet());
     }
 
     @Override
-    public SequencedCollection<V> sequencedValues() {
-        return CollectionUtils.reversedCollection(super.sequencedValues());
+    public SequencedCommonsSet<Entry<K, V>> entrySet() {
+        return SetUtils.reversedSet(decorated().sequencedEntrySet());
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
-        return new ReverseSequencedSet<>(super.sequencedEntrySet());
+    public SequencedCommonsCollection<V> values() {
+        return CollectionUtils.reversedCollection(decorated().sequencedValues());
     }
 
     @Override

@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Spliterator;
 
 public abstract class AbstractExtendedSortedBidiMap<K, V,
-            TSubMap extends AbstractExtendedSortedBidiMap<K, V, TSubMap, TInverseMap, ?, ?, ?>,
-            TInverseMap extends AbstractExtendedSortedBidiMap<V, K, TInverseMap, TSubMap, ?, ?, ?>,
+            TSubMap extends SortedBidiMap<K, V, ?, ?>,
+            TInverseMap extends SortedBidiMap<V, K, ?, ?>,
             TKeySet extends SortedRangedSet<K>,
             TEntrySet extends SortedRangedSet<Map.Entry<K, V>>,
             TValueSet extends SortedRangedSet<V>>
@@ -44,6 +44,9 @@ public abstract class AbstractExtendedSortedBidiMap<K, V,
         implements SortedBidiMap<K, V, TSubMap, TInverseMap> {
 
     private static final long serialVersionUID = -9181666289732043651L;
+
+    private transient TSubMap reverse;
+    private transient TInverseMap inverse;
 
     @Override
     public final K getKey(final Object value) {
@@ -67,6 +70,28 @@ public abstract class AbstractExtendedSortedBidiMap<K, V,
     protected TValueSet createValuesCollection() {
         return (TValueSet) new AbsExMapValues();
     }
+
+    @Override
+    public final TSubMap reversed() {
+        if (reverse == null) {
+            reverse = createReverse();
+        }
+        return reverse;
+    }
+
+    protected TSubMap createReverse() {
+        return (TSubMap) new ReverseSortedBidiMap<>(this);
+    }
+
+    @Override
+    public TInverseMap inverseBidiMap() {
+        if (inverse == null) {
+            inverse = createInverse();
+        }
+        return inverse;
+    }
+
+    protected abstract TInverseMap createInverse();
 
     protected abstract class AbsExMapView<E> extends AbstractMapViewSortedSet<E, SortedRangedSet<E>> {
         @Override

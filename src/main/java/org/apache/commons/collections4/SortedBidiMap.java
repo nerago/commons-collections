@@ -24,6 +24,15 @@ public interface SortedBidiMap<K, V,
         TInverseMap extends SortedBidiMap<V, K, ?, ?>>
         extends OrderedBidiMap<K, V, TSubMap, TInverseMap>,
                 IterableSortedMap<K, V, TSubMap> {
+
+    default V firstValue() {
+        return sequencedValues().getFirst();
+    }
+
+    default V lastValue() {
+        return sequencedValues().getLast();
+    }
+
     /**
      * Get the comparator used for the values in the value-to-key map aspect.
      * @return Comparator&lt;? super V&gt;
@@ -31,8 +40,6 @@ public interface SortedBidiMap<K, V,
     Comparator<? super V> valueComparator();
 
     SortedMapRange<V> getValueRange();
-
-    TSubMap subMap(SortedMapRange<K> keyRange, SortedMapRange<V> valueRange);
 
     @Override
     SortedRangedSet<K> keySet();
@@ -56,13 +63,5 @@ public interface SortedBidiMap<K, V,
     @Override
     default SortedRangedSet<V> sequencedValues() {
         return values();
-    }
-
-    default V firstValue() {
-        return sequencedValues().getFirst();
-    }
-
-    default V lastValue() {
-        return sequencedValues().getLast();
     }
 }

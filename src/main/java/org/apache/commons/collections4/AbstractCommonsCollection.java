@@ -41,7 +41,7 @@ public abstract class AbstractCommonsCollection<E> implements Collection<E>, Ser
     }
 
     @Override
-    public final boolean removeAll(final Collection<?> coll) {
+    public boolean removeAll(final Collection<?> coll) {
         Objects.requireNonNull(coll);
         if (coll.isEmpty()) {
             return false;
@@ -57,7 +57,7 @@ public abstract class AbstractCommonsCollection<E> implements Collection<E>, Ser
     }
 
     @Override
-    public final boolean retainAll(final Collection<?> coll) {
+    public boolean retainAll(final Collection<?> coll) {
         Objects.requireNonNull(coll);
         if (isEmpty()) {
             return false;

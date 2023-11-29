@@ -33,6 +33,7 @@ import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.OrderedIterator;
 import org.apache.commons.collections4.OrderedMapIterator;
+import org.apache.commons.collections4.SortedBidiMap;
 import org.apache.commons.collections4.SortedMapRange;
 import org.apache.commons.collections4.SortedRangedSet;
 import org.apache.commons.collections4.iterators.EmptyOrderedMapIterator;
@@ -97,8 +98,6 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
     private transient Node<K, V> rootNodeValue;
     private transient int nodeCount;
     private transient int modifications;
-
-    private transient Inverse<K, V> inverse;
 
     /**
      * Constructs a new empty TreeBidiMap.
@@ -417,17 +416,14 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return new MapIteratorKeyByKey<>(this);
     }
 
-    /**
-     * Gets the inverse map for comparison.
-     *
-     * @return the inverse map
-     */
     @Override
-    public Inverse<K, V> inverseBidiMap() {
-        if (inverse == null) {
-            inverse = new Inverse<>(this);
-        }
-        return inverse;
+    public OrderedMapIterator<K, V> descendingMapIterator() {
+        return null; // TODO
+    }
+
+    @Override
+    protected Inverse<K, V> createInverse() {
+        return new Inverse<>(this);
     }
 
     /**
@@ -1973,7 +1969,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @throws ClassCastException   if key is not Comparable or castable to K
      */
     @SuppressWarnings("unchecked")
-    private K checkKey(final Object key) {
+    private static <K> K checkKey(final Object key) {
         Objects.requireNonNull(key, "key");
         if (!(key instanceof Comparable)) {
             throw new ClassCastException("key must be Comparable");
@@ -1990,7 +1986,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * @throws ClassCastException   if value is not Comparable or castable to V
      */
     @SuppressWarnings("unchecked")
-    private V checkValue(final Object value) {
+    private static <V> V checkValue(final Object value) {
         Objects.requireNonNull(value, "value");
         if (!(value instanceof Comparable)) {
             throw new ClassCastException("key must be Comparable");
@@ -2658,8 +2654,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
      * The inverse map implementation.
      */
     public static final class Inverse<K extends Comparable<K>, V extends Comparable<V>>
-            extends AbstractExtendedSortedBidiMap<V, K, TreeBidiSubMap<V, K>, TreeBidiMapHard<K, V>,
-                SortedRangedSet<K>, SortedRangedSet<Map.Entry<K, V>>, SortedRangedSet<V>> {
+            extends AbstractExtendedSortedBidiMap<V, K, SortedBidiMap<V, K, ?, ?>, SortedBidiMap<K, V, ?, ?>,
+                SortedRangedSet<V>, SortedRangedSet<Map.Entry<V, K>>, SortedRangedSet<K>> {
 
         private static final long serialVersionUID = -5940400507869486450L;
         private final TreeBidiMapHard<K, V> parent;
@@ -2716,13 +2712,13 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public V nextKey(final V key) {
-            final Node<K, V> rval = parent.lookupValueHigher(parent.checkValue(key));
+            final Node<K, V> rval = parent.lookupValueHigher(checkValue(key));
             return rval == null ? null : rval.getValue();
         }
 
         @Override
         public V previousKey(final V key) {
-            final Node<K, V> rval = parent.lookupValueLower(parent.checkValue(key));
+            final Node<K, V> rval = parent.lookupValueLower(checkValue(key));
             return rval == null ? null : rval.getValue();
         }
 
@@ -2776,6 +2772,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public OrderedMapIterator<V, K> descendingMapIterator() {
+            return null; // TODO
+        }
+
+        @Override
         public MapSpliterator<V, K> mapSpliterator() {
             // TODO
             return null;
@@ -2787,7 +2788,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public TreeBidiMapHard<K, V> inverseBidiMap() {
+        protected TreeBidiMapHard<K, V> createInverse() {
             return parent;
         }
 
@@ -2812,7 +2813,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public TreeBidiSubMap<V, K> subMap(final SortedMapRange<V> range) {
+        public SortedBidiMap<V, K, ?, ?> subMap(final SortedMapRange<V> range) {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
 
@@ -2858,7 +2859,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public boolean containsKey(final Object keyObject) {
-            final K key = parent.checkKey(keyObject);
+            final K key = checkKey(keyObject);
             if (keyRange.contains(key)) {
                 return parent.lookupKey(key) != null;
             } else {
@@ -2878,13 +2879,19 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public OrderedMapIterator<K, V> descendingMapIterator() {
+            // TODO
+            return null;
+        }
+
+        @Override
         public MapSpliterator<K, V> mapSpliterator() {
             return new KeyRangeMapSpliterator<>(parent, keyRange);
         }
 
         @Override
         public V getOrDefault(final Object keyObject, final V defaultValue) {
-            final K key = parent.checkKey(keyObject);
+            final K key = checkKey(keyObject);
             if (keyRange.contains(key)) {
                 final Node<K, V> node = parent.lookupKey(key);
                 if (node != null) {
@@ -2896,8 +2903,8 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public boolean containsMapping(final Object keyObject, final Object valueObject) {
-            final K key = parent.checkKey(keyObject);
-            final V value = parent.checkValue(valueObject);
+            final K key = checkKey(keyObject);
+            final V value = checkValue(valueObject);
             if (keyRange.contains(key)) {
                 final Node<K, V> node = parent.lookupKey(key);
                 if (node != null) {
@@ -2909,7 +2916,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public K getKeyOrDefault(final Object valueObject, final K defaultKey) {
-            final V value = parent.checkValue(valueObject);
+            final V value = checkValue(valueObject);
             final Node<K, V> node = parent.lookupValue(value);
             if (node != null && keyRange.contains(node.key)) {
                 return node.key;
@@ -2919,7 +2926,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public K removeValue(final Object valueObject) {
-            final V value = parent.checkValue(valueObject);
+            final V value = checkValue(valueObject);
             final Node<K, V> node = parent.lookupValue(value);
             if (node != null && keyRange.contains(node.key)) {
                 parent.doRedBlackDelete(node);
@@ -2930,7 +2937,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public V remove(final Object keyObject) {
-            final K key = parent.checkKey(keyObject);
+            final K key = checkKey(keyObject);
             if (keyRange.contains(key)) {
                 return parent.remove(key);
             }
@@ -2939,7 +2946,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public boolean remove(final Object keyObject, final Object value) {
-            final K key = parent.checkKey(keyObject);
+            final K key = checkKey(keyObject);
             if (keyRange.contains(key)) {
                 return parent.remove(key,  value);
             }
@@ -2948,7 +2955,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
 
         @Override
         public boolean removeAsBoolean(final Object keyObject) {
-            final K key = parent.checkKey(keyObject);
+            final K key = checkKey(keyObject);
             if (keyRange.contains(key)) {
                 return parent.removeAsBoolean(keyObject);
             }
@@ -3042,7 +3049,7 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
-        public TreeBidiSubMap<V, K> inverseBidiMap() {
+        protected TreeBidiSubMap<V, K> createInverse() {
             throw new UnsupportedOperationException("TreeBidiMap can't combine inverse and sub map operations");
         }
 

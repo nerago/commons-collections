@@ -164,6 +164,16 @@ public final class SortedMapRange<T> implements Serializable {
         return subRange(fromKey, true, toKey, false);
     }
 
+    public SortedMapRange<T> subRange(final SortedMapRange<T> other) {
+        if (this.isEmpty() || other.isFull()) {
+            return this;
+        } else if (this.isFull() || other.isEmpty()) {
+            return this;
+        } else {
+            return makeSubRange(other.fromKey, other.fromInclusive, other.toKey, other.toInclusive);
+        }
+    }
+
     public SortedMapRange<T> tail(final T fromKey) {
         return tail(fromKey, true);
     }
@@ -291,7 +301,9 @@ public final class SortedMapRange<T> implements Serializable {
     }
 
     public <V> NavigableMap<T, V> applyToNavigableMap(final NavigableMap<T, V> map) {
-        if (fromKey != null && toKey != null) {
+        if (map instanceof NavigableRangedMap<?, ?, ?>) {
+            return ((NavigableRangedMap<T, V, ?>) map).subMap(this);
+        } else if (fromKey != null && toKey != null) {
             return map.subMap(fromKey, fromInclusive, toKey, toInclusive);
         } else if (fromKey != null) {
             return map.tailMap(fromKey, fromInclusive);
@@ -306,14 +318,16 @@ public final class SortedMapRange<T> implements Serializable {
 
     @SuppressWarnings("unchecked")
     public <V, M extends SortedMap<T, V>> M applyToMap(final M map) {
-        if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
+        if (map instanceof SortedRangedMap<?, ?, ?>) {
+            return (M) ((SortedRangedMap<T, V, ?>) map).subMap(this);
+        } else if (map instanceof NavigableMap) {
+            return (M) applyToNavigableMap((NavigableMap<T, V>) map);
+        } else if (fromKey != null && fromInclusive && toKey != null && !toInclusive) {
             return (M) map.subMap(fromKey, toKey);
         } else if (fromKey != null && fromInclusive && toKey == null) {
             return (M) map.tailMap(fromKey);
         } else if (fromKey == null && toKey != null && !toInclusive) {
             return (M) map.headMap(toKey);
-        } else if (map instanceof NavigableMap) {
-            return (M) applyToNavigableMap((NavigableMap<T, V>) map);
         } else if (isFull()) {
             return map;
         } else if (isEmpty()) {

@@ -44,8 +44,8 @@ import org.apache.commons.collections4.SortedRangedSet;
 public abstract class AbstractSortedBidiMapDecorator<K, V,
             TDecorated extends SortedBidiMap<K, V, ?, ?>,
             TDecoratedInverse extends SortedBidiMap<V, K, ?, ?>,
-            TSubMap extends AbstractSortedBidiMapDecorator<K, V, ?, ?, ?, ?, ?, ?, ?>,
-            TInverseMap extends AbstractSortedBidiMapDecorator<V, K, ?, ?, ?, ?, ?, ?, ?>,
+            TSubMap extends SortedBidiMap<K, V, ?, ?>,
+            TInverseMap extends SortedBidiMap<V, K, ?, ?>,
             TKeySet extends SortedRangedSet<K>,
             TEntrySet extends SortedRangedSet<Map.Entry<K, V>>,
             TValueSet extends SortedRangedSet<V>>

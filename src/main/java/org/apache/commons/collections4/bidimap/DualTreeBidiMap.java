@@ -19,12 +19,14 @@ package org.apache.commons.collections4.bidimap;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -315,7 +317,7 @@ public class DualTreeBidiMap<K, V>
             @Override
             public SortedRangedSet<V> subSet(final SortedMapRange<V> range) {
                 final DualTreeBidiMap<K, V> parent = parent();
-                return parent.subMap(parent.getKeyRange(), range).values();
+                return parent.inverseBidiMap().subMap(range).inverseBidiMap().values();
             }
 
             @Override
@@ -340,6 +342,81 @@ public class DualTreeBidiMap<K, V>
                     }
                 }
                 return false;
+            }
+
+            @Override
+            public void addFirst(V v) {
+                SortedRangedSet.super.addFirst(v);
+            }
+
+            @Override
+            public void addLast(V v) {
+                SortedRangedSet.super.addLast(v);
+            }
+
+            @Override
+            public V getFirst() {
+                return SortedRangedSet.super.getFirst();
+            }
+
+            @Override
+            public V getLast() {
+                return SortedRangedSet.super.getLast();
+            }
+
+            @Override
+            public V removeFirst() {
+                return SortedRangedSet.super.removeFirst();
+            }
+
+            @Override
+            public V removeLast() {
+                return SortedRangedSet.super.removeLast();
+            }
+
+            @Override
+            public boolean equals(Object object) {
+                return super.equals(object);
+            }
+
+            @Override
+            public int hashCode() {
+                return super.hashCode();
+            }
+
+            @Override
+            public boolean removeIf(Predicate<? super V> filter) {
+                return super.removeIf(filter);
+            }
+
+            @Override
+            public boolean removeAll(Collection<?> coll) {
+                return super.removeAll(coll);
+            }
+
+            @Override
+            public boolean retainAll(Collection<?> coll) {
+                return super.retainAll(coll);
+            }
+
+            @Override
+            public V first() {
+                return null;
+            }
+
+            @Override
+            public V last() {
+                return null;
+            }
+
+            @Override
+            public Iterator<V> descendingIterator() {
+                return null;
+            }
+
+            @Override
+            public Iterator<V> iterator() {
+                return super.iterator();
             }
         }
     }

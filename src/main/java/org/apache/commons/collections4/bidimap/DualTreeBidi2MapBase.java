@@ -570,10 +570,6 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
         return valueSet;
     }
 
-    private DualTreeBidi2MapBase<K, V> valueSubMap(final SortedMapRange<V> range) {
-        return inverseBidiMap().subMap(range).inverseBidiMap();
-    }
-
     protected abstract NavigableRangedSet<K> createKeySet(boolean descending);
 
     protected abstract NavigableRangedSet<V> createValueSet();
@@ -588,6 +584,15 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
     @Override
     public OrderedMapIterator<K, V> descendingMapIterator() {
         return super.descendingMapIterator();
+    }
+
+    @Override
+    public DualTreeBidi2MapBase<K, V> subMap(final SortedMapRange<K> keyRange, final SortedMapRange<V> valueRange) {
+        final SortedMapRange<K> combinedKeyRange = getKeyRange().subRange(keyRange);
+        final SortedMapRange<V> combinedValueRange = getValueRange().subRange(valueRange);
+        final NavigableMap<K, V> subKeyMap = combinedKeyRange.applyToNavigableMap(keyMap);
+        final NavigableMap<V, K> subValueMap = combinedValueRange.applyToNavigableMap(valueMap);
+        return new DualTreeBidi2MapSubMap<>(subKeyMap, combinedKeyRange, subValueMap, combinedValueRange, primaryMap());
     }
 
     protected boolean updateValueMapDuringKeyMapIteration(final K key, final V oldValue, final V newValue) {
@@ -971,7 +976,7 @@ public abstract class DualTreeBidi2MapBase<K extends Comparable<K>, V extends Co
 
         @Override
         public NavigableRangedSet<V> subSet(final SortedMapRange<V> range) {
-            return parent.valueSubMap(range).values();
+            return parent.subMap(parent.getKeyRange(), range).values();
         }
 
         @Override

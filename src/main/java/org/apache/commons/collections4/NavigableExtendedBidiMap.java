@@ -6,4 +6,10 @@ public interface NavigableExtendedBidiMap<K, V,
         extends SortedBidiMap<K, V, TSubMap, TInverseMap>,
                 NavigableRangedMap<K, V, TSubMap> {
 
+    TSubMap subMap(SortedMapRange<K> keyRange, SortedMapRange<V> valueRange);
+
+    @Override
+    default TSubMap subMap(final SortedMapRange<K> range) {
+        return subMap(range, getValueRange());
+    }
 }

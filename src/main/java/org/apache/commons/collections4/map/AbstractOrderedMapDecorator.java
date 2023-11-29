@@ -128,18 +128,18 @@ public abstract class AbstractOrderedMapDecorator<K, V,
     }
 
     @Override
-    public SequencedSet<K> sequencedKeySet() {
-        return decorated().sequencedKeySet();
+    public TKeySet keySet() {
+        return (TKeySet) decorated().sequencedKeySet();
     }
 
     @Override
-    public SequencedCollection<V> sequencedValues() {
-        return decorated().sequencedValues();
+    public TEntrySet entrySet() {
+        return (TEntrySet) decorated().sequencedEntrySet();
     }
 
     @Override
-    public SequencedSet<Entry<K, V>> sequencedEntrySet() {
-        return decorated().sequencedEntrySet();
+    public TValueSet values() {
+        return (TValueSet) decorated().sequencedValues();
     }
 
     @Override

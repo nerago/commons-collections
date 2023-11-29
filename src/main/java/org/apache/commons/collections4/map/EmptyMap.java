@@ -293,6 +293,11 @@ public class EmptyMap<K, V> implements EverythingMap<K, V> {
     }
 
     @Override
+    public EverythingMap<K, V> subMap(final SortedMapRange<K> keyRange, final SortedMapRange<V> valueRange) {
+        return this;
+    }
+
+    @Override
     public EmptyMap<K, V> prefixMap(final K key) {
         return this;
     }

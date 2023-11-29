@@ -569,6 +569,15 @@ public class SingletonMap<K, V> implements EverythingMap<K, V>, KeyValue<K, V>, 
     }
 
     @Override
+    public EverythingMap<K, V> subMap(final SortedMapRange<K> keyRange, final SortedMapRange<V> valueRange) {
+        if (keyRange.contains(this.key) && valueRange.contains(this.value)) {
+            return this;
+        } else {
+            return EmptyMap.emptyMap();
+        }
+    }
+
+    @Override
     public Entry<K, V> lowerEntry(final K key) {
         return null;
     }

@@ -181,7 +181,6 @@ public final class UnmodifiableSortedBidiMap<K, V>
 
     @Override
     protected UnmodifiableSortedBidiMap<K, V> createReverse() {
-
         return new UnmodifiableSortedBidiMap<>(decorated().reversed());
     }
 

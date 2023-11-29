@@ -25,14 +25,17 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Objects;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.collections4.collection.ArraySequencedCollection;
 import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.collections4.set.PredicatedNavigableSet;
 import org.apache.commons.collections4.set.PredicatedSet;
 import org.apache.commons.collections4.set.PredicatedSortedSet;
+import org.apache.commons.collections4.set.ReverseSequencedSet;
 import org.apache.commons.collections4.set.TransformedNavigableSet;
 import org.apache.commons.collections4.set.TransformedSet;
 import org.apache.commons.collections4.set.TransformedSortedSet;
@@ -648,6 +651,14 @@ public class SetUtils {
      */
     public static <E> SortedSet<E> unmodifiableSortedSet(final SortedSet<E> set) {
         return UnmodifiableSortedSet.unmodifiableSortedSet(set);
+    }
+
+    public static <E> SequencedCommonsSet<E> reversedSet(final SequencedSet<E> set) {
+        if (set instanceof SequencedCommonsSet<E>) {
+            return ((SequencedCommonsSet<E>) set).reversed();
+        } else {
+            return new ReverseSequencedSet(set);
+        }
     }
 
     /**
