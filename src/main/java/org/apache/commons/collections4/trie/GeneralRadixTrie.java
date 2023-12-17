@@ -359,6 +359,12 @@ public class GeneralRadixTrie<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        // TODO
+        return false;
+    }
+
+    @Override
     public boolean removeAsBoolean(Object key) {
         // TODO
         return false;

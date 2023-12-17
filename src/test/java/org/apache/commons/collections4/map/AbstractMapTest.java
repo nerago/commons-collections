@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.SequencedCollection;
+import java.util.SequencedMap;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -372,6 +374,10 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
         return collectionRole() == CollectionCommonsRole.CONCRETE;
     }
 
+    public boolean isSequenced() {
+        return makeObject() instanceof SequencedMap<?, ?>;
+    }
+
     /**
      *  Returns the set of keys in the mappings used to test the map.  This
      *  method must return an array with the same length as {@link
@@ -629,6 +635,16 @@ public abstract class AbstractMapTest<K, V, TMap extends Map<K, V>>
     @Test
     public void testCollectionCheckRolesBasics() throws Exception {
         checkRoleBasics(makeObject(), collectionRole(), isTestSerialization());
+    }
+
+    @Override
+    protected void checkSequencedCollectionInterface(final Object object) {
+        if (isSequenced()) {
+            assertTrue(object instanceof java.util.SequencedMap);
+        } else {
+            assertFalse(object instanceof java.util.SequencedMap);
+        }
+        assertFalse(object instanceof java.util.SequencedCollection);
     }
 
     // tests begin here.  Each test adds a little bit of tested functionality.

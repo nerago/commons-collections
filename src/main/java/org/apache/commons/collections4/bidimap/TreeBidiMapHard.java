@@ -206,6 +206,36 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         return doPutKeyFirst(key, absentFunc, presentFunc);
     }
 
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        checkKey(key);
+        checkValue(oldValue);
+        checkValue(newValue);
+
+        Node<K, V> node = rootNodeKey;
+        while (node != null) {
+            final int cmp = key.compareTo(node.getKey());
+            if (cmp == 0) {
+                final V currentValue = node.getValue();
+                if (Objects.equals(currentValue, oldValue)) {
+                    updateValue(node, newValue);
+                    finishPutKeyFirst(key, newValue, node);
+                    return true;
+                }
+                return false;
+            } else if (cmp < 0) {
+                node = node.keyLeftNode;
+            } else { // cmp > 0
+                node = node.keyRightNode;
+            }
+        }
+        return false;
+    }
+
+    private boolean replaceValue(V value, K oldKey, K newKey) {
+        return false; // TODO
+    }
+
     /**
      * Puts all the mappings from the specified map into this map.
      * <p>
@@ -2734,6 +2764,11 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         }
 
         @Override
+        public boolean replace(final V value, final K oldKey, final K newKey) {
+            return parent.replaceValue(value, oldKey, newKey);
+        }
+
+        @Override
         public K remove(final Object key) {
             return parent.removeValue(key);
         }
@@ -2972,6 +3007,12 @@ public final class TreeBidiMapHard<K extends Comparable<K>, V extends Comparable
         protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
             verifyRange(key);
             return parent.doPut(key, absentFunc, presentFunc, saveNulls);
+        }
+
+        @Override
+        public boolean replace(final K key, final V oldValue, final V newValue) {
+            verifyRange(key);
+            return parent.replace(key, oldValue, newValue);
         }
 
         @Override

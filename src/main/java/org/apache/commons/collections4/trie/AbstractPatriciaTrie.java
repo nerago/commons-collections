@@ -275,6 +275,27 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
         }
     }
 
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        Objects.requireNonNull(key, "key");
+
+        // empty key maps to root
+        final int lengthInBits = lengthInBits(key);
+        if (lengthInBits == 0) {
+            return false;
+        }
+
+        // find matching entry node
+        final TrieEntry<K, V> found = getNearestEntryForKey(key, lengthInBits);
+        if (equalKeys(key, found.key) && Objects.equals(oldValue, found.value)) {
+            incrementModCount();
+            found.setKeyValue(key, newValue);
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Adds the given {@link TrieEntry} to the {@link org.apache.commons.collections4.Trie}.
      */
@@ -2338,6 +2359,14 @@ public abstract class AbstractPatriciaTrie<K, V, TSubMap extends IterableSortedM
                 throw new IllegalArgumentException("Key is out of range: " + key);
             }
             return AbstractPatriciaTrie.this.doPut(key, absentFunc, presentFunc, saveNulls);
+        }
+
+        @Override
+        public boolean replace(final K key, final V oldValue, final V newValue) {
+            if (!inRange(key)) {
+                throw new IllegalArgumentException("Key is out of range: " + key);
+            }
+            return AbstractPatriciaTrie.this.replace(key, oldValue, newValue);
         }
     }
 

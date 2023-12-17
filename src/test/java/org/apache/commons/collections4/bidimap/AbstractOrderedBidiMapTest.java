@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Abstract test class for {@link OrderedBidiMap} methods and contracts.
  */
-public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiMap<K, V, ?>>
+public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiMap<K, V, ?, ?>>
         extends AbstractBidiMapTest<K, V, TMap> {
 
     @Override
@@ -48,9 +48,9 @@ public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiM
     @Test
     public void testFirstKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, ?> bidi = getMap();
+        OrderedBidiMap<K, V, ?, ?> bidi = getMap();
 
-        final OrderedBidiMap<K, V, ?> finalBidi = bidi;
+        final OrderedBidiMap<K, V, ?, ?> finalBidi = bidi;
         assertThrows(NoSuchElementException.class, () -> finalBidi.firstKey());
 
         resetFull();
@@ -62,9 +62,9 @@ public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiM
     @Test
     public void testLastKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, ?> bidi = getMap();
+        OrderedBidiMap<K, V, ?, ?> bidi = getMap();
 
-        final OrderedBidiMap<K, V, ?> finalBidi = bidi;
+        final OrderedBidiMap<K, V, ?, ?> finalBidi = bidi;
         assertThrows(NoSuchElementException.class, () -> finalBidi.lastKey());
 
         resetFull();
@@ -79,7 +79,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiM
     @Test
     public void testNextKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, ?> bidi = map;
+        OrderedBidiMap<K, V, ?, ?> bidi = map;
         assertNull(bidi.nextKey(getOtherKeys()[0]));
         if (!isAllowNullKey()) {
             try {
@@ -101,7 +101,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiM
         assertNull(bidi.nextKey(confirmedLast));
 
         if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V, ?> finalBidi = bidi;
+            final OrderedBidiMap<K, V, ?, ?> finalBidi = bidi;
             assertThrows(NullPointerException.class, () -> finalBidi.nextKey(null));
 
         } else {
@@ -112,7 +112,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiM
     @Test
     public void testPreviousKey() {
         resetEmpty();
-        OrderedBidiMap<K, V, ?> bidi = getMap();
+        OrderedBidiMap<K, V, ?, ?> bidi = getMap();
         assertNull(bidi.previousKey(getOtherKeys()[0]));
         if (!isAllowNullKey()) {
             try {
@@ -136,7 +136,7 @@ public abstract class AbstractOrderedBidiMapTest<K, V, TMap extends OrderedBidiM
         assertNull(bidi.previousKey(confirmedLast));
 
         if (!isAllowNullKey()) {
-            final OrderedBidiMap<K, V, ?> finalBidi = bidi;
+            final OrderedBidiMap<K, V, ?, ?> finalBidi = bidi;
             assertThrows(NullPointerException.class, () -> finalBidi.previousKey(null));
 
         } else {

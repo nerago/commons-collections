@@ -24,10 +24,10 @@ import org.apache.commons.collections4.OrderedBidiMap;
 /**
  * JUnit tests.
  */
-public class TreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V, OrderedBidiMap<K, V, ?>> {
+public class TreeBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V, OrderedBidiMap<K, V, ?, ?>> {
 
     @Override
-    public OrderedBidiMap<K, V, ?> makeObject() {
+    public OrderedBidiMap<K, V, ?, ?> makeObject() {
         return new TreeBidiMap<>();
     }
 

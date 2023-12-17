@@ -37,22 +37,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.SequencedCollection;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.AbstractObjectTest;
 import org.apache.commons.collections4.ArrayTestUtils;
 import org.apache.commons.collections4.CollectionCommonsRole;
+import org.apache.commons.collections4.NestedEnabledIf;
+import org.apache.commons.collections4.NestedEnabledIfOuter;
 import org.apache.commons.collections4.spliterators.SpliteratorTestFixture;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 import static org.apache.commons.collections4.TestUtils.assertThrowsEither;
 import static org.apache.commons.collections4.TestUtils.assertThrowsOptional;
 import static org.apache.commons.collections4.TestUtils.assertThrowsOrFalse;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -278,6 +285,10 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
 
     public boolean isCopyConstructorCheckable() {
         return collectionRole() == CollectionCommonsRole.CONCRETE;
+    }
+
+    public boolean isSequenced() {
+        return makeObject() instanceof SequencedCollection<E>;
     }
 
     /**
@@ -543,6 +554,17 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
      * @see IterationBehaviour
      */
     protected abstract IterationBehaviour getIterationBehaviour();
+
+    @Override
+    protected void checkSequencedCollectionInterface(final Object object) {
+        if (isSequenced()) {
+            assertTrue(object instanceof java.util.SequencedCollection);
+        } else {
+            assertFalse(object instanceof java.util.SequencedCollection);
+        }
+        assertFalse(object instanceof java.util.SequencedMap);
+    }
+
 
     // Tests
         /**
@@ -1644,6 +1666,172 @@ public abstract class AbstractCollectionTest<E> extends AbstractObjectTest {
         assertFalse(spliterator.tryAdvance(x -> result[0] = x));
         assertNull(result[0]);
     }
+
+    @NestedEnabledIfOuter
+    public class SequencedTests {
+        public SequencedCollection<E> getCollection() {
+            return (SequencedCollection<E>) collection;
+        }
+
+        public SequencedCollection<E> getConfirmed() {
+            return (SequencedCollection<E>) confirmed;
+        }
+
+        @Nested
+        public class GetFirstLast {
+            @Test
+            public void testSequencedGetFirstFull() {
+                resetFull();
+                final E[] elements = getFullElements();
+                assertEquals(elements[0], getCollection().getFirst());
+            }
+
+            @Test
+            public void testSequencedGetFirstEmpty() {
+                resetEmpty();
+                assertThrows(NoSuchElementException.class, () -> getCollection().getFirst());
+            }
+
+            @Test
+            public void testSequencedGetLastFull() {
+                resetFull();
+                final E[] elements = getFullElements();
+                assertEquals(elements[elements.length - 1], getCollection().getLast());
+            }
+
+            @Test
+            public void testSequencedGetLastEmpty() {
+                resetEmpty();
+                assertThrows(NoSuchElementException.class, () -> getCollection().getLast());
+            }
+        }
+
+        @Nested
+        @EnabledIf("isAddSupported")
+        public class AddFirstLast {
+            @Test
+            public void testAddFirstFull() {
+                final E a = getOtherElements()[0], b = getOtherElements()[1];
+                final E[] expectA = ArrayUtils.addFirst(getFullElements(), a);
+                final E[] expectBA = ArrayUtils.addFirst(expectA, b);
+                resetFull();
+                getCollection().addFirst(a);
+                getConfirmed().addFirst(a);
+                assertArrayEquals(expectA, getCollection().toArray());
+                assertEquals(a, getCollection().getFirst());
+                assertFalse(getCollection().isEmpty());
+                verify();
+
+                getCollection().addFirst(b);
+                getConfirmed().addFirst(b);
+                assertArrayEquals(expectBA, getCollection().toArray());
+                assertEquals(b, getCollection().getFirst());
+                assertFalse(getCollection().isEmpty());
+                verify();
+            }
+
+            @Test
+            public void testAddFirstEmpty() {
+                final E a = getOtherElements()[0], b = getOtherElements()[1];
+                final Object[] expectA = new Object[] { a };
+                final Object[] expectBA = new Object[] { b, a };
+                resetEmpty();
+                assertTrue(getCollection().isEmpty());
+                getCollection().addFirst(a);
+                getConfirmed().addFirst(a);
+                assertArrayEquals(expectA, getCollection().toArray());
+                assertEquals(a, getCollection().getFirst());
+                assertFalse(getCollection().isEmpty());
+                verify();
+
+                getCollection().addFirst(b);
+                getConfirmed().addFirst(b);
+                assertArrayEquals(expectBA, getCollection().toArray());
+                assertEquals(b, getCollection().getFirst());
+                assertFalse(getCollection().isEmpty());
+                verify();
+            }
+
+            @Test
+            public void testAddLastFull() {
+                final E a = getOtherElements()[0], b = getOtherElements()[1];
+                final E[] expectA = ArrayUtils.add(getFullElements(), a);
+                final E[] expectBA = ArrayUtils.add(expectA, b);
+                resetFull();
+                getCollection().addLast(a);
+                getConfirmed().addLast(a);
+                assertArrayEquals(expectA, getCollection().toArray());
+                assertEquals(a, getCollection().getLast());
+                assertFalse(getCollection().isEmpty());
+                verify();
+
+                getCollection().addLast(b);
+                getConfirmed().addLast(b);
+                assertArrayEquals(expectBA, getCollection().toArray());
+                assertEquals(b, getCollection().getLast());
+                assertFalse(getCollection().isEmpty());
+                verify();
+            }
+
+            @Test
+            public void testAddLastEmpty() {
+                final E a = getOtherElements()[0], b = getOtherElements()[1];
+                final Object[] expectA = new Object[] { a };
+                final Object[] expectAB = new Object[] { a, b };
+                resetEmpty();
+                assertTrue(getCollection().isEmpty());
+                getCollection().addLast(a);
+                getConfirmed().addLast(a);
+                assertArrayEquals(expectA, getCollection().toArray());
+                assertFalse(getCollection().isEmpty());
+                verify();
+
+                getCollection().addLast(b);
+                getConfirmed().addLast(b);
+                assertArrayEquals(expectAB, getCollection().toArray());
+                assertFalse(getCollection().isEmpty());
+                verify();
+            }
+        }
+
+        @Test
+        @DisabledIf("isAddSupported")
+        public void testAddDisabled() {
+            final E a = getOtherElements()[0];
+            resetEmpty();
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().addFirst(a));
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().addLast(a));
+            verify();
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().addFirst(a));
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().addLast(a));
+            verify();
+        }
+
+        @Nested
+        @EnabledIf("isRemoveSupported")
+        public class RemoveFirstLast {
+
+        }
+
+        @Test
+        @DisabledIf("isRemoveSupported")
+        public void testRemoveDisabled() {
+            resetEmpty();
+            assertThrowsEither(UnsupportedOperationException.class, NoSuchElementException.class, () -> getCollection().removeFirst());
+            assertThrowsEither(UnsupportedOperationException.class, NoSuchElementException.class, () -> getCollection().removeLast());
+            verify();
+            resetFull();
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().removeFirst());
+            assertThrows(UnsupportedOperationException.class, () -> getCollection().removeLast());
+            verify();
+        }
+    }
+
+//        seq.removeFirst();
+//        seq.removeLast();
+//        seq.reversed();
+
 
     public Collection<E> getCollection() {
         return collection;

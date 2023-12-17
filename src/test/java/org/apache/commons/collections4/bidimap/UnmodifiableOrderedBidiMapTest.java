@@ -32,16 +32,16 @@ import org.junit.jupiter.api.Test;
 /**
  * JUnit tests.
  */
-public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V, OrderedBidiMap<K, V, ?>> {
+public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends Comparable<V>> extends AbstractOrderedBidiMapTest<K, V, OrderedBidiMap<K, V, ?, ?>> {
 
     @Override
-    public OrderedBidiMap<K, V, ?> makeObject() {
+    public OrderedBidiMap<K, V, ?, ?> makeObject() {
         return UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(new TreeBidiMap<K, V>());
     }
 
     @Override
-    public OrderedBidiMap<K, V, ?> makeFullMap() {
-        final OrderedBidiMap<K, V, ?> bidi = new TreeBidiMap<>();
+    public OrderedBidiMap<K, V, ?, ?> makeFullMap() {
+        final OrderedBidiMap<K, V, ?, ?> bidi = new TreeBidiMap<>();
         addSampleMappings(bidi);
         return UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(bidi);
     }
@@ -89,7 +89,7 @@ public class UnmodifiableOrderedBidiMapTest<K extends Comparable<K>, V extends C
 
     @Test
     public void testDecorateFactory() {
-        final OrderedBidiMap<K, V, ?> map = makeFullMap();
+        final OrderedBidiMap<K, V, ?, ?> map = makeFullMap();
         assertSame(map, UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(map));
 
         assertThrows(NullPointerException.class, () -> UnmodifiableOrderedBidiMap.unmodifiableOrderedBidiMap(null));

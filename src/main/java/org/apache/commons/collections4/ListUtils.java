@@ -47,6 +47,7 @@ import org.apache.commons.collections4.sequence.SequencesComparator;
  * @since 1.0
  */
 public class ListUtils {
+
     /**
      * A simple wrapper to use a CharSequence as List.
      */
@@ -747,6 +748,10 @@ public class ListUtils {
     public static <E> List<E> transformedList(final List<E> list,
                                               final Transformer<? super E, ? extends E> transformer) {
         return TransformedList.transformingList(list, transformer);
+    }
+
+    public static <E> List<E> reversed(final List<E> list) {
+        return list.reversed();
     }
 
     /**

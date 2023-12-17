@@ -130,21 +130,6 @@ public abstract class AbstractIterableMapAlternate<K, V,
     }
 
     @Override
-    public final boolean replace(final K key, final V oldValue, final V newValue) {
-        final MutableBoolean didUpdate = new MutableBoolean();
-        doPut(key, null,
-                (k, currentValue) -> {
-                    if (Objects.equals(oldValue, currentValue)) {
-                        didUpdate.flag = true;
-                        return newValue;
-                    } else {
-                        return currentValue;
-                    }
-                }, true);
-        return didUpdate.flag;
-    }
-
-    @Override
     public final V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
         return doPut(key, mappingFunction, null, false);
@@ -170,7 +155,8 @@ public abstract class AbstractIterableMapAlternate<K, V,
         Objects.requireNonNull(remappingFunction);
         return doPut(key,
                 k -> value,
-                (k, v) -> remappingFunction.apply(v, value), false);
+                (k, v) -> v == null ? value : remappingFunction.apply(v, value),
+                false);
     }
 
     @Override

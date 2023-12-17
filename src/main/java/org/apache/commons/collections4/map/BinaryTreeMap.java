@@ -285,6 +285,38 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
     }
 
     @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        checkKey(key);
+
+        Node<K, V> node = rootNode;
+        if (node == null) {
+            return false;
+        }
+
+        while (true) {
+            final int cmp = key.compareTo(node.getKey());
+            if (cmp == 0) {
+                final V currentValue = node.value;
+                if (Objects.equals(currentValue, oldValue)) {
+                    updateValue(node, newValue);
+                    return true;
+                }
+                return false;
+            } else if (cmp < 0) {
+                if (node.leftNode == null) {
+                    return false;
+                }
+                node = node.leftNode;
+            } else { // cmp > 0
+                if (node.rightNode == null) {
+                    return false;
+                }
+                node = node.rightNode;
+            }
+        }
+    }
+
+    @Override
     public Comparator<? super K> comparator() {
         return null; // natural order
     }
@@ -1554,6 +1586,12 @@ public final class BinaryTreeMap<K extends Comparable<K>, V>
         protected V doPut(final K key, final Function<? super K, ? extends V> absentFunc, final BiFunction<? super K, ? super V, ? extends V> presentFunc, final boolean saveNulls) {
             verifyRange(key);
             return BinaryTreeMap.this.doPut(key, absentFunc, presentFunc, saveNulls);
+        }
+
+        @Override
+        public boolean replace(final K key, final V oldValue, final V newValue) {
+            verifyRange(key);
+            return BinaryTreeMap.this.replace(key, oldValue, newValue);
         }
 
         @Override

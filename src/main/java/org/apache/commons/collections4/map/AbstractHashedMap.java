@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
@@ -234,7 +235,6 @@ public abstract class AbstractHashedMap<K, V,
         return false;
     }
 
-
     @Override
     protected V doPut(final K key, final V value, final boolean addIfAbsent, final boolean updateIfPresent) {
         final Object convertedKey = convertKey(key);
@@ -244,7 +244,7 @@ public abstract class AbstractHashedMap<K, V,
         while (entry != null) {
             if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
                 final V oldValue = entry.getValue();
-                if (updateIfPresent) {
+                if ((oldValue == null && addIfAbsent) || (!Objects.equals(oldValue, value) && updateIfPresent)) {
                     updateEntry(entry, value);
                 }
                 return oldValue;
@@ -269,27 +269,67 @@ public abstract class AbstractHashedMap<K, V,
         while (entry != null) {
             if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
                 final V oldValue = entry.getValue();
-                final V newValue = presentFunc.apply(key, oldValue);
-                if (modCount != expectedModCount) {
-                    throw new ConcurrentModificationException();
-                } else if (newValue != null || saveNulls) {
-                    updateEntry(entry, newValue);
+                if (oldValue == null) {
+                    if (absentFunc != null) {
+                        final V newValue = absentFunc.apply(key);
+                        if (modCount != expectedModCount) {
+                            throw new ConcurrentModificationException();
+                        } else if (newValue != null || saveNulls) {
+                            updateEntry(entry, newValue);
+                        }
+                        return newValue;
+                    }
                 } else {
-                    removeMapping(entry, index, prev);
+                    if (presentFunc != null) {
+                        final V newValue = presentFunc.apply(key, oldValue);
+                        if (modCount != expectedModCount) {
+                            throw new ConcurrentModificationException();
+                        } else if (newValue != null || saveNulls) {
+                            updateEntry(entry, newValue);
+                        } else {
+                            removeMapping(entry, index, prev);
+                        }
+                        return newValue;
+                    }
                 }
-                return newValue;
+                return oldValue;
             }
             prev = entry;
             entry = entry.next;
         }
 
-        final V newValue = absentFunc.apply(key);
-        if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
-        } else if (newValue != null || saveNulls) {
-            addMapping(index, hashCode, key, newValue);
+        if (absentFunc != null) {
+            final V newValue = absentFunc.apply(key);
+            if (modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            } else if (newValue != null || saveNulls) {
+                addMapping(index, hashCode, key, newValue);
+            }
+            return newValue;
+        } else {
+            return null;
         }
-        return null;
+    }
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        final Object convertedKey = convertKey(key);
+        final int hashCode = hash(convertedKey);
+        final int index = hashIndex(hashCode, data.length);
+        HashEntry<K, V> entry = data[index], prev = null;
+        while (entry != null) {
+            if (entry.hashCode == hashCode && isEqualKey(convertedKey, entry.key)) {
+                final V currentValue = entry.getValue();
+                if (Objects.equals(currentValue, oldValue)) {
+                    updateEntry(entry, newValue);
+                    return true;
+                }
+                return false;
+            }
+            prev = entry;
+            entry = entry.next;
+        }
+        return false;
     }
 
     /**
